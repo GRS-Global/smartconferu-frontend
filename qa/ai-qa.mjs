@@ -1,0 +1,33 @@
+import { NEXT, VIEWPORTS } from "./pages.mjs";
+import { launch, newContext, openStable } from "./lib.mjs";
+import { makePdf } from "./qa-pdf.mjs";
+const b = await launch(); const ctx = await newContext(b, VIEWPORTS[0], true);
+await ctx.route("**/__qa-paper.pdf", (r) => r.fulfill({ status: 200, contentType: "application/pdf", body: makePdf(3) }));
+const pg = await ctx.newPage(); const r = {};
+await openStable(pg, NEXT + "/submissions/DSAI-6/chair/review/add"); await pg.waitForTimeout(4000);
+// Ask a question
+const ask = pg.getByRole("button", { name: /Ask a question/ });
+r.askButton = await ask.count();
+await ask.click(); await pg.waitForTimeout(400);
+r.panel = await pg.getByRole("region", { name: "Ask about this paper" }).count();
+r.starters = await pg.getByRole("button", { name: "What is the main contribution?" }).count();
+await pg.getByRole("button", { name: "What is the main contribution?" }).click(); await pg.waitForTimeout(1600);
+r.answerSources = await pg.locator("section[aria-label='Ask about this paper'] span.truncate").count();
+r.count = await pg.getByRole("button", { name: /Ask a question \(1\)/ }).count();
+await pg.screenshot({ path: "out/det/ai-chat.png" });
+await pg.keyboard.press("Escape").catch(() => {});
+await pg.getByRole("button", { name: /Close$|Close the chat/ }).first().click().catch(() => {});
+// Polish with Smart Assist
+const polish = pg.getByRole("button", { name: "Polish with Smart Assist" });
+r.polishButton = await polish.count();
+r.polishDisabledEmpty = await polish.first().isDisabled();
+const ta = pg.locator("textarea[id^='rfp-']").first();
+await ta.fill("the paper is good but writing bad and need more experiments"); await pg.waitForTimeout(200);
+r.polishEnabled = !(await polish.first().isDisabled());
+await polish.first().click(); await pg.waitForTimeout(800);
+r.dialog = await pg.getByRole("dialog").getByText("Polish with Smart Assist").count();
+r.errorText = await pg.getByRole("alert").filter({ hasText: "untouched" }).count();
+await pg.screenshot({ path: "out/det/ai-polish.png" });
+await pg.getByRole("button", { name: "Keep my original" }).click(); await pg.waitForTimeout(300);
+r.textKept = await ta.inputValue();
+console.log(JSON.stringify(r, null, 1)); await b.close();

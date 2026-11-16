@@ -1,0 +1,83 @@
+/** My Profile › photo, as the prototype's popup: pick or drop an image, crop it (drag / zoom / rotate) right above the default-avatar choices, and
+ *  press Done. Like the prototype there is no Save button: the cropped photo is uploaded and saved when Apply is pressed, "Remove" takes it off at
+ *  once, and picking a default avatar is saved when it is picked. */
+export function PhotoEditor({ profile, save, uploadPhoto, onDone, onCancel }: EditorProps & { uploadPhoto: (photo: Blob) => Promise<string> }) {
+  const [cropping, setCropping] = useState<{ src: string; name: string } | null>(null);
+  const [localSource, setLocalSource] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const changed = useRef(false);
+  const input = useRef<HTMLInputElement>(null);
+  const inputId = useId();
+  const initials = initialsOf(profile.firstName, profile.lastName, profile.mainEmail);
+
+  const shown = profile.photoUrl;
+  const name = profile.photo;
+  const run = async (job: () => Promise<unknown>) => {
+    setBusy(true); setError("");
+    try { await job(); changed.current = true; return true; } catch (e) { setError(e instanceof Error ? e.message : "Couldn't save that. Please try again."); return false; } finally { setBusy(false); }
+  };
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    setError("");
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { setError("Only PNG, JPEG or WebP photos can be uploaded."); return; }
+    if (file.size > MAX_BYTES) { setError("That photo is too large — the limit is 5 MB."); return; }
+    try { setCropping({ src: await readImageDataUrl(file), name: file.name }); } catch { setError("That image couldn't be read — try another one."); }
+  };
+  const apply = async (dataUrl: string, source: string) => {
+    const ok = await run(async () => { const blob = await dataUrlToBlob(dataUrl); await save({ photoPath: await uploadPhoto(blob) }); });
+    if (ok) { setLocalSource(source); setCropping(null); }
+  };
+  const close = () => { if (!busy) { if (changed.current) onDone("Photo updated"); else onCancel(); } };
+  const adjustFrom = localSource || shown;
+
+  return (
+    <Modal title="Profile photo" subtitle="A clear headshot helps organizers recognize you." icon={Camera} onClose={close} maxWidth="max-w-[480px]" roomy
+      actions={<button type="button" onClick={close} disabled={busy} className="h-10 cursor-pointer rounded-lg bg-primary px-[22px] text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60">Done</button>}>
+      {cropping ? (
+        <PhotoCropper src={cropping.src} onCancel={() => setCropping(null)} onApply={(d, s) => void apply(d, s)} />
+      ) : (
+        <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); void pick(e.dataTransfer.files?.[0]); }} className="flex items-center gap-4">
+          <button type="button" onClick={() => input.current?.click()} disabled={busy} aria-label={shown ? "Change profile photo" : "Add a profile photo"} title={shown ? "Change photo" : "Add a photo"} className="group relative h-20 w-20 shrink-0 cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+            <span style={{ border: dragOver ? "2px dashed var(--primary)" : "none" }} className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-primary-soft transition-colors">
+              {shown ? (
+                // eslint-disable-next-line @next/next/no-img-element -- the stored or just-cropped photo
+                <img src={shown} alt="Profile preview" className="h-full w-full object-cover" />
+              ) : <DefaultAvatar variant={profile.avatarStyle || "initials"} size={80} initials={initials} />}
+            </span>
+            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-900/45 opacity-0 transition-opacity group-hover:opacity-100"><Camera size={24} className="text-white" aria-hidden="true" /></span>
+            <span aria-hidden="true" style={{ width: 27, height: 27, border: "2px solid #FFFFFF" }} className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-primary shadow-sm"><Camera size={14} className="text-white" /></span>
+          </button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              <label htmlFor={inputId} className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-[1.5px] border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink transition-all focus-within:ring-2 focus-within:ring-primary hover:border-primary">
+                <Camera size={13} className="text-primary" aria-hidden="true" /> {shown ? "Change photo" : "Upload photo"}
+                <input ref={input} id={inputId} type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} className="sr-only" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
+              </label>
+              {shown && adjustFrom && <button type="button" onClick={() => setCropping({ src: adjustFrom, name })} className="inline-flex cursor-pointer items-center gap-1 rounded text-xs font-semibold text-primary hover:underline"><Crop size={12} aria-hidden="true" /> Adjust photo</button>}
+              {shown && <button type="button" disabled={busy} onClick={() => { setLocalSource(""); void run(() => save({ photoPath: null })); }} className="cursor-pointer rounded text-xs font-semibold text-ink-muted transition-colors hover:text-danger">Remove</button>}
+            </div>
+            {error ? <p role="alert" className="mt-1 text-[11.5px] text-danger">{error}</p> : <p className="mt-1 truncate text-[11px] text-ink-faint">{busy ? "Saving…" : name || "Profile photo (optional) · JPG or PNG, or drag & drop"}</p>}
+          </div>
+        </div>
+      )}
+      {cropping && error && <p role="alert" className="mt-2 text-[11.5px] text-danger">{error}</p>}
+      <div className="mt-5 border-t border-muted pt-4">
+        <div className="text-sm font-semibold text-ink">Default avatar</div>
+        <p className="mb-3 text-xs text-ink-muted">{shown ? "Shown if you remove your photo. " : "Shown until you upload a photo. "}Your initials by default — or pick an illustration.</p>
+        <div className="flex flex-wrap gap-3">
+          {[{ id: "", label: "Initials" }, ...AVATAR_STYLES].map((s) => {
+            const active = (profile.avatarStyle || "") === s.id;
+            return (
+              <button key={s.id || "auto"} type="button" disabled={busy} onClick={() => void run(() => save({ avatarStyle: s.id }))} aria-pressed={active} className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 transition-colors ${active ? "border-primary bg-primary-soft" : "border-line bg-white"}`}>
+                <DefaultAvatar variant={s.id || "initials"} size={44} initials={initials} />
+                <span className={`text-[11px] font-semibold ${active ? "text-primary" : "text-ink-soft"}`}>{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </Modal>
+  );
+}

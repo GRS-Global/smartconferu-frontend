@@ -1,0 +1,10 @@
+import { PROTO, VIEWPORTS } from "./pages.mjs";
+import { launch, newContext, openStable } from "./lib.mjs";
+const b = await launch();
+const ctx = await newContext(b, VIEWPORTS[0], true); const pg = await ctx.newPage();
+pg.on("pageerror", (e) => console.log("pageerror", String(e).slice(0, 200)));
+await openStable(pg, "http://localhost:3102/chair/isbm2026/settings/email-templates"); await pg.waitForTimeout(2500);
+console.log("cards:", await pg.getByRole("button", { name: /Edit/ }).count());
+const txt = await pg.locator("body").innerText();
+console.log(txt.slice(0, 200).replace(/\n/g, " | "));
+await b.close();

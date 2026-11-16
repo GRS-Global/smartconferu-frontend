@@ -1,0 +1,120 @@
+/* Design tokens, mirrored from the prototype's single source of truth
+   (author-journey/src/shared/theme.js → TOKENS). Rebrand by editing values here only.
+   Components reference them through the Tailwind theme below (bg-primary, text-ink-muted, …). */
+:root {
+  /* brand */
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-soft: #f5f3ff;
+  --primary-soft-hover: #ede9fe;
+  --primary-soft-border: #ddd6fe;
+  --secondary: #a21caf;
+  --secondary-soft: #fae8ff;
+  --accent: #06b6d4;
+
+  /* structural */
+  --navy: #0b1020;
+  --canvas: #f8fafc;
+  --card: #ffffff;
+  --row-hover: #f9fbfd;
+  --table-row-alt: #f3f6fb;
+  --table-row-hover: #e8eef7;
+  --muted: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* text */
+  --ink: #1e293b;
+  --ink-soft: #475569;
+  --ink-muted: #64748b;
+  --ink-faint: #94a3b8;
+
+  /* status / semantic */
+  --success: #16a34a;
+  --success-soft: #eaf7ee;
+  --warning: #d97706;
+  --warning-soft: #fef3e2;
+  --warning-border: #fde68a; /* prototype token warning-border: dashed "not configured" panels */
+  --danger: #dc2626;
+  --danger-soft: #fdeded;
+  --danger-hover: #b91c1c; /* prototype token danger-hover: destructive confirm buttons on hover */
+  --danger-border: #eb9898;
+  --danger-300: #fca5a5;
+
+  /* category (committee / virtual) */
+  --cat-virtual: #0e7490;
+  --cat-virtual-soft: #ecfeff;
+
+  /* text on a dark surface and the dark header slab (the certificate verify page) */
+  --on-dark: rgba(255, 255, 255, 0.85);
+  --on-dark-soft: rgba(255, 255, 255, 0.6);
+  --gradient-header: linear-gradient(135deg, #0b1020 0%, #2e1065 55%, #4c1d95 100%);
+
+  /* full-bleed photo scrim on the sign-in screen */
+  --auth-scrim: linear-gradient(135deg, rgba(11, 16, 32, 0.94) 0%, rgba(11, 16, 32, 0.78) 45%, rgba(11, 16, 32, 0.55) 100%);
+
+  /* elevation */
+  --gradient-accent: linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%); /* 3px hairline on .ui-accent-card (prototype gradient-accent) */
+  --shadow-card: 0 1px 2px rgba(11, 16, 32, 0.04), 0 4px 20px rgba(11, 16, 32, 0.05);
+  --shadow-pop: 0 16px 40px rgba(11, 16, 32, 0.12);
+}
+
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-hover: var(--primary-soft-hover);
+  --color-primary-soft-border: var(--primary-soft-border);
+  --color-secondary: var(--secondary);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-accent: var(--accent);
+
+  --color-navy: var(--navy);
+  --color-canvas: var(--canvas);
+  --color-card: var(--card);
+  --color-row-hover: var(--row-hover);
+  --color-table-alt: var(--table-row-alt);
+  --color-table-hover: var(--table-row-hover);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-cat-virtual: var(--cat-virtual);
+  --color-cat-virtual-soft: var(--cat-virtual-soft);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+
+  /* One corner radius across cards, panels, modals, buttons, inputs and menus (as in the prototype).
+     rounded-full (avatars, pills) and the small rounded / rounded-md are intentionally untouched. */
+  --radius-lg: 0.7rem;
+  --radius-xl: 0.7rem;
+  --radius-2xl: 0.7rem;
+  --radius-3xl: 0.7rem;
+}
+
+/* Color-blind mode (Settings › Display): swaps just the status/semantic tokens (the ones that encode meaning through
+   color alone). Red/green is the pairing most color-vision deficiencies confuse, so danger moves to blue and
+   success/warning to an Okabe-Ito teal-green/orange pair. Brand colors are left alone. Same values as the
+   prototype's COLORBLIND_TOKENS (src/shared/theme.js). */
+:root[data-colorblind="true"] {
+  --success: #009e73;
+  --success-soft: #e4f5f0;
+  --warning: #e69f00;
+  --warning-soft: #fdf0dc;
+  --danger: #0072b2;
+  --danger-soft: #e3f0f9;
+}

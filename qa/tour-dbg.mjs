@@ -1,0 +1,10 @@
+import { NEXT, VIEWPORTS } from "./pages.mjs";
+import { launch, newContext, openStable } from "./lib.mjs";
+const b = await launch(); const ctx = await newContext(b, VIEWPORTS[0], true); const pg = await ctx.newPage();
+await pg.addInitScript(() => localStorage.setItem("grs_setup_tour_chair_isbm2026", JSON.stringify({ welcomed: true, tourStep: 10 })));
+await openStable(pg, (process.env.NEXT_URL || NEXT) + "/chair/isbm2026/settings"); await pg.waitForTimeout(2000);
+pg.on("console", (m) => console.log("console:", m.type(), m.text().slice(0, 200)));
+await pg.getByRole("button", { name: /Take a tour/i }).first().click(); await pg.waitForTimeout(7000);
+console.log("url", pg.url(), "popover", await pg.locator("[data-tour-popover]").count(), "anchor", await pg.locator("[data-tour=ss-tracks]").count());
+console.log(await pg.locator("[data-tour-popover]").first().innerText().catch(() => "none"));
+await pg.screenshot({ path: "out/det/tour-dbg.png" }); await b.close();

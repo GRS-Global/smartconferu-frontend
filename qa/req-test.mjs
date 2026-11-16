@@ -1,0 +1,12 @@
+import { chromium } from "playwright";
+const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1440, height: 1000 } });
+pg.on("pageerror", (e) => console.log("pageerror", String(e).slice(0, 200)));
+await pg.goto("http://localhost:3102/my-requests"); await pg.waitForTimeout(2500);
+await pg.getByRole("link", { name: /Open the request for/ }).click(); await pg.waitForTimeout(1500);
+console.log("opened:", pg.url());
+await pg.getByText("Show full details").click();
+await pg.getByRole("button", { name: "Cancel This Request" }).click(); await pg.waitForTimeout(300);
+await pg.getByRole("button", { name: "Cancel Request", exact: true }).click(); await pg.waitForTimeout(300);
+await pg.screenshot({ path: "out/dd/req-next2.png", fullPage: true });
+console.log(await pg.getByRole("status").allTextContents());
+await b.close();

@@ -1,0 +1,15 @@
+import { chromium } from "playwright";
+const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1440, height: 1000 } }); const pg = await ctx.newPage();
+pg.on("pageerror", (e) => console.log("pageerror", String(e).slice(0, 200)));
+await pg.clock.setFixedTime(new Date("2027-02-20T10:00:00"));
+await pg.goto("http://localhost:3102/author/isbm2026/feedback"); await pg.waitForTimeout(3000);
+console.log("form:", await pg.getByText("How was ISBM").count(), "preview note:", await pg.getByText(/Preview: the form opens/).count());
+await pg.getByRole("radio", { name: /Poor/ }).click();
+console.log("improve question:", await pg.getByText("What should the organisers improve?").count());
+await pg.getByRole("button", { name: "Venue" }).click(); await pg.getByRole("radio", { name: "Maybe" }).click();
+await pg.getByRole("button", { name: "Send feedback" }).click(); await pg.waitForTimeout(1200);
+console.log("thanks:", await pg.getByText("Thanks for your feedback").count(), "| chips:", await pg.getByText("Improve: Venue").count());
+await pg.screenshot({ path: "out/dd/fb-sent.png" });
+await pg.getByRole("button", { name: "Change my answers" }).click(); await pg.waitForTimeout(500);
+console.log("edit shows Update:", await pg.getByRole("button", { name: "Update feedback" }).count(), "| poor selected:", await pg.getByRole("radio", { name: /Poor/ }).getAttribute("aria-checked"));
+await b.close();

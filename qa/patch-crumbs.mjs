@@ -1,0 +1,15 @@
+import fs from "node:fs";
+const d = "../src/";
+const sub = (file, a, b) => { let s = fs.readFileSync(d + file, "utf8"); if (!s.includes(a)) { console.log("MISSING", file, a.slice(0, 70)); return; } fs.writeFileSync(d + file, s.replace(a, () => b)); };
+sub("components/layout/page-header.tsx", `  label: string;\n  href?: string;\n}`, `  label: string;\n  href?: string;\n  /** The last crumb of a Conference Settings page: semibold, navy (the prototype's current-page crumb there). */\n  strong?: boolean;\n}`);
+sub("components/layout/page-header.tsx", `<span aria-current={last ? "page" : undefined}>{c.label}</span>`, `<span aria-current={last ? "page" : undefined} className={last && c.strong ? "font-semibold text-navy" : undefined}>{c.label}</span>`);
+const c = "features/chair/components/";
+sub(c + "review-settings-page.tsx", `{ label: "Conference Settings" }]} />`, `{ label: "Conference Settings" }, { label: "Review", strong: true }]} />`);
+sub(c + "decision-settings-page.tsx", `{ label: "Conference Settings" }]} />`, `{ label: "Conference Settings" }, { label: "Decision", strong: true }]} />`);
+sub(c + "email-logs-page.tsx", `{ label: "Conference Settings" }]} />`, `{ label: "Conference Settings" }, { label: "Email Logs", strong: true }]} />`);
+sub(c + "email-templates-page.tsx", `{ label: "Email Templates" }]} />`, `{ label: "Email Templates", strong: true }]} />`);
+sub(c + "activity-logs-page.tsx", `{ label: "Activity Logs" }]} />`, `{ label: "Activity Logs", strong: true }]} />`);
+sub(c + "submission-settings-page.tsx", `{ label: "Submissions" }]} />`, `{ label: "Submissions", strong: true }]} />`);
+let s = fs.readFileSync(d + c + "conference-details-page.tsx", "utf8");
+s = s.replace(/\{ label: \(\{ basic: "Basic Details", venue: "Format & Venue", branding: "Branding" \} as const\)\[tab\] \}/, (m) => m.replace("{ label:", "{ strong: true, label:"));
+fs.writeFileSync(d + c + "conference-details-page.tsx", s); console.log("done");

@@ -1,0 +1,12 @@
+import { NEXT, VIEWPORTS } from "./pages.mjs";
+import { launch, newContext, openStable } from "./lib.mjs";
+const b = await launch(); const ctx = await newContext(b, VIEWPORTS[0], true); const pg = await ctx.newPage();
+await openStable(pg, NEXT + "/chair/isbm2026/settings/review"); await pg.waitForTimeout(2000);
+const rail = pg.locator("aside[aria-label='Sections']");
+const before = await pg.evaluate(() => scrollY);
+const child = rail.getByRole("button", { name: "Complete your reviewer profile" });
+console.log("children visible:", await child.count());
+await child.click(); await pg.waitForTimeout(1200);
+const top = await pg.evaluate(() => document.getElementById("rs-recruit-reviewerProfileReminder")?.getBoundingClientRect().top);
+console.log("scrolled:", (await pg.evaluate(() => scrollY)) > before, "row top:", Math.round(top));
+await b.close();

@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 700, height: 900 } });
+pg.on("pageerror", (e) => console.log("pageerror", String(e).slice(0, 200)));
+await pg.goto("http://localhost:3102/qa-photo"); await pg.waitForTimeout(2500);
+await pg.screenshot({ path: "out/dd/photo-a.png" });
+await pg.locator('input[type=file]').setInputFiles("out/dd/test-photo.png"); await pg.waitForTimeout(1200);
+await pg.screenshot({ path: "out/dd/photo-b.png" });
+await pg.getByRole("button", { name: "Apply" }).click(); await pg.waitForTimeout(1200);
+await pg.screenshot({ path: "out/dd/photo-c.png" });
+await b.close();

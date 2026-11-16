@@ -1,0 +1,22 @@
+import { NEXT, VIEWPORTS } from "./pages.mjs";
+import { launch, newContext, openStable } from "./lib.mjs";
+const b = await launch(); const ctx = await newContext(b, VIEWPORTS[0], true); const pg = await ctx.newPage(); const r = {};
+await openStable(pg, NEXT + "/submissions/DSAI-5/chair/review"); await pg.waitForTimeout(2500);
+await pg.getByRole("button", { name: /^Add review$/ }).click(); await pg.waitForURL((u) => u.pathname.endsWith("/review/add"), { timeout: 90000 }); await pg.getByText(/Your review counts like any reviewer/).waitFor({ timeout: 90000 }); await pg.waitForTimeout(500);
+r.url = pg.url().replace(/^https?:\/\/[^/]+/, "");
+r.title = await pg.evaluate(() => document.querySelector("h1")?.innerText);
+r.crumbs = await pg.evaluate(() => (document.body.innerText.match(/My Conferences[^\n]*Add review/) || [null])[0]);
+r.banner = await pg.getByText(/Your review counts like any reviewer/).count();
+r.progress0 = await pg.evaluate(() => (document.body.innerText.match(/\d+ of \d+ required fields answered/) || [null])[0]);
+r.submitDisabled = await pg.getByRole("button", { name: /Submit review/ }).isDisabled();
+for (const g of await pg.locator("[role=radiogroup]:visible").all()) { const rs = g.getByRole("radio"); await rs.nth(Math.min(3, (await rs.count()) - 1)).click(); }
+for (const t of await pg.locator("textarea:visible").all()) await t.fill("Solid paper.");
+const conf = pg.getByRole("button", { name: /^(High|Medium)$/ }); if (await conf.count()) await conf.first().click();
+await pg.waitForTimeout(900);
+r.progress1 = await pg.evaluate(() => (document.body.innerText.match(/All required fields answered|\d+ of \d+ required fields answered/) || [null])[0]);
+r.draft = await pg.evaluate(() => /Draft saved/.test(document.body.innerText));
+r.cancelLabel = await pg.getByRole("link", { name: /Save draft & close|Cancel/ }).innerText();
+await pg.getByRole("button", { name: /Submit review/ }).click(); await pg.waitForTimeout(2500);
+r.after = pg.url().replace(/^https?:\/\/[^/]+/, "");
+r.toast = await pg.evaluate(() => (document.querySelector("[role=status]")?.innerText ?? "").replace(/\s+/g, " "));
+console.log(JSON.stringify(r, null, 1)); await b.close();

@@ -1,0 +1,13 @@
+import { NEXT, VIEWPORTS } from "./pages.mjs";
+import { launch, newContext, openStable } from "./lib.mjs";
+const b = await launch(); const ctx = await newContext(b, VIEWPORTS[0], true); const pg = await ctx.newPage();
+await openStable(pg, NEXT + "/submissions/DSAI-6/chair/review/add"); await pg.waitForTimeout(3000);
+const r = { stripWhileOpen: await pg.getByText("Submitted paper").count() };
+await pg.getByRole("button", { name: "Hide the paper preview" }).click(); r.showBtn = await pg.getByRole("button", { name: "Show the paper beside the form" }).count(); await pg.waitForTimeout(500);
+r.stripHidden = await pg.getByText("Submitted paper").count();
+r.buttons = [await pg.getByRole("button", { name: "View", exact: true }).count(), await pg.getByRole("button", { name: "Download" }).count()];
+console.log(JSON.stringify(r)); await pg.screenshot({ path: "out/det/strip.png" }); await pg.getByRole("button", { name: "Download", exact: true }).hover(); await pg.waitForTimeout(300);
+const [pop] = await Promise.all([ctx.waitForEvent("page", { timeout: 5000 }).catch(() => null), pg.getByRole("button", { name: "View", exact: true }).click()]);
+r.opened = !!pop;
+await pg.screenshot({ path: "out/det/strip.png" });
+console.log(JSON.stringify(r)); await b.close();

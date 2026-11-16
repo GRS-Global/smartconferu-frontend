@@ -1,0 +1,10 @@
+import fs from "node:fs";
+const sub = (file, re, rep) => { let s = fs.readFileSync(file, "utf8"); if (!re.test(s)) { console.log("MISSING", file); return; } s = s.replace(re, () => rep); fs.writeFileSync(file, s); console.log("ok", file.split("/").pop()); };
+const d = "../src/features/";
+sub(d + "author/components/submit-paper-page.tsx", /\{showGuide && <div className="space-y-3[^\n]*info\.guidelines\.split[^\n]*<\/div>\}/, `{showGuide && <RichTextContent value={info.guidelines} className="px-5 py-4" />}`);
+sub(d + "chair/components/submission-form-preview.tsx", /\{showGuide && <div className="space-y-3[^\n]*guidelines\.split[^\n]*<\/div>\}/, `{showGuide && (hasRichText(guidelines) ? <RichTextContent value={guidelines} className="px-5 py-4" /> : <div className="px-5 py-4 text-[13px] leading-relaxed"><p className="text-ink-faint">No guidelines written yet — add them under Conference Settings › Submissions.</p></div>)}`);
+const imp = (file, line) => { let s = fs.readFileSync(file, "utf8"); if (s.includes(line)) return; s = s.replace(/^("use client";\n\n)/, `$1${line}\n`); fs.writeFileSync(file, s); };
+const line = `import { RichTextContent, RichTextEditor, hasRichText } from "@/components/ui/rich-text";`;
+imp(d + "chair/components/submission-settings-panel.tsx", line);
+imp(d + "author/components/submit-paper-page.tsx", line);
+imp(d + "chair/components/submission-form-preview.tsx", line);

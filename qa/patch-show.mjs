@@ -1,0 +1,10 @@
+import fs from "node:fs";
+const f = "../src/features/chair/components/paper-split.tsx"; let s = fs.readFileSync(f, "utf8");
+const a0 = s.indexOf("      {!open && (\n        <div className=\"mb-3 flex justify-end\">"); const a1 = s.indexOf("      <div ref={grid}");
+if (a0 < 0 || a1 < 0) throw new Error("missing");
+s = s.slice(0, a0) + s.slice(a1);
+s = s.replace('<div className={`min-w-0 ${open ?', () => '<div className={`min-w-0 ${open ?');
+const b = '{children(open)}</div>';
+s = s.replace(b, () => '{!open && <button type="button" onClick={() => setOpen(true)} style={{ border: "1px solid var(--primary-soft-border)", color: "var(--primary)", background: "var(--primary-soft)" }} className="mb-4 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3.5 text-xs font-bold"><BookOpen size={14} aria-hidden="true" /> Show the paper beside the form</button>}{children(open)}</div>');
+s = s.replace("PanelLeftOpen, ", "BookOpen, ").replace("import { ExternalLink,", "import { BookOpen, ExternalLink,").replace("BookOpen, BookOpen, ", "BookOpen, ");
+fs.writeFileSync(f, s);

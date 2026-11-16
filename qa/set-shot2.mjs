@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1440, height: 900 } });
+pg.on("pageerror", (e) => console.log("pageerror", String(e).slice(0, 200)));
+await pg.goto("http://localhost:3102/qa-settings"); await pg.waitForTimeout(2500);
+await pg.screenshot({ path: "out/dd/set-next2.png" });
+await pg.getByRole("button", { name: /Linked sign-in methods/ }).click(); await pg.waitForTimeout(700);
+await pg.getByRole("button", { name: "Connect" }).first().click(); await pg.waitForTimeout(300);
+await pg.screenshot({ path: "out/dd/set-linked.png" });
+await pg.keyboard.press("Escape");
+await b.close();
