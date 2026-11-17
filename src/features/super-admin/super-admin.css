@@ -1,0 +1,128 @@
+/* Super Admin console styles, copied from the prototype (src/super-admin/styles.js) with its
+   theme tokens (src/shared/theme.js TOKENS), scoped to .sa-root so the rest of the app is untouched. */
+.sa-root {
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --primary-soft: #F5F3FF;
+  --primary-soft-hover: #EDE9FE;
+  --primary-soft-border: #DDD6FE;
+  --secondary: #A21CAF;
+  --secondary-soft: #FAE8FF;
+  --accent: #06B6D4;
+  --navy: #0B1020;
+  --canvas: #F8FAFC;
+  --card: #FFFFFF;
+  --row-hover: #F9FBFD;
+  --table-row-alt: #F3F6FB;
+  --table-row-hover: #E8EEF7;
+  --muted: #F1F5F9;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --text: #1E293B;
+  --text-soft: #475569;
+  --text-muted: #64748B;
+  --text-faint: #94A3B8;
+  --on-dark: rgba(255,255,255,0.85);
+  --on-dark-soft: rgba(255,255,255,0.6);
+  --on-dark-faint: rgba(255,255,255,0.45);
+  --success: #16A34A;
+  --success-soft: #EAF7EE;
+  --warning: #D97706;
+  --warning-soft: #FEF3E2;
+  --warning-soft-2: #FEF3C7;
+  --warning-border: #FDE68A;
+  --danger: #DC2626;
+  --danger-hover: #B91C1C;
+  --danger-soft: #FDEDED;
+  --danger-border: #EB9898;
+  --danger-300: #FCA5A5;
+  --danger-border-soft: #F8CFCF;
+  --cat-physical: #B45309;
+  --cat-physical-soft: #FEF3E7;
+  --cat-physical-border: #F3D9AE;
+  --cat-virtual: #0E7490;
+  --cat-virtual-soft: #ECFEFF;
+  --cat-virtual-border: #A8E6F0;
+  --gradient-primary: linear-gradient(135deg,#7C3AED 0%,#7C3AED 100%);
+  --gradient-dark: linear-gradient(135deg,#0B1020 0%,#2E1065 35%,#4C1D95 65%,#6D28D9 100%);
+  --gradient-header: linear-gradient(135deg,#0B1020 0%,#2E1065 55%,#4C1D95 100%);
+  --gradient-brand: linear-gradient(135deg,#7C3AED 0%,#06B6D4 100%);
+  --auth-scrim: linear-gradient(135deg,rgba(11,16,32,0.94) 0%,rgba(11,16,32,0.78) 45%,rgba(11,16,32,0.55) 100%);
+  --banner-wash: linear-gradient(120deg,#E3E8FE 0%,#EAE5FF 48%,#DCF5F9 100%);
+  --banner-border: #C9D1F8;
+  --gradient-accent: linear-gradient(90deg,#7C3AED 0%,#06B6D4 100%);
+  --shadow-card: 0 1px 2px rgba(11,16,32,0.04),0 4px 20px rgba(11,16,32,0.05);
+  --shadow-pop: 0 16px 40px rgba(11,16,32,0.12);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+/* Same surface system as the user app: a grey canvas, white bordered cards. */
+.sa-root{background:var(--canvas);color:var(--text);min-height:100vh}
+.sa-card{background:#FFFFFF;border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow-card)}
+/* Compact page header (PageTitle): breadcrumb, icon + title, optional description and actions. */
+.sa-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.sa-page-icon{width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid var(--border);color:var(--primary);box-shadow:var(--shadow-card);flex-shrink:0}
+.sa-crumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);margin-bottom:8px}
+.sa-crumb button:hover{color:var(--primary);text-decoration:underline}
+/* Sidebar: a quiet active state (tint + left bar) instead of a solid pill. */
+.sa-nav-link{position:relative;display:flex;align-items:center;gap:11px;width:100%;padding:8px 12px;border-radius:10px;font-size:13.5px;font-weight:500;color:var(--text-soft);transition:background .15s,color .15s}
+.sa-nav-link:hover{background:var(--canvas);color:var(--text)}
+.sa-nav-link.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.sa-nav-link.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--primary)}
+.sa-nav-link .sa-count{margin-left:auto;min-width:22px;height:20px;padding:0 7px;border-radius:999px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;background:var(--muted);color:var(--text-muted)}
+.sa-nav-link .sa-count.is-late{background:var(--danger-soft);color:var(--danger)}
+.sa-nav-link.active .sa-count{background:#FFFFFF;color:var(--primary)}
+.sa-sample-tag{margin-left:auto;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;background:var(--warning-soft);color:var(--warning);white-space:nowrap}
+.sa-nav-link .sa-sample-tag + .sa-count{margin-left:6px}
+.sa-nav-link.active .sa-count.is-late{color:var(--danger)}
+.sa-caption{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);padding:0 12px;margin:20px 0 6px}
+.sa-caption-count{letter-spacing:0;font-size:11px;font-weight:700;min-width:22px;height:18px;padding:0 6px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--muted);color:var(--text-muted)}
+.sa-caption-count.is-late{background:var(--danger-soft);color:var(--danger)}
+/* Approval groups: a folding header, then its queues indented on a thin guide line. */
+.sa-nav-group{font-weight:600;color:var(--text)}
+.sa-nav-group.has-active{background:var(--primary-soft);color:var(--primary)}
+.sa-nav-sub{position:relative;margin-left:21px;padding-left:10px;border-left:1px solid var(--border)}
+.sa-nav-link.is-nested{padding:6px 10px;font-size:13px}
+.sa-nav-link.is-nested.active::before{left:-11px;top:6px;bottom:6px}
+.sa-nav-dot{width:6px;height:6px;border-radius:999px;background:var(--border-strong);flex-shrink:0;margin:0 2px}
+.sa-nav-link.is-nested.active .sa-nav-dot{background:var(--primary)}
+/* Dashboard: KPI tiles and the queue list. */
+.sa-kpi{display:flex;flex-direction:column;gap:10px;text-align:left;background:#FFFFFF;border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s,transform .15s}
+.sa-kpi:hover{border-color:var(--primary-soft-border);box-shadow:0 10px 24px -8px rgba(124, 58, 237,.18);transform:translateY(-1px)}
+.sa-row-link{display:flex;align-items:center;gap:12px;width:100%;padding:12px 24px;text-align:left;transition:background .12s}
+.sa-row-link:hover{background:var(--row-hover)}
+.sa-icon-btn{width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--text-soft);transition:background .15s,color .15s}
+.sa-icon-btn:hover{background:var(--primary-soft);color:var(--primary)}
+.sa-btn{transition:filter .15s,box-shadow .15s}
+.sa-btn:hover:not(:disabled){filter:brightness(.95);box-shadow:0 6px 16px rgba(11,16,32,.10)}
+.sa-table{width:100%;font-size:13.5px;border-collapse:collapse}
+.sa-table th{font-size:13px;font-weight:600;color:var(--text);text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+.sa-table td{padding:14px;border-bottom:1px solid var(--border);color:var(--text-soft);vertical-align:middle}
+.sa-table tbody tr:last-child td{border-bottom:0}
+.sa-table tbody tr.sa-clickable{cursor:pointer;transition:background .12s}
+.sa-table tbody tr.sa-clickable:hover{background:var(--row-hover)}
+.sa-tab{padding:8px 14px;border-radius:0.6rem;font-size:13.5px;font-weight:600;color:var(--text-muted);transition:background .15s,color .15s}
+.sa-tab:hover{color:var(--primary)}
+.sa-tab.active{background:var(--primary-soft);color:var(--primary)}
+.sa-input{width:100%;border:1px solid var(--border);border-radius:0.6rem;padding:9px 12px;font-size:13.5px;color:var(--text);background:#FFFFFF;outline:none;transition:border-color .15s,box-shadow .15s}
+.sa-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(124, 58, 237,.12)}
+.sa-root button:not(:disabled),.sa-root a[href],.sa-root label{cursor:pointer}
+/* Sign-in page: 48px controls with a 10px radius, a visible 4px focus ring, and a red state
+   driven by aria-invalid so the error styling always matches what screen readers hear. */
+.sa-auth-input{height:48px;width:100%;border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:14.5px;color:var(--text);background:#FFFFFF;outline:none;transition:border-color .15s,box-shadow .15s,background-color .15s}
+.sa-auth-input::placeholder{color:var(--text-faint)}
+.sa-auth-input:hover{border-color:var(--border-strong)}
+.sa-auth-input:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(124, 58, 237,.12)}
+.sa-auth-input[aria-invalid="true"]{border-color:var(--danger)}
+.sa-auth-input[aria-invalid="true"]:focus{box-shadow:0 0 0 4px rgba(220,38,38,.12)}
+.sa-auth-btn{height:50px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;background:var(--gradient-primary);color:#FFFFFF;font-size:15px;font-weight:600;box-shadow:0 1px 2px rgba(11,16,32,.14),inset 0 1px 0 rgba(255,255,255,.16);transition:filter .15s,box-shadow .15s,transform .08s}
+.sa-auth-btn:hover:not(:disabled){filter:brightness(1.07);box-shadow:0 8px 20px rgba(124, 58, 237,.28),inset 0 1px 0 rgba(255,255,255,.16)}
+.sa-auth-btn:active:not(:disabled){transform:translateY(1px)}
+.sa-auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.sa-auth-btn[aria-busy="true"]{opacity:.85;cursor:progress}
+.sa-auth-btn:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(124, 58, 237,.28)}
+.sa-auth-btn .sa-arrow{transition:transform .15s}
+.sa-auth-btn:hover:not(:disabled) .sa-arrow{transform:translateX(2px)}
+.sa-focus:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:6px}
+@keyframes sa-spin{to{transform:rotate(360deg)}}
+.sa-spin{animation:sa-spin .8s linear infinite}
+@media (prefers-reduced-motion: reduce){.sa-auth-input,.sa-auth-btn,.sa-auth-btn .sa-arrow{transition:none}.sa-spin{animation-duration:2s}}
