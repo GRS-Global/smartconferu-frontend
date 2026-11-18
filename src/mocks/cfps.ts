@@ -38,7 +38,7 @@ export const mockCfpService: CfpService = {
     if (d) details.set(slug, { ...d, managers: [...d.managers, { id, name: `${who.firstName} ${who.lastName}`.trim(), email: who.email, status: "invited", permissions: who.permissions ?? DEFAULT_CFP_PERMISSIONS }] });
     return id;
   },
-  async saveManagers(kept, removed) {
+  async saveManagers(_slug, kept, removed) {
     details.forEach((d, k) => details.set(k, { ...d, managers: d.managers.filter((m) => !removed.includes(m.id)).map((m) => { const u = kept.find((x) => x.id === m.id); return u ? { ...m, name: u.name, permissions: u.permissions } : m; }) }));
   },
   async discardDraft(slug) { const d = details.get(slug); if (d) details.set(slug, { ...d, doc: "", themeId: "classic" }); },

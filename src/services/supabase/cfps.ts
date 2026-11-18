@@ -183,7 +183,7 @@ export const supabaseCfpService: CfpService = {
     return (made.data as { id: string }).id;
   },
 
-  async saveManagers(kept, removed) {
+  async saveManagers(_slug, kept, removed) {
     if ([...kept.map((k) => k.id), ...removed].some((id) => !UUID.test(id))) throw new ServiceError("Couldn't save the managers.");
     const db: SupabaseClient = getSupabase();
     await currentUser(db);

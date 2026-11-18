@@ -91,7 +91,7 @@ export function AuthorPaperPage({ label }: { label: string }) {
     const tab = download ? null : window.open("", "_blank");
     try {
       const url = await (await getAuthorSubmissionService()).fileUrl(f.storagePath, download ? f.name : undefined);
-      if (download) window.location.assign(url);
+      if (download) { const a = document.createElement("a"); a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }
       else if (tab) tab.location.href = url;
     } catch (e) {
       tab?.close();

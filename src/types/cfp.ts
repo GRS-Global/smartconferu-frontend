@@ -4,8 +4,8 @@ export interface CfpRow {
   slug: string;
   acronym: string;
   name: string;
-  /** "draft": not published yet (no submission link); "published": takes submissions; "closed": stopped taking them. */
-  status: "draft" | "published" | "closed";
+  /** "draft": not published yet (no submission link); "review": sent to the Super Admin, waiting for approval (own backend only); "published": takes submissions; "closed": stopped taking them. */
+  status: "draft" | "review" | "published" | "closed";
   /** The CFP's text has been started (written, templated or copied): a draft the chair can continue. Until then the new-CFP wizard starts it. */
   hasDraft: boolean;
   /** Papers sent so far (drafts and withdrawn ones are not counted). */
@@ -29,6 +29,8 @@ export interface CfpManager { id: string; name: string; email: string; status: "
  *  The page's text is kept as HTML in `cfps.content.doc`, the page the authors visit in `cfps.content.publicSlug`, the look in `cfps.theme.id`. */
 export interface CfpDetail {
   status: CfpStatus;
+  /** Why the Super Admin did not approve the last version sent (a draft again, own backend only); "" or missing otherwise. */
+  rejection?: string;
   /** The CFP page's text (HTML), "" while nothing is written. */
   doc: string;
   /** The theme's id ("classic", "easy", "blue", "sandy", "red"). */

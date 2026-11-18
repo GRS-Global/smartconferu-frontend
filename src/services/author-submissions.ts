@@ -34,5 +34,6 @@ export interface AuthorSubmissionService {
  *  there is no fallback from one source to the other. */
 export async function getAuthorSubmissionService(): Promise<AuthorSubmissionService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/author-submissions")).mockAuthorSubmissionService;
+  if (DATA_SOURCE === "api") return (await import("./api/author-submissions")).apiAuthorSubmissionService;
   return (await import("./supabase/author-submissions")).supabaseAuthorSubmissionService;
 }

@@ -4,7 +4,7 @@ import { AlertTriangle, Check, Globe2, ShieldCheck } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { openSetupGuide } from "@/features/tour/conference-tour";
-import { getCfpService } from "@/services/cfps";
+import { CFP_NEEDS_APPROVAL, getCfpService } from "@/services/cfps";
 import { AuthRequiredError } from "@/services/errors";
 import { CfpPublicPreview, type CfpPreviewProps } from "./cfp-public-preview";
 
@@ -37,7 +37,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [taken, setTaken] = useState<string[]>([]);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<false | "live" | "review">(false);
   const [copied, setCopied] = useState(false);
   const locked = Boolean(chosen);
   const canPublish = missing.length === 0;
@@ -62,11 +62,23 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
     const err = locked ? "" : validate(page);
     if (err) { setError(err); return; }
     setBusy(true); setError("");
-    try { await (await getCfpService()).publish(slug, locked ? chosen : page); setDone(true); } catch (e) {
+    try { const result = await (await getCfpService()).publish(slug, locked ? chosen : page); setDone(result === "review" ? "review" : "live"); } catch (e) {
       if (e instanceof AuthRequiredError) onSessionEnded(); else setError(e instanceof Error ? e.message : "Couldn't publish the Call for Papers.");
     } finally { setBusy(false); }
   };
 
+  if (done === "review") {
+    return (
+      <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
+        <div className="max-w-md text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning-soft"><ShieldCheck size={28} aria-hidden="true" className="text-warning" /></div>
+          <h2 className="mb-2 text-lg font-bold text-navy">Call for Papers sent for approval</h2>
+          <p className="mb-6 text-sm text-ink-muted">A Super Admin will review it. Submissions open as soon as it is approved — you will get a notification and an email. If it is not approved, you will see why and can send it again.</p>
+          <Button variant="outline" onClick={onPublished}>Go to CFP Manager</Button>
+        </div>
+      </div>
+    );
+  }
   if (done) {
     return (
       <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
@@ -102,7 +114,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
       {notice("warning", (
         <>
           <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-warning" />
-          <p className="text-xs leading-relaxed text-warning"><strong>Warning:</strong> publishing opens submissions straight away: authors can use the submission link as soon as you publish. Please make sure the CFP is ready — check the preview alongside.</p>
+          <p className="text-xs leading-relaxed text-warning">{CFP_NEEDS_APPROVAL ? <><strong>Note:</strong> your CFP goes to the Super Admin for approval. Submissions open only once it is approved. Please make sure the CFP is ready — check the preview alongside.</> : <><strong>Warning:</strong> publishing opens submissions straight away: authors can use the submission link as soon as you publish. Please make sure the CFP is ready — check the preview alongside.</>}</p>
         </>
       ))}
       <div className="grid items-start gap-6 lg:grid-cols-5">
@@ -144,7 +156,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
           </div>
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={onCancel} disabled={busy}>Cancel</Button>
-            <button type="button" onClick={() => void publish()} disabled={!canPublish || busy} title={canPublish ? undefined : `${missing.length} thing${plural(missing.length)} left to fill in before you can publish`} className="flex cursor-pointer items-center gap-2 rounded-lg bg-success px-6 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"><ShieldCheck size={16} aria-hidden="true" /> {busy ? "Publishing…" : "Select Page and Publish"}</button>
+            <button type="button" onClick={() => void publish()} disabled={!canPublish || busy} title={canPublish ? undefined : `${missing.length} thing${plural(missing.length)} left to fill in before you can publish`} className="flex cursor-pointer items-center gap-2 rounded-lg bg-success px-6 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"><ShieldCheck size={16} aria-hidden="true" /> {busy ? (CFP_NEEDS_APPROVAL ? "Sending…" : "Publishing…") : CFP_NEEDS_APPROVAL ? "Select Page and Send for Approval" : "Select Page and Publish"}</button>
           </div>
         </div>
         <div className="lg:col-span-3">

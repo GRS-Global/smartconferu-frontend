@@ -15,13 +15,14 @@ import { SAMPLE_UI } from "@/lib/sample-mode";
 import { AuthRequiredError } from "@/services/errors";
 import { sendActionEmails } from "@/services/action-emails";
 import { getConferenceRequestService } from "@/services/conference-requests";
+import { fillConferenceFromWebsite, SMART_FILL_AVAILABLE } from "@/services/smart-fill";
 import { VenueMapPicker } from "@/components/ui/venue-map-picker";
 import { VenueSearchInput } from "@/components/ui/venue-search-input";
 import { EMPTY_NEW_CONFERENCE, type NewConferenceInput } from "@/types/conference-request";
 import { BLANK_DRAFT_FORM, clearDraft, draftAge, readDraft, writeDraft, type DraftForm, type SavedDraft } from "../create-conference-draft";
 /* Create New Conference (the prototype's CreateConferencePage): the request goes to the Super Admin, who approves or declines it; the chair is
-   told by email. The "Required to create" checklist, the live preview and the policy tick are the prototype's. Not ported: Smart Fill (reading the
-   website with AI to fill the form, decision D2), the saved-draft offer and "Clear form". The venue box suggests places (Google Places) and the venue
+   told by email. The "Required to create" checklist, the live preview and the policy tick are the prototype's. Smart Fill (reading the website with AI
+   to fill the form) works with the own backend (services/smart-fill.ts); without it the button is not shown. Not ported: the saved-draft offer and "Clear form". The venue box suggests places (Google Places) and the venue
    address is the map picker, both only when a Maps key is set; as in the prototype they show once an event format other than Virtual is chosen. */
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
@@ -72,6 +73,10 @@ export function CreateConferencePage() {
   const [error, setError] = useState("");
   // Timezone follows the country until the chair picks one by hand (prototype).
   const [tzAuto, setTzAuto] = useState(false);
+  // Smart Fill: reading the website takes a while (the backend opens several pages and asks the AI), so it has its own busy state and message.
+  const [fill, setFill] = useState<{ status: "idle" | "loading" | "done" | "error"; message: string }>({ status: "idle", message: "" });
+  const formRef = useRef(form);
+  useEffect(() => { formRef.current = form; }, [form]);
   const [isMac, setIsMac] = useState(false);
   useEffect(() => { setIsMac(/Mac|iPhone|iPad/.test(navigator.userAgent)); }, []);
   const set = <K extends keyof NewConferenceInput>(k: K, v: NewConferenceInput[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -139,6 +144,35 @@ export function CreateConferencePage() {
     if (next.country !== form.country) setCountry(next.country);
     setForm((f) => ({ ...f, ...next }));
   };
+  /** Reads the website and fills what is still empty (what has been typed is never overwritten). */
+  const smartFill = async () => {
+    const url = formRef.current.webPage.trim();
+    if (!URL_RE.test(url)) { setFill({ status: "error", message: "Enter your conference website first, e.g. https://yourconference.org" }); return; }
+    setFill({ status: "loading", message: "Reading the website — this can take up to a minute…" });
+    try {
+      const { values, source } = await fillConferenceFromWebsite(url);
+      const cur = formRef.current;
+      const applied: Partial<NewConferenceInput> = {};
+      let filled = 0;
+      for (const [k, v] of Object.entries(values) as Array<[keyof NewConferenceInput, string]>) {
+        // "Conference" is the form's starting choice, so it counts as empty until the person picks something else.
+        const empty = k === "type" ? cur.type === "conference" && !cur.typeInfo.trim() : k === "typeInfo" ? !cur.typeInfo.trim() : !String(cur[k] ?? "").trim();
+        // A secondary area only fits the primary area it was read with.
+        if (k === "secondaryArea" && (applied.primaryArea ?? cur.primaryArea) !== values.primaryArea) continue;
+        if (!empty || k === "webPage") continue;
+        (applied as Record<string, string>)[k] = v;
+        filled += 1;
+      }
+      if (applied.timezone) setTzAuto(false);
+      setForm((f) => ({ ...f, ...applied }));
+      setFill(filled
+        ? { status: "done", message: `Filled ${filled} field${filled === 1 ? "" : "s"} from ${source.replace(/^https?:\/\//, "")}. Please check them and add anything that is missing.` }
+        : { status: "done", message: "Nothing new to fill — the fields it found are already filled in, or the website didn't say." });
+    } catch (e) {
+      setFill({ status: "error", message: e instanceof AuthRequiredError ? "Your session ended — please sign in again." : e instanceof Error ? e.message : "Couldn't read that website. Please fill the form by hand." });
+    }
+  };
+
   // In the prototype a real account's request is saved and sent for approval; the sample build creates the conference straight away.
   const live = !SAMPLE_UI;
 
@@ -280,10 +314,17 @@ export function CreateConferencePage() {
                   {label("Website", "webPage", true)}
                   <div className="relative">
                     <input id="cc-webPage" type="url" value={form.webPage} onChange={(e) => set("webPage", e.target.value)} placeholder="https://yourconference.org" className={cn(cls("webPage"), "pr-10")} />
-                    {/* The prototype's Smart Fill icon sits here. Smart Fill is not built in this app (decision D2), so the icon is inert. */}
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" aria-hidden="true"><Sparkles size={16} className="text-line-strong" /></span>
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" aria-hidden="true"><Sparkles size={16} className={SMART_FILL_AVAILABLE ? "text-primary" : "text-line-strong"} /></span>
                   </div>
                   {msg("webPage") || hint("Your conference's own website.")}
+                  {SMART_FILL_AVAILABLE && (
+                    <div className="mt-2">
+                      <button type="button" onClick={() => void smartFill()} disabled={fill.status === "loading"} className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary transition-opacity hover:opacity-80 disabled:cursor-wait disabled:opacity-60">
+                        {fill.status === "loading" ? <Loader2 size={13} className="animate-spin" aria-hidden="true" /> : <Sparkles size={13} aria-hidden="true" />} {fill.status === "loading" ? "Reading the website…" : "Fill the form from this website"}
+                      </button>
+                      {fill.message && <p role={fill.status === "error" ? "alert" : "status"} className={cn("mt-1.5 text-xs", fill.status === "error" ? "font-semibold text-danger" : "text-ink-muted")}>{fill.message}</p>}
+                    </div>
+                  )}
                 </div>
                 <div>{label("Conference title", "title", true)}<input id="cc-title" value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. International Conference on Information Systems for Business Management" className={cls("title")} />{msg("title")}</div>
                 <div className="grid items-start gap-4 sm:grid-cols-[240px_minmax(0,1fr)]">

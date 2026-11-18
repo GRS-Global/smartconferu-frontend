@@ -36,6 +36,7 @@ import { ThemePanel } from "./theme-panel";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const STATUS = {
   draft: { label: "Unpublished draft", color: "var(--ink-muted)", bg: "var(--muted)" },
+  review: { label: "Awaiting approval", color: "var(--warning)", bg: "var(--warning-soft)" },
   published: { label: "Published", color: "var(--primary)", bg: "var(--primary-soft)" },
   closed: { label: "Closed", color: "var(--danger)", bg: "var(--danger-soft)" },
 } as const;
@@ -92,6 +93,7 @@ export function CfpManagerPage({ slug }: { slug: string }) {
 
   const draft = cfp.status === "draft";
   const closed = cfp.status === "closed";
+  const review = cfp.status === "review"; // sent to the Super Admin: it can still be read, but not sent again or closed
   const st = STATUS[cfp.status];
   const theme = themeOf(cfp.themeId);
   const html = docOf(cfp.doc, info, conference.acronym);
@@ -115,7 +117,7 @@ export function CfpManagerPage({ slug }: { slug: string }) {
     { label: "Edit details", icon: Settings, onClick: () => setTab("details"), active: tab === "details", disabled: closed, disabledReason: lockedWhy },
     { label: "Change theme", icon: Sparkles, onClick: () => setTab("theme"), active: tab === "theme", disabled: closed, disabledReason: lockedWhy },
     { label: "Change logo", icon: FileUp, onClick: () => setTab("logo"), active: tab === "logo", disabled: closed, disabledReason: lockedWhy },
-    ...(closed ? [] : [{ label: "Close this CFP", icon: XCircle, onClick: () => { setError(""); setClosing(true); }, divider: true, danger: true }]),
+    ...(closed || review ? [] : [{ label: "Close this CFP", icon: XCircle, onClick: () => { setError(""); setClosing(true); }, divider: true, danger: true }]),
   ];
   const navItems: CfpNavItem[] = [
     ...(draft ? [{ label: "Publish", icon: ShieldCheck, onClick: () => setTab("publish"), active: tab === "publish", accent: true }] : []),
@@ -143,6 +145,18 @@ export function CfpManagerPage({ slug }: { slug: string }) {
         </div>
       </div>
       <div className="space-y-6">
+        {review && (
+          <div style={{ border: "1.5px dashed var(--warning-border)" }} className="rounded-xl bg-warning-soft p-5">
+            <div className="mb-2 text-xs font-semibold text-warning">Waiting for approval</div>
+            <p className="text-xs leading-relaxed text-warning">This CFP was sent to the Super Admin. Submissions open as soon as it is approved — you will get a notification and an email.</p>
+          </div>
+        )}
+        {draft && cfp.rejection && (
+          <div role="alert" className="rounded-xl border border-danger bg-danger-soft p-5">
+            <div className="mb-2 text-xs font-semibold text-danger">Not approved</div>
+            <p className="text-xs leading-relaxed text-danger">The Super Admin did not approve this CFP: “{cfp.rejection}”. Update it and send it for approval again.</p>
+          </div>
+        )}
         {draft && (
           <div style={{ border: "1.5px dashed var(--warning-border)" }} className="rounded-xl bg-warning-soft p-5">
             <div className="mb-2 text-xs font-semibold text-warning">Draft status</div>

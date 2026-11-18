@@ -157,7 +157,7 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
   const conferenceId = conference.id;
   const awaitingResponse = paper.response === "pending";
   const submitted = detail.state === "submitted";
-  const locked = Boolean(detail.decision) && submitted;
+  const locked = Boolean(detail.decision); // a decided paper's review is locked (the database refuses a draft too, not only a sent review)
   const [values, setValues] = useState<ReviewValues>(detail.values);
   const router = useRouter();
   // What was loaded (or last sent): the form only autosaves when it differs from this.
@@ -223,7 +223,7 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
     const tab = download ? null : window.open("", "_blank");
     try {
       const url = await (await getAuthorSubmissionService()).fileUrl(file.storagePath, download ? file.name : undefined);
-      if (download) window.location.assign(url); else if (tab) tab.location.href = url;
+      if (download) { const a = document.createElement("a"); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); } else if (tab) tab.location.href = url;
     } catch (e) { tab?.close(); setFileError(e instanceof Error ? e.message : "Couldn't open this file."); }
   };
 

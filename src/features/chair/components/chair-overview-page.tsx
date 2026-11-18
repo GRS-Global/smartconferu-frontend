@@ -387,7 +387,16 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
             </div>
           </div>
         )}
-        {data.cfpStatus !== "published" && data.cfpStatus !== "closed" && (
+        {data.cfpStatus === "review" && (
+          <div style={{ border: "1px dashed var(--warning-border)" }} className="flex flex-wrap items-center gap-4 rounded-2xl bg-warning-soft px-5 py-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-warning"><Link2 size={18} aria-hidden="true" /></span>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold text-navy">Waiting for approval</div>
+              <p className="text-xs text-ink-soft">Your Call for Papers was sent to the Super Admin. The submission link opens as soon as it is approved.</p>
+            </div>
+          </div>
+        )}
+        {data.cfpStatus !== "published" && data.cfpStatus !== "closed" && data.cfpStatus !== "review" && (
           <div style={{ border: "1px dashed var(--border-strong)" }} className="flex flex-wrap items-center gap-4 rounded-2xl bg-white px-5 py-4">
             <span style={{ background: "var(--muted)" }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-ink-faint"><Link2 size={18} aria-hidden="true" /></span>
             <div className="min-w-0 flex-1">

@@ -73,7 +73,7 @@ export interface ChairConference {
   /** The conference's database id (the email server asks for it). */
   dbId: string;
   /** The Call for Papers' state (`cfps.status`), or null when the conference has none. */
-  cfpStatus: "draft" | "published" | "closed" | null;
+  cfpStatus: "draft" | "review" | "published" | "closed" | null;
   papers: ChairPaper[];
   decisionTypes: DecisionType[];
   criteria: ScreeningCriteria;

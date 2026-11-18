@@ -8,9 +8,11 @@ import { useEffect, useRef, useState } from "react";
 import { AuthMessage } from "@/components/ui/auth-message";
 import { PasswordField } from "@/components/ui/password-field";
 import { REGISTER_PATH, safeNext } from "@/lib/auth-redirect";
-import { DATA_SOURCE, PROTOTYPE_URL, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
+import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE, PROTOTYPE_URL } from "@/lib/config";
 import { getSupabase } from "@/lib/supabase";
+import { MfaRequiredError } from "@/services/errors";
 import { authService } from "../auth-service";
+import { MfaCodeForm } from "./mfa-code-form";
 import { AccountEmailDialog, type AccountEmailKind } from "./account-email-dialog";
 import { DEMO_ACCOUNTS, DEMO_ROLE_TONE } from "../demo-accounts";
 import { SsoButtons } from "./sso-buttons";
@@ -38,7 +40,7 @@ export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
-  const configured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  const configured = AUTH_CONFIGURED;
   const mock = DATA_SOURCE === "mock";
 
   const [email, setEmail] = useState("");
@@ -49,6 +51,7 @@ export function LoginForm() {
   const [unconfirmed, setUnconfirmed] = useState("");
   const [resend, setResend] = useState<"" | "sending" | "sent" | string>("");
   const [dialog, setDialog] = useState<AccountEmailKind | null>(null);
+  const [mfa, setMfa] = useState(false); // the password was right, the account asks for its two-step code
   const [linkError] = useState(linkErrorFromHash);
   const submitting = useRef(false); // blocks a second submit before React re-renders the disabled button
 
@@ -62,6 +65,12 @@ export function LoginForm() {
   // client on load. Once one exists, leave the login page for where the user was going.
   useEffect(() => {
     if (mock || !configured) return undefined;
+    if (AUTH_API) {
+      // The backend keeps the session in an httpOnly cookie: ask it whether this browser still has one.
+      let live = true;
+      void authService().then((a) => a.isSignedIn()).then((ok) => { if (live && ok) { setDone(true); router.replace(next); router.refresh(); } }).catch(() => undefined);
+      return () => { live = false; };
+    }
     const db = getSupabase();
     db.auth.getSession().then(({ data }) => { if (data.session) { setDone(true); router.replace(next); router.refresh(); } });
     const { data } = db.auth.onAuthStateChange((event, session) => {
@@ -80,9 +89,10 @@ export function LoginForm() {
       await (await authService()).signIn(email, password);
       finish();
     } catch (e) {
+      if (e instanceof MfaRequiredError) { setMfa(true); setBusy(false); return; }
       const message = e instanceof Error ? e.message : "Something went wrong — please try again.";
       setError(message);
-      setUnconfirmed(/confirm your email/i.test(message) ? email.trim() : "");
+      setUnconfirmed((e as { code?: string }).code === "AUTH_EMAIL_NOT_VERIFIED" || /confirm your email/i.test(message) ? email.trim() : "");
       setResend("");
       setBusy(false);
     } finally {
@@ -96,8 +106,16 @@ export function LoginForm() {
   };
 
   const reason = params.get("reason");
-  const notice = !error && reason === "expired" ? "Your session has ended — please sign in again." : "";
+  const notice = error ? "" : reason === "expired" ? "Your session has ended — please sign in again." : params.get("reset") ? "Your password was changed — sign in with the new one." : "";
   const disabled = busy || done || mock || !configured;
+
+  if (mfa) {
+    return (
+      <div className="relative z-10 w-full max-w-[480px]">
+        <div className="rounded-2xl bg-white p-8 shadow-2xl"><MfaCodeForm onVerified={finish} onCancel={() => { setMfa(false); setPassword(""); }} /></div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative z-10 w-full max-w-[480px]">
@@ -113,7 +131,7 @@ export function LoginForm() {
         <p className="mb-6 text-sm text-ink-muted">Sign in to submit and track your papers.</p>
 
         {mock && <AuthMessage tone="error">Sign-in is not used in mock data mode. <Link href="/dashboard" className="underline">Open the dashboard</Link> to see the fixtures.</AuthMessage>}
-        {!mock && !configured && <AuthMessage tone="error">Sign-in isn&apos;t set up on this site yet (the Supabase keys are missing).</AuthMessage>}
+        {!mock && !configured && <AuthMessage tone="error">Sign-in isn&apos;t set up on this site yet (the sign-in service isn&apos;t configured).</AuthMessage>}
         {linkError && !error && <AuthMessage tone="error">{linkError}</AuthMessage>}
         {notice && <AuthMessage>{notice}</AuthMessage>}
         {error && <AuthMessage tone="error">{error}</AuthMessage>}
@@ -143,7 +161,7 @@ export function LoginForm() {
             <button type="button" onClick={() => setDialog("reset")} disabled={mock || !configured} className="font-semibold text-primary hover:underline disabled:opacity-50">Forgot password?</button>
           </div>
         </form>
-        <AccountEmailDialog kind={dialog} initialEmail={email} onClose={() => setDialog(null)} onSignedIn={() => { setDialog(null); finish(); }} />
+        <AccountEmailDialog kind={dialog} initialEmail={email} onClose={() => setDialog(null)} onSignedIn={() => { setDialog(null); finish(); }} onMfaRequired={() => { setDialog(null); setMfa(true); }} />
 
         {/* Demo logins show sample data, so they are only offered in sample / mock mode (as in the prototype). */}
         {SAMPLE_UI && (

@@ -7,7 +7,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useDismiss } from "@/hooks/use-dismiss";
 import { cn } from "@/lib/cn";
 import { loginUrl } from "@/lib/auth-redirect";
-import { DATA_SOURCE, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
+import { onSessionChange } from "@/lib/api-client";
+import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
 import { getSupabase } from "@/lib/supabase";
 import { getProfileCompleteness } from "@/features/profile/completeness";
 import { initialsOf, ProfileAvatar } from "@/features/profile/components/profile-avatar";
@@ -36,7 +37,7 @@ export function ProfileProgress() {
  *  Sign out. It also watches the session: if it ends on its own (expired and couldn't refresh, or signed
  *  out in another tab) the user is sent back to the login page. Renders nothing in mock mode. */
 export function UserMenu() {
-  if (DATA_SOURCE === "mock" || !SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  if (DATA_SOURCE === "mock" || !AUTH_CONFIGURED) return null;
   return <SignedInMenu />;
 }
 
@@ -54,6 +55,10 @@ function SignedInMenu() {
   useDismiss(ref, open, close);
 
   useEffect(() => {
+    if (AUTH_API) {
+      // The session ended on its own (it couldn't be refreshed): back to sign-in, unless the user just chose Sign out.
+      return onSessionChange((event) => { if (event === "signed_out" && !manual.current) router.replace(loginUrl(pathname, "expired")); });
+    }
     const db = getSupabase();
     db.auth.getSession().then(({ data }) => setSessionEmail(data.session?.user.email ?? ""));
     const { data } = db.auth.onAuthStateChange((event, session) => {

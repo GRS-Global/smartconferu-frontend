@@ -404,7 +404,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
         )}
         <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-5 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.10)]">
           <span className="text-xs font-semibold text-ink-muted">{done} of {required.length} required fields answered{tried && !canSubmit ? ` · still to do: ${required.filter(([, ok]) => !ok).map(([l]) => l).join(", ") || "check the authors"}` : ""}</span>
-          <Button disabled={sending || filling} onClick={() => void send()}><Check size={15} aria-hidden="true" /> {sending ? "Submitting…" : "Submit paper"}</Button>
+          <Button disabled={sending || filling || info.closed} title={info.closed ? `Submissions to ${info.acronym} are closed` : undefined} onClick={() => void send()}><Check size={15} aria-hidden="true" /> {sending ? "Submitting…" : "Submit paper"}</Button>
         </div>
       </div>
       <aside className="space-y-4 xl:sticky xl:top-6" aria-label="Before you submit">

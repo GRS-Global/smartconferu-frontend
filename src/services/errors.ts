@@ -14,6 +14,15 @@ export class AuthRequiredError extends Error {
   }
 }
 
+/** The password (or code, or provider) was right, but the account has two-step verification on: the sign-in is finished by sending the code from the
+ *  authenticator app (or a recovery code) to `verifyMfa`. Not a failure to show, a step to ask for. */
+export class MfaRequiredError extends Error {
+  constructor(message = "Enter the code from your authenticator app.") {
+    super(message);
+    this.name = "MfaRequiredError";
+  }
+}
+
 /** A failed request, with a sentence that is ready to show. */
 export class ServiceError extends Error {
   constructor(message: string) {

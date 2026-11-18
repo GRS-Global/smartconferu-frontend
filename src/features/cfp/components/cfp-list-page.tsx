@@ -17,6 +17,7 @@ const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)
 /** The prototype's CFP_STATUS_CONFIG (its "Active" state has no counterpart in the database). */
 const STATUS = {
   draft: { label: "Unpublished draft", color: "var(--ink-muted)", bg: "var(--muted)" },
+  review: { label: "Awaiting approval", color: "var(--warning)", bg: "var(--warning-soft)" },
   published: { label: "Published", color: "var(--primary)", bg: "var(--primary-soft)" },
   closed: { label: "Closed", color: "var(--danger)", bg: "var(--danger-soft)" },
 } as const;

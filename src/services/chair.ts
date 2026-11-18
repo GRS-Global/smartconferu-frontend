@@ -17,11 +17,11 @@ export interface ChairService {
   loadReviewerPool(conferenceSlug: string): Promise<ReviewerPool>;
   /** Invites someone to the committee (nothing changes when they are already on it). The invitation email is a separate step. */
   inviteReviewer(conferenceSlug: string, person: { name: string; email: string; tracks: string[] }): Promise<InviteResult>;
-  renameReviewer(memberId: string, name: string): Promise<void>;
+  renameReviewer(conferenceSlug: string, memberId: string, name: string): Promise<void>;
   /** Sets the tracks a committee member is scoped to (`conference_members.expertise`, the column the invitation fills in). */
-  setReviewerTracks(memberId: string, tracks: string[]): Promise<void>;
+  setReviewerTracks(conferenceSlug: string, memberId: string, tracks: string[]): Promise<void>;
   /** Takes someone off the committee, with their assignments in this conference. */
-  removeReviewer(reviewer: PoolReviewer, paperDbIds: string[]): Promise<void>;
+  removeReviewer(conferenceSlug: string, reviewer: PoolReviewer, paperDbIds: string[]): Promise<void>;
   /** Gives papers to a reviewer. Someone without an account yet gets them queued on their committee invitation. Returns the papers given. */
   assignPapers(reviewer: PoolReviewer, paperDbIds: string[], dueISO: string | null): Promise<string[]>;
   /** Every paper's uploaded versions (newest last) with what the PDF check found, for the Initial Check and Plagiarism Check pages. By the paper's database id. */
@@ -118,5 +118,6 @@ export interface ChairService {
  *  there is no fallback from one source to the other. */
 export async function getChairService(): Promise<ChairService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/chair")).mockChairService;
+  if (DATA_SOURCE === "api") return (await import("./api/chair")).apiChairService;
   return (await import("./supabase/chair")).supabaseChairService;
 }

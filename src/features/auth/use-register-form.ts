@@ -8,7 +8,7 @@ import type { SignUpInput } from "@/services/auth";
 /* The Register form's state and rules, from the prototype's RegisterPage: the identity fields are validated by the same rules as
    Complete Profile (features/profile/validation), plus the password pair and the Terms checkbox. */
 
-export const PASSWORD_MIN = 6;
+export const PASSWORD_MIN = 8;
 
 export type RegisterKey = keyof FormValues | "password" | "password2";
 export type RegisterProblems = Partial<Record<RegisterKey, string>>;
@@ -44,7 +44,7 @@ export function useRegisterForm() {
   const identity: FormValues = { ...values, affiliation: inst.name };
   const problems: RegisterProblems = {
     ...validateProfileForm(identity),
-    ...(!password ? { password: "Choose a password." } : password.length < PASSWORD_MIN ? { password: "Use at least 6 characters." } : {}),
+    ...(!password ? { password: "Choose a password." } : password.length < PASSWORD_MIN ? { password: `Use at least ${PASSWORD_MIN} characters.` } : {}),
     ...(!password2 ? { password2: "Retype your password." } : password2 !== password ? { password2: "The two passwords don't match." } : {}),
   };
   const pending = ORDER.filter((k) => problems[k]);

@@ -1,4 +1,7 @@
 import { DATA_SOURCE } from "@/lib/config";
+
+/** With the own backend a Super Admin approves a Call for Papers before it goes live: "Publish" sends it for approval. */
+export const CFP_NEEDS_APPROVAL = DATA_SOURCE === "api";
 import type { CfpDetail, CfpPermissions, CfpRow, PublicCfp } from "@/types/cfp";
 
 /** The Calls for Papers of the signed-in user. A CFP is the conference's own `cfps` row (made with the conference), so every conference has
@@ -12,8 +15,8 @@ export interface CfpService {
   loadPublic(page: string): Promise<PublicCfp | null>;
   /** Which of these CFP page addresses another CFP already uses (the conference's own is not counted). */
   takenPages(slug: string, pages: string[]): Promise<string[]>;
-  /** Chooses the CFP page (once) and publishes the CFP: submissions open at once (`publish_cfp`). */
-  publish(slug: string, page: string): Promise<void>;
+  /** Chooses the CFP page (once) and publishes the CFP: submissions open at once (`publish_cfp`). With the own backend it answers "review" when the CFP was sent to the Super Admin instead (it opens once approved). */
+  publish(slug: string, page: string): Promise<void | "review">;
   /** Closes a published CFP: it stops taking papers (`close_cfp`); the papers already sent stay. */
   close(slug: string): Promise<void>;
   /** Saves the CFP page's text (HTML). */
@@ -23,12 +26,13 @@ export interface CfpService {
   /** Adds a CFP manager (they are invited; the email goes out separately: `cfp_manager_invited`). Returns the new member's id. */
   addManager(slug: string, who: { firstName: string; lastName: string; email: string; permissions: CfpPermissions }): Promise<string>;
   /** Saves the manager list as edited: names and permissions of those kept, and takes the removed ones off the CFP. */
-  saveManagers(kept: Array<{ id: string; name: string; permissions: CfpPermissions }>, removed: string[]): Promise<void>;
+  saveManagers(slug: string, kept: Array<{ id: string; name: string; permissions: CfpPermissions }>, removed: string[]): Promise<void>;
   /** "Closing" a CFP that was never published: its content and theme are cleared and it starts again as an empty draft. */
   discardDraft(slug: string): Promise<void>;
 }
 
 export async function getCfpService(): Promise<CfpService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/cfps")).mockCfpService;
+  if (DATA_SOURCE === "api") return (await import("./api/cfps")).apiCfpService;
   return (await import("./supabase/cfps")).supabaseCfpService;
 }

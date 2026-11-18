@@ -4,7 +4,12 @@ import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthMessage } from "@/components/ui/auth-message";
 import { Dialog } from "@/components/ui/dialog";
+import { AUTH_API } from "@/lib/config";
+import { MfaRequiredError } from "@/services/errors";
 import { authService } from "../auth-service";
+
+/** The own backend's login code has exactly 6 digits (Supabase's can be up to 10). */
+const CODE_MAX = AUTH_API ? 6 : 10;
 
 export type AccountEmailKind = "otp" | "reset";
 
@@ -22,15 +27,17 @@ interface Props {
   onClose: () => void;
   /** Called after a one-time code signs the user in. */
   onSignedIn: () => void;
+  /** The code was right but the account has two-step verification: the login screen asks for that code next. */
+  onMfaRequired?: () => void;
 }
 
 /** "Forgot password?" (emails a reset link) and "Email me a login code" (emails a code, then signs in with it). */
-export function AccountEmailDialog({ kind, initialEmail, onClose, onSignedIn }: Props) {
+export function AccountEmailDialog({ kind, initialEmail, onClose, onSignedIn, onMfaRequired }: Props) {
   // Remount per opening so every opening starts on the email step.
-  return <Inner key={kind ?? "closed"} kind={kind} initialEmail={initialEmail} onClose={onClose} onSignedIn={onSignedIn} />;
+  return <Inner key={kind ?? "closed"} kind={kind} initialEmail={initialEmail} onClose={onClose} onSignedIn={onSignedIn} onMfaRequired={onMfaRequired} />;
 }
 
-function Inner({ kind, initialEmail, onClose, onSignedIn }: Props) {
+function Inner({ kind, initialEmail, onClose, onSignedIn, onMfaRequired }: Props) {
   const flow = FLOWS[kind ?? "otp"];
   const [email, setEmail] = useState(initialEmail);
   const [step, setStep] = useState<"email" | "sent" | "code">("email");
@@ -40,7 +47,7 @@ function Inner({ kind, initialEmail, onClose, onSignedIn }: Props) {
   const [info, setInfo] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const valid = /^\S+@\S+\.\S+$/.test(email.trim());
-  const codeOk = /^\d{6,10}$/.test(code.trim());
+  const codeOk = code.trim().length >= 6 && code.trim().length <= CODE_MAX && /^[0-9]+$/.test(code.trim());
 
   useEffect(() => {
     if (cooldown <= 0) return undefined;
@@ -69,7 +76,12 @@ function Inner({ kind, initialEmail, onClose, onSignedIn }: Props) {
     setInfo("A new code is on its way.");
   });
   const verify = () => run(async () => {
-    await (await authService()).verifyLoginCode(email, code);
+    try {
+      await (await authService()).verifyLoginCode(email, code);
+    } catch (e) {
+      if (e instanceof MfaRequiredError && onMfaRequired) { onMfaRequired(); return; }
+      throw e;
+    }
     onSignedIn();
   });
 
@@ -88,12 +100,12 @@ function Inner({ kind, initialEmail, onClose, onSignedIn }: Props) {
 
       {step === "code" && (
         <form onSubmit={(e) => { e.preventDefault(); if (codeOk && !busy) verify(); }}>
-          <p className="mb-3 text-sm text-ink-muted">We&apos;ve emailed a code to <b className="text-ink">{email.trim()}</b>. Enter it below — or just click the sign-in link in the same email.</p>
+          <p className="mb-3 text-sm text-ink-muted">We&apos;ve emailed a code to <b className="text-ink">{email.trim()}</b>. Enter it below{AUTH_API ? "." : " — or just click the sign-in link in the same email."}</p>
           {error && <AuthMessage tone="error">{error}</AuthMessage>}
           {info && <AuthMessage>{info}</AuthMessage>}
           <label htmlFor="login-code" className="sr-only">Code from the email</label>
           <input
-            id="login-code" value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setError(""); }}
+            id="login-code" value={code} onChange={(e) => { setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, CODE_MAX)); setError(""); }}
             inputMode="numeric" autoComplete="one-time-code" autoFocus placeholder="Code from the email"
             className="w-full rounded-lg border-[1.5px] border-line px-3.5 py-3 text-center text-lg font-semibold tracking-[0.3em] text-ink outline-none placeholder:text-sm placeholder:font-normal placeholder:tracking-normal focus:border-primary"
           />

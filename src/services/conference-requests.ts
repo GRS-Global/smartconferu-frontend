@@ -9,5 +9,6 @@ export interface ConferenceRequestService {
 
 export async function getConferenceRequestService(): Promise<ConferenceRequestService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/conference-requests")).mockConferenceRequestService;
+  if (DATA_SOURCE === "api") return (await import("./api/conference-requests")).apiConferenceRequestService;
   return (await import("./supabase/conference-requests")).supabaseConferenceRequestService;
 }

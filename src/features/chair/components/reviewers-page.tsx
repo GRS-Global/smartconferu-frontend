@@ -225,9 +225,9 @@ export function ReviewersPage({ slug }: { slug: string }) {
       const svc = await getChairService();
       if (modal?.kind === "edit") {
         const was = modal.rev;
-        if (v.name !== was.name) await svc.renameReviewer(was.memberId, v.name);
+        if (v.name !== was.name) await svc.renameReviewer(slug, was.memberId, v.name);
         const tracksChanged = v.tracks.length !== was.tracks.length || v.tracks.some((t) => !was.tracks.includes(t));
-        if (tracksChanged) await svc.setReviewerTracks(was.memberId, v.tracks);
+        if (tracksChanged) await svc.setReviewerTracks(slug, was.memberId, v.tracks);
         setToast({ title: "Reviewer updated", text: `${v.name}${tracksChanged ? " — tracks saved." : " was saved."}` }); setModal(null); reload(); return; }
       const res = await svc.inviteReviewer(slug, v);
       let mail: string | null = null;
@@ -246,7 +246,7 @@ export function ReviewersPage({ slug }: { slug: string }) {
   const doRemove = async () => {
     if (modal?.kind !== "remove") return;
     setBusy(true); setError("");
-    try { await (await getChairService()).removeReviewer(modal.rev, paperIds); setToast({ title: "Reviewer removed", text: `${nameOf(modal.rev)} and their assignments were removed.` }); setModal(null); reload(); } catch (e) { fail(e); } finally { setBusy(false); }
+    try { await (await getChairService()).removeReviewer(slug, modal.rev, paperIds); setToast({ title: "Reviewer removed", text: `${nameOf(modal.rev)} and their assignments were removed.` }); setModal(null); reload(); } catch (e) { fail(e); } finally { setBusy(false); }
   };
   const close = () => { if (!busy) { setModal(null); setError(""); } };
 

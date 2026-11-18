@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 
-// Sign-in is not ported yet, so the app opens on the first ported screen.
+// The app opens on the dashboard; signed-out visitors are sent on to /login from there.
+export const instant = false;
+
 export default function Home() {
   redirect("/dashboard");
 }

@@ -5,6 +5,7 @@ import { AlertTriangle, BookOpen, Check, Clock, GripVertical, Layers, Pencil, Pl
 import { useRef, useState, type ReactNode } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { setupChanged } from "@/features/tour/use-setup";
 import { getChairService } from "@/services/chair";
 import { DEFAULT_SUBMISSION_POLICY, type ConferenceSettings, type ConferenceTrack, type SubmissionPolicy } from "@/types/chair";
 import { SectionsRail, type RailLink, type RailSection } from "./sections-rail";
@@ -149,7 +150,8 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
     const next: ConferenceTrack[] = names.map((name, i) => tracks.find((t) => t.name === name) ?? { id: `new-${Date.now()}-${i}`, name, description: "" });
     const patch: Partial<SubmissionPolicy> = names.length > tracks.length ? { tracksOn: true } : names.length === 0 ? { tracksOn: false } : {};
     setTracks(next); setError("");
-    void getChairService().then((s) => s.saveTracks(slug, next)).catch(fail);
+    // Having a track is one of the required setup items: tell the "Finish setup" checklist and the locked menu to read it again once it is saved.
+    void getChairService().then((s) => s.saveTracks(slug, next)).then(() => setupChanged()).catch(fail);
     if (Object.keys(patch).length) update(patch);
   };
   const commitTypes = (names: string[]) => {

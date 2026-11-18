@@ -17,5 +17,6 @@ export interface ProfileService {
 /** There is no profile service in mock mode (mock has no accounts and never reaches Supabase). */
 export async function getProfileService(): Promise<ProfileService> {
   if (DATA_SOURCE === "mock") throw new Error("Profiles are not available in mock data mode.");
+  if (DATA_SOURCE === "api") return (await import("./api/profile")).apiProfileService;
   return (await import("./supabase/profile")).supabaseProfileService;
 }

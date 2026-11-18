@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { DATA_SOURCE, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
+import { AUTH_API, DATA_SOURCE, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
 import { DEFAULT_AFTER_LOGIN, LOGIN_PATH, REGISTER_PATH, RESET_PASSWORD_PATH, loginUrl, safeNext } from "@/lib/auth-redirect";
 
 /** Runs in src/proxy.ts on every page request: refreshes the Supabase session cookies and does the
@@ -9,6 +9,9 @@ import { DEFAULT_AFTER_LOGIN, LOGIN_PATH, REGISTER_PATH, RESET_PASSWORD_PATH, lo
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
   // Mock mode never talks to Supabase, so nothing is gated.
   if (DATA_SOURCE === "mock") return NextResponse.next({ request });
+  // Own backend: its session cookie only travels to /api/v1/auth, so pages can't be gated here. The screens do it themselves
+  // (ProfileProvider → SessionEnded → /login) and the backend refuses every call without a valid token.
+  if (AUTH_API) return NextResponse.next({ request });
 
   const { pathname, search } = request.nextUrl;
   // Pages a signed-out visitor may open. Signed-in visitors are sent on from /login and /register; /reset-password stays

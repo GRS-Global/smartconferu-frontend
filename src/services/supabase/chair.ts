@@ -353,14 +353,14 @@ export const supabaseChairService: ChairService = {
     return { memberId: row.id, userId: row.user_id, created: true };
   },
 
-  async setReviewerTracks(memberId, tracks) {
+  async setReviewerTracks(_slug, memberId, tracks) {
     if (!UUID.test(memberId)) throw new ServiceError("Couldn't edit this reviewer.");
     const db: SupabaseClient = getSupabase();
     await currentUser(db);
     const { error } = await db.from("conference_members").update({ expertise: tracks }).eq("id", memberId);
     if (error) fail(error, "edit reviewers");
   },
-  async renameReviewer(memberId, name) {
+  async renameReviewer(_slug, memberId, name) {
     if (!UUID.test(memberId)) throw new ServiceError("Couldn't edit this reviewer.");
     const db: SupabaseClient = getSupabase();
     await currentUser(db);
@@ -368,7 +368,7 @@ export const supabaseChairService: ChairService = {
     if (error) fail(error, "edit reviewers");
   },
 
-  async removeReviewer(reviewer, paperDbIds) {
+  async removeReviewer(_slug, reviewer, paperDbIds) {
     if (!UUID.test(reviewer.memberId)) throw new ServiceError("Couldn't remove this reviewer.");
     const db: SupabaseClient = getSupabase();
     await currentUser(db);

@@ -1,8 +1,10 @@
 import { DATA_SOURCE } from "@/lib/config";
+import { api, ApiError } from "@/lib/api-client";
 import { getSupabase } from "@/lib/supabase";
 
-/* The AI functions, through this app's proxy (app/api/ai/[name]/route.ts → the prototype's server; moving them into this app is
-   still to do). Nothing here runs in mock mode, and a failure never blocks what the person was doing. */
+/* The AI functions. With the own backend (`api` mode) they call Backend/src/modules/ai directly (`POST /ai/topics`, `/ai/review-enhance`, `/ai/screening`,
+   `/ai/paper-metadata`, `/submissions/:id/ai/ingest|chat`); otherwise they go through this app's proxy (app/api/ai/[name]/route.ts → the prototype's
+   server). Nothing here runs in mock mode, and a failure never blocks what the person was doing. */
 
 async function post(name: "ingest-paper" | "paper-chat" | "enhance-review" | "suggest-topics" | "screen-paper" | "extract-paper", body: Record<string, unknown>, signal?: AbortSignal): Promise<Response | null> {
   if (DATA_SOURCE === "mock") return null;
@@ -15,6 +17,7 @@ async function post(name: "ingest-paper" | "paper-chat" | "enhance-review" | "su
  *  Fire and forget — the server answers 202 at once and works in the background; a failure only means it can be prepared later. */
 export async function requestPaperIngest(submissionId: string, force = false): Promise<void> {
   try {
+    if (DATA_SOURCE === "api") { await api(`/submissions/${submissionId}/ai/ingest`, { method: "POST", body: { force } }); return; }
     const res = await post("ingest-paper", { submissionId, force });
     if (res && !res.ok && res.status !== 202) console.warn(`Paper not prepared for AI (error ${res.status}).`);
   } catch (e) {
@@ -25,6 +28,16 @@ export async function requestPaperIngest(submissionId: string, force = false): P
 export interface PaperAnswer { answer: string; sources: unknown[]; usage?: Record<string, number | string> }
 /** "Ask about this paper": resolves to the answer; throws an Error ready to show (`notReady` while the paper is still being prepared). */
 export async function askPaper(submissionId: string, question: string, history: Array<{ role: string; content: string }> = [], signal?: AbortSignal): Promise<PaperAnswer> {
+  if (DATA_SOURCE === "api") {
+    try {
+      const r = await api<Partial<PaperAnswer>>(`/submissions/${submissionId}/ai/chat`, { method: "POST", body: { question, history }, signal });
+      return { answer: r.answer ?? "", sources: r.sources ?? [], usage: r.usage };
+    } catch (e) {
+      // 409 NOT_READY: the paper is still being prepared (a 503 NOT_READY means the server has no AI key, which is not worth retrying).
+      if (e instanceof ApiError) throw Object.assign(new Error(e.message), { notReady: e.status === 409 && e.code === "NOT_READY" });
+      throw e;
+    }
+  }
   const res = await post("paper-chat", { submissionId, question, history }, signal);
   if (!res) throw new Error("The assistant isn't available in this mode.");
   const body = (await res.json().catch(() => ({}))) as { error?: string; notReady?: boolean } & Partial<PaperAnswer>;
@@ -34,6 +47,10 @@ export async function askPaper(submissionId: string, question: string, history: 
 
 /** "Suggest with AI" for a conference's topics (Conference Details): new topics only; throws an Error ready to show. */
 export async function suggestTopics(input: { title: string; about: string; primaryArea: string; secondaryArea: string; existing: string[]; count: number }): Promise<string[]> {
+  if (DATA_SOURCE === "api") {
+    const r = await api<{ topics?: unknown }>("/ai/topics", { method: "POST", body: input });
+    return Array.isArray(r.topics) ? r.topics.filter((t): t is string => typeof t === "string") : [];
+  }
   const res = await post("suggest-topics", input);
   if (!res) throw new Error("Topic suggestions aren't available in this mode.");
   const body = (await res.json().catch(() => ({}))) as { error?: string; topics?: unknown };
@@ -44,6 +61,11 @@ export async function suggestTopics(input: { title: string; about: string; prima
 export interface ReviewEnhancement { versions: Array<{ style: string; text: string }>; improvements: string[]; suggestions: string[] }
 /** "Polish with Smart Assist": better-worded versions of the reviewer's own draft. Resolves to the versions; throws an Error ready to show. */
 export async function enhanceReview(input: { review: string; title: string; abstract: string; ratings: Array<{ label: string; value: number }>; submissionId?: string }, signal?: AbortSignal): Promise<ReviewEnhancement> {
+  if (DATA_SOURCE === "api") {
+    const b = await api<{ versions?: Array<{ style: string; text: string }>; enhancedReview?: string; improvements?: string[]; suggestions?: string[] }>("/ai/review-enhance", { method: "POST", body: input, signal });
+    const versions = b.versions?.length ? b.versions : [{ style: "Polished", text: b.enhancedReview ?? "" }];
+    return { versions, improvements: b.improvements ?? [], suggestions: b.suggestions ?? [] };
+  }
   const res = await post("enhance-review", input, signal);
   if (!res) throw new Error("Smart Assist isn't available in this mode.");
   const body = (await res.json().catch(() => ({}))) as { error?: string; versions?: Array<{ style: string; text: string }>; enhancedReview?: string; improvements?: string[]; suggestions?: string[] };
@@ -55,6 +77,10 @@ export async function enhanceReview(input: { review: string; title: string; abst
 export interface ScreeningVerdict { column: "single" | "double"; columnConfidence: string; english: boolean; missing: string[]; summary: string }
 /** The automatic initial check's AI review: a compact digest of the PDF (never the file) in, Claude's verdict out. Throws an Error ready to show. */
 export async function screenPaperDigest(input: { pages: number; layout: string; text: string; rules: { column: string | null; columnConfidence: string } }): Promise<ScreeningVerdict> {
+  if (DATA_SOURCE === "api") {
+    const b = await api<Partial<ScreeningVerdict>>("/ai/screening", { method: "POST", body: input });
+    return { column: b.column === "double" ? "double" : "single", columnConfidence: b.columnConfidence ?? "low", english: Boolean(b.english), missing: Array.isArray(b.missing) ? b.missing.filter((k): k is string => typeof k === "string") : [], summary: b.summary ?? "" };
+  }
   const res = await post("screen-paper", input);
   if (!res) throw new Error("The AI review isn't available in this mode.");
   const body = (await res.json().catch(() => ({}))) as { error?: string } & Partial<ScreeningVerdict>;
@@ -69,10 +95,15 @@ export interface ExtractedPaper { title: string; abstract: string; keywords: str
  *  back to the basic guess; it never throws. */
 export async function extractPaperFields(text: string): Promise<ExtractedPaper | null> {
   try {
-    const res = await post("extract-paper", { text: text.slice(0, 12000) });
-    if (!res || !res.ok) return null;
-    const data = (await res.json()) as { content?: Array<{ type: string; input?: Record<string, unknown> }> };
-    const r = data.content?.find((c) => c.type === "tool_use")?.input;
+    let r: Record<string, unknown> | undefined;
+    if (DATA_SOURCE === "api") {
+      r = await api<Record<string, unknown>>("/ai/paper-metadata", { method: "POST", body: { text: text.slice(0, 12000) } });
+    } else {
+      const res = await post("extract-paper", { text: text.slice(0, 12000) });
+      if (!res || !res.ok) return null;
+      const data = (await res.json()) as { content?: Array<{ type: string; input?: Record<string, unknown> }> };
+      r = data.content?.find((c) => c.type === "tool_use")?.input;
+    }
     if (!r) return null;
     const str = (v: unknown) => (typeof v === "string" ? v : "");
     const authors = (Array.isArray(r.authors) ? r.authors : []).map((a): ExtractedAuthor => { const o = (a ?? {}) as Record<string, unknown>; return { name: str(o.name).trim(), affiliation: str(o.affiliation), country: str(o.country), email: str(o.email), corresponding: o.corresponding === true }; }).filter((a) => a.name);

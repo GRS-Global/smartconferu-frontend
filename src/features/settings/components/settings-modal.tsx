@@ -1,16 +1,18 @@
 "use client";
 
-import { Bell, ChevronRight, GitMerge, KeyRound, Link2, MessageSquare, Settings, ShieldCheck, Trash2, type LucideIcon } from "lucide-react";
+import { Bell, ChevronRight, GitMerge, KeyRound, Laptop, Link2, Mail, MessageSquare, Settings, ShieldCheck, Smartphone, Trash2, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Switch } from "@/components/ui/switch";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { NOTIFY_CHANNELS } from "@/features/profile/fields";
 import { profileSlug } from "@/features/profile/components/share-dialog";
+import { AUTH_API } from "@/lib/config";
 import type { Profile, ProfilePatch } from "@/types/profile";
 import { DeleteAccountModal, LinkedSignInModal, MergeAccountsModal } from "./account-modals";
 import { ChangePasswordModal } from "./change-password-card";
 import { NOTIFY_FREQUENCIES } from "./preference-cards";
+import { ChangeEmailModal, ConnectAccountModal, SessionsModal, TwoStepModal } from "./security-modals";
 
 /* My Profile › Security & Settings, as the prototype's popup over the profile (settingsBody): Account & Security (Change password …), Notifications,
    Display & Accessibility and Privacy. Like the prototype there is no Save button: each change is written to the profile as it is made (the profile
@@ -45,7 +47,7 @@ function ActionItem({ icon: Icon, title, subtitle, onClick, danger = false }: { 
 const Card = ({ children }: { children: ReactNode }) => <div style={CARD} className="rounded-2xl bg-white p-6">{children}</div>;
 
 export function SecuritySettingsModal({ profile, save, onClose, onAddPhone }: { profile: Profile; save: (patch: ProfilePatch) => Promise<Profile>; onClose: () => void; onAddPhone: () => void }) {
-  const [dialog, setDialog] = useState<"password" | "linked" | "merge" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<"password" | "linked" | "merge" | "delete" | "email" | "twostep" | "sessions" | null>(null);
   const [error, setError] = useState("");
   const write = async (patch: ProfilePatch) => {
     setError("");
@@ -63,6 +65,9 @@ export function SecuritySettingsModal({ profile, save, onClose, onAddPhone }: { 
             <CardHeader icon={ShieldCheck} title="Account & Security" />
             <div className="mt-2 space-y-1">
               <ActionItem icon={KeyRound} title="Change password" subtitle="Update your login password" onClick={() => setDialog("password")} />
+              {AUTH_API && <ActionItem icon={Mail} title="Change email address" subtitle="The address you sign in with" onClick={() => setDialog("email")} />}
+              {AUTH_API && <ActionItem icon={Smartphone} title="Two-step verification" subtitle="Ask for a code from an authenticator app when you sign in" onClick={() => setDialog("twostep")} />}
+              {AUTH_API && <ActionItem icon={Laptop} title="Active sessions" subtitle="See where you are signed in and sign devices out" onClick={() => setDialog("sessions")} />}
               <ActionItem icon={Link2} title="Linked sign-in methods" subtitle="Google, ORCID, Microsoft" onClick={() => setDialog("linked")} />
               <ActionItem icon={GitMerge} title="Merge accounts" subtitle="Combine two accounts into one" onClick={() => setDialog("merge")} danger />
               <ActionItem icon={Trash2} title="Delete account" subtitle="Permanently remove your account and all its data" onClick={() => setDialog("delete")} danger />
@@ -130,7 +135,10 @@ export function SecuritySettingsModal({ profile, save, onClose, onAddPhone }: { 
       </Modal>
       {dialog === "password" && <ChangePasswordModal onClose={() => setDialog(null)} />}
       {dialog === "linked" && <LinkedSignInModal onClose={() => setDialog(null)} />}
-      {dialog === "merge" && <MergeAccountsModal onClose={() => setDialog(null)} />}
+      {dialog === "merge" && (AUTH_API ? <ConnectAccountModal mainEmail={profile.mainEmail} onClose={() => setDialog(null)} /> : <MergeAccountsModal onClose={() => setDialog(null)} />)}
+      {dialog === "email" && <ChangeEmailModal currentEmail={profile.mainEmail} hasPassword={profile.hasPassword !== false} onClose={() => setDialog(null)} />}
+      {dialog === "twostep" && <TwoStepModal onClose={() => setDialog(null)} />}
+      {dialog === "sessions" && <SessionsModal onClose={() => setDialog(null)} />}
       {dialog === "delete" && <DeleteAccountModal onClose={() => setDialog(null)} />}
     </>
   );

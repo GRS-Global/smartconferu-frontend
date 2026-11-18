@@ -70,6 +70,8 @@ export type LinkKey = "orcidId" | (typeof SCHOLAR_LINK_KEYS)[number] | (typeof P
 export type Profile = {
   userId: string;
   mainEmail: string;
+  /** Own backend only: false when the account was created through Google/Microsoft/ORCID and has no password yet. Absent (= has one) with Supabase. */
+  hasPassword?: boolean;
   // profiles columns
   firstName: string;
   lastName: string;

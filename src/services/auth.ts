@@ -20,6 +20,8 @@ export interface SignUpInput {
 
 /** What the login, register and reset-password screens need. Only the Supabase implementation exists: mock mode has no accounts. */
 export interface AuthService {
+  /** Own backend only: the second step of a sign-in that threw `MfaRequiredError`. Takes the 6-digit code of the authenticator app or a recovery code. */
+  verifyMfa?(code: string): Promise<void>;
   /** Creates the account. Resolves `needsConfirmation: true` when Supabase has "Confirm email" on (the person must click the
    *  emailed link first) and `false` when a session already exists. An email that is already registered throws a ServiceError. */
   signUp(input: SignUpInput): Promise<{ needsConfirmation: boolean }>;

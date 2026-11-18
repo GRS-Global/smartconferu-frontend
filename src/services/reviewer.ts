@@ -22,5 +22,6 @@ export interface ReviewerService {
  *  there is no fallback from one source to the other. */
 export async function getReviewerService(): Promise<ReviewerService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/reviewer")).mockReviewerService;
+  if (DATA_SOURCE === "api") return (await import("./api/reviewer")).apiReviewerService;
   return (await import("./supabase/reviewer")).supabaseReviewerService;
 }

@@ -56,7 +56,7 @@ export function ManagersPanel({ slug, acronym, managers, onAdd, onDone, onChange
   const save = async () => {
     setBusy(true); setError("");
     try {
-      await (await getCfpService()).saveManagers(rows.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`.trim(), permissions: r.permissions })), removed);
+      await (await getCfpService()).saveManagers(slug, rows.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`.trim(), permissions: r.permissions })), removed);
       setSaved(true); onChanged();
     } catch (e) { if (e instanceof AuthRequiredError) onSessionEnded(); else setError(e instanceof Error ? e.message : "Couldn't save the managers."); } finally { setBusy(false); }
   };

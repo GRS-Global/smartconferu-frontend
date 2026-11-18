@@ -7,13 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { AuthMessage } from "@/components/ui/auth-message";
 import { PasswordField } from "@/components/ui/password-field";
 import { DEFAULT_AFTER_LOGIN, LOGIN_PATH } from "@/lib/auth-redirect";
-import { DATA_SOURCE, PROTOTYPE_URL, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
+import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE, PROTOTYPE_URL } from "@/lib/config";
 import { getSupabase } from "@/lib/supabase";
 import { authService } from "../auth-service";
 import { OLD_LINK_MESSAGE, readEmailLink } from "../email-link";
 
 const INPUT = "w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-slate-400 focus:border-primary";
-const MIN_LENGTH = 6;
+const MIN_LENGTH = AUTH_API ? 8 : 6;
 
 type Phase = { kind: "checking" } | { kind: "ready" } | { kind: "invalid"; message: string };
 
@@ -25,7 +25,7 @@ const NOT_OPENED = "We couldn't open this reset link. It may have expired, been 
  *  without a link, with an expired or used one, or in another browser than the one that asked, says so and points back to sign in. */
 export function ResetPasswordForm() {
   const router = useRouter();
-  const configured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  const configured = AUTH_CONFIGURED;
   const mock = DATA_SOURCE === "mock";
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [password, setPassword] = useState("");
@@ -37,6 +37,12 @@ export function ResetPasswordForm() {
 
   useEffect(() => {
     if (mock || !configured) return undefined;
+    if (AUTH_API) {
+      // The emailed link carries a one-time token (?token=…); the backend checks it when the new password is sent.
+      const token = new URLSearchParams(window.location.search).get("token");
+      const t = setTimeout(() => setPhase(token ? { kind: "ready" } : { kind: "invalid", message: NO_LINK }), 0);
+      return () => clearTimeout(t);
+    }
     // Read what the link left in the address bar before the Supabase client is created (it cleans it up).
     const link = readEmailLink();
     const unusable = link.error || (link.hasImplicitTokens ? OLD_LINK_MESSAGE : !link.hasCode ? NO_LINK : "");
@@ -59,7 +65,7 @@ export function ResetPasswordForm() {
     return () => { live = false; clearTimeout(timer); data.subscription.unsubscribe(); };
   }, [mock, configured]);
 
-  const problem = password.length < MIN_LENGTH ? "Password must be at least 6 characters." : password !== password2 ? "The two passwords don't match." : "";
+  const problem = password.length < MIN_LENGTH ? `Password must be at least ${MIN_LENGTH} characters.` : password !== password2 ? "The two passwords don't match." : "";
   const canSubmit = phase.kind === "ready" && !problem && !busy && !done;
 
   const submit = async () => {
@@ -73,7 +79,8 @@ export function ResetPasswordForm() {
       setPassword("");
       setPassword2("");
       setDone(true);
-      router.replace(DEFAULT_AFTER_LOGIN);
+      // The backend ends every session when a password is reset, so the next step is signing in with the new one.
+      router.replace(AUTH_API ? `${LOGIN_PATH}?reset=1` : DEFAULT_AFTER_LOGIN);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong — please try again.");
@@ -95,7 +102,7 @@ export function ResetPasswordForm() {
         <h1 className="mb-1 text-xl font-bold text-navy">Set a new password</h1>
 
         {mock && <AuthMessage tone="error">Password reset is not used in mock data mode.</AuthMessage>}
-        {!mock && !configured && <AuthMessage tone="error">Sign-in isn&apos;t set up on this site yet (the Supabase keys are missing).</AuthMessage>}
+        {!mock && !configured && <AuthMessage tone="error">Sign-in isn&apos;t set up on this site yet (the sign-in service isn&apos;t configured).</AuthMessage>}
 
         {!mock && configured && phase.kind === "checking" && <p role="status" className="text-sm text-ink-muted">Checking your reset link…</p>}
 
@@ -108,13 +115,13 @@ export function ResetPasswordForm() {
 
         {phase.kind === "ready" && (
           <form noValidate onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-            <p className="mb-5 text-sm text-ink-muted">Choose a new password for your account. You&apos;ll be signed in straight after.</p>
+            <p className="mb-5 text-sm text-ink-muted">Choose a new password for your account. {AUTH_API ? "You'll sign in with it afterwards." : "You'll be signed in straight after."}</p>
             {error && <AuthMessage tone="error">{error}</AuthMessage>}
-            {done && <AuthMessage>Password updated — taking you to your conferences…</AuthMessage>}
+            {done && <AuthMessage>{AUTH_API ? "Password updated — taking you to sign in…" : "Password updated — taking you to your conferences…"}</AuthMessage>}
             <div className="space-y-3">
               <div>
                 <label htmlFor="reset-password" className="sr-only">New password</label>
-                <PasswordField id="reset-password" name="new-password" label="new password" autoComplete="new-password" autoFocus placeholder="New password (min. 6 characters)" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} disabled={busy || done} className={INPUT} />
+                <PasswordField id="reset-password" name="new-password" label="new password" autoComplete="new-password" autoFocus placeholder={`New password (min. ${MIN_LENGTH} characters)`} value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} disabled={busy || done} className={INPUT} />
               </div>
               <div>
                 <label htmlFor="reset-password2" className="sr-only">Retype new password</label>

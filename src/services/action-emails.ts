@@ -10,6 +10,8 @@ export type ActionEmail = "submission_withdrawn" | "paper_authors_updated" | "pa
 /** `null` when nothing went wrong (or nothing is sent: mock mode has no emails); otherwise a sentence ready to show. */
 export async function sendActionEmails(event: ActionEmail, data: Record<string, unknown>): Promise<string | null> {
   if (DATA_SOURCE === "mock") return null;
+  // Own backend: it sends these emails itself when the action is saved (invitations, decisions, assignments, …), so there is nothing to ask for here.
+  if (DATA_SOURCE === "api") return null;
   try {
     const { data: { session } } = await getSupabase().auth.getSession();
     if (!session) return "Saved, but the emails weren't sent: you're signed out — please sign in again.";
@@ -43,6 +45,7 @@ export async function sendActionEmails(event: ActionEmail, data: Record<string, 
 /** One email event whose answer matters to the caller (Email Communication › Send Email): how many went out, or why nothing did. Never throws. */
 export async function sendEmailEvent(event: ActionEmail, data: Record<string, unknown>): Promise<{ sent: number; failed: number; error: string | null }> {
   if (DATA_SOURCE === "mock") return { sent: 0, failed: 0, error: "Emails are not sent in mock mode." };
+  if (DATA_SOURCE === "api") return { sent: 0, failed: 0, error: "Sending emails from here isn't connected to the own backend yet." };
   try {
     const { data: { session } } = await getSupabase().auth.getSession();
     if (!session) return { sent: 0, failed: 0, error: "You're signed out — please sign in again." };

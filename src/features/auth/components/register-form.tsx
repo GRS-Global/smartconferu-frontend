@@ -16,7 +16,7 @@ import { PhotoField, type PhotoValue } from "@/features/profile/components/photo
 import { initialsOf } from "@/features/profile/components/profile-avatar";
 import { DEFAULT_AFTER_LOGIN, LOGIN_PATH } from "@/lib/auth-redirect";
 import { cn } from "@/lib/cn";
-import { DATA_SOURCE, PROTOTYPE_URL, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
+import { AUTH_CONFIGURED, DATA_SOURCE, PROTOTYPE_URL } from "@/lib/config";
 import { getProfileService } from "@/services/profile";
 import { authService } from "../auth-service";
 import { PRIVACY_URL, TERMS_URL } from "../legal-links";
@@ -32,7 +32,7 @@ const REG_INPUT = "w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 te
 export function RegisterForm() {
   const router = useRouter();
   const form = useRegisterForm();
-  const configured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  const configured = AUTH_CONFIGURED;
   const mock = DATA_SOURCE === "mock";
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -256,7 +256,7 @@ function Fields({ form }: { form: Form }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <PasswordField name="new-password" label="password" aria-required="true" autoComplete="new-password" placeholder="Password * (min. 6 characters)" value={form.password} onChange={(e) => form.setPassword(e.target.value)} onBlur={touch("password")} aria-invalid={invalid("password")} className={REG_INPUT} />
+          <PasswordField name="new-password" label="password" aria-required="true" autoComplete="new-password" placeholder="Password * (min. 8 characters)" value={form.password} onChange={(e) => form.setPassword(e.target.value)} onBlur={touch("password")} aria-invalid={invalid("password")} className={REG_INPUT} />
           {err("password")}
         </div>
         <div>

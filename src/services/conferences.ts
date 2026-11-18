@@ -17,5 +17,6 @@ export interface ConferenceService {
  *  there is no fallback from one source to the other. */
 export async function getConferenceService(): Promise<ConferenceService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/conferences")).mockConferenceService;
+  if (DATA_SOURCE === "api") return (await import("./api/conferences")).apiConferenceService;
   return (await import("./supabase/conferences")).supabaseConferenceService;
 }
