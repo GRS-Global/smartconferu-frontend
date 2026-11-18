@@ -76,7 +76,7 @@ The prototype is the reference (`src/author-module/NotificationsPage.jsx`, `noti
 | Notifications (`/notifications`) and the header bell | ported — checked with mock data and a fake backend only; not against the real project |
 | Registration (`/register`), reset password (`/reset-password`) | ported — checked in a browser against a fake Supabase only; not yet against the real project (needs the settings above) |
 | Author, Chair, Reviewer workspaces | not started |
-| Super Admin | **Pending / Not started — on hold by decision; stays in the prototype untouched** |
+| Super Admin (`/super-admin`) | ported for launch, on the **Smartconferu API** (not Supabase): sign-in, Dashboard, Conferences, Conference / Deletion Requests, Users, Master data, Email Templates; the rest of the sidebar is "Coming soon". See below. Not yet compared side by side with the prototype (qa/). |
 
 ## Layout
 
@@ -175,3 +175,13 @@ Pages were compared against prototype screenshots and aligned: Dashboard setup c
 
 ## Create Conference and My Requests (`/create-conference`, `/my-requests`)
 Create New Conference sends a `conferences` row (pending approval) and emails the Super Admin; My Requests lists the user's pending and declined requests. Smart Fill (AI from the website), the venue map, the saved-draft offer, the request detail / cancel page are not ported (see PORT-PLAN §3a, P5a).
+
+## Super Admin console (`/super-admin`)
+
+The prototype's Super Admin (`../src/super-admin`), ported for launch. **It talks to the Smartconferu API** (the NestJS backend, GRS-Global/smartconferu-backend), not to Supabase, so it shows the API's database. `src/proxy.ts` leaves `/super-admin` out of the Supabase session check; the console has its own session (`features/super-admin/session.tsx`): the access token in memory, the API's httpOnly refresh cookie, `POST /auth/refresh` on reload.
+
+- **Sign-in** (`/super-admin/login`): work email + password, then the 6-digit code the API emails to the super admin ("Send a new code"), or the authenticator-app code if they set one up. Only a super admin in that verified session gets in. Trusted devices are not ported.
+- **Live modules:** Dashboard (KPIs, the two approval queues, what has waited longest, recent activity), Conferences (list by status, detail with papers, archive / restore, bring back a deleted one), Conference Requests and Deletion Requests (approve / decline with a reason), Users (search, roles, detail, suspend / reactivate), Master data (Societies, Institutions with merge, Research Areas: add, edit, rename, retire), Email Templates (edit, preview, send me a test).
+- **Coming soon** (in the sidebar, disabled): Billing, Announcements, License Extensions, CFP Page Review, Profile Verification, Claim Reports, Names & lists, Team & Roles, Audit Log. Also not ported inside live pages: licenses / billing cards, suspend conference, view as chair / user, reset a user's two-step, merge accounts, society logo upload, Ctrl K search, notifications menu, the activity chart.
+- **Code:** `src/app/super-admin/` (routes; `(console)` = signed-in pages), `src/features/super-admin/` (`api.ts` fetch client, `services.ts` typed endpoints, `components/*`, `super-admin.css` = the prototype's stylesheet and theme tokens scoped to `.sa-root`).
+- **Run it locally:** start the API (`npm run db:serve` and `npm run start:dev` in the backend, with `http://localhost:3100` in its `CORS_ORIGINS`), then here `NEXT_PUBLIC_API_URL=http://localhost:3000 npx next dev -p 3100` (3000 is the API's port) and open http://localhost:3100/super-admin. Demo admin: `dev@example.test` / `smartconferu-dev`; the code is printed in the API's terminal. `NEXT_PUBLIC_API_URL` defaults to `http://localhost:3000`.
