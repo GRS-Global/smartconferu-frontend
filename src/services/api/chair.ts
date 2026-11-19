@@ -1,18 +1,17 @@
-import { api, ApiError, publicFileUrl } from "@/lib/api-client";
+import { api, apiBlob, ApiError, publicFileUrl } from "@/lib/api-client";
+import type { ReviewValues } from "@/types/reviewer";
 import { PEER_REVIEW_FORM, PROTECTED_FIELD_IDS, sectionsFromStored } from "@/features/reviewer/form-schema";
 import { extrasFromStored } from "@/types/author-submission";
 import {
   DEFAULT_CRITERIA, DEFAULT_PRESENTATION_TYPES, DEFAULT_REVIEW_LIMITS, DEFAULT_REVIEW_POLICY, DEFAULT_REVIEW_TIMELINE, DEFAULT_SUBMISSION_POLICY,
-  type CfpFacts, type ChairActivityLog, type ChairAuthor, type ChairConference, type ChairPaper, type ChairReviewer, type DeclinedReviewer, type ReviewBoard, type ScreeningFile, type ConferenceInfo, type ConferenceSettings, type DecisionType, type DeletionRequest,
-  type InviteResult, type Outcome, type PoolReviewer, type ReviewerPool, type ScreeningCriteria, type ScreeningRecord,
+  type CfpFacts, type ChairAuthor, type ChairConference, type ChairPaper, type ChairPaperDetail, type ChairReviewer, type DeclinedReviewer, type ReviewBoard, type ScreeningFile, type ConferenceInfo, type ConferenceSettings, type DecisionType, type DeletionRequest,
+  type ChairEmailLog, type LicenseRequest, type ConferenceTemplate, type EmailTemplates, type InviteResult, type Outcome, type PoolReviewer, type ReviewerPool, type ScreeningCriteria, type ScreeningRecord,
 } from "@/types/chair";
 import type { ChairService } from "../chair";
 import { ServiceError } from "../errors";
 
-/* The Chair workspace through the own backend. Only the conference-level part is here so far (details, settings, reviewer pool, logo, archive and
-   deletion, the overview the workspace frame reads); everything about single papers (reviews, decisions, screening, assignments) and the email
-   pages answer "not available yet" until they are connected, so a screen that needs them says so instead of showing something wrong.
-   Every `:conferenceId` in a path may be the conference's slug. Backend/src/modules/conferences + reviews (chair-overview). */
+/* The Chair workspace through the own backend: the conference (details, settings, reviewer pool, logo, archive and deletion, the overview the workspace frame reads)
+   and its papers (the paper page, reviewers and reviews, screening, decisions, "Ask author to fix", tracks, deleting). Still answering "not available yet": the license requests. Every `:conferenceId` in a path may be the conference's slug. Backend/src/modules/conferences + reviews + submissions. */
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -22,6 +21,16 @@ const nul = (v: string) => (v.trim() === "" ? null : v.trim());
 const rec = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
 /* ---------------------------------------------------------------- backend shapes (only what is read) */
+
+interface ActivityRow { id: string; at: string; actorName: string; actorRole: "chair" | "author" | "reviewer" | "system"; action: string; module: string; description: string; status: "success" | "failed"; reviewerName: string | null; previousValue: string | null; newValue: string | null }
+interface LicenseRow { id: string; requestedDate: string; reason: string | null; status: LicenseRequest["status"]; decisionReason: string | null; newExpiry: string | null; createdAt: string }
+const toLicense = (r: LicenseRow): LicenseRequest => ({ id: r.id, requestedDate: r.requestedDate, reason: r.reason ?? "", status: r.status, decisionReason: r.decisionReason ?? "", newExpiry: r.newExpiry ?? "", createdAt: r.createdAt });
+
+interface TemplatesResponse {
+  templates: Array<{ key: string; module: string | null; role: string | null; label: string; sendType: string | null; triggerText: string | null; recipients: string | null; subject: string; body: string; enabled: boolean; customized: boolean; defaultSubject: string; defaultBody: string }>;
+  customEmails: Array<{ key: string; name: string; enabled: boolean; subject: string; body: string }>;
+}
+interface EmailLogPage { data: Array<{ id: string; event: string; templateKey: string; templateLabel: string | null; submissionId: string | null; toEmail: string; toName: string | null; recipientType: string | null; subject: string; body: string | null; status: string; error: string | null; createdAt: string }>; nextCursor: string | null }
 
 interface ConferenceResponse {
   id: string; slug: string; acronym: string; title: string; about: string | null; mode: string | null; venue: string | null; city: string | null; state: string | null; country: string | null;
@@ -43,6 +52,7 @@ interface BoardReview {
 interface BoardAssignment {
   id: string; reviewer: { userId: string; name: string; email: string | null }; status: string; byChair: boolean; dueAt: string | null; assignedAt: string;
   respondedAt: string | null; declineReason: string | null; review: BoardReview | null;
+  extension: { id: string; date: string; reason: string | null; status: string; createdAt: string } | null;
 }
 interface BoardPending { id: string; memberId: string; name: string; email: string | null; dueAt: string | null; createdAt: string }
 interface Board { conferenceId: string; papers: Array<{ submissionId: string; assignments: BoardAssignment[]; pending: BoardPending[] }> }
@@ -101,6 +111,53 @@ function toSettings(c: ConferenceResponse): ConferenceSettings {
 }
 
 /* ---------------------------------------------------------------- the implemented part */
+
+/** A paper's reviewers as the Peer Review pages show them: the ones on the paper, and the invited ones the paper waits for. */
+function toReviewers(assignments: BoardAssignment[], pending: BoardPending[], deadline: string): ChairReviewer[] {
+  const reviewers: ChairReviewer[] = assignments.filter((a) => a.status !== "declined" && a.status !== "removed").map((a) => {
+    const r = a.review && a.review.status === "submitted" ? a.review : null;
+    return {
+      assignmentId: a.id, reviewerId: a.reviewer.userId, name: a.reviewer.name, email: a.reviewer.email ?? "", response: a.status === "assigned" ? "pending" : "accepted",
+      assignedAt: label(a.assignedAt), due: isoDay(a.dueAt) || deadline, byChair: a.byChair, awaitingInvite: false,
+      // An open "Ask for more time", for the chair to approve or decline.
+      extension: a.extension?.status === "pending" ? { id: a.extension.id, date: a.extension.date, reason: a.extension.reason ?? "", at: label(a.extension.createdAt) } : null,
+      review: r ? {
+        id: r.id, score: r.score, confidence: r.confidence ? r.confidence[0].toUpperCase() + r.confidence.slice(1) : "", commentsToAuthor: r.commentsToAuthor ?? "",
+        commentsToChair: r.commentsToChair ?? "", shared: r.sharedWithAuthor, submittedAt: label(r.submittedAt), answers: r.answers ?? {},
+      } : null,
+    };
+  });
+  // Someone invited who has not joined the committee yet: the paper waits for them.
+  for (const w of pending) {
+    reviewers.push({ assignmentId: `pending-${w.memberId}`, reviewerId: w.memberId, name: w.name || w.email || "New reviewer", email: w.email ?? "", response: "pending", assignedAt: label(w.createdAt), due: isoDay(w.dueAt) || deadline, byChair: false, awaitingInvite: true, review: null });
+  }
+  return reviewers;
+}
+
+/** The review form's answers -> the review's fields (the prototype's reviewFields); the whole form is kept in `answers`. */
+const RECOMMENDATION: Record<string, string> = { accept: "accept", "re-review": "revise", revise: "revise", revision: "revise", reject: "reject" };
+function reviewFields(values: ReviewValues) {
+  const score = Number(values["f-score"]);
+  const confidence = String(values["f-confidence"] ?? "").toLowerCase();
+  return {
+    score: score >= 1 && score <= 5 ? Math.round(score) : null,
+    confidence: ["low", "medium", "high"].includes(confidence) ? confidence : null,
+    recommendation: RECOMMENDATION[String(values["f-decision"] ?? "").toLowerCase()] ?? null,
+    commentsToAuthor: (values["f-to-author"] as string) || null,
+    commentsToChair: (values["f-to-chair"] as string) || null,
+    answers: values,
+  };
+}
+
+interface PaperDto {
+  id: string; paperId: string; conferenceId: string; conferenceSlug: string; view: "chair" | "author" | "reviewer"; abstract: string; keywords: string[];
+  files: Array<{ id: string; kind: string; version: number; fileName: string; uploadedAt: string }>;
+  decisionNote: string | null; notifiedAt: string | null; fixRequest: { issue: string; fixBy: string; at: string } | null;
+}
+interface PaperReviews { assignments: BoardAssignment[]; pending: BoardPending[] }
+/** The conference (slug) a paper belongs to: the bulk routes are per conference. */
+const slugOfPaper = async (paperDbId: string) => (await api<PaperDto>(`/submissions/${paperDbId}`)).conferenceSlug;
+const needUuid = (...ids: string[]) => { if (ids.some((id) => !UUID.test(id))) throw new ServiceError("Couldn't do that. Reload the page and try again."); };
 
 const implemented: Partial<ChairService> = {
   async loadConference(slug) {
@@ -247,21 +304,7 @@ const implemented: Partial<ChairService> = {
     const [conf, b] = await Promise.all([getConference(slug), api<Board>(`/conferences/${slug}/review-board`)]);
     const board: ReviewBoard = { target: toSettings(conf).limits.reviewersPerPaper, deadline: isoDay(conf.reviewDeadline), papers: {} };
     for (const p of b.papers) {
-      const reviewers: ChairReviewer[] = p.assignments.filter((a) => a.status !== "declined" && a.status !== "removed").map((a) => {
-        const r = a.review && a.review.status === "submitted" ? a.review : null;
-        return {
-          assignmentId: a.id, reviewerId: a.reviewer.userId, name: a.reviewer.name, email: a.reviewer.email ?? "", response: a.status === "assigned" ? "pending" : "accepted",
-          assignedAt: label(a.assignedAt), due: isoDay(a.dueAt) || board.deadline, byChair: a.byChair, awaitingInvite: false, extension: null,
-          review: r ? {
-            id: r.id, score: r.score, confidence: r.confidence ? r.confidence[0].toUpperCase() + r.confidence.slice(1) : "", commentsToAuthor: r.commentsToAuthor ?? "",
-            commentsToChair: r.commentsToChair ?? "", shared: r.sharedWithAuthor, submittedAt: label(r.submittedAt), answers: r.answers ?? {},
-          } : null,
-        };
-      });
-      // Someone invited who has not joined the committee yet: the paper waits for them.
-      for (const w of p.pending) {
-        reviewers.push({ assignmentId: `pending-${w.memberId}`, reviewerId: w.memberId, name: w.name || w.email || "New reviewer", email: w.email ?? "", response: "pending", assignedAt: label(w.createdAt), due: isoDay(w.dueAt) || board.deadline, byChair: false, awaitingInvite: true, review: null });
-      }
+      const reviewers = toReviewers(p.assignments, p.pending, board.deadline);
       const declined: DeclinedReviewer[] = p.assignments.filter((a) => a.status === "declined").map((a) => ({ name: a.reviewer.name, reason: a.declineReason ?? "", at: label(a.respondedAt) }));
       board.papers[p.submissionId] = { reviewers, declined };
     }
@@ -279,9 +322,6 @@ const implemented: Partial<ChairService> = {
     }
     return out;
   },
-
-  // The backend keeps no activity log a chair can read yet (the audit log is for admins), so the list is empty (see GAP-REPORT.md).
-  async loadActivityLogs(): Promise<ChairActivityLog[]> { return []; },
 
   async loadCfpFacts(slug): Promise<CfpFacts> {
     const [members, cfp] = await Promise.all([
@@ -306,6 +346,166 @@ const implemented: Partial<ChairService> = {
     const r = await api<{ created: boolean; member: { id: string; userId: string | null } }>(`/conferences/${slug}/members`, { method: "POST", body: { email, role: "reviewer", displayName: person.name.trim(), expertise: person.tracks } });
     return { memberId: r.member.id, userId: r.member.userId, created: r.created };
   },
+  /** One paper as its chair sees it: `GET /submissions/by-label/:label` (chair view), its reviewers and reviews (`GET /submissions/:id/reviews`), the conference's overview and review form. */
+  async loadPaper(paperLabel) {
+    if (!/^([A-Za-z0-9]{1,40})-(\d{1,9})$/.test(paperLabel)) return null;
+    let sub: PaperDto;
+    try { sub = await api<PaperDto>(`/submissions/by-label/${encodeURIComponent(paperLabel)}`); }
+    catch (e) { if (e instanceof ApiError && (e.status === 403 || e.status === 404)) return null; throw e; }
+    if (sub.view !== "chair") return null; // an author or reviewer has their own page for it
+    const slug = sub.conferenceSlug;
+    const [data, conf, rv, setup] = await Promise.all([
+      implemented.loadConference!(slug), getConference(slug), api<PaperReviews>(`/submissions/${sub.id}/reviews`), implemented.loadReviewSetup!(slug),
+    ]);
+    const found = data.papers.find((p) => p.dbId === sub.id);
+    if (!found) return null;
+    const deadline = isoDay(conf.reviewDeadline);
+    const toFile = (f: PaperDto["files"][number]) => ({ name: f.fileName, uploadedAt: label(f.uploadedAt), storagePath: `${sub.id}/${f.id}` });
+    const files = [...sub.files].sort((a, b) => a.version - b.version);
+    return {
+      paper: found, data, form: setup.form, abstract: sub.abstract, keywords: sub.keywords,
+      files: files.filter((f) => f.kind !== "supplementary").map(toFile), supporting: files.filter((f) => f.kind === "supplementary").map(toFile),
+      reviewers: toReviewers(rv.assignments, rv.pending, deadline),
+      declined: rv.assignments.filter((a) => a.status === "declined").map((a) => ({ name: a.reviewer.name, reason: a.declineReason || "No reason given", at: label(a.respondedAt) })),
+      fixRequest: sub.fixRequest ? { issue: sub.fixRequest.issue, fixBy: sub.fixRequest.fixBy, at: label(sub.fixRequest.at) } : null,
+      decisionNote: sub.decisionNote ?? "", notifiedAt: label(sub.notifiedAt),
+    } satisfies ChairPaperDetail;
+  },
+
+  async recordDecision(paperDbId, decisionTypeId, note) {
+    needUuid(paperDbId, decisionTypeId);
+    await api(`/submissions/${paperDbId}/decision`, { method: "POST", body: { decisionTypeId, note: (note ?? "").trim().slice(0, 5000) || null } });
+  },
+  /** Sends the recorded decision; the reviews the chair marked as shared go with it. */
+  async notifyDecision(paperDbId, note) {
+    needUuid(paperDbId);
+    const rv = await api<{ assignments: BoardAssignment[] }>(`/submissions/${paperDbId}/reviews`);
+    const shareReviewIds = rv.assignments.filter((a) => a.review?.status === "submitted" && a.review.sharedWithAuthor).map((a) => a.review!.id);
+    const text = (note ?? "").trim().slice(0, 5000);
+    await api(`/submissions/${paperDbId}/decision/notify`, { method: "POST", body: { ...(text ? { note: text } : {}), shareReviewIds } });
+  },
+  async setReviewShared(reviewId, shared) { needUuid(reviewId); await api(`/reviews/${reviewId}/shared`, { method: "PATCH", body: { shared } }); },
+  async editReview(reviewId, values) { needUuid(reviewId); await api(`/reviews/${reviewId}`, { method: "PUT", body: reviewFields(values) }); },
+  async submitOwnReview(paperDbId, values) {
+    needUuid(paperDbId);
+    const r = await api<{ review: { id: string } | null }>(`/submissions/${paperDbId}/chair-review`, { method: "PUT", body: reviewFields(values) });
+    if (!r.review) throw new ServiceError("Couldn't save this review.");
+    return r.review.id;
+  },
+  async setReviewDue(assignmentId, dateISO) {
+    needUuid(assignmentId);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) throw new ServiceError("Couldn't change this deadline.");
+    await api(`/assignments/${assignmentId}/due-date`, { method: "PATCH", body: { date: dateISO } });
+  },
+  /** Takes a reviewer off one paper: their assignment, or the paper waiting for an invited reviewer. */
+  async removeReviewerFromPaper(paperDbId, reviewerUserId) {
+    needUuid(paperDbId, reviewerUserId);
+    const rv = await api<PaperReviews>(`/submissions/${paperDbId}/reviews`);
+    const a = rv.assignments.find((x) => x.reviewer.userId === reviewerUserId);
+    if (a) { await api(`/assignments/${a.id}`, { method: "DELETE" }); return; }
+    const w = rv.pending.find((x) => x.memberId === reviewerUserId);
+    if (w) { await api(`/pending-assignments/${w.id}`, { method: "DELETE" }); return; }
+    throw new ServiceError("We couldn't find that any more — reload the page.");
+  },
+  async requestFix(paperDbId, issue, fixByISO) {
+    needUuid(paperDbId);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fixByISO) || !issue.trim()) throw new ServiceError("Say what needs fixing and by when.");
+    await api(`/submissions/${paperDbId}/fix-request`, { method: "POST", body: { issue: issue.trim().slice(0, 2000), fixBy: fixByISO } });
+  },
+  async setSubmissionTrack(paperDbIds, track) {
+    const ids = paperDbIds.filter((id) => UUID.test(id));
+    if (!ids.length) return 0;
+    const slug = await slugOfPaper(ids[0]);
+    return (await api<{ count: number }>(`/conferences/${slug}/submissions/track`, { method: "PATCH", body: { ids, track } })).count;
+  },
+  async deleteSubmissions(paperDbIds) {
+    const ids = paperDbIds.filter((id) => UUID.test(id));
+    if (!ids.length) return 0;
+    const slug = await slugOfPaper(ids[0]);
+    return (await api<{ count: number }>(`/conferences/${slug}/submissions/delete`, { method: "POST", body: { ids } })).count;
+  },
+
+  /** Gives papers to a reviewer (an invited one gets them queued on the invitation). Returns the papers given. */
+  async assignPapers(reviewer, paperDbIds, dueISO) {
+    const given: string[] = [];
+    let last: unknown = null;
+    for (const id of paperDbIds) {
+      try { await api(`/submissions/${id}/assignments`, { method: "POST", body: { memberIds: [reviewer.memberId], dueDate: dueISO || null } }); given.push(id); }
+      catch (e) { last = e; }
+    }
+    if (!given.length && last) throw last;
+    return given;
+  },
+  /** Takes someone off the committee: the backend also takes them off their papers. */
+  async removeReviewer(slug, reviewer) { await api(`/conferences/${slug}/members/${reviewer.memberId}`, { method: "DELETE" }); },
+
+  async saveScreening(paperDbId, version, record) {
+    needUuid(paperDbId);
+    await api(`/submissions/${paperDbId}/screening/${version}`, { method: "PUT", body: { record } });
+  },
+  async uploadScreeningReport(paperDbId, file) {
+    needUuid(paperDbId);
+    const form = new FormData();
+    form.append("file", file);
+    const conferenceId = await slugOfPaper(paperDbId);
+    const up = await api<{ path: string }>("/files", { method: "POST", query: { purpose: "screening_report", conferenceId }, body: form });
+    return { name: file.name, path: up.path };
+  },
+  /** Opens a stored file: a paper file ("<paperId>/<fileId>") or a screening report; the routes need the Bearer header, so the bytes are fetched. */
+  async fileUrl(storagePath, download) {
+    const m = /^([0-9a-f-]{36})\/([0-9a-f-]{36})$/i.exec(storagePath);
+    const blob = m ? await apiBlob(`/submissions/${m[1]}/files/${m[2]}`) : await apiBlob("/files", { query: { path: storagePath } });
+    const url = URL.createObjectURL(download ? new Blob([blob], { type: "application/octet-stream" }) : blob);
+    setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
+    return url;
+  },
+  async saveDecisionTypes(slug, types) {
+    const bad = types.some((t) => !t.label.trim() || t.label.length > 100);
+    if (!types.length || types.length > 50 || bad) throw new ServiceError("Couldn't save that. Every decision needs a name (up to 100 characters).");
+    await api(`/conferences/${slug}/decision-types`, { method: "PUT", body: { types: types.map((t) => ({ ...(UUID.test(t.id) ? { id: t.id } : {}), label: t.label.trim(), color: t.color, outcome: t.outcome, description: t.description.trim() || null })) } });
+  },
+
+  /* ---- emails: the conference's templates, its Email Logs (Backend/src/modules/communications) */
+  async loadEmailTemplates(slug) {
+    const r = await api<TemplatesResponse>(`/conferences/${slug}/email-templates`);
+    const platform = r.templates.map((t) => ({ key: t.key, module: t.module ?? "", role: t.role ?? "", label: t.label, sendType: t.sendType ?? "", trigger: t.triggerText ?? "", recipients: t.recipients ?? "", subject: t.defaultSubject, body: t.defaultBody }));
+    const mine: Record<string, ConferenceTemplate> = {};
+    // A copy exists once the chair changed the text or switched the email off; the backend answers every email with its effective text.
+    for (const t of r.templates) if (t.customized || !t.enabled) mine[t.key] = { key: t.key, label: t.label, enabled: t.enabled, subject: t.subject, body: t.body, custom: false };
+    for (const c of r.customEmails) mine[c.key] = { key: c.key, label: c.name, enabled: c.enabled, subject: c.subject, body: c.body, custom: true };
+    return { platform, mine } satisfies EmailTemplates;
+  },
+  async saveEmailTemplate(slug, t) {
+    if (!t.subject.trim() || t.subject.length > 300 || t.body.length > 50000 || t.key.length > 80 || (t.custom && !t.key.startsWith("custom:"))) throw new ServiceError("Couldn't save that. Please check the email and try again.");
+    await api(`/conferences/${slug}/email-templates/${encodeURIComponent(t.key)}`, { method: "PUT", body: { enabled: t.enabled, subject: t.subject, body: t.body, ...(t.custom ? { label: t.label } : {}) } });
+  },
+  async deleteEmailTemplate(slug, key) { await api(`/conferences/${slug}/email-templates/${encodeURIComponent(key)}`, { method: "DELETE" }); },
+  async loadEmailLogs(slug) {
+    const out: ChairEmailLog[] = [];
+    let cursor: string | null = null;
+    // The page reads the last 300; the backend sends 100 at a time.
+    for (let i = 0; i < 3; i += 1) {
+      const page: EmailLogPage = await api<EmailLogPage>(`/conferences/${slug}/email-log`, { query: { limit: 100, cursor } });
+      for (const l of page.data) out.push({ id: l.id, createdAt: l.createdAt, event: l.event, template: l.templateLabel || l.templateKey, templateKey: l.templateKey, ...(l.submissionId ? { submissionId: l.submissionId } : {}), toEmail: l.toEmail, toName: l.toName ?? "", recipientType: l.recipientType ?? "", subject: l.subject, body: l.body ?? "", status: l.status === "failed" ? "failed" : l.status === "sent" ? "sent" : "queued", error: l.error ?? "" });
+      cursor = page.nextCursor;
+      if (!cursor) break;
+    }
+    return out;
+  },
+
+  /* ---- the activity log (read from the backend's audit log) and the license extension requests */
+  async loadActivityLogs(slug) {
+    const rows = await api<ActivityRow[]>(`/conferences/${slug}/activity`, { query: { limit: 1000 } });
+    return rows.map((r) => ({ id: r.id, datetime: r.at, actorName: r.actorName, actorRole: r.actorRole, action: r.action, module: r.module, description: r.description, status: r.status, ...(r.reviewerName ? { reviewerName: r.reviewerName } : {}), ...(r.previousValue ? { previousValue: r.previousValue } : {}), ...(r.newValue ? { newValue: r.newValue } : {}) }));
+  },
+  async loadLicenseRequest(slug) {
+    const r = await api<Partial<LicenseRow>>(`/conferences/${slug}/license-request`);
+    return r.id ? toLicense(r as LicenseRow) : null;
+  },
+  async requestLicenseExtension(slug, requestedDate, reason) { await api(`/conferences/${slug}/license-request`, { method: "POST", body: { requestedDate, ...(reason.trim() ? { reason: reason.trim() } : {}) } }); },
+  async withdrawLicenseRequest(slug) { await api(`/conferences/${slug}/license-request`, { method: "DELETE" }); },
+
+  async decideExtension(requestId, approve) { await api(`/extension-requests/${requestId}/decision`, { method: "POST", body: { approve } }); },
   async renameReviewer(slug, memberId, name) { await api(`/conferences/${slug}/members/${memberId}`, { method: "PATCH", body: { displayName: nul(name) } }); },
   async setReviewerTracks(slug, memberId, tracks) { await api(`/conferences/${slug}/members/${memberId}`, { method: "PATCH", body: { expertise: tracks } }); },
 };

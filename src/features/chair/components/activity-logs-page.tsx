@@ -17,15 +17,15 @@ import { useActivityLogs } from "../use-activity-logs";
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const PAGE = 8;
-const MODULES = ["Submissions", "Submissions Settings", "Screening", "Peer Review", "Decision", "Email Templates", "Program", "Registration"];
-const ACTIONS = ["Created", "Updated", "Deleted", "Enabled", "Disabled", "Assigned", "Unassigned", "Published", "Submitted", "Approved", "Rejected", "Changed"];
+const MODULES = ["Submissions", "Submissions Settings", "Screening", "Peer Review", "Decision", "Email Templates", "Program", "Registration", "Conference Details", "Conference", "Call for Papers", "Committee"];
+const ACTIONS = ["Created", "Updated", "Deleted", "Enabled", "Disabled", "Assigned", "Unassigned", "Published", "Submitted", "Approved", "Rejected", "Changed", "Sent"];
 const ROLE = { chair: "Chair", author: "Author", reviewer: "Reviewer", system: "System" } as const;
 // The app's three semantic tokens (and primary / neutral), so the colour-blind remap of success / warning / danger holds for these badges too.
 const TONE: Record<string, { color: string; bg: string }> = {
   Created: { color: "var(--primary)", bg: "var(--primary-soft)" }, Updated: { color: "var(--primary)", bg: "var(--primary-soft)" }, Deleted: { color: "var(--danger)", bg: "var(--danger-soft)" },
   Enabled: { color: "var(--success)", bg: "var(--success-soft)" }, Disabled: { color: "var(--ink-muted)", bg: "var(--muted)" }, Assigned: { color: "var(--primary)", bg: "var(--primary-soft)" },
   Unassigned: { color: "var(--warning)", bg: "var(--warning-soft)" }, Published: { color: "var(--success)", bg: "var(--success-soft)" }, Submitted: { color: "var(--primary)", bg: "var(--primary-soft)" },
-  Approved: { color: "var(--success)", bg: "var(--success-soft)" }, Rejected: { color: "var(--danger)", bg: "var(--danger-soft)" }, Changed: { color: "var(--primary)", bg: "var(--primary-soft)" },
+  Sent: { color: "var(--primary)", bg: "var(--primary-soft)" }, Approved: { color: "var(--success)", bg: "var(--success-soft)" }, Rejected: { color: "var(--danger)", bg: "var(--danger-soft)" }, Changed: { color: "var(--primary)", bg: "var(--primary-soft)" },
 };
 const parts = (iso: string) => { const d = new Date(iso); return { date: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) }; };
 const whenUtc = (iso: string) => { const p = parts(iso); return `${p.date} · ${p.time} UTC`; };

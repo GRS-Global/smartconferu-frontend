@@ -187,7 +187,8 @@ export interface ChairEmailLog {
   subject: string;
   /** The HTML that was sent. */
   body: string;
-  status: "sent" | "failed";
+  /** "queued": waiting to go out (or being sent) right now. */
+  status: "sent" | "failed" | "queued";
   /** Why a failed email failed. */
   error: string;
 }

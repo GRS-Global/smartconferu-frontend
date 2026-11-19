@@ -32,5 +32,6 @@ export interface NotificationService {
  *  there is no fallback from one source to the other. */
 export async function getNotificationService(): Promise<NotificationService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/notifications")).mockNotificationService;
+  if (DATA_SOURCE === "api") return (await import("./api/notifications")).apiNotificationService;
   return (await import("./supabase/notifications")).supabaseNotificationService;
 }

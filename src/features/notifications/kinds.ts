@@ -46,6 +46,14 @@ const CATEGORY: Record<string, ItemCategory> = {
   // "Ask for more time" (migration 0043): the chair's request is an action, the reviewer's answer an update (the prototype's own categories).
   extension_request: "action",
   extension_answer: "update",
+  // Kinds only the own backend writes.
+  extension_decision: "update",
+  due_date_changed: "update",
+  reviewer_message: "update",
+  assignment_removed: "update",
+  fix_requested: "action",
+  review_submitted: "update",
+  license_decision: "update",
   withdrawn: "update",
   announcement: "announcement",
   email: "email",

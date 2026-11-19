@@ -112,3 +112,29 @@ export async function extractPaperFields(text: string): Promise<ExtractedPaper |
     return null;
   }
 }
+
+
+/* The paper's summary (own backend only): written by the AI when the paper is given to a reviewer and kept in the database (`GET /submissions/:id/ai/summary`);
+   `POST` writes it now when it is missing or is for an older version of the paper. Chairs and the paper's reviewers only. */
+export interface PaperSummary {
+  /** "none" until it has been written. */
+  status: "ready" | "none";
+  summary: string | null;
+  claims: string[];
+  methods: string[];
+  datasets: string[];
+  limitations: string[];
+  /** When it was written, or null. */
+  updatedAt: string | null;
+  /** False when the authors uploaded a newer version after it was written. */
+  upToDate: boolean;
+}
+/** Whether the summary button is offered: only with the own backend, which writes and keeps the summaries. */
+export const SUMMARY_AVAILABLE = DATA_SOURCE === "api";
+
+export async function loadPaperSummary(submissionId: string, signal?: AbortSignal): Promise<PaperSummary> {
+  return api<PaperSummary>(`/submissions/${submissionId}/ai/summary`, { signal });
+}
+export async function writePaperSummary(submissionId: string): Promise<PaperSummary> {
+  return api<PaperSummary>(`/submissions/${submissionId}/ai/summary`, { method: "POST" });
+}

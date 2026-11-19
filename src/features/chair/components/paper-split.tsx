@@ -1,9 +1,11 @@
 "use client";
 
-import { BookOpen, ExternalLink, Maximize2, Minimize2, Sparkles, X } from "lucide-react";
+import { BookOpen, ExternalLink, FileText, Maximize2, Minimize2, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { SUMMARY_AVAILABLE } from "@/services/paper-ai";
 import { chatAvailable, PaperChatPanel, type ChatPaper } from "./paper-chat";
+import { PaperSummaryPanel } from "./paper-summary";
 
 /* The paper beside a form (the prototype's ReviewSplit and ReviewPaperPreview): the paper's file on the left, the form on the right, 60 / 40 by default. The
    paper's header has "Ask a question" (the chat about the paper opens as a panel along the bottom of the preview, its height can be dragged), Open in a new
@@ -29,11 +31,13 @@ export function PaperSplit({ file, loadUrl, chat = null, blind = false, children
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPct, setChatPct] = useState(56);
   const [chatCount, setChatCount] = useState(0);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const grid = useRef<HTMLDivElement>(null);
   const aside = useRef<HTMLElement>(null);
   const chatRef = useRef(56);
   const path = file?.storagePath ?? null;
   const canChat = Boolean(chat && chatAvailable(chat));
+  const canSummary = Boolean(chat && SUMMARY_AVAILABLE && chat.dbId);
   const onCount = useCallback((n: number) => setChatCount(n), []);
   useEffect(() => {
     if (!path || !open) return undefined;
@@ -73,8 +77,11 @@ export function PaperSplit({ file, loadUrl, chat = null, blind = false, children
               <div className="flex items-center gap-3 border-b border-line bg-canvas px-4 py-2.5">
                 <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-[9.5px] font-extrabold tracking-wide text-danger">PDF</span>
                 <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold text-ink">{file?.name ?? "The paper"}</span><span className="block text-[11px] text-ink-faint">{full ? "Full screen · press Esc to go back" : "Paper preview"}{blind ? " · authors hidden" : ""}</span></span>
+                {canSummary && (
+                  <button type="button" onClick={() => { setChatOpen(false); if (!summaryOpen) { const v = savedChat(); chatRef.current = v; setChatPct(v); } setSummaryOpen((o) => !o); }} aria-pressed={summaryOpen} title={summaryOpen ? "Close the summary" : "Read the summary of this paper"} style={summaryOpen ? { background: "var(--primary)", color: "#FFFFFF", borderColor: "var(--primary)" } : { background: "#FFFFFF", color: "var(--primary)", borderColor: "var(--primary-soft-border)" }} className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-xs font-bold"><FileText size={13} aria-hidden="true" /> Summary</button>
+                )}
                 {canChat && (
-                  <button type="button" onClick={() => { if (!chatOpen) { const v = savedChat(); chatRef.current = v; setChatPct(v); } setChatOpen((o) => !o); }} aria-pressed={chatOpen} title={chatOpen ? "Close the chat" : "Ask a question about this paper"} style={chatOpen ? { background: "var(--primary)", color: "#FFFFFF", borderColor: "var(--primary)" } : { background: "var(--primary-soft)", color: "var(--primary)", borderColor: "var(--primary-soft-border)" }} className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-xs font-bold"><Sparkles size={13} aria-hidden="true" /> Ask a question{chatCount ? ` (${chatCount})` : ""}</button>
+                  <button type="button" onClick={() => { setSummaryOpen(false); if (!chatOpen) { const v = savedChat(); chatRef.current = v; setChatPct(v); } setChatOpen((o) => !o); }} aria-pressed={chatOpen} title={chatOpen ? "Close the chat" : "Ask a question about this paper"} style={chatOpen ? { background: "var(--primary)", color: "#FFFFFF", borderColor: "var(--primary)" } : { background: "var(--primary-soft)", color: "var(--primary)", borderColor: "var(--primary-soft-border)" }} className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-xs font-bold"><Sparkles size={13} aria-hidden="true" /> Ask a question{chatCount ? ` (${chatCount})` : ""}</button>
                 )}
                 <button type="button" aria-label="Open the paper in a new tab" title="Open in a new tab" disabled={!url} onClick={() => window.open(url, "_blank", "noopener")} className={`${ICON_BTN} disabled:opacity-40`}><ExternalLink size={14} aria-hidden="true" /></button>
                 <button type="button" aria-label={full ? "Exit full screen" : "Full screen"} aria-pressed={full} title={full ? "Exit full screen (Esc)" : "Full screen"} onClick={() => setFull((v) => !v)} style={full ? { background: "var(--primary)", color: "#FFFFFF", borderColor: "var(--primary)" } : undefined} className={ICON_BTN}>{full ? <Minimize2 size={14} aria-hidden="true" /> : <Maximize2 size={14} aria-hidden="true" />}</button>
@@ -85,12 +92,12 @@ export function PaperSplit({ file, loadUrl, chat = null, blind = false, children
                   ? <PdfViewer url={url} onOpenExternal={() => window.open(url, "_blank", "noopener")} />
                   : <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-ink-faint">{!path ? "The paper's file isn't available." : failed ? "Couldn't open the paper here. Use “View submission” to open it in a new tab." : "Loading the paper…"}</div>}
               </div>
-              {chatOpen && chat && (
+              {(chatOpen || summaryOpen) && chat && (
                 <>
                   <div role="separator" aria-orientation="horizontal" aria-label="Resize the chat" aria-valuemin={CHAT_RANGE[0]} aria-valuemax={CHAT_RANGE[1]} aria-valuenow={Math.round(chatPct)} tabIndex={0} onPointerDown={dragChat} onDoubleClick={() => { setChatHeight(56); saveChat(); }}
                     onKeyDown={(e) => { if (e.key === "ArrowUp") { setChatHeight(chatRef.current + 3); saveChat(); } if (e.key === "ArrowDown") { setChatHeight(chatRef.current - 3); saveChat(); } }}
                     className="group flex h-2 shrink-0 cursor-row-resize items-center justify-center bg-white outline-none"><span className="h-1 w-12 rounded-full bg-line-strong transition-colors group-hover:bg-primary group-focus-visible:bg-primary" /></div>
-                  <PaperChatPanel paper={chat} heightPct={chatPct} onClose={() => setChatOpen(false)} onCount={onCount} />
+                  {chatOpen ? <PaperChatPanel paper={chat} heightPct={chatPct} onClose={() => setChatOpen(false)} onCount={onCount} /> : <PaperSummaryPanel paper={chat} heightPct={chatPct} onClose={() => setSummaryOpen(false)} />}
                 </>
               )}
             </aside>

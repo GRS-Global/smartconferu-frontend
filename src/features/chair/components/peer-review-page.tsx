@@ -97,6 +97,8 @@ export function PeerReviewPage({ slug }: { slug: string }) {
   const [cut, setCut] = useState({ accept: 4, reject: 2.5 });
   const [busy, setBusy] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
+  /** The chair's note to the authors of each paper in the Notify dialog (by the paper's database id); empty = the note saved with the decision, if any. */
+  const [notes, setNotes] = useState<Record<string, string>>({});
   // Linked Initial check / Plagiarism filters, and the paper whose screening report is open.
   const [icF, setIcF] = useState(saved?.ic || "all");
   const [plF, setPlF] = useState(saved?.pl || "all");
@@ -234,9 +236,9 @@ export function PeerReviewPage({ slug }: { slug: string }) {
     const svc = await getChairService();
     let sent = 0; let problem = "";
     for (const r of unsent) {
-      try { await svc.notifyDecision(r.paper.dbId, ""); sent += 1; const mail = await sendActionEmails("decision_notified", { submissionId: r.paper.dbId }); if (mail) problem = mail; } catch (e) { problem = `${r.paper.id}: ${e instanceof Error ? e.message : "failed"}`; }
+      try { await svc.notifyDecision(r.paper.dbId, (notes[r.paper.dbId] ?? "").trim()); sent += 1; const mail = await sendActionEmails("decision_notified", { submissionId: r.paper.dbId }); if (mail) problem = mail; } catch (e) { problem = `${r.paper.id}: ${e instanceof Error ? e.message : "failed"}`; }
     }
-    setBusy(false); setNotifyOpen(false);
+    setBusy(false); setNotifyOpen(false); setNotes({});
     setToast({ title: `${sent} author group${sent === 1 ? "" : "s"} notified`, text: problem || "Decisions and shared reviewer comments sent." });
     if (filter === "unsent") setFilter("decided");
     reload();
@@ -497,7 +499,8 @@ export function PeerReviewPage({ slug }: { slug: string }) {
           </div>
         )}
 
-        {(filter === "unsent" || filter === "decided") && unsent.length > 0 && (
+        {/* Shown whenever a decision is waiting to be sent (not only under the Decided filter), so the chair does not have to hunt for the button. */}
+        {unsent.length > 0 && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-warning-soft px-4 py-3">
             <Mail size={16} aria-hidden="true" className="shrink-0 text-warning" />
             <div className="min-w-0 flex-1 text-[13px] text-ink-soft"><b className="text-navy">{unsent.length} decision{unsent.length === 1 ? "" : "s"} not sent to the authors yet.</b> Authors get the decision and the reviewer comments you shared.</div>
@@ -630,11 +633,17 @@ export function PeerReviewPage({ slug }: { slug: string }) {
         <p className="flex items-center gap-1.5 text-[11.5px] text-ink-faint"><Info size={12} aria-hidden="true" /> Papers get reviewers once they&apos;re plagiarism clear on the Plagiarism page.</p>
       </div>
 
-      <Dialog open={notifyOpen} onClose={() => setNotifyOpen(false)} title="Notify authors" description={`${unsent.length} decision${unsent.length === 1 ? "" : "s"} · one email to each paper’s authors`} size="md">
+      <Dialog open={notifyOpen} onClose={() => { setNotifyOpen(false); setNotes({}); }} title="Notify authors" description={`${unsent.length} decision${unsent.length === 1 ? "" : "s"} · one email to each paper’s authors`} size="md">
         <ul className="max-h-[46vh] divide-y divide-muted overflow-y-auto rounded-xl border border-line">
-          {unsent.map((r) => <li key={r.paper.dbId} className="flex items-center gap-3 px-4 py-2.5"><div className="min-w-0 flex-1"><div className="text-[11px] font-bold text-ink-muted">{r.paper.id}</div><div className="truncate text-[13px] font-semibold text-navy">{r.paper.title}</div></div><span className="shrink-0 text-[11px] font-semibold text-ink-muted">{r.reviewers.filter((x) => x.r.review?.shared).length} comment(s) shared</span><span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-ink-soft">{typeOf(r)?.label ?? r.paper.outcome}</span></li>)}
+          {unsent.map((r) => (
+            <li key={r.paper.dbId} className="px-4 py-2.5">
+              <div className="flex items-center gap-3"><div className="min-w-0 flex-1"><div className="text-[11px] font-bold text-ink-muted">{r.paper.id}</div><div className="truncate text-[13px] font-semibold text-navy">{r.paper.title}</div></div><span className="shrink-0 text-[11px] font-semibold text-ink-muted">{r.reviewers.filter((x) => x.r.review?.shared).length} comment(s) shared</span><span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-ink-soft">{typeOf(r)?.label ?? r.paper.outcome}</span></div>
+              <label htmlFor={`notify-note-${r.paper.dbId}`} className="mt-2 block text-[11px] font-semibold text-ink-soft">Note to the authors <span className="font-normal text-ink-faint">(optional)</span></label>
+              <textarea id={`notify-note-${r.paper.dbId}`} rows={2} maxLength={5000} value={notes[r.paper.dbId] ?? ""} disabled={busy} onChange={(e) => setNotes((cur) => ({ ...cur, [r.paper.dbId]: e.target.value }))} placeholder="Leave empty to send the note saved with the decision, if there is one" className="mt-1 w-full resize-y rounded-lg border border-line bg-white px-3 py-2 text-xs text-ink outline-none focus:border-primary" />
+            </li>
+          ))}
         </ul>
-        <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setNotifyOpen(false)} disabled={busy}>Cancel</Button><Button onClick={() => void notifyAll()} disabled={busy}><Send size={15} aria-hidden="true" /> {busy ? "Sending…" : `Send ${unsent.length} email${unsent.length === 1 ? "" : "s"}`}</Button></div>
+        <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => { setNotifyOpen(false); setNotes({}); }} disabled={busy}>Cancel</Button><Button onClick={() => void notifyAll()} disabled={busy}><Send size={15} aria-hidden="true" /> {busy ? "Sending…" : `Send ${unsent.length} email${unsent.length === 1 ? "" : "s"}`}</Button></div>
       </Dialog>
       {assignFor && assignRow && <AssignReviewerPopover row={assignRow} candidates={candidatesFor(assignRow)} maxLoad={maxLoad} deadline={dueDefault} anchor={assignFor.rect} busy={busy} onAssign={(rev, due) => void assignOne(assignRow, rev, due)} onInvite={() => { setAddError(""); setAddFor(assignRow.paper.dbId); setAssignFor(null); }} onClose={() => setAssignFor(null)} />}
       <Dialog open={addFor !== null} onClose={() => { if (!busy) setAddFor(null); }} title="Add reviewers" size="lg">

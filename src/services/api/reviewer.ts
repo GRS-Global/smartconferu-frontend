@@ -8,12 +8,13 @@ import { ServiceError } from "../errors";
    review), `GET /assignments/:id/review-form` (the conference's own form + instructions, and the decision once the authors were told: those are
    kept in chair-only settings), `GET /submissions/:id` (the paper's files) and `POST /assignments/:id/respond`, `PUT /assignments/:id/review`.
    The review is double-blind: the authors are never read. A paper file's `storagePath` is "<paperId>/<fileId>" (see services/api/author-submissions.ts).
-   "Ask for more time" has no backend yet (see GAP-REPORT.md). Backend/src/modules/reviews. */
+   "Ask for more time": `POST /assignments/:id/extension-request` (the latest request of each assignment comes with it as `extension`). Backend/src/modules/reviews. */
 
 interface ReviewDto { id: string; status: "draft" | "submitted"; score: number | null; confidence: string | null; commentsToAuthor: string | null; commentsToChair: string | null; answers: Record<string, unknown>; submittedAt: string | null; updatedAt: string }
+interface ExtensionDto { id: string; date: string; reason: string | null; status: "pending" | "approved" | "declined"; note: string | null; createdAt: string; decidedAt: string | null }
 interface AssignmentDto {
   id: string; submissionId: string; status: "assigned" | "accepted" | "declined" | "submitted" | "removed"; dueAt: string | null; assignedAt: string;
-  review: ReviewDto | null; can: { respond: boolean; review: boolean };
+  review: ReviewDto | null; extension: ExtensionDto | null; can: { respond: boolean; review: boolean };
 }
 interface MyAssignmentDto extends AssignmentDto {
   paper: { id: string; paperId: string; title: string; abstract: string; keywords: string[]; track: string | null; presentationType: string | null; conferenceSlug: string; outcome: string; withdrawn: boolean };
@@ -74,7 +75,7 @@ export const apiReviewerService: ReviewerService = {
         review: sent ? { score: a.review?.score ?? null, submittedAt: label(a.review?.submittedAt ?? a.review?.updatedAt ?? null) } : null,
         draft: !sent && a.review?.status === "draft",
         withdrawn: a.paper.withdrawn,
-        extension: null,
+        extension: a.extension ? { date: a.extension.date, reason: a.extension.reason ?? "", at: label(a.extension.createdAt), status: a.extension.status } : null,
       });
     }
     return { papers, declined } satisfies ReviewerAssignments;
@@ -114,7 +115,9 @@ export const apiReviewerService: ReviewerService = {
     await api(`/assignments/${assignmentId}/respond`, { method: "POST", body: { accept, reason: accept ? null : (reason ?? "").trim().slice(0, 1000) || null } });
   },
 
-  async requestExtension() {
-    throw new ServiceError("Asking for more time isn't available with the own backend yet.");
+  async requestExtension(assignmentId, dateISO, reason) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) throw new ServiceError("Choose a date.");
+    // The backend's own messages ("You already have a request waiting for the chair.", "Choose a date after the current deadline ...") are meant to be read as they are.
+    await api(`/assignments/${assignmentId}/extension-request`, { method: "POST", body: { date: dateISO, reason: reason.trim().slice(0, 1000) || null } });
   },
 };

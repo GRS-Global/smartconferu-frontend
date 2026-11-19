@@ -26,9 +26,9 @@ function Recipients({ list }: { list: Array<{ name: string; email: string }> }) 
   if (list.length === 0) return <span className="text-ink-faint">—</span>;
   return <div><div className="font-semibold text-navy">{list[0].name || list[0].email}{list.length > 1 ? ` +${list.length - 1}` : ""}</div>{list[0].name && <div className="text-xs text-ink-faint">{list[0].email}</div>}</div>;
 }
-function StatusBadge({ status }: { status: "sent" | "failed" }) {
-  const c = status === "failed" ? "text-danger bg-danger-soft" : "text-success bg-success-soft";
-  return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${c}`}><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${status === "failed" ? "bg-danger" : "bg-success"}`} />{status === "failed" ? "Failed" : "Sent"}</span>;
+function StatusBadge({ status }: { status: "sent" | "failed" | "queued" }) {
+  const c = status === "failed" ? "text-danger bg-danger-soft" : status === "queued" ? "text-warning bg-warning-soft" : "text-success bg-success-soft";
+  return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${c}`}><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${status === "failed" ? "bg-danger" : status === "queued" ? "bg-warning" : "bg-success"}`} />{status === "failed" ? "Failed" : status === "queued" ? "Sending" : "Sent"}</span>;
 }
 function HeaderRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
@@ -103,7 +103,7 @@ export function EmailLogsPage({ slug }: { slug: string }) {
         <div className="mb-6 max-w-3xl rounded-xl border border-line bg-canvas p-5 text-sm leading-relaxed text-ink-soft">View the history and delivery status of emails sent by this conference. Editing what an email says happens on Email Templates — this is the delivery record only.</div>
         <div data-tour="el-filters" className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <select aria-label="Status" value={status} onChange={(e) => reset(setStatus)(e.target.value)} className={SELECT}><option value="all">All Statuses</option><option value="sent">Sent</option><option value="failed">Failed</option></select>
+            <select aria-label="Status" value={status} onChange={(e) => reset(setStatus)(e.target.value)} className={SELECT}><option value="all">All Statuses</option><option value="sent">Sent</option><option value="queued">Sending</option><option value="failed">Failed</option></select>
             <select aria-label="Recipient type" value={recipient} onChange={(e) => reset(setRecipient)(e.target.value)} className={SELECT}><option value="all">All Recipients</option>{recipients.map((r) => <option key={r} value={r}>{r}</option>)}</select>
             <select aria-label="Template" value={template} onChange={(e) => reset(setTemplate)(e.target.value)} className={SELECT}><option value="all">All Templates</option>{templates.map((t) => <option key={t} value={t}>{t}</option>)}</select>
             <span className="flex items-center gap-1.5"><input type="date" aria-label="From date" value={from} onChange={(e) => reset(setFrom)(e.target.value)} className={`${DATE_BOX} ${from ? "text-ink" : "text-ink-faint"}`} /><span className="text-xs text-ink-faint">to</span><input type="date" aria-label="To date" value={to} onChange={(e) => reset(setTo)(e.target.value)} className="rounded-lg border border-line bg-canvas px-2.5 py-2 text-xs outline-none" /></span>

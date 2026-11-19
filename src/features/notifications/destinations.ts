@@ -101,6 +101,18 @@ const ACTIONS: Record<string, Maker> = {
     if (!c) return null;
     return p ? { label: "Open my review", target: { app: `/reviewer/${c}/review/${p}` } } : { label: "Open my review queue", target: { app: `/reviewer/${c}` } };
   },
+  // The own backend writes a few more kinds (Backend/src/modules/*): the chair's answer to "more time" is called extension_decision there, a moved
+  // due date and a chair's message go to the reviewer, "fix this" to the authors, a sent review to the chairs.
+  extension_decision: (n, chairOf) => ACTIONS.extension_answer(n, chairOf),
+  due_date_changed: (n, chairOf) => ACTIONS.extension_answer(n, chairOf),
+  reviewer_message: (n, chairOf) => ACTIONS.extension_answer(n, chairOf),
+  assignment_removed: inConferenceApp("Open my review queue", (c) => `/reviewer/${c}`),
+  fix_requested: myPaper,
+  review_submitted: (n) => {
+    const p = paper(n);
+    return p ? { label: "Open reviews", target: { app: `/submissions/${p}/chair/review` } } : null;
+  },
+  license_decision: inConferenceApp("Open Conference Details", (c) => `/chair/${c}/settings`),
   coauthor_added: myPaper,
   screening: myPaper,
   // An email copy: "Open paper" (a reviewer's email goes to the review page, anyone else's to the paper), only when its paper is known.
@@ -141,6 +153,12 @@ const AUDIENCE: Record<string, Audience> = {
   new_version: "chair",
   extension_request: "chair",
   extension_answer: "reviewer",
+  extension_decision: "reviewer",
+  due_date_changed: "reviewer",
+  reviewer_message: "reviewer",
+  assignment_removed: "reviewer",
+  review_submitted: "chair",
+  license_decision: "chair",
 };
 
 /** Whose notification it is — the role on its conference chip. A withdrawal goes to the conference's chairs and to the
