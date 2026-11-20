@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState, type ReactNode } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Dialog } from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/load-more";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { HeroButton, HeroChip, PageHero } from "@/features/workspace/components/hero";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
@@ -194,7 +195,7 @@ export function InitialCheckDetailPage({ slug, paperLabel }: { slug: string; pap
             {!auto ? (
               <p className="text-sm text-ink-muted">The PDF hasn&apos;t been read.</p>
             ) : auto.status === "running" ? (
-              <p className="inline-flex items-center gap-2 text-sm text-ink-muted"><span aria-hidden="true" className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-line border-t-primary" /> Reading the PDF…</p>
+              <p className="inline-flex items-center gap-2 text-sm text-ink-muted"><Spinner size={14} /> Reading the PDF…</p>
             ) : auto.status === "failed" ? (
               <div style={{ background: "#FFF4E5", color: "#92400E" }} className="inline-flex items-start gap-2 rounded-lg px-3.5 py-2.5 text-sm"><AlertTriangle size={15} aria-hidden="true" className="mt-0.5 shrink-0" /> <span>The PDF couldn&apos;t be read{auto.error ? ` (${auto.error})` : ""}. Check its values by hand from the PDF.</span></div>
             ) : (

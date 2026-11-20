@@ -2,9 +2,10 @@
 
 import { Check, ChevronRight, Plus, TriangleAlert } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CountryFlag } from "@/components/ui/country-flag";
+import { LoadMore } from "@/components/ui/load-more";
 import { SessionEnded } from "@/features/auth/components/session-ended";
 import { countryCodeOf } from "@/lib/country-codes";
 import { getCfpService } from "@/services/cfps";
@@ -16,6 +17,7 @@ import type { CfpRow } from "@/types/cfp";
    conference hosted elsewhere has no Smartconferu conference to hold a CFP, so "Add External Conference" is drawn but off. */
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
+const DASHBOARD_LOAD_MORE_COUNT = 15; // the prototype's: 15 rows at first, 15 more each time the end of the list scrolls into view
 const showDate = (iso: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "—");
 type State = { status: "loading" } | { status: "auth" } | { status: "error"; message: string } | { status: "ready"; rows: CfpRow[] };
 
@@ -28,12 +30,32 @@ export function CfpNewPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- loads the list once on mount
   useEffect(() => { load(); }, [load]);
 
+  // The list grows as its end scrolls into view, with the prototype's "Loading more conferences…" row in between.
+  const [visibleCount, setVisibleCount] = useState(DASHBOARD_LOAD_MORE_COUNT);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const total = state.status === "ready" ? state.rows.length : 0;
+  const hasMore = visibleCount < total;
+  useEffect(() => {
+    if (!hasMore || loadingMore) return undefined;
+    const el = sentinelRef.current;
+    if (!el) return undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) return;
+      setLoadingMore(true);
+      timer = setTimeout(() => { setVisibleCount((v) => Math.min(v + DASHBOARD_LOAD_MORE_COUNT, total)); setLoadingMore(false); }, 1000);
+    }, { rootMargin: "200px" });
+    observer.observe(el);
+    return () => { observer.disconnect(); if (timer) clearTimeout(timer); };
+  }, [hasMore, loadingMore, total]);
+
   const crumbs = [{ label: "Calls for Papers", href: "/cfp" }, { label: "Add New" }];
   if (state.status === "auth") return <><PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} /><SessionEnded /></>;
   if (state.status === "loading") return <><PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} /><div role="status" aria-label="Loading your conferences" className="p-4 sm:p-8"><div className="h-48 animate-pulse rounded-2xl border border-line bg-white" /></div></>;
   if (state.status === "error") return <><PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger"><TriangleAlert size={18} aria-hidden="true" /><span className="flex-1">{state.message}</span><button type="button" onClick={load} className="cursor-pointer rounded-lg border border-danger px-3 py-1.5 text-xs font-bold">Try again</button></div></>;
 
-  const rows = state.rows;
+  const rows = state.rows.slice(0, visibleCount);
   return (
     <>
       <PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} />
@@ -76,6 +98,10 @@ export function CfpNewPage() {
               })}
             </tbody>
           </table>
+          <div style={{ borderTop: "1px solid var(--muted)" }} className="flex flex-col items-center gap-2 px-5 py-4">
+            <span className="text-xs text-ink-muted">Showing {rows.length} of {total}</span>
+            {loadingMore ? <LoadMore label="Loading more conferences…" /> : hasMore ? <div ref={sentinelRef} style={{ height: 1 }} /> : total > DASHBOARD_LOAD_MORE_COUNT && <span className="text-xs text-ink-faint">You&apos;ve reached the end of the list.</span>}
+          </div>
         </div>
         <Link href="/cfp" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Back to My CFPs <ChevronRight size={14} aria-hidden="true" /></Link>
       </div>

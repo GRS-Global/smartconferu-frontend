@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { FlowToast, type FlowToastData } from "@/components/ui/flow-toast";
+import { Spinner } from "@/components/ui/load-more";
 import { INPUT_CLASS } from "@/components/ui/field";
 import { ConferenceShell, ConferenceMonogram } from "@/features/workspace/components/conference-shell";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
@@ -53,8 +54,16 @@ type FormState =
   | { status: "auth" }
   | { status: "error"; message: string; config: boolean };
 
-function Section({ title, hint, n, children }: { title: string; hint?: string; n?: number; children: ReactNode }) {
-  return <section style={CARD} className="rounded-2xl bg-white p-5 sm:p-6"><h2 className="flex items-center gap-2.5 text-[15px] font-bold text-navy">{n !== undefined && <span className="flex h-6 w-6 items-center justify-center rounded-full bg-navy text-[11px] text-white">{n}</span>}{title}</h2>{hint && <p className="mb-4 mt-0.5 text-xs text-ink-muted">{hint}</p>}<div className={hint ? "" : "mt-4"}>{children}</div></section>;
+function Section({ title, hint, n, busy = false, children }: { title: string; hint?: string; n?: number; busy?: boolean; children: ReactNode }) {
+  return <section style={CARD} aria-busy={busy || undefined} className="relative overflow-hidden rounded-2xl bg-white p-5 sm:p-6">
+    {/* Locked while Smart Fill fills the form: a frosted cover with a shimmer (the prototype's EnhancedSchemaForm). */}
+    {busy && (
+      <div aria-hidden="true" className="absolute inset-0 z-10 flex cursor-wait items-start justify-center pt-6" style={{ background: "rgba(255,255,255,0.62)", backdropFilter: "blur(1.5px)" }}>
+        <span aria-hidden="true" className="pu-anim absolute inset-y-0 -left-1/3 w-1/3" style={{ background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.10), transparent)", animation: "pu-slide 1.6s ease-in-out infinite" }} />
+        <span style={{ background: "var(--gradient-primary)", boxShadow: "0 6px 18px rgba(124, 58, 237,0.3)" }} className="relative inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold text-white"><Sparkles size={13} aria-hidden="true" /> Smart Fill is working…</span>
+      </div>
+    )}
+    <h2 className="flex items-center gap-2.5 text-[15px] font-bold text-navy">{n !== undefined && <span className="flex h-6 w-6 items-center justify-center rounded-full bg-navy text-[11px] text-white">{n}</span>}{title}</h2>{hint && <p className="mb-4 mt-0.5 text-xs text-ink-muted">{hint}</p>}<div className={hint ? "" : "mt-4"}>{children}</div></section>;
 }
 
 export function SubmitPaperPage({ slug, behalf = false }: { slug: string; behalf?: boolean }) {
@@ -272,8 +281,13 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
         <section style={{ border: "1.5px solid var(--primary)" }} className="rounded-2xl bg-white p-5 sm:p-6">
           <div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-soft text-primary"><Sparkles size={16} aria-hidden="true" /></span><div><h2 className="text-sm font-bold text-navy">Auto-fill from your paper</h2><p className="text-[11px] text-ink-faint">Upload your paper (PDF or Word, up to 25 MB) and we&apos;ll fill in the title, abstract, keywords and authors below for you.</p></div></div>
           {filling ? (
-            <div role="status" aria-live="polite" className="mt-4 flex flex-col items-center rounded-2xl border-[1.5px] border-[var(--primary-soft-border)] bg-gradient-to-br from-primary-soft via-white to-primary-soft px-6 py-8 text-center">
-              <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white"><Sparkles size={24} className="animate-pulse" aria-hidden="true" /></span>
+            <div role="status" aria-live="polite" style={{ background: "linear-gradient(135deg, var(--primary-soft), #FFFFFF 60%, var(--primary-soft))", border: "1.5px solid var(--primary-soft-border)" }} className="mt-4 flex flex-col items-center rounded-2xl px-6 py-8 text-center">
+              {/* The orbiting AI mark: a pulsing glow, a turning ring, and the sparkle in a gradient disc. */}
+              <div className="relative mb-4 h-[76px] w-[76px]">
+                <span aria-hidden="true" style={{ background: "var(--gradient-primary)", animation: "pu-glow 1.8s ease-in-out infinite" }} className="pu-anim absolute inset-2 rounded-full blur-md" />
+                <span aria-hidden="true" style={{ border: "3px solid var(--primary-soft-border)", borderTopColor: "var(--primary)", animation: "pu-spin 1s linear infinite" }} className="pu-anim absolute inset-0 rounded-full" />
+                <span style={{ background: "var(--gradient-primary)" }} className="absolute inset-[10px] flex items-center justify-center rounded-full text-white shadow-[0_8px_20px_rgba(124,58,237,0.35)]"><Sparkles size={24} aria-hidden="true" /></span>
+              </div>
               <div className="text-[17px] font-extrabold text-navy">{stage === "reading" ? "Reading your paper…" : "Smart Fill is reading your paper…"}</div>
               <p className="mt-1 max-w-md text-[13px] text-ink-muted">Filling in the title, abstract, keywords and authors from <b className="text-ink-soft">{file?.name}</b>. The form is locked until it&apos;s done.</p>
               <ol className="mt-5 flex flex-wrap items-center justify-center gap-2">
@@ -284,14 +298,17 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
                     <li key={s.key} className="flex items-center gap-2">
                       {i > 0 && <span aria-hidden="true" className={cn("h-0.5 w-6 rounded-full", state === "todo" ? "bg-line" : "bg-primary")} />}
                       <span className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-[12.5px] font-bold", state === "done" && "bg-success-soft text-success", state === "on" && "bg-primary text-white", state === "todo" && "border border-line bg-white text-ink-faint")}>
-                        <span className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[10px]", state === "done" && "bg-success text-white", state === "on" && "bg-white/25 text-white", state === "todo" && "bg-muted text-ink-faint")}>{state === "done" ? <Check size={12} strokeWidth={3} aria-hidden="true" /> : state === "on" ? <RefreshCw size={11} className="animate-spin" aria-hidden="true" /> : i + 1}</span>
+                        <span className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[10px]", state === "done" && "bg-success text-white", state === "on" && "bg-white/25 text-white", state === "todo" && "bg-muted text-ink-faint")}>{state === "done" ? <Check size={12} strokeWidth={3} aria-hidden="true" /> : state === "on" ? <RefreshCw size={11} strokeWidth={2.6} style={{ animation: "pu-spin 1.2s linear infinite" }} className="pu-anim" aria-hidden="true" /> : i + 1}</span>
                         {s.label}
                       </span>
                     </li>
                   );
                 })}
               </ol>
-              <div className="mt-2.5 text-xs font-medium text-ink-faint">{seconds}s · {seconds < 12 ? "usually takes 5–15 seconds" : "almost there — longer papers take a little more time"}</div>
+              <div style={{ background: "var(--primary-soft-border)" }} className="relative mt-5 h-1.5 w-full max-w-md overflow-hidden rounded-full">
+                <span aria-hidden="true" style={{ background: "var(--gradient-primary)", animation: "pu-slide 1.4s ease-in-out infinite" }} className="pu-anim absolute inset-y-0 left-0 w-2/5 rounded-full" />
+              </div>
+              <div className="mt-2 text-xs font-medium text-ink-faint">{seconds}s · {seconds < 12 ? "usually takes 5–15 seconds" : "almost there — longer papers take a little more time"}</div>
             </div>
           ) : file ? (
             <div className={`mt-4 flex items-center gap-3 rounded-xl border-[1.5px] bg-white p-3.5 ${over ? "border-dashed border-primary bg-primary-soft" : "border-line"} ${bad(Boolean(file))}`} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={(e) => { e.preventDefault(); setOver(false); pick(e.dataTransfer.files[0] ?? null); }}>
@@ -313,7 +330,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
         </section>
 
         <div inert={filling} aria-busy={filling} className="space-y-5">
-        <Section n={1} title="Basic Information">
+        <Section n={1} title="Basic Information" busy={filling}>
           <div className="space-y-4">
             <div>
               <label htmlFor="p-title" className={fieldLabel(tried && !paperTitle.trim())}>Title <span className="text-danger">*</span></label>
@@ -329,7 +346,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </div>
         </Section>
 
-        <Section n={2} title="Authors" hint={behalf ? "The author you named is Author 1." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it."}>
+        <Section n={2} title="Authors" busy={filling} hint={behalf ? "The author you named is Author 1." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it."}>
           <div className="space-y-3">
             {rows.map((a, i) => (
               <div key={a.key} style={{ border: `1px solid ${a.corresponding ? "var(--primary-soft-border)" : "var(--border)"}`, background: a.corresponding ? "var(--primary-soft)" : "#FFFFFF" }} className="rounded-xl p-4">
@@ -357,7 +374,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
         </Section>
 
         {info.extras.length > 0 && (
-          <Section n={3} title="Additional questions" hint="Asked by the conference's organisers.">
+          <Section n={3} title="Additional questions" busy={filling} hint="Asked by the conference's organisers.">
             <div className="space-y-4">
               {info.extras.map((f) => {
                 const bad = tried && f.required && !answered(f);
@@ -382,7 +399,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </Section>
         )}
 
-        <Section n={info.extras.length ? 4 : 3} title="Declarations">
+        <Section n={info.extras.length ? 4 : 3} title="Declarations" busy={filling}>
           <div className="space-y-3">
             <label className={`flex items-start gap-2.5 text-[13px] text-ink-soft ${tried && !originality ? "text-danger" : ""}`}><input type="checkbox" checked={originality} onChange={(e) => setOriginality(e.target.checked)} className="mt-0.5" /> I confirm this submission is original work and has not been previously published or plagiarized. <span className="text-danger" aria-hidden="true">*</span></label>
             <label className={`flex items-start gap-2.5 text-[13px] text-ink-soft ${tried && !terms ? "text-danger" : ""}`}><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5" /> I agree to the conference&apos;s submission terms and conditions. <span className="text-danger" aria-hidden="true">*</span></label>
@@ -403,8 +420,8 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </section>
         )}
         <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-5 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.10)]">
-          <span className="text-xs font-semibold text-ink-muted">{done} of {required.length} required fields answered{tried && !canSubmit ? ` · still to do: ${required.filter(([, ok]) => !ok).map(([l]) => l).join(", ") || "check the authors"}` : ""}</span>
-          <Button disabled={sending || filling || info.closed} title={info.closed ? `Submissions to ${info.acronym} are closed` : undefined} onClick={() => void send()}><Check size={15} aria-hidden="true" /> {sending ? "Submitting…" : "Submit paper"}</Button>
+          <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", filling ? "text-primary" : "text-ink-muted")}>{filling && <Spinner size={15} tone="current" />}{filling ? "Smart Fill is filling in your form — hold on a moment" : `${done} of ${required.length} required fields answered${tried && !canSubmit ? ` · still to do: ${required.filter(([, ok]) => !ok).map(([l]) => l).join(", ") || "check the authors"}` : ""}`}</span>
+          <Button disabled={sending || filling || info.closed} title={info.closed ? `Submissions to ${info.acronym} are closed` : undefined} onClick={() => void send()}>{sending ? <Spinner size={15} tone="current" /> : <Check size={15} aria-hidden="true" />} {sending ? "Submitting…" : "Submit paper"}</Button>
         </div>
       </div>
       <aside className="space-y-4 xl:sticky xl:top-6" aria-label="Before you submit">

@@ -4,6 +4,7 @@ import { Check, Download, Info, Link2, QrCode } from "lucide-react";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/load-more";
 import { Switch } from "@/components/ui/switch";
 import type { Profile } from "@/types/profile";
 import { PROFESSIONAL_FIELDS, SCHOLAR_FIELDS, type LinkField } from "../fields";
@@ -86,7 +87,7 @@ export function ShareDialog({ profile, onClose, onTogglePublic }: { profile: Pro
             {qr
               // eslint-disable-next-line @next/next/no-img-element -- a generated data: URL
               ? <img src={qr} alt="QR code linking to this profile" width={72} height={72} className="shrink-0 rounded-lg border border-line" />
-              : <div style={{ width: 72, height: 72 }} className="shrink-0 rounded-lg border border-line" />}
+              : <div style={{ width: 72, height: 72 }} className="flex shrink-0 items-center justify-center rounded-lg border border-line"><Spinner size={24} label="Generating QR code" /></div>}
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <button type="button" onClick={() => downloadVCard(profile)} className={btn}><Download size={13} aria-hidden="true" /> Save contact (vCard)</button>
               <a href={qr || undefined} download={`${profile.firstName}-${profile.lastName}-qr.png`} aria-disabled={!qr} className={`${btn} ${qr ? "" : "pointer-events-none opacity-50"}`}><QrCode size={13} aria-hidden="true" /> Save QR code</a>

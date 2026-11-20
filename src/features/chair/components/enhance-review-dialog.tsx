@@ -1,8 +1,9 @@
 "use client";
 
-import { AlertTriangle, Check, Loader2, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/load-more";
 import { enhanceReview, type ReviewEnhancement } from "@/services/paper-ai";
 
 /* "Polish with Smart Assist" on the review text (the prototype's EnhanceReviewDialog): asks the AI (the `enhance-review` endpoint, through this app's /api/ai
@@ -34,7 +35,7 @@ export function EnhanceReviewDialog({ open, input, onApply, onClose }: { open: b
     <Dialog open={open} onClose={onClose} title="Polish with Smart Assist" description="Your wording, polished — you decide what to keep" icon={Sparkles} size="xl">
       {state.status === "loading" && (
         <div role="status" aria-live="polite" className="flex flex-col items-center gap-3 py-10 text-center">
-          <Loader2 size={40} aria-hidden="true" className="animate-spin text-primary" />
+          <Spinner size={40} label="Enhancing your review" />
           <p className="text-sm font-bold text-navy">Improving your review…</p>
           <p className="max-w-sm text-xs text-ink-muted">Fixing grammar, clarity and tone while keeping your meaning and your judgment. This takes a few seconds.</p>
         </div>

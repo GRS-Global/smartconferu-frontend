@@ -4,6 +4,7 @@ import { Bold, BookOpen, Check, ChevronDown, Clock, FileCheck, FileText, Italic,
 import Link from "next/link";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
+import { LoadingOverlay, Spinner } from "@/components/ui/load-more";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
 import { frameEmailHtml } from "@/lib/email-frame";
@@ -280,7 +281,8 @@ export function EmailCommunicationPage({ slug }: { slug: string }) {
                 </div>
                 <div className="mt-3 flex items-center justify-between border-t border-muted pt-3"><span className="text-xs font-semibold text-ink-faint">Total recipients</span><span className="text-sm font-extrabold text-navy">{total}</span></div>
               </section>
-              <button type="button" onClick={() => void send()} disabled={!canSend} style={{ background: canSend ? "var(--gradient-primary)" : "var(--muted)", color: canSend ? "#FFFFFF" : "var(--ink-faint)" }} className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-sm font-bold transition-opacity disabled:cursor-not-allowed"><Send size={15} aria-hidden="true" /> {sending ? "Sending…" : "Send Email"}</button>
+              <button type="button" onClick={() => void send()} disabled={!canSend} style={{ background: canSend ? "var(--gradient-primary)" : "var(--muted)", color: canSend ? "#FFFFFF" : "var(--ink-faint)" }} className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-sm font-bold transition-opacity disabled:cursor-not-allowed">{sending ? <Spinner size={16} tone="white" /> : <Send size={15} aria-hidden="true" />} {sending ? "Sending…" : "Send Email"}</button>
+              <LoadingOverlay open={sending} label="Sending your email…" hint="We're delivering it to every recipient. Please don't close or refresh the page." />
               <div>
                 <button type="button" onClick={() => setShowPreview((v) => !v)} aria-expanded={showPreview} className="flex items-center gap-1.5 text-xs text-primary"><Mail size={13} aria-hidden="true" /> This action sends {total || 1} email{(total || 1) === 1 ? "" : "s"} <span aria-hidden="true">·</span> <span className="font-semibold hover:underline">View emails</span> <ChevronDown size={13} aria-hidden="true" style={{ transform: showPreview ? "rotate(180deg)" : "none", transition: "transform 150ms ease" }} /></button>
                 {showPreview && (

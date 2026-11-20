@@ -2,6 +2,7 @@
 
 import { Send, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Spinner } from "@/components/ui/load-more";
 import { DATA_SOURCE } from "@/lib/config";
 import { askPaper, requestPaperIngest } from "@/services/paper-ai";
 
@@ -82,7 +83,7 @@ export function PaperChatPanel({ paper, heightPct, onClose, onCount }: { paper: 
             {Array.isArray(m.sources) && m.sources.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1">{[...new Set(m.sources.map((s) => (s as { section?: string }).section).filter(Boolean))].map((s) => <span key={s} className="max-w-full truncate rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-ink-muted">{s}</span>)}</div>}
           </div>
         ))}
-        {busy && <div role="status" className="flex items-center gap-2 text-xs text-ink-muted">Reading the relevant parts of the paper…</div>}
+        {busy && <div role="status" className="flex items-center gap-2 text-xs text-ink-muted"><Spinner size={14} /> <span>Reading the relevant parts of the paper…</span></div>}
       </div>
       <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="flex items-end gap-2 border-t border-line p-4">
         <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={2} maxLength={1000} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } }} placeholder="Ask about the method, data, results…" aria-label="Your question" className="flex-1 resize-none rounded-xl border-[1.5px] border-line px-3 py-2 text-sm text-ink outline-none placeholder:text-slate-400 focus:border-primary" />

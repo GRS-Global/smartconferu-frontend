@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CountrySelect } from "@/components/ui/country-select";
+import { Spinner } from "@/components/ui/load-more";
 import { Modal } from "@/components/ui/modal";
 import { countryTimezone, TimezoneSelect } from "@/components/ui/timezone-select";
 import { TriggeredEmailNote } from "@/components/ui/triggered-email-note";
@@ -495,7 +496,7 @@ export function CreateConferencePage() {
                 ))}
               </ul>
               <button type="button" onClick={() => void submit()} disabled={!canCreate || saving} title={canCreate ? undefined : "Fill in the required fields listed above first"} className={cn("mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50", canCreate && BTN_FX)}>
-                {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}{submitLabel}
+                {saving && <Spinner size={15} tone="current" />}{submitLabel}
                 <kbd className="rounded bg-white/[0.18] px-1.5 py-0.5 font-sans text-[10px] font-semibold">{isMac ? "⌘" : "Ctrl"} ↵</kbd>
               </button>
               {error && <p role="alert" className="mt-2 text-xs font-medium text-danger">{error}</p>}

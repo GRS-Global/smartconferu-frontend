@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Minus, Plus, Search, X } from "lucide-react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
 import "pdfjs-dist/web/pdf_viewer.css";
+import { Spinner } from "@/components/ui/load-more";
 
 /* The paper preview on the review pages: our own light PDF reader instead of the browser's (dark toolbar, thumbnail sidebar) — the prototype's
    src/shared/PdfViewer.jsx. pdf.js draws every page (a canvas plus a transparent text layer, so text can be selected and searched); a slim toolbar gives
@@ -251,7 +252,7 @@ export function PdfViewer({ url, onOpenExternal }: { url: string; onOpenExternal
         ) : <button type="button" disabled={!doc} onClick={() => setSearchOpen(true)} aria-label="Search the paper" title="Search the paper" className={btn}><Search size={15} aria-hidden="true" /></button>}
       </div>
       <div ref={(el) => { scrollerRef.current = el; if (el !== root) setRoot(el); }} onScroll={onScroll} className="relative min-h-0 flex-1 overflow-auto bg-canvas">
-        {!doc ? <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-ink-muted">Loading the paper…</div> : (
+        {!doc ? <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-ink-muted"><Spinner size={14} /> Loading the paper…</div> : (
           <div style={{ padding: `${PAGE_GAP}px ${SIDE_PAD}px 0`, width: "max-content", minWidth: "100%" }}>
             {doc.sizes.map((s, i) => <PdfPage key={i} pdf={doc.pdf} n={i + 1} w={s.w} h={s.h} scale={scale} root={root} query={query} nowIndex={where.page === i + 1 ? where.local : -1} pageRef={(n, el) => { pageEls.current[n] = el; }} />)}
           </div>

@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, Check, Copy, Eye, GripVertical, Lock, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { INPUT_CLASS } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/load-more";
 import { PROTECTED_FIELD_IDS, type FieldType, type ReviewField, type ReviewSection } from "@/features/reviewer/form-schema";
 import { InstructionsPreview } from "./review-form-preview";
 
@@ -150,7 +151,7 @@ export function ReviewFormBuilder({ initial, acronym, instructions, hiddenFields
   const required = secs.flatMap((x) => x.fields).filter((x) => x.required).length;
   const lockedCount = secs.flatMap((x) => x.fields).filter(locked).length;
   const status = state === "failed" ? <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-1 text-[11px] font-bold text-danger">{failure || "Couldn't save"}</span>
-    : state === "saving" ? <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-ink-muted">Saving…</span>
+    : state === "saving" ? <span className="fe-pulse inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-ink-muted"><Spinner size={12} tone="current" /> Saving…</span>
       : <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-bold text-success"><Check size={11} aria-hidden="true" /> All changes saved</span>;
   return (
     <div className="mx-auto max-w-[1064px]">

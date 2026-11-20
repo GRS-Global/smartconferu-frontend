@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertTriangle, BadgeCheck, Check, Clock, ExternalLink, Loader2, Search } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Check, Clock, ExternalLink, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { INPUT_CLASS } from "@/components/ui/field";
+import { Loader } from "@/components/ui/load-more";
 import { CAN_SEARCH_IN_APP, profileSearchUrl, searchProfiles, type ProfileMatch } from "@/lib/profile-search";
 import type { Profile } from "@/types/profile";
 import { normalizePastedProfile, profileLinkHref, type LinkField } from "../fields";
@@ -63,7 +64,7 @@ export function FindDialog({ field, profile, onPicked, onClose }: { field: LinkF
         </button>
       </form>
       {!inApp && <p className="text-sm leading-relaxed text-ink-muted">{field.label} can&apos;t be searched from here. Search opens {field.label} in a new tab with your name filled in — open your profile there, copy its link and paste it below.</p>}
-      {inApp && state.status === "loading" && <p role="status" className="flex items-center gap-2 py-6 text-sm text-ink-muted"><Loader2 size={16} className="animate-spin" aria-hidden="true" /> Searching {field.label}…</p>}
+      {inApp && state.status === "loading" && <Loader label={`Searching ${field.label}…`} className="py-6" />}
       {inApp && state.status === "error" && <p role="alert" className="flex items-start gap-1.5 text-sm text-danger"><AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> We couldn&apos;t reach {field.label} just now. {siteLink(`Search on ${field.label}`)} instead and paste the link below.</p>}
       {inApp && state.status === "done" && (state.results.length === 0 ? (
         <p className="text-sm text-ink-muted">No one called “{query.trim()}” on {field.label}. Try another spelling, or {siteLink(`search on ${field.label}`)}.</p>

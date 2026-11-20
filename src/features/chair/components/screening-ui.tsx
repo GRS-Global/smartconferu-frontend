@@ -3,6 +3,7 @@
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, Check, CalendarClock, ChevronDown, ChevronRight, ClipboardCheck, Download, FileText, FilterX, Info, Lock, RefreshCw, Send, Settings2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { Spinner } from "@/components/ui/load-more";
 import { cn } from "@/lib/cn";
 import type { AutoCheck, ChairPaper, ScreeningCheck } from "@/types/chair";
 import { EMAILED, isOverdue, type CheckItem, type DecisionMeta } from "../screening";
@@ -31,19 +32,8 @@ export function ScreeningToast({ toast, onClose }: { toast: ScreeningToastData |
   );
 }
 
-/** A "please wait" cover while an email is sent (the prototype's LoadingOverlay). */
-export function LoadingOverlay({ open, label, hint }: { open: boolean; label?: string; hint?: string }) {
-  if (!open) return null;
-  return (
-    <div role="alertdialog" aria-busy="true" aria-label={label} style={{ background: "rgba(15,23,42,0.45)" }} className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="flex max-w-sm flex-col items-center rounded-2xl bg-white px-8 py-7 text-center shadow-2xl">
-        <span aria-hidden="true" className="mb-3 inline-block h-9 w-9 animate-spin rounded-full border-[3px] border-line border-t-primary" />
-        <div className="text-sm font-bold text-navy">{label}</div>
-        {hint && <p className="mt-1 text-xs text-ink-muted">{hint}</p>}
-      </div>
-    </div>
-  );
-}
+/** A "please wait" cover while an email is sent (the prototype's LoadingOverlay, shared). */
+export { LoadingOverlay } from "@/components/ui/load-more";
 
 /* ---------- cells ---------- */
 /** Green = yes, red = no. */
@@ -146,7 +136,7 @@ export const MISSING_LABEL: Record<string, string> = { title: "title", author_na
 /** Under the upload date: only what needs the chair — a check still running / failed, missing parts. An anonymised PDF has no names by design. */
 export function AutoStatus({ auto, doubleBlind = false }: { auto: AutoCheck | null | undefined; doubleBlind?: boolean }) {
   if (!auto) return <div className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap text-[10.5px] font-semibold text-ink-muted"><AlertTriangle size={11} aria-hidden="true" /> Check the PDF manually</div>;
-  if (auto.status === "running") return <div className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap text-[10.5px] font-semibold text-ink-muted"><span aria-hidden="true" className="inline-block h-[11px] w-[11px] animate-spin rounded-full border-2 border-line border-t-primary" /> Reading PDF…</div>;
+  if (auto.status === "running") return <div className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap text-[10.5px] font-semibold text-ink-muted"><Spinner size={11} /> Reading PDF…</div>;
   if (auto.status === "failed") return <div title={auto.error} className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap text-[10.5px] font-semibold text-ink-muted"><AlertTriangle size={11} aria-hidden="true" /> Check the PDF manually</div>;
   const missing = (auto.missing ?? []).filter((k) => !(doubleBlind && (k === "author_names" || k === "affiliations"))).map((k) => MISSING_LABEL[k] ?? k);
   if (!missing.length) return null;
