@@ -5,6 +5,7 @@ import { getConferenceService } from "@/services/conferences";
 import { getNotificationService } from "@/services/notifications";
 import { AuthRequiredError, ServiceConfigError, ServiceError } from "@/services/errors";
 import type { AppNotification } from "@/types/notification";
+import { LIVE_NOTIFICATION_EVENT } from "./live-events";
 import { useUnreadCount } from "./notifications-context";
 
 export type NotificationsState =
@@ -61,6 +62,13 @@ export function useNotifications() {
       });
     return () => { cancelled = true; };
   }, [tick]);
+
+  // A new notification arrived live (the bell's stream): read the list again without the loading state, so it simply appears.
+  useEffect(() => {
+    const again = () => setTick((t) => t + 1);
+    window.addEventListener(LIVE_NOTIFICATION_EVENT, again);
+    return () => window.removeEventListener(LIVE_NOTIFICATION_EVENT, again);
+  }, []);
 
   const loadedWithdrawals = state.status === "ready" && state.items.some((n) => n.kind === "withdrawn");
   useEffect(() => {

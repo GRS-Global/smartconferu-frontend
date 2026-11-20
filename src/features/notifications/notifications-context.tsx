@@ -1,14 +1,16 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { DATA_SOURCE } from "@/lib/config";
 import { getConferenceService } from "@/services/conferences";
 import { getNotificationService, type UnreadRow } from "@/services/notifications";
 import { audienceOf, type Audience } from "./destinations";
+import { announceLiveNotification, openLiveNotifications } from "./live-events";
 
 /* The header bell's unread number, shared with the Notifications page so both always agree.
 
-   One lightweight query pair per signed-in page load (the provider mounts once in the app shell): no polling, no
-   realtime. The count is the whole account's; the list of unread rows (id, kind, conference) lets the bell count inside one
+   One lightweight query pair per signed-in page load (the provider mounts once in the app shell), and with the own backend a live stream
+   (Server-Sent Events, live-events.ts): a new notification updates the number at once and tells the Notifications page to reload its list. The count is the whole account's; the list of unread rows (id, kind, conference) lets the bell count inside one
    conference for one role, as the prototype's bell does there. The page keeps both in step as it marks notifications read,
    instead of asking again. A failed query is not an error screen: the bell simply shows no number. */
 
@@ -61,6 +63,19 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .then((r) => { if (!cancelled) { setUnreadState((current) => current ?? r.count); setRows((current) => current ?? r.rows); } })
       .catch(() => { if (!cancelled) setCountFailed(true); }); // no number on the bell; the Notifications page reports its own errors
     return () => { cancelled = true; };
+  }, []);
+
+  // Own backend: new notifications arrive live. The stream says "something new, this many unread now"; the bell's per-conference list is read again
+  // (the event does not carry the conference) and the Notifications page, if it is open, reloads its list.
+  useEffect(() => {
+    if (DATA_SOURCE !== "api") return undefined;
+    let cancelled = false;
+    const refreshRows = () => { getNotificationService().then((s) => s.unreadList()).then((r) => { if (!cancelled) setRows(r); }).catch(() => undefined); };
+    const close = openLiveNotifications({
+      onReady: (n) => { setUnreadState(n); refreshRows(); },
+      onNotification: (n) => { setUnreadState(n); refreshRows(); announceLiveNotification(); },
+    });
+    return () => { cancelled = true; close(); };
   }, []);
 
   const setUnread = useCallback((n: number) => { setUnreadState(Math.max(0, n)); if (n === 0) setRows([]); }, []);
