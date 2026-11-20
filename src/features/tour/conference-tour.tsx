@@ -9,6 +9,7 @@ import { SetupGuideModal } from "./setup-guide-modal";
 import { buildTourSteps, DETAIL_LABELS, gateOpen, missingDetails } from "./tour-steps";
 import type { ConferenceSetup, SetupTask } from "./use-setup";
 import { readTourState, writeTourState } from "./tour-state";
+import { rememberTourShown, tourNotShownYet } from "./tour-seen";
 
 /* The chair's guided tour of Conference Settings (the prototype's SetupTourRunner + SetupTourPausedBar). "Take a tour" in the sidebar opens a short welcome,
    then a spotlight walks through the settings pages: the menu item first (with an "Open …" button), then the cards that matter on the page itself. Opening
@@ -47,6 +48,18 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
       if (raw) { const s = JSON.parse(raw) as { mode: Mode; missing: string[]; task: SetupTask | null }; if (s.mode !== "off") { setMissing(s.missing); setFocusTask(s.task); setModeState(s.mode); } } // eslint-disable-line react-hooks/set-state-in-effect
     } catch { /* unreadable: no tour running */ }
   }, [memo]);
+  // The first time this chair opens the conference the tour starts by itself; from then on (any device, any later visit) only the "Take a tour" button starts it.
+  // A tour already running in this tab (it follows the chair from page to page) is never started a second time.
+  useEffect(() => {
+    let alive = true;
+    try { if (window.sessionStorage.getItem(memo)) return undefined; } catch { /* storage off: fall through to the saved answer */ }
+    void tourNotShownYet(slug).then(async (first) => {
+      if (!first || !alive) return;
+      await rememberTourShown(slug); // saved before it starts, so the next page of the tour (and another device) already counts it as shown
+      if (alive) startConferenceTour();
+    });
+    return () => { alive = false; };
+  }, [slug, memo]);
   useEffect(() => {
     const start = () => {
       // What the field steps ask about is what is saved right now.

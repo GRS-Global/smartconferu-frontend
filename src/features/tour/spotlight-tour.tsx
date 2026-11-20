@@ -3,7 +3,7 @@
 import { Lock, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PAD, placePopover, type Box, type Placement } from "./placement";
-import { findTargets, focusField, isComfortablyVisible, revealTarget, unionRect, waitForTargets } from "./reveal";
+import { findTargets, focusField, isClipped, isComfortablyVisible, revealTarget, unionRect, waitForTargets } from "./reveal";
 
 /* A spotlight + anchored popover for one tour step, pointed at real elements by `data-tour` attributes (never CSS classes or visible text, so restyling or
    translating the page cannot break it). The prototype's setup-tour/SpotlightTour.jsx.
@@ -65,7 +65,7 @@ function arrowStyle(pos: Placement, rect: Box, popH: number): React.CSSPropertie
   if (pos.side === "left") return { right: -ARROW, top: y, transform: "rotate(45deg)", borderRight: edge, borderTop: edge };
   return null;
 }
-const MAX_RE_REVEALS = 2; // after layout shifts, bring the target back into view at most this many times
+const MAX_RE_REVEALS = 4; // after layout shifts, bring the target back into view at most this many times
 
 /** A step as the popover draws it: the runner has turned `skip` and `open` into actions. */
 export type ViewStep = Omit<TourStep, "skip" | "open"> & { skip?: TourAction; /** For a gated step: whether its field is filled in. */ gateOk?: boolean };
@@ -109,7 +109,7 @@ function TourStepView({ step, index, total, onBack, onNext, onSkipTour, onFinish
         ins = await revealTarget(els[0], { signal });
         if (!ins) return;
         els = findTargets(targets);
-        if (!els.length || isComfortablyVisible(unionRect(els), ins)) break;
+        if (!els.length || (isComfortablyVisible(unionRect(els), ins) && !isClipped(els[0]))) break;
       }
       if (signal.aborted || !ins) return;
       if (!els.length) { setRect(null); setPhase("lost"); return; }
@@ -126,19 +126,22 @@ function TourStepView({ step, index, total, onBack, onNext, onSkipTour, onFinish
         frame = 0;
         const now = findTargets(targets);
         if (!now.length) { setRect(null); setPhase("lost"); return; }
-        setRect(unionRect(now));
+        const box = unionRect(now);
+        setRect((prev) => (prev && prev.left === box.left && prev.top === box.top && prev.width === box.width && prev.height === box.height ? prev : box));
         setView((prev) => (prev.w === window.innerWidth && prev.h === window.innerHeight ? prev : { w: window.innerWidth, h: window.innerHeight }));
       };
       const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
       const onLayout = async () => {
         schedule();
         const now = findTargets(targets);
-        if (!now.length || reveals >= MAX_RE_REVEALS || isComfortablyVisible(unionRect(now), insetsRef.current)) return;
+        if (!now.length || reveals >= MAX_RE_REVEALS || (isComfortablyVisible(unionRect(now), insetsRef.current) && !isClipped(now[0]))) return;
         reveals += 1;
         const next = await revealTarget(now[0], { signal });
         if (next) { insetsRef.current = next; setInsets(next); schedule(); }
       };
       insetsRef.current = ins;
+      // The menu can still be settling (a group opening, the setup lock loading) without any scroll or resize: look again a few times a second so the spotlight never stays on the old spot.
+      const poll = window.setInterval(() => { void onLayout(); }, 250);
       window.addEventListener("scroll", schedule, { capture: true, passive: true });
       window.addEventListener("resize", onLayout);
       const observer = new ResizeObserver(() => { void onLayout(); });
@@ -147,6 +150,7 @@ function TourStepView({ step, index, total, onBack, onNext, onSkipTour, onFinish
         window.removeEventListener("scroll", schedule, { capture: true });
         window.removeEventListener("resize", onLayout);
         observer.disconnect();
+        window.clearInterval(poll);
         cancelAnimationFrame(frame);
       }, { once: true });
     })();

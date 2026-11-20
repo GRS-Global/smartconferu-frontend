@@ -98,6 +98,12 @@ export function isComfortablyVisible(rect: Box, insets = { top: 0, bottom: 0 }) 
   return rect.top >= top && rect.bottom <= bottom;
 }
 
+/** True when a panel that scrolls (the menu, a dialog) hides part of `el`: being inside the window is not enough if the panel around it cuts it off. */
+export function isClipped(el: HTMLElement): boolean {
+  const r = el.getBoundingClientRect();
+  return scrollParents(el).some((sp) => { const c = sp.getBoundingClientRect(); return r.top < c.top - 1 || r.bottom > c.bottom + 1; });
+}
+
 type Container = HTMLElement | Window;
 const position = (c: Container) => (c === window ? window.scrollY : (c as HTMLElement).scrollTop);
 
