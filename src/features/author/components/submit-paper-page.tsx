@@ -42,9 +42,10 @@ const LABEL = "mb-1 block text-xs font-bold text-ink-soft";
 // The prototype's New Submission form label (EnhancedSchemaForm): 14 px / 600, 6 px below, --text; it turns danger-red when a required field is still empty after a submit attempt.
 const FIELD_LABEL = "mb-1.5 block text-sm font-semibold";
 const fieldLabel = (missing = false) => `${FIELD_LABEL} ${missing ? "text-danger" : "text-ink"}`;
-let rowKey = 0;
+/** Keys for the author rows. The counter lives on `globalThis`, not in this module, so a hot reload (which re-runs the module but keeps the rows on screen) can never hand out a key a row already has. */
+const nextRowKey = (): number => { const g = globalThis as { __authorRowKey?: number }; g.__authorRowKey = (g.__authorRowKey ?? 0) + 1; return g.__authorRowKey; };
 interface Row extends AuthorInput { key: number }
-const blankRow = (over: Partial<Row> = {}): Row => ({ key: ++rowKey, name: "", email: "", affiliation: "", country: "", corresponding: false, ...over });
+const blankRow = (over: Partial<Row> = {}): Row => ({ key: nextRowKey(), name: "", email: "", affiliation: "", country: "", corresponding: false, ...over });
 const titleKey = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 type FormState =
@@ -265,7 +266,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   return (
     <>
       <PageHeader title={title} breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: info.acronym, href: behalf ? `/chair/${encodeURIComponent(info.slug)}` : undefined }, { label: title }]} />
-      <div className="grid items-start gap-6 p-4 sm:p-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid items-start gap-6 p-4 sm:p-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
       <div className="min-w-0 space-y-5">
         <div style={CARD} className="flex flex-wrap items-center gap-5 rounded-2xl bg-gradient-to-r from-[#EEF2FF] via-[#F1ECFF] to-[#E6F6FB] p-6">
           <ConferenceMonogram acronym={info.acronym} size={84} />
@@ -401,8 +402,14 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
 
         <Section n={info.extras.length ? 4 : 3} title="Declarations" busy={filling}>
           <div className="space-y-3">
-            <label className={`flex items-start gap-2.5 text-[13px] text-ink-soft ${tried && !originality ? "text-danger" : ""}`}><input type="checkbox" checked={originality} onChange={(e) => setOriginality(e.target.checked)} className="mt-0.5" /> I confirm this submission is original work and has not been previously published or plagiarized. <span className="text-danger" aria-hidden="true">*</span></label>
-            <label className={`flex items-start gap-2.5 text-[13px] text-ink-soft ${tried && !terms ? "text-danger" : ""}`}><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5" /> I agree to the conference&apos;s submission terms and conditions. <span className="text-danger" aria-hidden="true">*</span></label>
+            <div className={tried && !originality ? "rounded-xl border border-danger bg-danger-soft px-3.5 py-3" : undefined}>
+              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !originality ? "font-semibold text-danger" : "text-ink-soft")}><input type="checkbox" checked={originality} onChange={(e) => setOriginality(e.target.checked)} aria-invalid={tried && !originality} className={cn("mt-0.5", tried && !originality && "outline outline-2 outline-offset-1 outline-danger")} /> I confirm this submission is original work and has not been previously published or plagiarized. <span className="text-danger" aria-hidden="true">*</span></label>
+              {tried && !originality && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger">Please tick this box to submit your paper.</p>}
+            </div>
+            <div className={tried && !terms ? "rounded-xl border border-danger bg-danger-soft px-3.5 py-3" : undefined}>
+              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !terms ? "font-semibold text-danger" : "text-ink-soft")}><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} aria-invalid={tried && !terms} className={cn("mt-0.5", tried && !terms && "outline outline-2 outline-offset-1 outline-danger")} /> I agree to the conference&apos;s submission terms and conditions. <span className="text-danger" aria-hidden="true">*</span></label>
+              {tried && !terms && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger">Please tick this box to submit your paper.</p>}
+            </div>
           </div>
         </Section>
 
