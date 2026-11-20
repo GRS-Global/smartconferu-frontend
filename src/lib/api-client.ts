@@ -1,5 +1,6 @@
 import { API_URL } from "@/lib/config";
 import { AuthRequiredError, ServiceError } from "@/services/errors";
+import { endSupportView, hadSupportView, readSupportView } from "@/lib/support-view";
 
 /* One place for every call to the own backend (Backend/, NestJS): plain JSON over HTTPS, routes in ../API.md.
    - Base path /api/v1.
@@ -18,7 +19,18 @@ export class ApiError extends ServiceError {
 }
 
 let accessToken: string | null = null;
-export const hasAccessToken = () => accessToken !== null;
+/* A Super Admin's read-only "View as" in this tab: its token is used as is and never refreshed (the
+   browser's refresh cookie is the admin's own). See lib/support-view.ts. */
+function supportToken(): string | null {
+  const view = readSupportView();
+  if (view) {
+    accessToken = view.token;
+    return view.token;
+  }
+  if (hadSupportView()) endSupportView();
+  return null;
+}
+export const hasAccessToken = () => accessToken !== null || supportToken() !== null;
 
 /* ---- who is listening to the session (the header menu watches it to send people back to sign-in) ---- */
 export type SessionEvent = "signed_in" | "signed_out";
@@ -32,6 +44,11 @@ const emit = (e: SessionEvent) => listeners.forEach((fn) => fn(e));
 
 /** Stores (or, with null, forgets) the access token and tells the listeners (`notify` false: the caller sends the person on itself). */
 export function setAccessToken(token: string | null, notify = true): void {
+  // Signing out of a support view ends the view; nothing else may replace its token.
+  if (hadSupportView()) {
+    if (token === null) endSupportView();
+    return;
+  }
   const had = accessToken !== null;
   accessToken = token;
   if (!notify) return;
@@ -44,6 +61,10 @@ let refreshing: Promise<boolean> | null = null;
 
 /** Gets a new access token from the refresh cookie. Resolves false when there is no valid session. Never throws. */
 export function refreshSession(): Promise<boolean> {
+  if (hadSupportView()) {
+    // The view's token can't be renewed: it is still good, or the view is over.
+    return Promise.resolve(supportToken() !== null);
+  }
   refreshing ??= (async () => {
     try {
       const res = await fetch(`${BASE}/auth/refresh`, { method: "POST", credentials: "include" });
@@ -114,6 +135,7 @@ async function isSessionProblem(res: Response): Promise<boolean> {
 /** Calls the backend and returns the parsed JSON (undefined for 204). Throws AuthRequiredError / ApiError / ServiceError. */
 async function request(path: string, o: ApiOptions): Promise<Response> {
   const authed = o.auth !== false;
+  if (authed && !accessToken) supportToken();
   if (authed && !accessToken && !(await refreshSession())) throw new AuthRequiredError();
   let res = await send(path, o);
   if (res.status === 401 && authed && (await isSessionProblem(res))) {

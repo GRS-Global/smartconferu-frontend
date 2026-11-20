@@ -4,13 +4,18 @@
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { onSessionEnded } from "./api";
-import { loadMe, resumeAdminSession, signOut as apiSignOut, type Me } from "./services";
+import { forgetTrustedDevice, loadMe, resumeAdminSession, signOut as apiSignOut, signOutEverywhere as apiSignOutEverywhere, type Me } from "./services";
+import { forgetTrustHint } from "./trusted-device";
 import { Loading } from "./components/ui";
 
 interface AdminSession {
   me: Me;
   name: string;
   signOut: () => Promise<void>;
+  /** Ends every session of this account (and every trusted device), then back to the sign-in. */
+  signOutEverywhere: () => Promise<void>;
+  /** "Forget this device": the emailed code is asked again next time. */
+  forgetDevice: () => Promise<void>;
 }
 
 const Ctx = createContext<AdminSession | null>(null);
@@ -54,6 +59,15 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
     await apiSignOut().catch(() => undefined);
     router.replace("/super-admin/login");
   }, [router]);
+  const signOutEverywhere = useCallback(async () => {
+    await apiSignOutEverywhere().catch(() => undefined);
+    forgetTrustHint();
+    router.replace("/super-admin/login");
+  }, [router]);
+  const forgetDevice = useCallback(async () => {
+    await forgetTrustedDevice();
+    forgetTrustHint();
+  }, []);
 
   if (failed) {
     return (
@@ -71,5 +85,5 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
   }
   if (!me) return <Loading label="Checking your admin session…" />;
   const name = [me.firstName, me.lastName].filter(Boolean).join(" ") || me.email || "Super Admin";
-  return <Ctx.Provider value={{ me, name, signOut }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ me, name, signOut, signOutEverywhere, forgetDevice }}>{children}</Ctx.Provider>;
 }

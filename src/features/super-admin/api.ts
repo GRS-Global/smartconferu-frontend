@@ -71,7 +71,14 @@ export function refreshSession(): Promise<boolean> {
   return refreshing;
 }
 
-/** A JSON request; a 401 renews the access token once and retries. */
+/* "Confirm it's you": a high-risk action answers 403 AUTH_STEP_UP_REQUIRED; the console shows the
+   code dialog (registered by the shell) and, once the code is accepted, the request is sent again. */
+let stepUp: (() => Promise<boolean>) | null = null;
+export function onStepUpRequired(handler: (() => Promise<boolean>) | null) {
+  stepUp = handler;
+}
+
+/** A JSON request; a 401 renews the access token once and retries; a step-up asks for a code and retries. */
 export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   let res = await send(path, init);
   if (res.status === 401 && accessToken && !path.startsWith("/auth/")) {
@@ -81,7 +88,15 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
       listeners.forEach((l) => l());
     }
   }
-  if (!res.ok) throw await errorOf(res);
+  if (!res.ok) {
+    const error = await errorOf(res);
+    if (error.code === "AUTH_STEP_UP_REQUIRED" && stepUp && (await stepUp())) {
+      res = await send(path, init);
+      if (!res.ok) throw await errorOf(res);
+    } else {
+      throw error;
+    }
+  }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
@@ -90,6 +105,7 @@ export const get = <T>(path: string) => api<T>(path);
 export const post = <T>(path: string, json?: unknown) => api<T>(path, { method: "POST", json: json ?? {} });
 export const patch = <T>(path: string, json: unknown) => api<T>(path, { method: "PATCH", json });
 export const put = <T>(path: string, json: unknown) => api<T>(path, { method: "PUT", json });
+export const del = <T>(path: string) => api<T>(path, { method: "DELETE" });
 
 export const qs = (params: Record<string, string | number | undefined | null>) => {
   const s = new URLSearchParams();
