@@ -2,9 +2,9 @@
 /* Super Admin building blocks, ported from the prototype (src/super-admin/ui.jsx, format.js):
    same class names (super-admin.css) and token colours, typed for this app. */
 import Link from "next/link";
-import { useEffect, type ComponentType, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, ChevronRight, Loader2, User, X, type LucideProps } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, ChevronRight, Loader2, Search, User, X, type LucideProps } from "lucide-react";
 import { ApiError } from "../api";
 
 export type Icon = ComponentType<LucideProps>;
@@ -263,18 +263,27 @@ export function Modal({ title, subtitle, children, footer, onClose }: { title: s
   );
 }
 
-export function Toast({ text, onDone }: { text: string | null; onDone: () => void }) {
+/** How long a decision can be undone before it is sent (the prototype's UNDO_MS). */
+export const UNDO_MS = 10_000;
+
+/* `undo`: the toast offers Undo while a decision is held back (and stays for UNDO_MS). */
+export function Toast({ text, onDone, undo }: { text: string | null; onDone: () => void; undo?: () => void }) {
   useEffect(() => {
     if (!text) return;
-    const t = setTimeout(onDone, 3500);
+    const t = setTimeout(onDone, undo ? UNDO_MS : 3200);
     return () => clearTimeout(t);
-  }, [text, onDone]);
+  }, [text, onDone, undo]);
   if (!text) return null;
   return (
-    <div className="fixed bottom-6 right-6 z-[60]" role="status">
-      <div className="flex items-center gap-2.5 rounded-xl px-4 py-2 min-h-[46px] text-[13.5px] font-medium text-white" style={{ background: "var(--navy)", boxShadow: "var(--shadow-pop)" }}>
+    <div className="fixed bottom-6 right-6 z-[60] sa-rise" role="status">
+      <div className="flex items-center gap-2.5 rounded-xl pl-4 pr-2 py-2 min-h-[46px] text-[13.5px] font-medium text-white" style={{ background: "var(--navy)", boxShadow: "var(--shadow-pop)" }}>
         <CheckCircle2 size={18} className="shrink-0" style={{ color: "#4ADE80" }} />
-        <span>{text}</span>
+        <span className="pr-2">{text}</span>
+        {undo && (
+          <button type="button" onClick={undo} className="shrink-0 rounded-lg px-3 py-1.5 text-[13px] font-semibold hover:bg-white/10 cursor-pointer" style={{ color: "#C4B5FD" }}>
+            Undo
+          </button>
+        )}
       </div>
     </div>
   );
@@ -364,21 +373,47 @@ export function Empty({ children }: { children: ReactNode }) {
   );
 }
 
-/** Tabs with counts (Active / Deactivated / All …) and a search box. */
+/** Tabs with counts (Active / Deactivated / All …), a search box and optional buttons (the prototype's Toolbar). */
 export function Toolbar<K extends string>({ tabs, tab, setTab, query, setQuery, placeholder, right }: { tabs: [K, string, number][]; tab: K; setTab: (k: K) => void; query: string; setQuery: (q: string) => void; placeholder: string; right?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 flex-wrap px-6 pt-5 pb-4">
-      <div className="flex items-center gap-1 flex-wrap" role="tablist">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-6 pt-5 pb-4">
+      <div className="flex gap-1 flex-wrap" role="tablist">
         {tabs.map(([k, label, n]) => (
-          <button key={k} role="tab" aria-selected={tab === k} className={`sa-tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>
+          <button key={k} role="tab" aria-selected={tab === k} className={`sa-tab ${tab === k ? "active" : ""} cursor-pointer`} onClick={() => setTab(k)}>
             {label} <span className="ml-1 opacity-70">{n}</span>
           </button>
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <input className="sa-input !w-[260px]" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={placeholder} aria-label={placeholder} />
+        <label className="relative flex-1 md:w-72">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-faint)" }} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={placeholder} aria-label={placeholder} className="sa-input !pl-9" />
+        </label>
         {right}
       </div>
     </div>
   );
+}
+
+/* Header sorting (the prototype's sort.js): click a column to sort by it, again to flip. Each column
+   says how to read its value and which way it sorts first (numbers and dates usually newest/largest first). */
+export type SortSpec<T> = Record<string, { get: (row: T) => string | number | null; first?: "asc" | "desc" }>;
+export function useSort<T>(rows: T[], spec: SortSpec<T>, initial: Sort<string> | null = null) {
+  const [sort, setSort] = useState<Sort<string> | null>(initial);
+  const sorted = useMemo(() => {
+    if (!sort || !spec[sort.key]) return rows;
+    const { get } = spec[sort.key];
+    const dir = sort.dir === "asc" ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const x = get(a);
+      const y = get(b);
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: "base" })) * dir;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, sort]);
+  const toggle = (key: string) => setSort((s) => (s?.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: spec[key]?.first ?? "asc" }));
+  return { sorted, sort: sort ?? { key: "", dir: "asc" as const }, toggle };
 }

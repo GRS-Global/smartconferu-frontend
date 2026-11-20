@@ -9,7 +9,7 @@ import { emailPreviewDoc, emailSubject } from "@/features/chair/email-preview";
 import { useAdmin } from "../session";
 import { loadEmailTemplates, saveEmailTemplate, testEmailTemplate, type EmailTemplate } from "../services";
 import { useData } from "../use-data";
-import { Badge, Button, Card, errorText, Failed, Loading, PageTitle, Toast } from "./ui";
+import { Badge, Button, Card, errorText, Failed, Loading, PageTitle, Toast, type Tone } from "./ui";
 
 const htmlToText = (html: string) =>
   html
@@ -26,6 +26,8 @@ const textToHtml = (text: string) =>
     .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
     .join("");
 const varsOf = (...texts: string[]) => [...new Set(texts.join(" ").match(/{{\s*\w+\s*}}/g)?.map((v) => v.replace(/[{}\s]/g, "")) ?? [])];
+// How each email goes out (the prototype's EMAIL_SEND_TYPES), and its badge colour.
+const SEND_TYPES: Record<string, [string, Tone]> = { auto: ["Automatic", "primary"], chair: ["Chair action", "secondary"], scheduled: ["Scheduled reminder", "warning"], bulk: ["Bulk / manual", "neutral"] };
 const MODULE_LABEL = (m: string | null) => (m ? m.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : "Other");
 
 function TemplateEditor({ template, onSaved }: { template: EmailTemplate; onSaved: (t: EmailTemplate, toast: string) => void }) {
@@ -74,7 +76,7 @@ function TemplateEditor({ template, onSaved }: { template: EmailTemplate; onSave
             {[template.triggerText, template.recipients && `to ${template.recipients}`].filter(Boolean).join(" · ")}
           </p>
         </div>
-        {template.sendType && <Badge tone="primary">{template.sendType}</Badge>}
+        {template.sendType && <Badge tone={(SEND_TYPES[template.sendType] ?? [template.sendType, "neutral"])[1]}>{(SEND_TYPES[template.sendType] ?? [template.sendType])[0]}</Badge>}
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="flex flex-col gap-3">

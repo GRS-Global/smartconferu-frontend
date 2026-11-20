@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { SupportViewBanner } from "@/components/support-view";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -26,7 +27,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${jakarta.variable} ${cormorant.variable}`}>
-      <body className="min-h-screen font-sans text-ink">{children}</body>
+      <body className="min-h-screen font-sans text-ink">
+        <SupportViewBanner />
+        {children}
+      </body>
     </html>
   );
 }
