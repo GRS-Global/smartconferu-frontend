@@ -197,7 +197,7 @@ summary {
 [data-tour-quiet]:focus { border-color: var(--border) !important; box-shadow: none !important; }
 
 /* Rich text a chair wrote (Submission Guidelines): the prototype's `.rich-text-content`, for the editor and for the read-only render. */
-.rich-text-content { font-size: 14px; line-height: 1.65; color: var(--text-soft); }
+.rich-text-content { font-size: 14px; line-height: 1.65; color: var(--text-soft); overflow-wrap: anywhere; }
 .rich-text-content > :first-child { margin-top: 0; }
 .rich-text-content p { margin: 0 0 10px; }
 .rich-text-content p:last-child { margin-bottom: 0; }

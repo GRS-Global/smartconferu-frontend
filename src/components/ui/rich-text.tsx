@@ -7,17 +7,58 @@ import { useEffect, useRef, useState } from "react";
    (Submission Guidelines). The text is stored as HTML. Text saved before this editor existed is plain text; it is shown as paragraphs and becomes HTML
    the next time it is saved. HTML is never trusted: scripts, frames, event handlers and javascript: links are removed on the way in and out. */
 
-export function cleanHtml(html: string): string {
+const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const SKIP = new Set(["script", "style", "iframe", "object", "embed", "link", "meta", "form", "base", "img", "svg", "canvas", "video", "audio", "head", "title", "noscript", "button", "input", "select", "textarea"]);
+
+/** The children of `el` as blocks: loose text and inline tags next to paragraphs / lists get a paragraph of their own. */
+function kids(el: Node, heading: "h2" | "strong"): string {
+  let out = "", run = "";
+  const flush = () => { if (run.replace(/<br>/g, "").trim()) out += `<p>${run.trim()}</p>`; run = ""; };
+  for (const c of Array.from(el.childNodes)) {
+    const piece = plain(c, heading);
+    if (/^<(p|ul|ol|h2)[s>]/.test(piece)) { flush(); out += piece; } else run += piece;
+  }
+  flush();
+  return out;
+}
+
+/** Rebuilds `node` with only the formatting the editor offers (bold, italic, underline, lists, links and, if asked, headings). Everything else a page or a Word file
+ *  brings along — styles, classes, fonts, columns, widths, tables, spans — is dropped, so pasted text always takes the editor's own look. */
+function plain(node: Node, heading: "h2" | "strong"): string {
+  if (node.nodeType === Node.TEXT_NODE) return escapeText((node.textContent ?? "").replace(/[\s ]+/g, " "));
+  if (node.nodeType !== Node.ELEMENT_NODE) return "";
+  const el = node as Element;
+  const tag = el.tagName.toLowerCase();
+  if (SKIP.has(tag)) return "";
+  const inner = () => Array.from(el.childNodes).map((c) => plain(c, heading)).join("");
+  switch (tag) {
+    case "br": return "<br>";
+    case "b": case "strong": { const i = inner(); return i.trim() ? `<strong>${i}</strong>` : i; }
+    case "i": case "em": { const i = inner(); return i.trim() ? `<em>${i}</em>` : i; }
+    case "u": { const i = inner(); return i.trim() ? `<u>${i}</u>` : i; }
+    case "a": {
+      const i = inner(); const href = (el.getAttribute("href") ?? "").trim();
+      return /^(https?:\/\/|mailto:)/i.test(href) && i.trim() ? `<a href="${href.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${i}</a>` : i;
+    }
+    case "ul": case "ol": { const i = inner(); return i.includes("<li") ? `<${tag}>${i}</${tag}>` : i; }
+    case "li": { const i = inner().replace(/<\/?p>/g, " ").trim(); return i ? `<li>${i}</li>` : ""; }
+    case "h1": case "h2": case "h3": case "h4": case "h5": case "h6": {
+      const i = inner().replace(/<\/?(strong|p)>/g, "").trim();
+      return !i ? "" : heading === "h2" ? `<h2>${i}</h2>` : `<p><strong>${i}</strong></p>`;
+    }
+    case "p": case "div": case "section": case "article": case "blockquote": case "pre": case "tr": case "td": case "th": case "header": case "footer": case "main": case "aside": case "figure": case "figcaption": case "dd": case "dt": {
+      const i = kids(el, heading);
+      return i || (tag === "p" ? "<p><br></p>" : "");
+    }
+    default: return inner(); // span, font, label, table, tbody … : only what is inside
+  }
+}
+
+/** HTML → the editor's simple HTML (see `plain`). `heading` is how a heading is kept: as a section heading, or as a bold line. */
+export function cleanHtml(html: string, heading: "h2" | "strong" = "h2"): string {
   if (typeof DOMParser === "undefined") return html;
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, "text/html");
-  doc.querySelectorAll("script,style,iframe,object,embed,link,meta,form,base").forEach((el) => el.remove());
-  doc.body.querySelectorAll("*").forEach((el) => {
-    for (const a of [...el.attributes]) {
-      const v = a.value.trim().toLowerCase();
-      if (a.name.startsWith("on") || ((a.name === "href" || a.name === "src" || a.name === "xlink:href") && /^(javascript|data|vbscript):/.test(v))) el.removeAttribute(a.name);
-    }
-  });
-  return doc.body.innerHTML;
+  return kids(doc.body, heading);
 }
 
 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -50,6 +91,15 @@ export function RichTextEditor({ value, onChange, placeholder, label, headings =
   }, []);
   const read = () => { const html = cleanHtml(box.current?.innerHTML ?? ""); const none = !hasRichText(html); setEmpty(none); onChange(none ? "" : html); };
   const run = (cmd: string, arg?: string) => { box.current?.focus(); document.execCommand(cmd, false, arg); read(); };
+  // Pasted text keeps only the editor's own formatting: a web page or Word file brings fonts, columns, widths and colours that would break the field.
+  const paste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData("text/html");
+    const text = e.clipboardData.getData("text/plain");
+    const clean = html ? cleanHtml(html, headings ? "h2" : "strong") : text.split(/\n{2,}/).filter((c) => c.trim()).map((c) => `<p>${escapeHtml(c.trim()).replace(/\n/g, "<br>")}</p>`).join("");
+    if (clean) document.execCommand("insertHTML", false, clean); else if (text) document.execCommand("insertText", false, text);
+    read();
+  };
   const link = () => { const url = window.prompt("Link address (https://…)"); if (url && /^(https?:\/\/|mailto:)/i.test(url.trim())) run("createLink", url.trim()); };
   return (
     <div>
@@ -66,7 +116,7 @@ export function RichTextEditor({ value, onChange, placeholder, label, headings =
       </div>
       <div className="relative">
         {empty && placeholder && <div aria-hidden="true" className="pointer-events-none absolute left-[15.5px] top-3 text-sm text-ink-faint">{placeholder}</div>}
-        <div ref={box} role="textbox" aria-multiline="true" aria-label={label} contentEditable suppressContentEditableWarning onInput={read} style={{ border: "1.5px solid var(--border)" }} className="rich-text-content min-h-[160px] rounded-b-[0.7rem] bg-white px-[14px] py-3 !text-sm !leading-[1.6] !text-ink outline-none [&_li]:!m-0 [&_li]:!leading-[1.5] focus:!border-primary-soft-border" />
+        <div ref={box} role="textbox" aria-multiline="true" aria-label={label} contentEditable suppressContentEditableWarning onInput={read} onPaste={paste} style={{ border: "1.5px solid var(--border)" }} className="rich-text-content min-h-[160px] rounded-b-[0.7rem] bg-white px-[14px] py-3 !text-sm !leading-[1.6] !text-ink outline-none [&_li]:!m-0 [&_li]:!leading-[1.5] focus:!border-primary-soft-border" />
       </div>
     </div>
   );
