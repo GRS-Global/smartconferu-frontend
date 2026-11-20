@@ -1,4 +1,5 @@
 import { DATA_SOURCE } from "@/lib/config";
+import { api } from "@/lib/api-client";
 import { getSupabase } from "@/lib/supabase";
 import type { ChairActivityLog } from "@/types/chair";
 import { AuthRequiredError, ServiceError } from "./errors";
@@ -11,6 +12,11 @@ export async function loadMyActivityLogs(conferenceSlug: string, role: "author" 
     // Mock mode: the sample log, narrowed the way the view narrows it.
     const { getChairService } = await import("./chair");
     return (await (await getChairService()).loadActivityLogs(conferenceSlug)).filter((l) => (role === "author" ? l.module === "Submissions" : l.module === "Peer Review")).map(({ reviewerName, ...rest }) => { void reviewerName; return rest; });
+  }
+  if (DATA_SOURCE === "api") {
+    // Own backend: GET /conferences/:id/my-activity answers with this person's own entries (Backend/src/modules/conferences/my-activity.service.ts).
+    const rows = await api<Array<{ id: string; at: string; actorName: string; actorRole: ChairActivityLog["actorRole"]; action: string; module: string; description: string; status: "success" | "failed"; previousValue: string | null; newValue: string | null }>>(`/conferences/${encodeURIComponent(conferenceSlug)}/my-activity`, { query: { role, limit: 500 } });
+    return rows.map((l) => ({ id: l.id, datetime: l.at, actorName: l.actorName, actorRole: l.actorRole, action: l.action, module: l.module, description: l.description, status: l.status, ...(l.previousValue ? { previousValue: l.previousValue } : {}), ...(l.newValue ? { newValue: l.newValue } : {}) } satisfies ChairActivityLog));
   }
   const db = getSupabase();
   const { data: auth } = await db.auth.getUser();

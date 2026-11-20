@@ -1,12 +1,12 @@
 "use client";
 
-import { AlertTriangle, BookOpen, Building2, Calendar, Check, ChevronDown, ChevronRight, Eraser, Globe2, History, Info, Layers, Loader2, Mail, MapPin, Newspaper, Sparkles, type LucideIcon } from "lucide-react";
+import { AlertTriangle, BookOpen, Building2, Calendar, Check, ChevronDown, ChevronRight, Eraser, Globe2, History, Info, Layers, Mail, MapPin, Newspaper, Sparkles, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CountrySelect } from "@/components/ui/country-select";
-import { Spinner } from "@/components/ui/load-more";
+import { LoadingOverlay, Spinner } from "@/components/ui/load-more";
 import { Modal } from "@/components/ui/modal";
 import { countryTimezone, TimezoneSelect } from "@/components/ui/timezone-select";
 import { TriggeredEmailNote } from "@/components/ui/triggered-email-note";
@@ -255,7 +255,7 @@ export function CreateConferencePage() {
   ] as Array<[string, string | undefined]>).map(([k, v]) => `<b>${k}:</b> ${esc(v || "Not set")}`).join("<br>");
 
   return (
-    <div onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); void submit(); } }}>
+    <div onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); if (!(fill.status === "loading")) void submit(); } }}>
       {/* One centred column for the heading, the form and the right rail, so they all line up. */}
       <div className="px-4 pt-6 sm:px-8 sm:pt-8">
         <div className="mx-auto max-w-[1200px]">
@@ -278,7 +278,9 @@ export function CreateConferencePage() {
           </header>
         </div>
       </div>
-      <div className="px-4 pb-8 sm:px-8">
+      {/* Smart Fill reads the website for a while: the shared full-screen loader covers the page, and the form behind it is inert (nothing can be typed) until the answer is in. */}
+      <LoadingOverlay open={fill.status === "loading"} label="Reading your website…" hint="We're filling in the conference details from your website. This can take up to a minute — please don't close or refresh the page." />
+      <div inert={fill.status === "loading"} className="px-4 pb-8 sm:px-8">
         <div className="mx-auto grid max-w-[1200px] items-start gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_340px] lg:pb-8 xl:gap-8">
           <div className="min-w-0 space-y-5">
             {/* Typing into the blank form counts as "start fresh": the new work becomes the draft. */}
@@ -321,7 +323,7 @@ export function CreateConferencePage() {
                   {SMART_FILL_AVAILABLE && (
                     <div className="mt-2">
                       <button type="button" onClick={() => void smartFill()} disabled={fill.status === "loading"} className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary transition-opacity hover:opacity-80 disabled:cursor-wait disabled:opacity-60">
-                        {fill.status === "loading" ? <Loader2 size={13} className="animate-spin" aria-hidden="true" /> : <Sparkles size={13} aria-hidden="true" />} {fill.status === "loading" ? "Reading the website…" : "Fill the form from this website"}
+                        {fill.status === "loading" ? <Spinner size={13} tone="current" /> : <Sparkles size={13} aria-hidden="true" />} {fill.status === "loading" ? "Reading the website…" : "Fill the form from this website"}
                       </button>
                       {fill.message && <p role={fill.status === "error" ? "alert" : "status"} className={cn("mt-1.5 text-xs", fill.status === "error" ? "font-semibold text-danger" : "text-ink-muted")}>{fill.message}</p>}
                     </div>
