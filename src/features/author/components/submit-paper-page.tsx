@@ -103,8 +103,9 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const [paperTitle, setPaperTitle] = useState("");
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState("");
-  const [track, setTrack] = useState(info.tracks.length === 1 ? info.tracks[0] : "");
-  const [type, setType] = useState("");
+  // The first track and the first submission type are already picked; the author changes them with one click.
+  const [track, setTrack] = useState(info.tracks[0] ?? "");
+  const [type, setType] = useState(info.presentationTypes[0] ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [fileProblem, setFileProblem] = useState("");
   const [rows, setRows] = useState<Row[]>(() => [blankRow({ name: info.me.name, email: info.me.email, affiliation: info.me.affiliation, country: info.me.country, corresponding: true })]);
