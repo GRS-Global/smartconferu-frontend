@@ -27,7 +27,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Calls for Papers",
     items: [
       { label: "My CFP", href: "/cfp" },
-      { label: "Smart CFP", prototypePath: "/smart-cfp/" },
+      { label: "Smart CFP", href: "/smart-cfp" }, // not built yet: a "Coming soon" page
     ],
   },
   {

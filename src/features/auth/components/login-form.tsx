@@ -194,9 +194,14 @@ export function LoginForm() {
         </p>
       </div>
 
-      <a href={`${PROTOTYPE_URL}/smart-cfp/`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border-[1.5px] border-white/20 bg-white/5 py-2.5 text-sm font-semibold text-white/85 transition-colors hover:bg-white/10 hover:text-white">
-        <Sparkles size={14} aria-hidden="true" /> Browse Smart CFP — no account needed
-      </a>
+      <Link href="/smart-cfp" className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border-[1.5px] border-white/20 bg-white/5 py-2.5 text-sm font-semibold text-white/85 transition-colors hover:bg-white/10 hover:text-white">
+        <Sparkles size={14} aria-hidden="true" /> Browse Smart CFP — coming soon
+      </Link>
+      {DATA_SOURCE === "api" && (
+        <p className="mt-4 text-center text-xs text-white/60">
+          Smartconferu team? <Link href="/super-admin/login" className="font-semibold text-white/85 underline-offset-2 transition-colors hover:text-white hover:underline">Super Admin sign-in</Link>
+        </p>
+      )}
       <p className="mt-6 text-center text-xs text-white/45">{SAMPLE_UI ? "This is a clickable prototype with sample data — no real accounts required." : "Your account and everything you add are saved for real."}</p>
       <a href={`${PROTOTYPE_URL}/`} className="mt-4 flex items-center justify-center gap-1 text-xs font-semibold text-white/60 transition-colors hover:text-white">
         <ChevronLeft size={13} aria-hidden="true" /> Back to home
