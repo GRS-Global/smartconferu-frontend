@@ -62,6 +62,9 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
   }, [slug, memo]);
   useEffect(() => {
     const start = () => {
+      // A tour finished earlier is over, so this one begins at step 1. If "done" stayed saved, every page the running tour opens would start again from
+      // step 1 and send the chair back to the first page, which sends them on again: an endless bounce between two pages that floods the server.
+      if (readTourState(slug).tourDone) writeTourState(slug, { tourDone: false, tourStep: 0 });
       // What the field steps ask about is what is saved right now.
       void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, s]) => missingDetails(i, s.tracks.length > 0 && !(s.tracks.length === 1 && s.tracks[0].name === "General Track"))).catch(() => [] as string[]).then((open) => { setMissing(open); setMode("tour", open); });
     };
@@ -113,7 +116,17 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
   }, [step?.gate, step?.key]);
   const base = `/chair/${encodeURIComponent(slug)}`;
   // A step that lives on a page takes the chair there if they are elsewhere.
-  useEffect(() => { if (step?.path && `${base}/${step.path}` !== here) go(step.path); }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!step?.path || `${base}/${step.path}` === here) return;
+    // Safety net: a tour that keeps jumping between pages (6 jumps within 10 seconds) is stopped, never left to hammer the server.
+    const key = `grs_tour_jumps_${slug}`;
+    const now = Date.now();
+    let jumps: number[] = [];
+    try { jumps = (JSON.parse(window.sessionStorage.getItem(key) ?? "[]") as number[]).filter((t) => now - t < 10000); } catch { /* unreadable: no history */ }
+    if (jumps.length >= 6) { try { window.sessionStorage.removeItem(key); } catch { /* storage off */ } onExit(); return; }
+    try { window.sessionStorage.setItem(key, JSON.stringify([...jumps, now])); } catch { /* storage off: no safety net this time */ }
+    go(step.path);
+  }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!step) return null;
   const last = index === steps.length - 1;
   const goTo = (i: number) => { setIndex(i); writeTourState(slug, { tourStep: i }); };
