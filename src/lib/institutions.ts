@@ -467,10 +467,14 @@ export function findDepartment(institutionId: string | null | undefined, name: s
   return q ? institutionDepartments(institutionId).find((d) => normalizeDepartment(d) === q) ?? null : null;
 }
 
+/** How many institutions the box offers before anything is typed. */
+const EMPTY_QUERY_LIMIT = 50;
+
 /** Best matches for what was typed: an exact name/short form first, then names or short forms starting with it, then ones containing it. */
 export function searchInstitutions(query: string, limit = 8): Institution[] {
   const q = normalizeInstitution(query);
-  if (!q) return [];
+  // Nothing typed yet: the list itself, A to Z, so a click in the box already shows something to pick (the box scrolls).
+  if (!q) return [...INSTITUTIONS].sort((a, b) => a.name.localeCompare(b.name)).slice(0, Math.max(limit, EMPTY_QUERY_LIMIT));
   const scored: Array<{ inst: Institution; score: number }> = [];
   for (const inst of INSTITUTIONS) {
     const forms = [inst.name, ...inst.aliases].map(normalizeInstitution);

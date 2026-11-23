@@ -107,6 +107,7 @@ export function VenueSearchInput({ id, value, onChange, onPick, placeholder, cla
         id={id} value={value} maxLength={300} placeholder={placeholder} autoComplete="off" className={className} onKeyDown={onKeyDown}
         onChange={(e) => { setOpen(true); onChange(e.target.value); search(e.target.value); }}
         onFocus={() => { if (enabled) { ensurePlaces().catch(() => undefined); if (items.length) setOpen(true); } }}
+        onClick={() => { if (enabled && items.length) setOpen(true); }}
         role={enabled ? "combobox" : undefined} aria-expanded={enabled ? showList : undefined} aria-controls={enabled ? listId : undefined} aria-autocomplete={enabled ? "list" : undefined}
       />
       {showList && (

@@ -71,6 +71,8 @@ export function Combobox<T>({ id, text, onTextChange, options, onSelect, placeho
         placeholder={placeholder}
         onChange={(e) => { onTextChange(e.target.value); setOpen(true); setActive(0); }}
         onFocus={() => { if (closeTimer.current) clearTimeout(closeTimer.current); setOpen(true); }}
+        // A click on a box that already has focus (after picking an option, or after Escape) opens the list again.
+        onClick={() => setOpen(true)}
         onBlur={() => { closeTimer.current = setTimeout(() => setOpen(false), 120); }}
         onKeyDown={onKeyDown}
         className={inputClassName ?? INPUT_CLASS}
