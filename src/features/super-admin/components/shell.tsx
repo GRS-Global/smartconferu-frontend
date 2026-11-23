@@ -1,11 +1,12 @@
 "use client";
 /* The console frame, ported from the prototype's SuperAdminApp: the sidebar (same groups and order,
    pending counts that turn red past the review promise, folding groups remembered per browser, the
-   review-promise strip), the header (menu, "Waiting for you" bell, Ctrl K search, user app link,
+   review-promise strip), the header (menu, Ctrl K search, website home link, the "Waiting for you" bell,
    profile menu) and the main column. Modules not in the launch are listed, disabled, "Coming soon". */
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { PROTOTYPE_URL } from "@/lib/config";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   BadgeCheck,
@@ -66,7 +67,9 @@ interface NavSection {
   groups?: NavGroup[];
 }
 
-const USER_APP_URL = process.env.NEXT_PUBLIC_USER_APP_URL ?? "/dashboard";
+/** The public website's home page. The user app's own pages do not open for a Super Admin account (they send it back to this console), so the header
+ *  link goes to the website itself. */
+const WEBSITE_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ?? `${PROTOTYPE_URL}/`;
 
 /* Same order as the prototype's sidebar: everyday objects, approval queues (folding groups),
    reference lists, settings, the console's own admin. */
@@ -353,7 +356,6 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
             <button className="sa-icon-btn cursor-pointer" aria-label="Toggle navigation" onClick={() => (window.matchMedia("(min-width: 1280px)").matches ? setCollapsed((c) => !c) : setNavOpen(!navOpen))}>
               <Menu size={20} />
             </button>
-            <NotificationsMenu pending={pending} onOpen={(p) => router.push(p.href)} />
             <button
               onClick={() => setSearchOpen(true)}
               className="hidden md:inline-flex items-center gap-2 h-10 ml-2 pl-3 pr-2 rounded-lg text-[13.5px] w-[280px] transition-colors hover:border-[var(--primary-soft-border)] cursor-pointer"
@@ -373,9 +375,10 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <a href={USER_APP_URL} className="sa-btn hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-semibold bg-white" style={{ border: "1px solid var(--border)", color: "var(--text-soft)" }}>
-              Open user app <ExternalLink size={14} />
+            <a href={WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="sa-btn hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-semibold bg-white" style={{ border: "1px solid var(--border)", color: "var(--text-soft)" }}>
+              Website home <ExternalLink size={14} />
             </a>
+            <NotificationsMenu pending={pending} onOpen={(p) => router.push(p.href)} />
             <ProfileMenu onToast={setToast} />
           </div>
         </header>
@@ -392,16 +395,60 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
   );
 }
 
+const SEEN_KEY = "smartconferu.sa.seenPending";
+const pendingKey = (p: PendingItem) => `${p.queue}:${p.id}`;
+const readSeen = (): Set<string> => {
+  try {
+    return new Set(JSON.parse(window.sessionStorage.getItem(SEEN_KEY) ?? "[]") as string[]);
+  } catch {
+    return new Set();
+  }
+};
+
+/** The bell on the right of the header: a red count of what waits for a decision. While something waiting has not been looked at yet (it arrived, or the
+ *  page was opened with it waiting) the bell rings and the count pulses every few seconds; opening the list marks what is in it as seen (kept for this tab,
+ *  so moving between console pages does not start it again). */
 function NotificationsMenu({ pending, onOpen }: { pending: PendingItem[]; onOpen: (p: PendingItem) => void }) {
   const [open, toggle, setOpen] = useDropdown();
+  const [seen, setSeen] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    setSeen(readSeen()); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
+  const alert = pending.some((p) => !seen.has(pendingKey(p)));
+  const markSeen = () => {
+    const next = new Set(pending.map(pendingKey));
+    setSeen(next);
+    try {
+      window.sessionStorage.setItem(SEEN_KEY, JSON.stringify([...next]));
+    } catch {
+      /* storage off: it rings again on the next page */
+    }
+  };
+  const count = pending.length > 99 ? "99+" : String(pending.length);
   return (
     <div className="relative">
-      <button className="sa-icon-btn relative cursor-pointer" aria-label={`Notifications, ${pending.length} waiting`} aria-expanded={open} onClick={toggle}>
+      <button
+        className={`sa-icon-btn relative cursor-pointer${alert ? " sa-bell-alert" : ""}`}
+        aria-label={`Notifications, ${pending.length} waiting`}
+        aria-expanded={open}
+        onClick={(e) => {
+          if (!open) markSeen();
+          toggle(e);
+        }}
+      >
         <Bell size={20} />
-        {pending.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: "var(--primary)", boxShadow: "0 0 0 2px #fff" }} />}
+        {pending.length > 0 && (
+          <span
+            aria-hidden="true"
+            className={`absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full inline-flex items-center justify-center text-[10.5px] font-bold leading-none text-white${alert ? " sa-badge-alert" : ""}`}
+            style={{ background: "var(--danger)", boxShadow: "0 0 0 2px #fff" }}
+          >
+            {count}
+          </span>
+        )}
       </button>
       {open && (
-        <div className="absolute left-0 top-12 w-[340px] bg-white rounded-xl py-2 sa-pop z-30" style={{ boxShadow: "var(--shadow-pop)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="absolute right-0 top-12 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-xl py-2 sa-pop z-30" style={{ boxShadow: "var(--shadow-pop)" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between px-5 py-2">
             <p className="font-semibold text-[15px]" style={{ color: "var(--text)" }}>
               Waiting for you

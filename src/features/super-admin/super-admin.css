@@ -129,4 +129,9 @@
 @keyframes sa-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .sa-pop{animation:sa-pop .24s cubic-bezier(.2,.8,.3,1) both}
 .sa-rise{animation:sa-rise .28s cubic-bezier(.2,.8,.3,1) both}
-@media (prefers-reduced-motion: reduce){.sa-auth-input,.sa-auth-btn,.sa-auth-btn .sa-arrow{transition:none}.sa-spin{animation-duration:2s}.sa-pop,.sa-rise{animation:none}}
+/* The header bell while something waiting has not been looked at: it rings for a moment every few seconds and its red count pulses. */
+@keyframes sa-bell-ring{0%,34%,100%{transform:rotate(0)}4%{transform:rotate(16deg)}9%{transform:rotate(-14deg)}14%{transform:rotate(11deg)}19%{transform:rotate(-8deg)}24%{transform:rotate(5deg)}29%{transform:rotate(-2deg)}}
+@keyframes sa-badge-ping{0%{box-shadow:0 0 0 2px #fff,0 0 0 2px rgba(220,38,38,.55)}70%,100%{box-shadow:0 0 0 2px #fff,0 0 0 9px rgba(220,38,38,0)}}
+.sa-bell-alert svg{animation:sa-bell-ring 3.2s ease-in-out infinite;transform-origin:50% 10%}
+.sa-badge-alert{animation:sa-badge-ping 1.6s ease-out infinite}
+@media (prefers-reduced-motion: reduce){.sa-auth-input,.sa-auth-btn,.sa-auth-btn .sa-arrow{transition:none}.sa-spin{animation-duration:2s}.sa-pop,.sa-rise{animation:none}.sa-bell-alert svg,.sa-badge-alert{animation:none}}
