@@ -11,6 +11,9 @@ import { Avatar, Badge, Button, errorText, fmtDate, Section } from "./ui";
 
 const timeOf = (iso: string) => new Date(iso).toTimeString().slice(0, 5);
 
+/** "Assign to me" / "reviewing this" and the internal notes are hidden for now (not needed yet). Set to true to bring them back: nothing else changes. */
+const SHOW_CLAIMS_AND_NOTES = false;
+
 /** A queue's claims and notes, reloadable; `null` until loaded. */
 export function useQueueState(queue: QueueKey) {
   const [state, setState] = useState<QueueState | null>(null);
@@ -30,6 +33,7 @@ export function useQueueState(queue: QueueKey) {
 /** In the table's Waiting cell: who is on it, and whether it has notes. */
 export function ClaimMarks({ claim, notes }: { claim: { admin: { name: string } } | null; notes: number }) {
   const { name } = useAdmin();
+  if (!SHOW_CLAIMS_AND_NOTES) return null;
   return (
     <>
       {claim && (
@@ -47,8 +51,9 @@ export function ClaimMarks({ claim, notes }: { claim: { admin: { name: string } 
 }
 
 /** The drawer's top line for a waiting item: since when, and who is on it. */
-export function ClaimBar({ queue, itemId, since, waiting, claim, onChanged }: { queue: QueueKey; itemId: string; since: string; waiting: React.ReactNode; claim: { admin: { id: string; name: string }; claimedAt: string } | null; onChanged: () => void }) {
+export function ClaimBar({ queue, itemId, since, waiting, claim: claimed, onChanged }: { queue: QueueKey; itemId: string; since: string; waiting: React.ReactNode; claim: { admin: { id: string; name: string }; claimedAt: string } | null; onChanged: () => void }) {
   const { me } = useAdmin();
+  const claim = SHOW_CLAIMS_AND_NOTES ? claimed : null;
   const [error, setError] = useState<string | null>(null);
   const run = (work: Promise<unknown>) =>
     work.then(onChanged).catch((e: unknown) => setError(errorText(e)));
@@ -59,7 +64,7 @@ export function ClaimBar({ queue, itemId, since, waiting, claim, onChanged }: { 
         <span className="inline-flex items-center gap-2">
           Submitted {fmtDate(since)} · waiting {waiting}
         </span>
-        {!claim && (
+        {SHOW_CLAIMS_AND_NOTES && !claim && (
           <button onClick={() => run(claimQueueItem(queue, itemId))} className="inline-flex items-center gap-1.5 font-semibold cursor-pointer" style={{ color: "var(--primary)" }}>
             <UserCheck size={15} />
             Assign to me
@@ -129,7 +134,11 @@ export function MessageThread({ notes }: { notes: AdminNote[] }) {
 }
 
 /** Internal notes: only admins see these. */
-export function InternalNotes({ queue, itemId, notes, onChanged }: { queue: QueueKey; itemId: string; notes: AdminNote[]; onChanged: () => void }) {
+export function InternalNotes(props: { queue: QueueKey; itemId: string; notes: AdminNote[]; onChanged: () => void }) {
+  return SHOW_CLAIMS_AND_NOTES ? <InternalNotesBox {...props} /> : null;
+}
+
+function InternalNotesBox({ queue, itemId, notes, onChanged }: { queue: QueueKey; itemId: string; notes: AdminNote[]; onChanged: () => void }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

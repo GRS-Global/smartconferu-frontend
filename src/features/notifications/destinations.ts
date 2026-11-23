@@ -113,6 +113,15 @@ const ACTIONS: Record<string, Maker> = {
     return p ? { label: "Open reviews", target: { app: `/submissions/${p}/chair/review` } } : null;
   },
   license_decision: inConferenceApp("Open Conference Details", (c) => `/chair/${c}/settings`),
+  // What the own backend sends to the Super Admins (Backend notifySuperAdmins): each opens the console list where the request is answered.
+  // The request's own drawer opens when its conference is known (`?open=<slug>`), otherwise the plain list.
+  conference_request: (n) => {
+    const c = conf(n);
+    return { label: "Review request", target: { app: `/super-admin/conference-requests${c ? `?open=${c}` : ""}` } };
+  },
+  cfp_review: () => ({ label: "Review CFP page", target: { app: "/super-admin/cfp-review" } }),
+  conference_deletion_request: () => ({ label: "Review request", target: { app: "/super-admin/deletion-requests" } }),
+  license_request: () => ({ label: "Review request", target: { app: "/super-admin/license-requests" } }),
   coauthor_added: myPaper,
   screening: myPaper,
   // An email copy: "Open paper" (a reviewer's email goes to the review page, anyone else's to the paper), only when its paper is known.
@@ -135,8 +144,8 @@ export function actionOf(n: Pick<AppNotification, "kind" | "conference" | "paper
     : { label: made.label, href: `${PROTOTYPE_URL}${made.target.prototype}`, external: true };
 }
 
-export type Audience = "author" | "reviewer" | "chair";
-export const AUDIENCE_LABEL: Record<Audience, string> = { author: "Author", reviewer: "Reviewer", chair: "Chair" };
+export type Audience = "author" | "reviewer" | "chair" | "admin";
+export const AUDIENCE_LABEL: Record<Audience, string> = { author: "Author", reviewer: "Reviewer", chair: "Chair", admin: "Super Admin" };
 
 const AUDIENCE: Record<string, Audience> = {
   decision: "author",
@@ -159,6 +168,10 @@ const AUDIENCE: Record<string, Audience> = {
   assignment_removed: "reviewer",
   review_submitted: "chair",
   license_decision: "chair",
+  conference_request: "admin",
+  cfp_review: "admin",
+  conference_deletion_request: "admin",
+  license_request: "admin",
 };
 
 /** Whose notification it is — the role on its conference chip. A withdrawal goes to the conference's chairs and to the

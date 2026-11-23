@@ -6,12 +6,12 @@
    then held back for 10 seconds with Undo before it is sent.
    Deletion Requests (the prototype's DeletionRequestsPage): chairs asking for an archived conference
    to be deleted, oldest first; each opens the conference, where the decision is made.
-   "Ask for info", claiming and internal notes need backend work: shown, disabled, "Coming soon". */
+   Messages to the chair ("Ask for info") are left out for now; internal notes and claiming stay. */
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, CalendarPlus, Check, ChevronRight, Mail, MessageSquare, PartyPopper, Search, Trash2, X } from "lucide-react";
-import { ClaimBar, ClaimMarks, InternalNotes, MessageThread, useQueueState } from "./queue-extras";
-import { askForInfo, decideConferenceRequest, loadConferencePapers, loadConferences, loadDeletionRequests, type AdminConference, type AdminNote } from "../services";
+import { ArrowRight, CalendarPlus, Check, ChevronRight, Mail, PartyPopper, Search, Trash2, X } from "lucide-react";
+import { ClaimBar, ClaimMarks, InternalNotes, useQueueState } from "./queue-extras";
+import { decideConferenceRequest, loadConferencePapers, loadConferences, loadDeletionRequests, type AdminConference, type AdminNote } from "../services";
 import { useData } from "../use-data";
 import { Avatar, Badge, Button, Card, Drawer, errorText, ExtLink, Failed, Fields, fmtDate, Loading, Modal, PageTitle, Section, SortTh, Toast, UNDO_MS, useSort, WaitingBadge, type Tone } from "./ui";
 
@@ -181,7 +181,8 @@ export function ConferenceRequestsPage() {
 
   if (loading && !data) return <Loading />;
   if (error || !data) return <Failed error={error} onRetry={reload} />;
-  const current = requests.find((c) => c.id === open) ?? null;
+  // `open` is the conference's id (the console's own links) or its slug (a notification only knows the slug).
+  const current = requests.find((c) => c.id === open || c.slug === open) ?? null;
   const th = (label: string, key: string, className?: string) => <SortTh label={label} sortKey={key} sort={sort} onSort={toggle} className={className} />;
 
   const decide = (c: AdminConference, approve: boolean, reason: string) => {
@@ -318,7 +319,6 @@ export function ConferenceRequestsPage() {
           claim={work.claimOf(current.id)}
           notes={work.notesOf(current.id)}
           onWorkChanged={work.reload}
-          onAsked={(text) => setToast({ text })}
           onClose={() => setOpen(null)}
           onDecide={decide}
         />
@@ -334,7 +334,6 @@ function RequestDrawer({
   claim,
   notes,
   onWorkChanged,
-  onAsked,
   onClose,
   onDecide,
 }: {
@@ -343,28 +342,11 @@ function RequestDrawer({
   claim: { admin: { id: string; name: string }; claimedAt: string } | null;
   notes: AdminNote[];
   onWorkChanged: () => void;
-  onAsked: (toast: string) => void;
   onClose: () => void;
   onDecide: (c: AdminConference, approve: boolean, reason: string) => void;
 }) {
-  const [active, setActive] = useState<"approve" | "decline" | "info" | null>(null);
+  const [active, setActive] = useState<"approve" | "decline" | null>(null);
   const [reason, setReason] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [askError, setAskError] = useState<string | null>(null);
-  const ask = async () => {
-    setBusy(true);
-    setAskError(null);
-    try {
-      await askForInfo(c.id, reason.trim());
-      setActive(null);
-      onWorkChanged();
-      onAsked(`Message sent to ${c.requester?.name ?? "the chair"}`);
-    } catch (e) {
-      setAskError(errorText(e));
-    } finally {
-      setBusy(false);
-    }
-  };
   const pending = status === "pending";
   const footer = !pending ? (
     <div className="flex items-center gap-3 text-[13.5px]">
@@ -373,17 +355,6 @@ function RequestDrawer({
     </div>
   ) : (
     <div className="flex flex-wrap justify-end gap-2">
-      <Button
-        tone="primary"
-        variant="soft"
-        onClick={() => {
-          setReason("");
-          setActive("info");
-        }}
-      >
-        <MessageSquare size={16} />
-        Ask for info
-      </Button>
       <Button
         tone="danger"
         variant="outline"
@@ -428,51 +399,9 @@ function RequestDrawer({
           ]}
         />
       </Section>
-      <MessageThread notes={notes} />
       <InternalNotes queue="requests" itemId={c.id} notes={notes} onChanged={onWorkChanged} />
 
       {/* The decision is confirmed in a popup over the drawer: what happens, any reason, the email that goes out. */}
-      {pending && active === "info" && (
-        <Modal
-          title="Ask for info?"
-          subtitle={c.title}
-          onClose={() => setActive(null)}
-          footer={
-            <div className="flex justify-end gap-2">
-              <Button tone="neutral" variant="soft" onClick={() => setActive(null)}>
-                Cancel
-              </Button>
-              <Button tone="primary" busy={busy} disabled={!reason.trim()} onClick={() => void ask()}>
-                <MessageSquare size={16} />
-                Ask for info
-              </Button>
-            </div>
-          }
-        >
-          <label className="block mb-4">
-            <span className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--text)" }}>
-              Message to the chair<span style={{ color: "var(--danger)" }}> *</span>
-            </span>
-            <textarea rows={3} className="sa-input resize-none !h-auto py-2.5" value={reason} onChange={(e) => setReason(e.target.value)} autoFocus maxLength={2000} />
-          </label>
-          {askError && (
-            <p role="alert" className="text-[13px] -mt-2 mb-3" style={{ color: "var(--danger)" }}>
-              {askError}
-            </p>
-          )}
-          <div className="rounded-xl mb-4 text-[12.5px] px-3.5 py-2.5 flex items-center gap-2" style={{ border: "1px solid var(--border)", background: "var(--canvas)" }}>
-            <Mail size={15} className="shrink-0" style={{ color: "var(--primary)" }} />
-            <span className="min-w-0">
-              <span className="block truncate" style={{ color: "var(--text-muted)" }}>
-                Email to {c.requester?.email ?? "the chair"}
-              </span>
-              <span className="block truncate font-semibold" style={{ color: "var(--text)" }}>
-                About your request for {c.acronym}
-              </span>
-            </span>
-          </div>
-        </Modal>
-      )}
       {pending && (active === "approve" || active === "decline") && (
         <Modal
           title={`${active === "approve" ? "Approve" : "Decline"}?`}
