@@ -14,12 +14,18 @@ export function groupOf(iso: string, now: Date = new Date()): Group {
   return "Earlier";
 }
 
-/** "3h ago" for today, the weekday for this week, "Oct 7" before that. */
+/** "Just now" / "12 min ago" / "3h ago" for today, the weekday for this week, "Oct 7" before that. (Whole hours were rounded up to at least "1h ago", so a
+ *  notification that had just arrived read as an hour old.) */
 export function whenLabel(iso: string, now: Date = new Date()): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const g = groupOf(iso, now);
-  if (g === "Today") return `${Math.max(1, Math.round((now.getTime() - d.getTime()) / 3_600_000))}h ago`;
+  if (g === "Today") {
+    const minutes = Math.floor((now.getTime() - d.getTime()) / 60_000);
+    if (minutes < 1) return "Just now"; // also a clock that is a little ahead of the server
+    if (minutes < 60) return `${minutes} min ago`;
+    return `${Math.floor(minutes / 60)}h ago`;
+  }
   if (g === "This week") return d.toLocaleDateString("en-US", { weekday: "short" });
   return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
 }

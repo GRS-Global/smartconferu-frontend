@@ -1,6 +1,7 @@
 "use client";
 
 import { Mail, MailOpen, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { AppNotification } from "@/types/notification";
 import { AUDIENCE_LABEL, type Audience, type NotificationAction } from "../destinations";
@@ -27,6 +28,12 @@ interface NotificationCardProps {
  *  of its buttons) does its action, when it has one. Titles and bodies are stored text and are rendered as text only. */
 export function NotificationCard({ item, action, audience, busy, onAction, onViewEmail, onToggleRead, onDismiss }: NotificationCardProps) {
   const { icon: Icon, className: tile } = kindStyle(item.kind);
+  // The time label ("Just now", "12 min ago") is read again every minute, so an open page never shows a stale age.
+  const [, setMinute] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setMinute((m) => m + 1), 60_000);
+    return () => clearInterval(t);
+  }, []);
   const titleId = `notification-${item.id}`;
   const toggle = item.read ? "Mark as unread" : "Mark as read";
   const isEmail = !!item.email;
