@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { OpenDatePicker } from "@/components/open-date-picker";
 import { SupportViewBanner } from "@/components/support-view";
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${jakarta.variable} ${cormorant.variable}`}>
       <body className="min-h-screen font-sans text-ink">
         <SupportViewBanner />
+        <OpenDatePicker />
         {children}
       </body>
     </html>
