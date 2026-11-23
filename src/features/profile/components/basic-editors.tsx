@@ -1,5 +1,6 @@
 "use client";
 
+import { useMasterDataVersion } from "@/lib/master-data";
 import { Building2, ChevronLeft, ChevronRight, GripVertical, X } from "lucide-react";
 import { useState } from "react";
 import { Field, INPUT_CLASS } from "@/components/ui/field";
@@ -73,6 +74,7 @@ interface AreaState { primary: string; secondary: string[]; primaryPending: bool
 
 /** One primary and one secondary area, each a dropdown; the secondary list follows the primary. "Other" is used straight away but marked pending. */
 function ResearchAreaFields({ value, onChange }: { value: AreaState; onChange: (v: AreaState) => void }) {
+  useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
   const { primary, secondary, primaryPending, pendingSecondary } = value;
   const sub = secondary[0] || "";
   const primaryListed = ALL_AREAS.includes(primary);

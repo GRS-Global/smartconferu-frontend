@@ -8,7 +8,7 @@ import { Library, RotateCcw } from "lucide-react";
 import { loadConferences, loadDeletionRequests, undeleteConference, type AdminConference, type ConferenceStatus } from "../services";
 import { useData } from "../use-data";
 import { DeletionRequestsBanner } from "./deletion-banner";
-import { Avatar, Badge, Button, Card, errorText, Failed, fmtDate, Loading, PageTitle, SortTh, Toast, Toolbar, useSort, type Tone } from "./ui";
+import { Avatar, Badge, Button, Card, errorText, Failed, fmtDate, Loading, PageTitle, Pagination, SortTh, Toast, Toolbar, usePaging, useSort, type Tone } from "./ui";
 
 export const CONF_STATUS: Record<ConferenceStatus, [string, Tone]> = {
   pending_approval: ["Waiting for approval", "warning"],
@@ -72,6 +72,7 @@ export function ConferencesPage() {
     status: { get: (c) => shownStatus(c) },
     created: { get: (c) => c.createdAt ?? "", first: "desc" },
   });
+  const paging = usePaging(sorted, `${tab}|${query}|${sort.key}|${sort.dir}`);
   if (loading && !data) return <Loading />;
   if (error || !data) return <Failed error={error} onRetry={reload} />;
 
@@ -133,7 +134,7 @@ export function ConferencesPage() {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((c) => {
+                {paging.rows.map((c) => {
                   const ask = deletedBy.get(c.id);
                   return (
                     <tr key={c.id}>
@@ -186,7 +187,7 @@ export function ConferencesPage() {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((c) => {
+                {paging.rows.map((c) => {
                   const [label, tone] = statusBadge(c);
                   const left = daysLeft(c.licenseExpiry);
                   const live = c.status === "active";
@@ -243,6 +244,7 @@ export function ConferencesPage() {
             </table>
           </div>
         )}
+        <Pagination paging={paging} />
       </Card>
       {bringBack && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center px-4" onKeyDown={(e) => e.key === "Escape" && setBringBack(null)}>

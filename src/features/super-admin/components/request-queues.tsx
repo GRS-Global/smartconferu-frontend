@@ -13,7 +13,7 @@ import { ArrowRight, CalendarPlus, Check, ChevronRight, Mail, PartyPopper, Searc
 import { ClaimBar, ClaimMarks, InternalNotes, useQueueState } from "./queue-extras";
 import { decideConferenceRequest, loadConferencePapers, loadConferences, loadDeletionRequests, type AdminConference, type AdminNote } from "../services";
 import { useData } from "../use-data";
-import { Avatar, Badge, Button, Card, Drawer, errorText, ExtLink, Failed, Fields, fmtDate, Loading, Modal, PageTitle, Section, SortTh, Toast, UNDO_MS, useSort, WaitingBadge, type Tone } from "./ui";
+import { Avatar, Badge, Button, Card, Drawer, errorText, ExtLink, Failed, Fields, fmtDate, Loading, Modal, PageTitle, Pagination, Section, SortTh, Toast, UNDO_MS, usePaging, useSort, WaitingBadge, type Tone } from "./ui";
 
 const DECLINE_REASONS = ["This isn't an academic event.", "We couldn't verify the organizing body.", "The conference web page or dates are missing.", "This conference is already on Smartconferu."];
 
@@ -178,6 +178,7 @@ export function ConferenceRequestsPage() {
     papers: { get: (c) => Number(detail(c, "estimatedSubmissions")) || 0 },
     waiting: { get: (c) => c.createdAt ?? "", first: tab === "pending" ? "asc" : "desc" },
   });
+  const paging = usePaging(sorted, `${tab}|${query}|${sort.key}|${sort.dir}`);
 
   if (loading && !data) return <Loading />;
   if (error || !data) return <Failed error={error} onRetry={reload} />;
@@ -235,7 +236,7 @@ export function ConferenceRequestsPage() {
 
         {/* Phones: one card per item instead of a wide table. */}
         <ul className="md:hidden border-t" style={{ borderColor: "var(--border)" }}>
-          {sorted.map((c) => (
+          {paging.rows.map((c) => (
             <li key={c.id} className="flex items-start gap-3 px-4 py-3.5 border-b" style={{ borderColor: "var(--border)" }}>
               <button onClick={() => setOpen(c.id)} className="flex-1 min-w-0 text-left cursor-pointer">
                 <TitleCell title={c.acronym} sub={c.title} />
@@ -267,7 +268,7 @@ export function ConferenceRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((c) => (
+              {paging.rows.map((c) => (
                 <tr key={c.id} className="sa-clickable cursor-pointer" onClick={() => setOpen(c.id)}>
                   <td className="!pl-6">
                     <TitleCell title={c.acronym} sub={c.title} />
@@ -309,6 +310,7 @@ export function ConferenceRequestsPage() {
             </tbody>
           </table>
         </div>
+      <Pagination paging={paging} />
       </Card>
 
       {current && (
@@ -463,6 +465,7 @@ export function DeletionRequestsPage() {
     const papers = await Promise.all(asks.map((d) => loadConferencePapers(d.conferenceId).then((p) => p.filter((x) => x.status !== "draft").length).catch(() => null)));
     return asks.map((d, i) => ({ ...d, papers: papers[i] }));
   });
+  const paging = usePaging(data ?? [], "deletions");
   if (loading && !data) return <Loading />;
   if (error || !data) return <Failed error={error} onRetry={reload} />;
   const open = (conferenceId: string) => router.push(`/super-admin/conferences/${conferenceId}`);
@@ -483,7 +486,7 @@ export function DeletionRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((d) => (
+              {paging.rows.map((d) => (
                 <tr key={d.id} className="sa-clickable cursor-pointer" onClick={() => open(d.conferenceId)}>
                   <td className="!pl-6">
                     <p className="font-semibold" style={{ color: "var(--text)" }}>
@@ -526,6 +529,7 @@ export function DeletionRequestsPage() {
             </tbody>
           </table>
         </div>
+      <Pagination paging={paging} />
       </Card>
     </>
   );

@@ -397,6 +397,53 @@ export function Toolbar<K extends string>({ tabs, tab, setTab, query, setQuery, 
 
 /* Header sorting (the prototype's sort.js): click a column to sort by it, again to flip. Each column
    says how to read its value and which way it sorts first (numbers and dates usually newest/largest first). */
+/* Paging: ten rows a page. The page goes back to 1 when what is listed changes (`resetKey`: tab, search, sort). */
+export const PAGE_SIZE = 10;
+export function usePaging<T>(rows: T[], resetKey: string) {
+  const [state, setState] = useState({ page: 1, key: resetKey });
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const page = state.key === resetKey ? Math.min(state.page, pages) : 1;
+  const setPage = (p: number) => setState({ page: Math.min(Math.max(p, 1), pages), key: resetKey });
+  return { page, pages, total: rows.length, rows: rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), setPage };
+}
+
+/** "Showing 11–20 of 48" with Previous / page numbers / Next. Nothing when everything fits on one page. */
+export function Pagination({ paging }: { paging: { page: number; pages: number; total: number; setPage: (p: number) => void } }) {
+  const { page, pages, total, setPage } = paging;
+  if (total <= PAGE_SIZE) return null;
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+  // 1 … 4 5 6 … 12: the first, the last and the neighbours of the current page.
+  const shown = Array.from({ length: pages }, (_, i) => i + 1).filter((p) => p === 1 || p === pages || Math.abs(p - page) <= 1);
+  const items: (number | "gap")[] = [];
+  shown.forEach((p, i) => { if (i > 0 && p - shown[i - 1] > 1) items.push("gap"); items.push(p); });
+  const btn = "inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2.5 text-[13px] font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-40";
+  return (
+    <nav aria-label="Pagination" className="flex flex-col items-center justify-between gap-3 border-t px-6 py-4 sm:flex-row" style={{ borderColor: "var(--border)" }}>
+      <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>
+        Showing {from}–{to} of {total}
+      </p>
+      <div className="flex items-center gap-1">
+        <button type="button" className={btn} style={{ color: "var(--text)" }} disabled={page === 1} onClick={() => setPage(page - 1)}>
+          Previous
+        </button>
+        {items.map((p, i) =>
+          p === "gap" ? (
+            <span key={`gap${i}`} className="px-1 text-[13px]" style={{ color: "var(--text-faint)" }} aria-hidden="true">…</span>
+          ) : (
+            <button key={p} type="button" aria-current={p === page ? "page" : undefined} className={btn} style={p === page ? { background: "var(--primary)", color: "#FFFFFF" } : { color: "var(--text)" }} onClick={() => setPage(p)}>
+              {p}
+            </button>
+          ),
+        )}
+        <button type="button" className={btn} style={{ color: "var(--text)" }} disabled={page === pages} onClick={() => setPage(page + 1)}>
+          Next
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 export type SortSpec<T> = Record<string, { get: (row: T) => string | number | null; first?: "asc" | "desc" }>;
 export function useSort<T>(rows: T[], spec: SortSpec<T>, initial: Sort<string> | null = null) {
   const [sort, setSort] = useState<Sort<string> | null>(initial);

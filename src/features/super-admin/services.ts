@@ -372,3 +372,52 @@ export const loadEmailTemplates = () => get<EmailTemplate[]>("/admin/email-templ
 export const saveEmailTemplate = (key: string, v: { subject: string; body: string }) => put<EmailTemplate>(`/admin/email-templates/${encodeURIComponent(key)}`, v);
 export const testEmailTemplate = (key: string, v: { subject?: string; body?: string }) =>
   post<void>(`/admin/email-templates/${encodeURIComponent(key)}/test`, v);
+
+// ---------- Profile Verification: names members typed that are not on the lists ----------
+
+export interface ProfileRequest {
+  id: string;
+  kind: "institution" | "society" | "research_area";
+  name: string;
+  /** A secondary research area: the primary area it was typed under. */
+  parentName: string | null;
+  url: string | null;
+  status: "pending" | "approved" | "rejected";
+  resolvedName: string | null;
+  reason: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  requesters: { id: string; name: string; email: string | null }[];
+}
+export const loadProfileRequests = (kind: ProfileRequest["kind"], status: "pending" | "resolved" = "pending") => get<ProfileRequest[]>(`/admin/profile-requests${qs({ status, kind })}`);
+/** Adds the name to the master data (or, with `intoId`, links it to an entry already listed); the members who typed it are updated and told. */
+export const approveProfileRequest = (id: string, v: { name?: string; acronym?: string; url?: string; country?: string; group?: string; parentId?: string; intoId?: string }) => post<void>(`/admin/profile-requests/${id}/approve`, v);
+export const rejectProfileRequest = (id: string, reason: string) => post<void>(`/admin/profile-requests/${id}/reject`, { reason });
+
+// ---------- Profile Verification: members asking for the green tick ----------
+
+export interface ProfileVerificationRequest {
+  id: string;
+  status: "pending" | "approved" | "rejected" | "withdrawn";
+  note: string | null;
+  reason: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  person: {
+    id: string;
+    name: string;
+    email: string | null;
+    emailVerified: boolean;
+    designation: string | null;
+    affiliation: string | null;
+    country: string | null;
+    orcidId: string | null;
+    institutionalEmail: string | null;
+    institutionalEmailVerified: boolean;
+    webPage: string | null;
+  };
+}
+export const loadProfileVerifications = (status: "pending" | "resolved" = "pending") => get<ProfileVerificationRequest[]>(`/admin/profile-verifications${qs({ status })}`);
+/** Green tick on the member's profile; they are emailed. */
+export const approveProfileVerification = (id: string) => post<void>(`/admin/profile-verifications/${id}/approve`);
+export const rejectProfileVerification = (id: string, reason: string) => post<void>(`/admin/profile-verifications/${id}/reject`, { reason });

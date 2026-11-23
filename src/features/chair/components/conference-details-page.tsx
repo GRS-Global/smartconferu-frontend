@@ -1,5 +1,6 @@
 "use client";
 
+import { useMasterDataVersion } from "@/lib/master-data";
 import { AlertTriangle, Globe, Layers, MapPin, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -46,6 +47,7 @@ const selectCls = (value: string) => cn("w-full appearance-none rounded-lg borde
 type Tab = "basic" | "venue" | "branding";
 
 function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, tab, setTab }: { initial: ConferenceInfo; slug: string; types: string[]; typesSet: boolean; cfp: CfpFacts; onLogoSaved: () => void; onSave: (i: ConferenceInfo) => void; busy: boolean; tab: Tab; setTab: (t: Tab) => void }) {
+  useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
   const [f, setF] = useState(initial);
   const [topic, setTopic] = useState("");
   const set = <K extends keyof ConferenceInfo>(k: K, v: ConferenceInfo[K]) => setF((s) => ({ ...s, [k]: v }));

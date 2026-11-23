@@ -7,6 +7,8 @@ export type Affiliation = {
   pending: boolean;
   department: string;
   departmentPending?: boolean;
+  /** The Super Admin did not accept the typed institution: why (shown to the owner). */
+  rejectReason?: string;
   location: string;
   startMonth: string;
   startYear: string;
@@ -34,6 +36,8 @@ export type TimelineEntry = {
   societyId: string;
   /** "pending" | "approved" | "rejected" for an "Other" society waiting on a Super Admin. */
   verification: string;
+  /** Why the Super Admin rejected the society (verification "rejected"). */
+  verificationReason?: string;
   gradePending: boolean;
   /** Membership extras: the grade was typed under "Other"; private number; links. */
   gradeOther?: boolean;
@@ -42,6 +46,9 @@ export type TimelineEntry = {
   societyUrl?: string;
   gradeRejectReason?: string;
 };
+
+/** Where a member's request to have the whole profile verified by the Super Admin stands (own backend). "verified" shows the green tick. */
+export type ProfileVerification = { status: "none" | "pending" | "verified" | "rejected"; requestedAt: string | null; resolvedAt: string | null; reason: string | null };
 
 /** A verification the member asked for on a scholar / professional link (profile_details.data.verificationRequests). */
 export type VerificationRequest = { status: "pending" | "declined"; requestedAt: string; note?: string; reason?: string };
@@ -135,6 +142,8 @@ export type Profile = {
   secondaryAreas: string[];
   avatarStyle: string;
   verifiedProfiles: Record<string, boolean>;
+  /** "Verify my profile": set by the server only (own backend); absent elsewhere. */
+  profileVerification?: ProfileVerification;
   confirmedProfiles: Record<string, boolean>;
   /** "Verification pending" requests on links the member confirmed (no verification service reads them yet). */
   verificationRequests: Record<string, VerificationRequest>;

@@ -103,7 +103,7 @@ const NAV: NavSection[] = [
         label: "People",
         icon: UserRound,
         links: [
-          { href: "/super-admin/profile-verification", label: "Profile Verification", icon: BadgeCheck, soon: true },
+          { href: "/super-admin/profile-verification", label: "Profile Verification", icon: BadgeCheck },
           { href: "/super-admin/claim-reports", label: "Claim Reports", icon: Flag, soon: true },
         ],
       },

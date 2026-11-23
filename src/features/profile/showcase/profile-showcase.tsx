@@ -1,5 +1,7 @@
 "use client";
 
+import { VerifyProfile } from "../components/verify-profile";
+import { useMasterDataVersion } from "@/lib/master-data";
 import { BadgeCheck, Briefcase, Building2, Calendar, Check, ChevronRight, ExternalLink, Globe2, GraduationCap, Layers, MapPin, Plus, Settings, Share2, type LucideIcon } from "lucide-react";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { CountryFlag } from "@/components/ui/country-flag";
@@ -54,6 +56,7 @@ const SECTIONS: Array<[string, string]> = [
  *  section nav, the About / Affiliation / Experience / Education / Memberships cards, and the private contact card.
  *  Everything shown is read from the profile; each card's pencil opens its editor. */
 export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: Profile; edit: ShowcaseEdit; readOnly?: boolean }) {
+  useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
   const fullName = `${profile.firstName} ${profile.lastName}`.trim();
   const timeline = profile.timeline.map(withEntryDates);
   const exp = timeline.filter((x) => x.type === "experience");
@@ -91,6 +94,7 @@ export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: 
   const trustReasons = [
     profile.orcidId && profile.verifiedProfiles.orcidId && "ORCID iD verified by signing in",
     emails.professional.status === "verified" && emails.professional.value && "Institutional email verified",
+    profile.profileVerification?.status === "verified" && "Profile verified by our team",
   ].filter((x): x is string => Boolean(x));
   const [trustOpen, setTrustOpen] = useState(false);
 
@@ -206,6 +210,7 @@ export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: 
               )}
             </div>
             {profile.designation && <p className="mt-1.5 text-[17px] font-medium leading-normal text-[#334155]">{profile.designation}</p>}
+            {!readOnly && <VerifyProfile profile={profile} />}
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2.5">
@@ -442,6 +447,7 @@ export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: 
                           <div className="text-[15px] font-semibold leading-snug text-navy">
                             {soc?.name || e.org}
                             {membershipPending(e) && <span className="ml-2 align-middle text-xs font-semibold text-[#B45309]">Pending review</span>}
+                            {e.verification === "rejected" && <span className="ml-2 align-middle text-xs font-semibold text-danger">Not accepted{e.verificationReason ? `: ${e.verificationReason}` : ""}</span>}
                           </div>
                           <div className="mt-0.5 text-sm text-ink-soft">
                             {e.title}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMasterDataVersion } from "@/lib/master-data";
 import { Award, Briefcase, ChevronDown, ChevronUp, Clock, GraduationCap, GripVertical, Lock, Pencil, Plus, Trash2, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Field, INPUT_CLASS } from "@/components/ui/field";
@@ -63,6 +64,7 @@ function GradeFields({ entry, onChange, idPrefix, part }: { entry: Entry; onChan
 }
 
 function SocietyFields({ entry, onChange, idPrefix }: { entry: Entry; onChange: (e: Entry) => void; idPrefix: string }) {
+  useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
   const society = membershipSociety({ societyId: entry.societyId ?? "", org: entry.org });
   const picked = entry.societyId === MEMBERSHIP_OTHER ? MEMBERSHIP_OTHER : society ? society.id : "";
   const pick = (id: string) => {
@@ -236,6 +238,7 @@ export function ListEditor({ kind, profile, save, onDone, onCancel, startSociety
                     <div className="truncate text-sm font-semibold text-navy">{e.title}</div>
                     <div className="mt-0.5 truncate text-[13px] text-ink-muted">{[society?.name || e.org, e.memberNumber && `No. ${e.memberNumber}`, formatEntryPeriod(e)].filter(Boolean).join(" · ")}</div>
                     {copy.society && membershipPending(e) && <div style={{ color: PENDING_AMBER }} className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold"><Clock size={12} strokeWidth={2.2} aria-hidden="true" /> Pending review</div>}
+                    {copy.society && e.verification === "rejected" && <div className="mt-0.5 text-xs font-semibold text-danger">Not accepted{e.verificationReason ? `: ${e.verificationReason}` : ""}</div>}
                   </div>
                   <div role="group" aria-label={`Edit or reorder ${e.title}`} className="flex shrink-0 gap-0.5">
                     <button type="button" onClick={() => setEditId(e.id)} disabled={editId !== null} aria-label={`Edit ${e.title}`} title="Edit" className={rowBtn}><Pencil size={14} aria-hidden="true" /></button>

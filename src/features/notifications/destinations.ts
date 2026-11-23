@@ -122,6 +122,17 @@ const ACTIONS: Record<string, Maker> = {
   cfp_review: () => ({ label: "Review CFP page", target: { app: "/super-admin/cfp-review" } }),
   conference_deletion_request: () => ({ label: "Review request", target: { app: "/super-admin/deletion-requests" } }),
   license_request: () => ({ label: "Review request", target: { app: "/super-admin/license-requests" } }),
+  // A new institution / society / research area a member typed: its list page shows the request.
+  // A member asked for their profile to be verified; the Super Admin's answer comes back to them.
+  profile_verification_request: () => ({ label: "Review request", target: { app: "/super-admin/profile-verification" } }),
+  profile_verification_approved: () => ({ label: "Open my profile", target: { app: "/profile" } }),
+  profile_verification_rejected: () => ({ label: "Open my profile", target: { app: "/profile" } }),
+  profile_request_institution: () => ({ label: "Review request", target: { app: "/super-admin/institutions?tab=requests" } }),
+  profile_request_society: () => ({ label: "Review request", target: { app: "/super-admin/societies?tab=requests" } }),
+  profile_request_research_area: () => ({ label: "Review request", target: { app: "/super-admin/research-areas?tab=requests" } }),
+  // The Super Admin's answer to a new institution / society a member typed.
+  profile_request_approved: () => ({ label: "Open my profile", target: { app: "/profile" } }),
+  profile_request_rejected: () => ({ label: "Open my profile", target: { app: "/profile" } }),
   coauthor_added: myPaper,
   screening: myPaper,
   // An email copy: "Open paper" (a reviewer's email goes to the review page, anyone else's to the paper), only when its paper is known.
@@ -172,6 +183,10 @@ const AUDIENCE: Record<string, Audience> = {
   cfp_review: "admin",
   conference_deletion_request: "admin",
   license_request: "admin",
+  profile_verification_request: "admin",
+  profile_request_institution: "admin",
+  profile_request_society: "admin",
+  profile_request_research_area: "admin",
 };
 
 /** Whose notification it is — the role on its conference chip. A withdrawal goes to the conference's chairs and to the

@@ -24,7 +24,9 @@ import {
   type Society,
 } from "../services";
 import { useData } from "../use-data";
-import { Badge, Button, Card, CardTitle, Drawer, errorText, ExtLink, Failed, Loading, PageTitle, SortTh, TextField, Toast, Toolbar, useSort } from "./ui";
+import { ProfileRequestsPanel, useProfileRequests } from "./profile-requests-section";
+import { useSearchParams } from "next/navigation";
+import { Badge, Button, Card, CardTitle, Pagination, usePaging, Drawer, errorText, ExtLink, Failed, Loading, PageTitle, SortTh, TextField, Toast, Toolbar, useSort } from "./ui";
 
 const LOGOS = new Map(SOCIETIES.map((s) => [s.id, s.logo]));
 const splitList = (text: string) => text.split(/[,\n]/).map((s) => s.trim()).filter(Boolean);
@@ -145,7 +147,8 @@ function SocietyDrawer({ society, existing, onClose, onSaved }: { society: Socie
 
 export function SocietiesPage() {
   const { data, error, loading, reload, setData } = useData(loadSocieties);
-  const [tab, setTab] = useState<"active" | "inactive" | "all">("active");
+  const reqs = useProfileRequests("society");
+  const [tab, setTab] = useState<"active" | "inactive" | "all" | "requests">(useSearchParams().get("tab") === "requests" ? "requests" : "active");
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Society | "new" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -159,6 +162,7 @@ export function SocietiesPage() {
     website: { get: (s) => s.url ?? "" },
     status: { get: (s) => s.status },
   });
+  const paging = usePaging(sorted, `${tab}|${query}|${sort.key}|${sort.dir}`);
   if (loading && !data) return <Loading />;
   if (error || !data) return <Failed error={error} onRetry={reload} />;
   const count = (k: typeof tab) => all.filter((s) => k === "all" || s.status === k).length;
@@ -182,6 +186,7 @@ export function SocietiesPage() {
             ["active", "Active", count("active")],
             ["inactive", "Deactivated", count("inactive")],
             ["all", "All", count("all")],
+            ["requests", "New requests", reqs.waiting],
           ]}
           tab={tab}
           setTab={setTab}
@@ -195,7 +200,11 @@ export function SocietiesPage() {
             </Button>
           }
         />
-        <div className="overflow-x-auto">
+        {tab === "requests" ? (
+          <ProfileRequestsPanel kind="society" reqs={reqs} query={query} onApproved={reload} />
+        ) : (
+          <>
+          <div className="overflow-x-auto">
           <table className="sa-table">
             <thead>
               <tr>
@@ -206,7 +215,7 @@ export function SocietiesPage() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((s) => (
+              {paging.rows.map((s) => (
                 <tr key={s.id} style={s.status === "inactive" ? { opacity: 0.65 } : undefined}>
                   <td className="!pl-6">
                     <div className="flex items-center gap-3">
@@ -252,6 +261,9 @@ export function SocietiesPage() {
             </tbody>
           </table>
         </div>
+            <Pagination paging={paging} />
+          </>
+        )}
       </Card>
       <FootNote>Deactivated societies stay on existing members&apos; profiles but can&apos;t be picked for new memberships.</FootNote>
       {editing && (
@@ -363,7 +375,8 @@ function MergeDrawer({ institution, all, onClose, onMerged }: { institution: Ins
 
 export function InstitutionsPage() {
   const { data, error, loading, reload, setData } = useData(loadInstitutions);
-  const [tab, setTab] = useState<"active" | "retired" | "all">("active");
+  const reqs = useProfileRequests("institution");
+  const [tab, setTab] = useState<"active" | "retired" | "all" | "requests">(useSearchParams().get("tab") === "requests" ? "requests" : "active");
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<{ mode: "new" } | { mode: "edit" | "merge"; institution: Institution } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -380,6 +393,7 @@ export function InstitutionsPage() {
     people: { get: (i) => (i.status === "retired" ? null : i.people), first: "desc" },
     status: { get: (i) => i.status },
   });
+  const paging = usePaging(sorted, `${tab}|${query}|${sort.key}|${sort.dir}`);
   if (loading && !data) return <Loading />;
   if (error || !data) return <Failed error={error} onRetry={reload} />;
   const count = (k: typeof tab) => all.filter((i) => k === "all" || i.status === k).length;
@@ -403,6 +417,7 @@ export function InstitutionsPage() {
             ["active", "Active", count("active")],
             ["retired", "Retired", count("retired")],
             ["all", "All", count("all")],
+            ["requests", "New requests", reqs.waiting],
           ]}
           tab={tab}
           setTab={setTab}
@@ -416,7 +431,11 @@ export function InstitutionsPage() {
             </Button>
           }
         />
-        <div className="overflow-x-auto">
+        {tab === "requests" ? (
+          <ProfileRequestsPanel kind="institution" reqs={reqs} query={query} onApproved={reload} />
+        ) : (
+          <>
+          <div className="overflow-x-auto">
           <table className="sa-table">
             <thead>
               <tr>
@@ -430,7 +449,7 @@ export function InstitutionsPage() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((i) => (
+              {paging.rows.map((i) => (
                 <tr key={i.id} style={i.status === "retired" ? { opacity: 0.65 } : undefined}>
                   <td className="!pl-6">
                     <p className="font-semibold" style={{ color: "var(--text)" }}>
@@ -504,6 +523,9 @@ export function InstitutionsPage() {
             </tbody>
           </table>
         </div>
+            <Pagination paging={paging} />
+          </>
+        )}
       </Card>
       <FootNote>Retired institutions don&apos;t appear in search. Merging keeps the old name as a short form, so people typing it still find the right one.</FootNote>
       {editing?.mode === "new" && (
@@ -551,6 +573,8 @@ export function InstitutionsPage() {
 
 export function ResearchAreasPage() {
   const { data, error, loading, reload } = useData(loadResearchAreas);
+  const reqs = useProfileRequests("research_area");
+  const [view, setView] = useState<"areas" | "requests">(useSearchParams().get("tab") === "requests" ? "requests" : "areas");
   const [selected, setSelected] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null); // area id being renamed inline
   const [draft, setDraft] = useState("");
@@ -630,6 +654,21 @@ export function ResearchAreasPage() {
   return (
     <>
       <PageTitle title="Research Areas" icon={Network} />
+      <div className="flex gap-1 mb-5" role="tablist">
+        <button role="tab" aria-selected={view === "areas"} className={`sa-tab ${view === "areas" ? "active" : ""} cursor-pointer`} onClick={() => setView("areas")}>
+          Research areas
+        </button>
+        <button role="tab" aria-selected={view === "requests"} className={`sa-tab ${view === "requests" ? "active" : ""} cursor-pointer`} onClick={() => setView("requests")}>
+          New requests <span className="ml-1 opacity-70">{reqs.waiting}</span>
+        </button>
+      </div>
+      {view === "requests" && (
+        <Card className="!p-0 pt-5">
+          <ProfileRequestsPanel kind="research_area" reqs={reqs} onApproved={reload} />
+        </Card>
+      )}
+      {view === "areas" && (
+      <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <Card className="!p-5">
           <p className="text-[12.5px]" style={{ color: "var(--text-muted)" }}>
@@ -763,6 +802,8 @@ export function ResearchAreasPage() {
           </Card>
         )}
       </div>
+      </>
+      )}
       <Toast text={toast} onDone={() => setToast(null)} />
     </>
   );

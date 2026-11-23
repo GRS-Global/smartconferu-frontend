@@ -1,5 +1,6 @@
 "use client";
 
+import { useMasterDataVersion } from "@/lib/master-data";
 import { AlertTriangle, BookOpen, Building2, Calendar, Check, ChevronDown, ChevronRight, Eraser, Globe2, History, Info, Layers, Mail, MapPin, Newspaper, Sparkles, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,6 +67,7 @@ const fieldCls = (bad: boolean) => cn("field-no-outline w-full rounded-xl border
 const BTN_FX = "transition-all hover:shadow-[0_0_30px_rgba(124,58,237,0.35)] hover:scale-[1.02]";
 
 export function CreateConferencePage() {
+  useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
   const router = useRouter();
   const [form, setForm] = useState<NewConferenceInput>(EMPTY_NEW_CONFERENCE);
   const [showErrors, setShowErrors] = useState(false);

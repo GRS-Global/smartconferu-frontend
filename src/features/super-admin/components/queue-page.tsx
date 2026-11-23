@@ -10,7 +10,7 @@ import { ChevronRight, Mail, PartyPopper, Search } from "lucide-react";
 import type { QueueKey } from "../pending";
 import type { AdminNote } from "../services";
 import { ClaimBar, ClaimMarks, InternalNotes, useQueueState } from "./queue-extras";
-import { Badge, Button, Card, Drawer, errorText, fmtDate, Modal, PageTitle, SortTh, Toast, UNDO_MS, useSort, WaitingBadge, type Icon, type Tone } from "./ui";
+import { Badge, Button, Card, Drawer, errorText, fmtDate, Modal, PageTitle, Pagination, SortTh, Toast, UNDO_MS, usePaging, useSort, WaitingBadge, type Icon, type Tone } from "./ui";
 
 /** Outcome badges for resolved items, shared by every queue (the prototype's OUTCOMES). */
 export const OUTCOMES: Record<string, [string, Tone]> = {
@@ -136,6 +136,7 @@ export function QueuePage<T>({ config: q, items, onChanged }: { config: QueueCon
     ["waiting", { get: (r: T) => (statusOf(r) === "pending" ? q.since(r) : (q.resolvedAt?.(r) ?? "")), first: tab === "pending" ? "asc" : "desc" }],
   ]);
   const { sorted, sort, toggle } = useSort(rows, spec);
+  const paging = usePaging(sorted, `${tab}|${query}|${sort.key}|${sort.dir}`);
   const current = items.find((r) => q.idOf(r) === open) ?? null;
 
   const decide = (r: T, action: QueueAction<T>, values: Values) => {
@@ -202,7 +203,7 @@ export function QueuePage<T>({ config: q, items, onChanged }: { config: QueueCon
 
         {/* Phones: one card per item instead of a wide table. */}
         <ul className="md:hidden border-t" style={{ borderColor: "var(--border)" }}>
-          {sorted.map((r) => (
+          {paging.rows.map((r) => (
             <li key={q.idOf(r)} className="flex items-start gap-3 px-4 py-3.5 border-b" style={{ borderColor: "var(--border)" }}>
               <button onClick={() => setOpen(q.idOf(r))} className="flex-1 min-w-0 text-left cursor-pointer">
                 <div className="min-w-0">{q.columns[0].render(r)}</div>
@@ -236,7 +237,7 @@ export function QueuePage<T>({ config: q, items, onChanged }: { config: QueueCon
               </tr>
             </thead>
             <tbody>
-              {sorted.map((r) => (
+              {paging.rows.map((r) => (
                 <tr key={q.idOf(r)} className="sa-clickable cursor-pointer" onClick={() => setOpen(q.idOf(r))}>
                   {q.columns.map((c, i) => (
                     <td key={i} className={i === 0 ? "!pl-6" : ""}>
@@ -267,6 +268,7 @@ export function QueuePage<T>({ config: q, items, onChanged }: { config: QueueCon
             </tbody>
           </table>
         </div>
+      <Pagination paging={paging} />
       </Card>
 
       {current && (

@@ -1,5 +1,5 @@
 import { DATA_SOURCE } from "@/lib/config";
-import type { Profile, ProfilePatch } from "@/types/profile";
+import type { Profile, ProfilePatch, ProfileVerification } from "@/types/profile";
 
 /** The contract the profile screens depend on. Failures throw AuthRequiredError (no session),
  *  ServiceConfigError (Supabase not configured) or ServiceError (a request failed, message ready to show). */
@@ -13,6 +13,10 @@ export interface ProfileService {
   /** Uploads a (cropped) photo and resolves to its storage path, which is then saved with `save({ photoPath })`. */
   uploadPhoto(photo: Blob): Promise<string>;
   /** Own backend only: emails the verification link for a saved personal / professional address again. */
+  /** Own backend only: asks the Super Admin to verify the whole profile (the green tick). */
+  requestVerification?(note: string): Promise<ProfileVerification>;
+  /** Own backend only: takes back a waiting verification request. */
+  withdrawVerification?(): Promise<ProfileVerification>;
   resendEmailVerification?(slot: "personal" | "professional"): Promise<void>;
 }
 

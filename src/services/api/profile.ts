@@ -1,5 +1,5 @@
 import { api, publicFileUrl } from "@/lib/api-client";
-import type { Affiliation, EmailSlot, PastAffiliation, Profile, ProfilePatch, TimelineEntry, VerificationRequest } from "@/types/profile";
+import type { Affiliation, EmailSlot, PastAffiliation, Profile, ProfilePatch, ProfileVerification, TimelineEntry, VerificationRequest } from "@/types/profile";
 import { ServiceError } from "../errors";
 import type { ProfileService } from "../profile";
 
@@ -153,6 +153,11 @@ const fromMe = (me: MeResponse): Profile => ({ ...toProfile({
   affiliation: me.affiliation, country: me.country, orcid_id: me.orcidId, photo_path: me.photoPath, created_at: me.createdAt,
 }, me.details ?? {}), hasPassword: me.hasPassword, isSuperAdmin: me.isSuperAdmin === true });
 
+/** Adds where the member's "Verify my profile" request stands (kept by the server, apart from the profile JSON). A failure leaves it out. */
+async function withVerification(profile: Profile): Promise<Profile> {
+  try { return { ...profile, profileVerification: await api<ProfileVerification>("/me/profile-verification") }; } catch { return profile; }
+}
+
 const COLUMNS = ["firstName", "lastName", "designation", "affiliation", "country", "orcidId", "photoPath"] as const;
 
 async function save(patch: ProfilePatch): Promise<Profile> {
@@ -170,7 +175,7 @@ async function save(patch: ProfilePatch): Promise<Profile> {
     before = emails(current.details?.emails);
     body.details = { ...(current.details ?? {}), ...details };
   }
-  const saved = fromMe(await api<MeResponse>("/me", { method: "PATCH", body }));
+  const saved = await withVerification(fromMe(await api<MeResponse>("/me", { method: "PATCH", body })));
   // A new address is saved as "pending" by the backend; it only becomes verified from the link emailed to it.
   if (details.emails !== undefined) {
     for (const slot of EMAIL_SLOTS) {
@@ -197,7 +202,9 @@ async function uploadPhoto(photo: Blob): Promise<string> {
 }
 
 export const apiProfileService: ProfileService = {
-  async load() { return fromMe(await api<MeResponse>("/me")); },
+  async load() { return withVerification(fromMe(await api<MeResponse>("/me"))); },
+  async requestVerification(note) { return api<ProfileVerification>("/me/profile-verification", { method: "POST", body: note.trim() ? { note: note.trim() } : {} }); },
+  async withdrawVerification() { return api<ProfileVerification>("/me/profile-verification", { method: "DELETE" }); },
   save,
   uploadPhoto,
   async resendEmailVerification(slot) { await api("/auth/profile-emails/verify", { method: "POST", body: { slot } }); },
