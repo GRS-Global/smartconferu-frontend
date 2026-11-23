@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { INPUT_CLASS } from "@/components/ui/field";
+import { DATA_SOURCE } from "@/lib/config";
+import { getProfileService } from "@/services/profile";
 import type { EmailSlot } from "@/types/profile";
 import { isEmail } from "../validation";
 import { profileEmails } from "../showcase/helpers";
@@ -19,13 +21,26 @@ type Slots = { personal: EmailSlot; professional: EmailSlot };
 type SlotKey = keyof Slots;
 
 /** My Profile › Email addresses: a personal and a professional slot. The address you sign in with is shown verified and can't be edited here;
- *  an address typed into the other slot is saved as "Not verified" — nothing sends a verification link yet, so only a verified address can be primary. */
+ *  an address typed into the other slot is saved as "Not verified". Own backend: a verification link is emailed to it (and can be sent again); it is "Verified"
+ *  once the link is opened. Only a verified address can be primary, and choosing it as primary is still the person's own step. */
 export function EmailsEditor({ profile, save, onDone, onCancel }: EditorProps) {
   const saved = profileEmails(profile);
   const [emails, setEmails] = useState<Slots>(saved.emails);
   const [primary, setPrimary] = useState<SlotKey>(saved.primaryEmail);
   const [touched, setTouched] = useState(false);
   const state = useSectionSave();
+  const [link, setLink] = useState<{ slot: SlotKey | null; state: "idle" | "sending" | "sent" | "error"; message: string }>({ slot: null, state: "idle", message: "" });
+  /** Emails the verification link of a saved address again (own backend). */
+  const resend = async (slot: SlotKey) => {
+    setLink({ slot, state: "sending", message: "" });
+    try {
+      const service = await getProfileService();
+      await service.resendEmailVerification?.(slot);
+      setLink({ slot, state: "sent", message: "" });
+    } catch (e) {
+      setLink({ slot, state: "error", message: e instanceof Error ? e.message : "The link could not be sent. Try again in a moment." });
+    }
+  };
   const isAccount = (k: SlotKey) => saved.emails[k].status === "verified" && saved.emails[k].value.trim().toLowerCase() === profile.mainEmail.trim().toLowerCase();
   const problem = (k: SlotKey) => (emails[k].value.trim() && !isEmail(emails[k].value) ? "Enter a valid email, e.g. name@university.edu." : "");
   const invalid = TYPES.some((t) => problem(t.key));
@@ -45,7 +60,7 @@ export function EmailsEditor({ profile, save, onDone, onCancel }: EditorProps) {
     let primaryEmail: SlotKey = primary;
     if (next[primaryEmail].status !== "verified") primaryEmail = (TYPES.map((t) => t.key).find((k) => next[k].status === "verified") ?? primaryEmail);
     const added = TYPES.some((t) => next[t.key].status === "pending" && next[t.key].value !== saved.emails[t.key].value.trim());
-    if (await state.run(() => save({ emails: next, primaryEmail }))) onDone(added ? "Saved — the new address is not verified yet" : "Email addresses updated");
+    if (await state.run(() => save({ emails: next, primaryEmail }))) onDone(added ? (DATA_SOURCE === "api" ? "Saved — we sent a verification link to the new address" : "Saved — the new address is not verified yet") : "Email addresses updated");
   };
 
   return (
@@ -77,7 +92,19 @@ export function EmailsEditor({ profile, save, onDone, onCancel }: EditorProps) {
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <RadioChoice checked={primary === t.key} disabled={!verified} onSelect={() => setPrimary(t.key)}>Primary — sign-in &amp; notifications</RadioChoice>
                 {account && <span className="text-[13px] text-ink-muted">The email you sign in with.</span>}
-                {has && !account && e.status !== "verified" && <span className="text-[13px] text-ink-muted">Verification isn&apos;t available yet, so this can&apos;t be your primary address.</span>}
+                {has && !account && e.status !== "verified" && (
+                  DATA_SOURCE !== "api" ? <span className="text-[13px] text-ink-muted">Verification isn&apos;t available yet, so this can&apos;t be your primary address.</span>
+                  : e.value.trim() !== saved.emails[t.key].value.trim() ? <span className="text-[13px] text-ink-muted">Save, and we&apos;ll email a verification link to this address.</span>
+                  : (
+                    <span className="flex flex-wrap items-center gap-x-2 text-[13px] text-ink-muted">
+                      {link.slot === t.key && link.state === "sent" ? "Link sent — check your inbox." : "We sent a link to this address. Open it to verify."}
+                      <button type="button" disabled={link.slot === t.key && link.state === "sending"} onClick={() => void resend(t.key)} className="cursor-pointer font-semibold text-primary hover:underline disabled:cursor-default disabled:opacity-60">
+                        {link.slot === t.key && link.state === "sending" ? "Sending…" : "Resend link"}
+                      </button>
+                      {link.slot === t.key && link.state === "error" && <span role="alert" className="w-full text-[11.5px] text-danger">{link.message}</span>}
+                    </span>
+                  )
+                )}
               </div>
             </div>
           );

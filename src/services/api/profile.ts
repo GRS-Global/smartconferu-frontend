@@ -162,12 +162,28 @@ async function save(patch: ProfilePatch): Promise<Profile> {
     if ((COLUMNS as readonly string[]).includes(key)) body[key] = key === "photoPath" ? value : String(value ?? "").trim();
     else details[key] = value;
   }
+  let before: Profile["emails"] = null;
   if (Object.keys(details).length) {
     // Merge into what is stored: the blob also holds data this app doesn't edit (experience, education, …).
     const current = await api<MeResponse>("/me");
+    before = emails(current.details?.emails);
     body.details = { ...(current.details ?? {}), ...details };
   }
-  return fromMe(await api<MeResponse>("/me", { method: "PATCH", body }));
+  const saved = fromMe(await api<MeResponse>("/me", { method: "PATCH", body }));
+  // A new address is saved as "pending" by the backend; it only becomes verified from the link emailed to it.
+  if (details.emails !== undefined) {
+    for (const slot of EMAIL_SLOTS) {
+      const now = saved.emails?.[slot];
+      if (now?.value && now.status !== "verified" && now.value.toLowerCase() !== (before?.[slot].value ?? "").toLowerCase()) await sendEmailLink(slot);
+    }
+  }
+  return saved;
+}
+
+const EMAIL_SLOTS = ["personal", "professional"] as const;
+/** Emails the verification link of a saved address. Never throws on save: the profile is saved either way and the editor offers "Resend". */
+async function sendEmailLink(slot: (typeof EMAIL_SLOTS)[number]): Promise<void> {
+  try { await api("/auth/profile-emails/verify", { method: "POST", body: { slot } }); } catch { /* the editor shows a resend button */ }
 }
 
 async function uploadPhoto(photo: Blob): Promise<string> {
@@ -183,6 +199,7 @@ export const apiProfileService: ProfileService = {
   async load() { return fromMe(await api<MeResponse>("/me")); },
   save,
   uploadPhoto,
+  async resendEmailVerification(slot) { await api("/auth/profile-emails/verify", { method: "POST", body: { slot } }); },
   // Public profiles (/author/<slug>) have no backend endpoint yet: they read as "no public profile".
   async loadPublic() { return null; },
 };

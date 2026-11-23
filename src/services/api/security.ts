@@ -46,6 +46,12 @@ export async function confirmEmailChange(token: string): Promise<void> {
   catch (e) { throw asBrokenLink(e, "This link has expired or was already used. Please ask for a new one in Settings."); }
 }
 
+/** The emailed link of a personal / professional address saved under My Profile › Email addresses (public: the link itself proves the address). */
+export async function confirmProfileEmail(token: string): Promise<void> {
+  try { await api("/auth/profile-emails/confirm", { auth: false, method: "POST", body: { token } }); }
+  catch (e) { throw asBrokenLink(e, "This link has expired or was already used. Open My Profile to get a new one."); }
+}
+
 /* ---- connecting a new provider-only sign-in (e.g. ORCID, which gives no email) to the account that owns an address ---- */
 export const requestMerge = (email: string) => api("/auth/account/merge", { method: "POST", body: { email: email.trim() } });
 /** Moves this sign-in to the other account and signs in to it (throws MfaRequiredError when that account has two-step verification). */

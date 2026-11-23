@@ -12,6 +12,8 @@ export interface ProfileService {
   loadPublic(slug: string): Promise<Profile | null>;
   /** Uploads a (cropped) photo and resolves to its storage path, which is then saved with `save({ photoPath })`. */
   uploadPhoto(photo: Blob): Promise<string>;
+  /** Own backend only: emails the verification link for a saved personal / professional address again. */
+  resendEmailVerification?(slot: "personal" | "professional"): Promise<void>;
 }
 
 /** There is no profile service in mock mode (mock has no accounts and never reaches Supabase). */
