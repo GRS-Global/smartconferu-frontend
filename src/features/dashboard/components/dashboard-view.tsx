@@ -1,6 +1,7 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
+import { Plus, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
@@ -44,12 +45,19 @@ export function DashboardView({ variant }: { variant: DashboardVariant }) {
   return <Loaded variant={variant} data={state.data} reload={reload} />;
 }
 
-/** Page title and breadcrumb: "My Conferences", then the picked role once one is chosen. */
+/** Page title and breadcrumb: "My Conferences", then the picked role once one is chosen. Under "As Chair" the header also offers "Create New Conference"
+ *  (the same button the Calls for Papers and My Requests pages have). */
 function Page({ role = "all", children }: { role?: RoleFilter; children: React.ReactNode }) {
   const crumbs = [{ label: "My Conferences" }, ...(role !== "all" ? [{ label: ROLE_META[role].chip }] : [])];
   return (
     <>
-      <PageHeader title="My Conferences" breadcrumbs={crumbs} />
+      <PageHeader
+        title="My Conferences"
+        breadcrumbs={crumbs}
+        actions={role === "chair" ? (
+          <Link href="/create-conference" className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-hover"><Plus size={16} aria-hidden="true" /> Create New Conference</Link>
+        ) : undefined}
+      />
       {children}
     </>
   );
