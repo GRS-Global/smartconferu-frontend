@@ -351,7 +351,6 @@ function RequestDrawer({
   const footer = !pending ? (
     <div className="flex items-center gap-3 text-[13.5px]">
       <OutcomeBadge status={status} />
-      <span style={{ color: "var(--text-soft)" }}>{status === "declined" ? "Declined" : "Approved"}</span>
     </div>
   ) : (
     <div className="flex flex-wrap justify-end gap-2">
