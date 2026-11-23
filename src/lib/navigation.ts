@@ -42,7 +42,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "My Account",
     items: [
       { label: "My Certificates", href: "/my-certificates" },
-      { label: "My Achievements", prototypePath: "/prototype/my-achievements" },
+      { label: "My Achievements", href: "/my-achievements" }, // not built yet: a "Coming soon" page
       { label: "My Receipts", href: "/receipts" },
       { label: "Terms of Service", href: "/terms" },
     ],
