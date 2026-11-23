@@ -13,6 +13,7 @@ interface MeResponse {
   id: string;
   email: string | null;
   hasPassword?: boolean;
+  isSuperAdmin?: boolean;
   firstName: string;
   lastName: string;
   designation: string | null;
@@ -150,7 +151,7 @@ function toProfile(row: ProfileRow, d: Data): Profile {
 const fromMe = (me: MeResponse): Profile => ({ ...toProfile({
   id: me.id, email: me.email ?? "", first_name: me.firstName, last_name: me.lastName, designation: me.designation,
   affiliation: me.affiliation, country: me.country, orcid_id: me.orcidId, photo_path: me.photoPath, created_at: me.createdAt,
-}, me.details ?? {}), hasPassword: me.hasPassword });
+}, me.details ?? {}), hasPassword: me.hasPassword, isSuperAdmin: me.isSuperAdmin === true });
 
 const COLUMNS = ["firstName", "lastName", "designation", "affiliation", "country", "orcidId", "photoPath"] as const;
 

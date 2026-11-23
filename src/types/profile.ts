@@ -72,6 +72,8 @@ export type Profile = {
   mainEmail: string;
   /** Own backend only: false when the account was created through Google/Microsoft/ORCID and has no password yet. Absent (= has one) with Supabase. */
   hasPassword?: boolean;
+  /** Own backend only: this account is a Super Admin. Its place is the admin console, so the user app's pages send it there (see SuperAdminGate). */
+  isSuperAdmin?: boolean;
   // profiles columns
   firstName: string;
   lastName: string;

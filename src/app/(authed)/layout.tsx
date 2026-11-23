@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SuperAdminGate } from "@/features/auth/components/super-admin-gate";
 import { ProfileProvider } from "@/features/profile/profile-context";
 import { ColorBlindApplier } from "@/features/settings/components/color-blind-applier";
 
@@ -10,7 +11,7 @@ export default function AuthedLayout({ children }: { children: ReactNode }) {
   return (
     <ProfileProvider>
       <ColorBlindApplier />
-      {children}
+      <SuperAdminGate>{children}</SuperAdminGate>
     </ProfileProvider>
   );
 }
