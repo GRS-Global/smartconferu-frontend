@@ -2,26 +2,11 @@
 
 import { Camera } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { Modal } from "@/components/ui/modal";
+import { dataUrlToBlob, MAX_PHOTO_BYTES, PhotoCropper, readImageDataUrl } from "./photo-cropper";
 import { ProfileAvatar } from "./profile-avatar";
 
 export type PhotoValue = { kind: "none" } | { kind: "stored"; url: string; name: string } | { kind: "new"; blob: Blob; previewUrl: string; name: string };
-
-const MAX_BYTES = 5 * 1024 * 1024;
-const OUTPUT = 512;
-
-/** Centre-crops the picked image to a square and re-encodes it as a small JPEG (the prototype stores a cropped photo). */
-async function cropToSquare(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
-  const side = Math.min(bitmap.width, bitmap.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = OUTPUT;
-  canvas.height = OUTPUT;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("no canvas");
-  ctx.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, OUTPUT, OUTPUT);
-  bitmap.close();
-  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode"))), "image/jpeg", 0.9));
-}
 
 interface PhotoFieldProps {
   value: PhotoValue;
@@ -29,12 +14,13 @@ interface PhotoFieldProps {
   initials: string;
 }
 
-/** Profile photo: pick (or drop) an image, it is cropped to a square; uploaded when the form is saved. */
+/** Profile photo: pick (or drop) an image and crop it in the same tool as My Profile; uploaded when the form is saved. */
 export function PhotoField({ value, onChange, initials }: PhotoFieldProps) {
   const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [cropping, setCropping] = useState<{ src: string; name: string } | null>(null);
   const urls = useRef<string[]>([]);
   useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
 
@@ -45,14 +31,25 @@ export function PhotoField({ value, onChange, initials }: PhotoFieldProps) {
     if (!file) return;
     setError("");
     if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { setError("Only PNG, JPEG or WebP photos can be uploaded."); return; }
-    if (file.size > MAX_BYTES) { setError("That photo is too large — the limit is 5 MB."); return; }
+    if (file.size > MAX_PHOTO_BYTES) { setError("That photo is too large — the limit is 5 MB."); return; }
     try {
-      const blob = await cropToSquare(file);
-      const previewUrl = URL.createObjectURL(blob);
-      urls.current.push(previewUrl);
-      onChange({ kind: "new", blob, previewUrl, name: file.name });
+      setCropping({ src: await readImageDataUrl(file), name: file.name });
     } catch {
       setError("That image couldn't be read — try another one.");
+    }
+  };
+  const applyCrop = async (dataUrl: string): Promise<boolean> => {
+    if (!cropping) return false;
+    try {
+      const blob = await dataUrlToBlob(dataUrl);
+      const previewUrl = URL.createObjectURL(blob);
+      urls.current.push(previewUrl);
+      onChange({ kind: "new", blob, previewUrl, name: cropping.name });
+      setCropping(null);
+      return true;
+    } catch {
+      setError("That image couldn't be read — try another one.");
+      return false;
     }
   };
 
@@ -82,6 +79,11 @@ export function PhotoField({ value, onChange, initials }: PhotoFieldProps) {
         </div>
         {error ? <p role="alert" className="mt-1 text-[11.5px] text-danger">{error}</p> : <p className="mt-1 truncate text-[11px] text-ink-faint">{name || "Profile photo (optional) · JPG or PNG, or drag & drop"}</p>}
       </div>
+      {cropping && (
+        <Modal title="Crop your photo" subtitle="Drag and zoom so your face sits inside the circle." icon={Camera} onClose={() => setCropping(null)} maxWidth="max-w-[480px]" roomy>
+          <PhotoCropper src={cropping.src} onCancel={() => setCropping(null)} onApply={(dataUrl) => applyCrop(dataUrl)} />
+        </Modal>
+      )}
     </div>
   );
 }

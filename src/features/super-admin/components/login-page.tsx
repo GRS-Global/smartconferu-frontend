@@ -650,7 +650,7 @@ function BrandPanel() {
       <BrandBackground />
       <div className="relative z-[1] flex flex-col w-full max-w-[760px] 2xl:max-w-[860px] mx-auto px-10 xl:px-14 py-8 [@media(min-height:900px)]:py-10">
         <span className="inline-flex self-start rounded-xl bg-white px-3.5 py-2" style={{ boxShadow: "0 6px 20px rgba(0,0,0,0.25)" }}>
-          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={140} height={28} priority className="h-7 w-auto" />
+          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={111} height={28} priority className="h-7 w-auto" />
         </span>
 
         <div className="mt-8 [@media(min-height:900px)]:mt-12">
@@ -698,7 +698,7 @@ function MobileHeader() {
       <BrandBackground />
       <div className="relative z-[1] max-w-[400px] mx-auto box-content px-5 sm:px-10 pt-5 pb-6">
         <span className="inline-flex rounded-lg bg-white px-3 py-1.5" style={{ boxShadow: "0 6px 20px rgba(0,0,0,0.25)" }}>
-          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={120} height={24} className="h-6 w-auto" />
+          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={95} height={24} className="h-6 w-auto" />
         </span>
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] mt-6" style={{ color: "var(--primary-soft-border)" }}>
           Super Admin Console
