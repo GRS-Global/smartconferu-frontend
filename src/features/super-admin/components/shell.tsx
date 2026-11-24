@@ -275,7 +275,7 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
         aria-label="Admin navigation"
       >
         <div className="h-[72px] flex items-center gap-2 px-6 shrink-0">
-          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={160} height={32} priority className="h-8 w-auto" />
+          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={127} height={32} priority className="h-8 w-auto" />
           <span className="text-[10.5px] font-bold uppercase tracking-wider rounded-md px-1.5 py-0.5" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
             Admin
           </span>

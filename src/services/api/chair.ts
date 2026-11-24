@@ -448,7 +448,7 @@ const implemented: Partial<ChairService> = {
     const form = new FormData();
     form.append("file", file);
     const conferenceId = await slugOfPaper(paperDbId);
-    const up = await api<{ path: string }>("/files", { method: "POST", query: { purpose: "screening_report", conferenceId }, body: form });
+    const up = await api<{ path: string }>("/files", { method: "POST", query: { purpose: "screening_report", conferenceId, submissionId: paperDbId }, body: form });
     return { name: file.name, path: up.path };
   },
   /** Opens a stored file: a paper file ("<paperId>/<fileId>") or a screening report; the routes need the Bearer header, so the bytes are fetched. */
