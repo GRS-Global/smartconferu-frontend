@@ -16,6 +16,7 @@ interface SubmissionDto {
   title: string; abstract: string; keywords: string[]; track: string | null; presentationType: string | null; authors: AuthorDto[] | null;
   status: "draft" | "submitted" | "withdrawn"; outcome: string; decisionNote: string | null; screening: Record<string, FullScreening> | null; files: PaperFileDto[];
   withdrawnAt: string | null; withdrawnBy: string | null; submittedAt: string; updatedAt: string; mySubmission: boolean; myCorresponding: boolean;
+  registration?: { payment: "not_paid" | "paid" | "waived"; attendance: "physical" | "virtual" | null; presenterName: string | null } | null;
 }
 interface FullScreening {
   check?: { decision?: string; passed?: boolean };
@@ -53,7 +54,8 @@ const told = (s: SubmissionDto): string | null => (STAGES.includes(s.outcome) ? 
 function resultOf(s: SubmissionDto): PaperResult {
   if (s.status === "draft") return "draft";
   switch (told(s)) {
-    case "accept": return "not_registered";
+    // Accepted: registered once the chair records the fee as paid or waived.
+    case "accept": return s.registration?.payment === "paid" || s.registration?.payment === "waived" ? "registered" : "not_registered";
     case "registered": return "registered";
     case "reject": return "not_accepted";
     default: return "no_result"; // nothing sent, or a revision / waitlist (still "no result" to the author)
@@ -109,6 +111,7 @@ function toListItem(s: SubmissionDto): AuthorSubmission {
     withdrawn: s.status === "withdrawn", mySubmission: s.mySubmission, myCorresponding: s.myCorresponding,
     result: resultOf(s), decision: t === "revise" || t === "waitlist" ? t : null, uploadPending: s.outcome === "upload_pending",
     screeningRequest: screeningRequestOf(s, paperVersions(s).length),
+    registration: s.registration ? { payment: s.registration.payment, attendance: s.registration.attendance, presenterName: s.registration.presenterName } : null,
   };
 }
 

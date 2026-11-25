@@ -8,6 +8,9 @@ export interface PaperAuthor {
 }
 
 /** What the paper's author has been told (the prototype's `paperResultFor`): only a decision the chair has *sent* counts. */
+/** What an author sees of their accepted paper's registration (the chair's note stays private). */
+export interface AuthorRegistration { payment: import("./chair").PaymentStatus; attendance: import("./chair").AttendanceMode | null; presenterName: string | null }
+
 export type PaperResult = "draft" | "no_result" | "not_registered" | "registered" | "not_accepted";
 
 /** A correction or revision the chair asked for after screening (initial check / plagiarism check). */
@@ -53,6 +56,8 @@ export interface AuthorSubmission {
   /** The signed-in user submitted it or is a corresponding author of it. */
   myCorresponding: boolean;
   result: PaperResult;
+  /** Payment and attendance as the chair recorded them, once the author was told the paper is accepted (own backend only; else absent). */
+  registration?: AuthorRegistration | null;
   /** The decision the author was told, when it is not accepted / rejected: a revision or the waitlist. */
   decision: "revise" | "waitlist" | null;
   /** The chair moved it back to "Paper Upload Pending". */

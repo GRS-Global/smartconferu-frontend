@@ -62,7 +62,8 @@ const at = (key: StageKey, status: string, tone: Tone = null): Stage => ({ key, 
 export function chairStageOf(p: ChairPaper, screening: Screening): Stage {
   if (p.withdrawn) return { key: "withdrawn", label: "Withdrawn", status: "Withdrawn", tone: "danger" };
   if (p.outcome === "accept" || p.outcome === "registered") {
-    const registered = p.outcome === "registered";
+    // "Registered": the chair picked that decision, or recorded the fee as paid or waived.
+    const registered = p.outcome === "registered" || p.registration?.payment === "paid" || p.registration?.payment === "waived";
     return at("registration", registered ? "Registered" : "Registration pending", registered ? "success" : "warning");
   }
   if (p.outcome === "reject") return at("decision", "Rejected", "danger");

@@ -4,7 +4,7 @@ import { AlignLeft, Check, ChevronRight, Download, Eye, FilePlus, FileText, File
 import { useState } from "react";
 import { getChairService } from "@/services/chair";
 import type { AuthorPaper } from "@/types/author-submission";
-import type { ChairFile, ChairPaperDetail, DecisionType } from "@/types/chair";
+import { ATTENDANCE_LABELS, PAYMENT_LABELS, type ChairFile, type ChairPaperDetail, type DecisionType } from "@/types/chair";
 import { plagDecisionOf } from "../screening";
 import { checkDecisionOf, isDecision } from "../stage";
 
@@ -37,7 +37,9 @@ export function paperSteps(detail: ChairPaperDetail, outcomeType: DecisionType |
   steps.push({ key: "rv", label: "Review", sub: paper.reviewersAssigned === 0 ? "No reviewers yet" : `${reviewsIn} review${reviewsIn === 1 ? "" : "s"}`, done: decided || (paper.reviewersAssigned > 0 && reviewsIn >= paper.reviewersAssigned) });
   const accepted = paper.outcome === "accept" || paper.outcome === "registered";
   steps.push({ key: "dc", label: decided ? (outcomeType?.label ?? "Decision") : "Decision", sub: "", done: accepted, color: decided && !accepted ? outcomeType?.color : undefined });
-  steps.push({ key: "rg", label: "Registration", sub: "", done: paper.outcome === "registered" });
+  const r = paper.registration;
+  const paid = r?.payment === "paid" || r?.payment === "waived";
+  steps.push({ key: "rg", label: "Registration", sub: r ? `${PAYMENT_LABELS[r.payment]}${r.attendance ? ` · ${ATTENDANCE_LABELS[r.attendance]}` : ""}` : "", done: paper.outcome === "registered" || paid });
   const first = steps.findIndex((s) => !s.done);
   return steps.map((s, i) => ({ key: s.key, label: s.label, sub: s.sub, color: s.color, state: s.done ? "done" : i === first ? "current" : "upcoming" }));
 }

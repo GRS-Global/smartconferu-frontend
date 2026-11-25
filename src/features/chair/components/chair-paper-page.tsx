@@ -16,7 +16,7 @@ import { workspaceGate } from "@/features/workspace/components/workspace-gate";
 import { sendActionEmails } from "@/services/action-emails";
 import { getChairService } from "@/services/chair";
 import { AuthRequiredError } from "@/services/errors";
-import type { ChairPaperDetail, ChairReviewer, DecisionType } from "@/types/chair";
+import { attendanceLabel, PAYMENT_LABELS, type ChairPaperDetail, type ChairReviewer, type DecisionType } from "@/types/chair";
 import { chairStageOf, isDecision } from "../stage";
 import type { ReviewValues } from "@/types/reviewer";
 import { DeskRejectDialog, ReviewDialog } from "./chair-paper-dialogs";
@@ -33,6 +33,7 @@ import { ReviewBody } from "./chair-review-view";
 import { FilesCard, ManageCard, NoteCard, PaperCard, PaperTimeline, toAuthorPaper } from "./chair-paper-details";
 import { EditAuthorsDialog, EditDetailsDialog, UpdateFilesDialog, WithdrawDialog } from "@/features/author/components/paper-dialogs";
 import { EmailAuthorsDialog } from "./email-authors-dialog";
+import { RegistrationCard, type RegistrationValues } from "./registration-card";
 
 /* A paper's page as its chair sees it (the prototype's SubmissionDetailPage, chair layout): the paper, "Reviewers & Scores" with each
    reviewer's progress and review (and the switch that shares their comments with the authors), and "Record decision" with the note to
@@ -120,6 +121,10 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
     if (!pick) return;
     const svc = await getChairService();
     if (await run(() => svc.recordDecision(paper.dbId, pick.id, text), { title: "Decision recorded", text: `${paper.id} is marked "${pick.label}". The authors haven't been told yet.` })) { setConfirm(false); setPick(null); }
+  };
+  const saveRegistration = async (values: RegistrationValues) => {
+    const svc = await getChairService();
+    return run(() => svc.saveRegistration(paper.dbId, values), { title: "Registration saved", text: `${paper.id}: ${PAYMENT_LABELS[values.payment]} · ${attendanceLabel(values.attendance)}. No email was sent.` });
   };
   const notify = async () => {
     const svc = await getChairService();
@@ -292,6 +297,7 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
               <NoteCard detail={detail} onUpload={() => setManage("files-paper")} />
             </div>
             <div className="space-y-6">
+            <RegistrationCard key={`${paper.dbId}-${paper.registration?.updatedAt ?? "new"}`} paper={paper} busy={busy} onSave={saveRegistration} />
             <ManageCard detail={detail} onDetails={() => setManage("details")} onAuthors={() => setManage("authors")} onFiles={() => setManage("files-paper")} onWithdraw={() => setManage("withdraw")} />
             <Card title="Paper actions" icon={Pencil}>
               {detail.fixRequest && <div className="mb-2 rounded-lg bg-warning-soft px-3 py-2 text-[11px] font-semibold leading-relaxed text-warning">Fix requested {detail.fixRequest.at}{detail.fixRequest.fixBy ? ` · due ${new Date(`${detail.fixRequest.fixBy}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}` : ""}</div>}

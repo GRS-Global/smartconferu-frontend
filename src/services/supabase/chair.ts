@@ -231,6 +231,9 @@ export const supabaseChairService: ChairService = {
     if (error) fail(error, "remove reviewers");
   },
 
+  async saveRegistration() {
+    throw new ServiceError("Payment and attendance can only be recorded with the own backend.");
+  },
   async requestFix(paperDbId, issue, fixByISO) {
     if (!UUID.test(paperDbId) || !/^\d{4}-\d{2}-\d{2}$/.test(fixByISO) || !issue.trim()) throw new ServiceError("Say what needs fixing and by when.");
     const db: SupabaseClient = getSupabase();

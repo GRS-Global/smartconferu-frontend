@@ -53,7 +53,27 @@ export interface ChairPaper {
   /** Paper versions uploaded. */
   versions: number;
   screening: Record<string, ScreeningRecord>;
+  /** Payment and attendance the chair recorded by hand: set while the paper is accepted, else null. */
+  registration?: PaperRegistration | null;
 }
+
+export type PaymentStatus = "not_paid" | "paid" | "waived";
+export type AttendanceMode = "physical" | "virtual";
+/** An accepted paper's registration (`PUT /submissions/{id}/registration`): a paper with nothing recorded is "not_paid", attendance null. */
+export interface PaperRegistration {
+  payment: PaymentStatus;
+  /** null: not known yet. */
+  attendance: AttendanceMode | null;
+  presenterEmail: string | null;
+  /** The presenter's name from the author list. */
+  presenterName: string | null;
+  /** The chair's own note (receipt number, amount…); never shown to authors. */
+  note: string | null;
+  updatedAt: string | null;
+}
+export const PAYMENT_LABELS: Record<PaymentStatus, string> = { not_paid: "Not paid", paid: "Paid", waived: "Waived" };
+export const ATTENDANCE_LABELS: Record<AttendanceMode, string> = { physical: "Physical", virtual: "Virtual" };
+export const attendanceLabel = (a: AttendanceMode | null) => (a ? ATTENDANCE_LABELS[a] : "Not known");
 
 /** The decision types a conference offers (`decision_types`), in the chair's order. */
 export interface DecisionType { id: string; label: string; color: string; outcome: Outcome; description: string; /** The status text the author sees ("" = the agreed wording for the outcome; migration 0039). */ authorLabel?: string }
