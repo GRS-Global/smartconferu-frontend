@@ -4,7 +4,7 @@ import { PEER_REVIEW_FORM, PROTECTED_FIELD_IDS, sectionsFromStored } from "@/fea
 import { extrasFromStored } from "@/types/author-submission";
 import {
   DEFAULT_CRITERIA, DEFAULT_PRESENTATION_TYPES, DEFAULT_REVIEW_LIMITS, DEFAULT_REVIEW_POLICY, DEFAULT_REVIEW_TIMELINE, DEFAULT_SUBMISSION_POLICY,
-  type CfpFacts, type ChairAuthor, type ChairConference, type ChairPaper, type ChairPaperDetail, type ChairReviewer, type DeclinedReviewer, type ReviewBoard, type ScreeningFile, type ConferenceInfo, type ConferenceSettings, type DecisionType, type DeletionRequest,
+  type CfpFacts, type ChairAuthor, type ChairConference, type ChairPaper, type ChairPaperDetail, type PaperRegistration, type ChairReviewer, type DeclinedReviewer, type ReviewBoard, type ScreeningFile, type ConferenceInfo, type ConferenceSettings, type DecisionType, type DeletionRequest,
   type ChairEmailLog, type LicenseRequest, type ConferenceTemplate, type EmailTemplates, type InviteResult, type Outcome, type PoolReviewer, type ReviewerPool, type ScreeningCriteria, type ScreeningRecord,
 } from "@/types/chair";
 import type { ChairService } from "../chair";
@@ -43,6 +43,7 @@ interface OverviewPaper {
   id: string; paperId: string; title: string; track: string | null; presentationType: string | null; keywords: string[]; status: string; outcome: string; decisionTypeId: string | null;
   notifiedOutcome: string | null; screening: Record<string, unknown> | null; files: Array<{ id: string; kind: string; version: number; fileName: string; uploadedAt: string; autoCheck: Record<string, unknown> | null }>; withdrawnAt: string | null; withdrawnBy: string | null; submittedAt: string; updatedAt: string;
   authors: Array<{ name: string; email: string; affiliation: string | null; country: string | null; corresponding: boolean; hasAccount: boolean }> | null;
+  registration: PaperRegistration | null;
   reviewersAssigned: number; reviewsReceived: number; averageScore: number | null;
 }
 interface BoardReview {
@@ -78,6 +79,7 @@ function toChairPaper(p: OverviewPaper, slug: string): ChairPaper {
     outcome: p.outcome as Outcome, decisionTypeId: p.decisionTypeId, notifiedOutcome: (p.notifiedOutcome as Outcome | null) ?? null,
     reviewersAssigned: p.reviewersAssigned, reviewsReceived: p.reviewsReceived, averageScore: p.averageScore,
     versions: p.files.filter((f) => f.kind !== "supplementary").length, screening: (p.screening ?? {}) as Record<string, ScreeningRecord>,
+    registration: p.registration ?? null,
   };
 }
 
@@ -377,6 +379,10 @@ const implemented: Partial<ChairService> = {
     await api(`/submissions/${paperDbId}/decision`, { method: "POST", body: { decisionTypeId, note: (note ?? "").trim().slice(0, 5000) || null } });
   },
   /** Sends the recorded decision; the reviews the chair marked as shared go with it. */
+  async saveRegistration(paperDbId, r) {
+    needUuid(paperDbId);
+    await api(`/submissions/${paperDbId}/registration`, { method: "PUT", body: { payment: r.payment, attendance: r.attendance, presenterEmail: r.presenterEmail, note: r.note?.trim() ? r.note.trim() : null } });
+  },
   async notifyDecision(paperDbId, note) {
     needUuid(paperDbId);
     const rv = await api<{ assignments: BoardAssignment[] }>(`/submissions/${paperDbId}/reviews`);

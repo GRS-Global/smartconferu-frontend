@@ -1,19 +1,21 @@
 import { FileCheck } from "lucide-react";
 import type { ReactNode } from "react";
-import type { ChairConference, ChairPaper, ReviewBoard } from "@/types/chair";
+import { ATTENDANCE_LABELS, PAYMENT_LABELS, attendanceLabel, type ChairConference, type ChairPaper, type ReviewBoard } from "@/types/chair";
 import { CHAIR_STAGES, chairStageOf, isDecision, type Screening } from "./stage";
 
 /* The Submissions list's column catalogue (the prototype's SUBMISSION_COLUMNS, submissionColumnTools and SUBMISSION_COLUMN_GROUPS):
    what each column shows, which ones are on by default, and the search box or dropdown under its title. Columns that need tables
-   the database does not have (session & slot, registration, payment, the submission form's own answers) are not offered. */
+   the database does not have (session & slot, the submission form's own answers) are not offered. Payment, attendance and presenter are
+   what the chair records by hand on an accepted paper (Registration & attendance); other papers show a dash. */
 
 export interface ColumnCtx { data: ChairConference; screening: Screening; board: ReviewBoard | null }
-export interface ListColumn { key: string; group: "submission" | "authors" | "review"; label: string; defaultOn: boolean; pinned?: boolean; render: (p: ChairPaper, ctx: ColumnCtx) => ReactNode }
+export interface ListColumn { key: string; group: "submission" | "authors" | "review" | "registration"; label: string; defaultOn: boolean; pinned?: boolean; render: (p: ChairPaper, ctx: ColumnCtx) => ReactNode }
 
 export const COLUMN_GROUPS: Array<{ key: ListColumn["group"]; label: string }> = [
   { key: "submission", label: "Submission" },
   { key: "authors", label: "Authors" },
   { key: "review", label: "Review & decision" },
+  { key: "registration", label: "Registration & attendance" },
 ];
 
 const dash = () => <span style={{ color: "var(--border-strong)" }} className="text-xs">—</span>;
@@ -88,13 +90,44 @@ export const COLUMNS: ListColumn[] = [
         : <span className="text-xs text-ink-faint">Pending</span>;
     },
   },
+  {
+    key: "payment", group: "registration", label: "Payment", defaultOn: true,
+    render: (p) => {
+      const r = p.registration;
+      if (!r) return dash();
+      const [color, bg] = PAYMENT_PILL[r.payment];
+      return pill(PAYMENT_LABELS[r.payment], color, bg);
+    },
+  },
+  {
+    key: "attendance", group: "registration", label: "Attending", defaultOn: true,
+    render: (p) => {
+      const r = p.registration;
+      if (!r) return dash();
+      return r.attendance ? pill(ATTENDANCE_LABELS[r.attendance], r.attendance === "physical" ? "#7C3AED" : "#0369A1", r.attendance === "physical" ? "#F3E8FF" : "#E0F2FE") : <span className="whitespace-nowrap text-xs text-ink-faint">Not known</span>;
+    },
+  },
+  { key: "presenter", group: "registration", label: "Presenter", defaultOn: false, render: (p) => (p.registration ? <span className="whitespace-nowrap text-xs text-ink-soft">{presenterOf(p) || "Not chosen"}</span> : dash()) },
 ];
+
+const PAYMENT_PILL = { paid: ["#15803D", "var(--success-soft)"], waived: ["#0369A1", "#E0F2FE"], not_paid: ["#B45309", "var(--warning-soft)"] } as const;
+/** The presenting author's name (or their email, when they left the author list). */
+export const presenterOf = (p: ChairPaper) => p.registration?.presenterName || p.registration?.presenterEmail || "";
+/** The text the Payment / Attending / Presenter filters compare (empty for a paper that is not accepted). */
+export const registrationFilterValue: Record<"payment" | "attendance" | "presenter", (p: ChairPaper) => string> = {
+  payment: (p) => (p.registration ? PAYMENT_LABELS[p.registration.payment] : ""),
+  attendance: (p) => (p.registration ? attendanceLabel(p.registration.attendance) : ""),
+  presenter: (p) => (p.registration ? presenterOf(p) || "Not chosen" : ""),
+};
+/** The registration columns, shown on the Registration stage even when the chair's saved columns leave them out. */
+export const REGISTRATION_COLUMNS = ["payment", "attendance", "presenter"];
 
 export const DEFAULT_COLUMNS = COLUMNS.filter((c) => c.defaultOn).map((c) => c.key);
 /** Column widths as on the Peer Review list. Columns not listed size to what they hold. */
 export const COLUMN_WIDTHS: Record<string, { min?: number; width?: string }> = {
   id: { min: 100 }, title: { min: 200, width: "clamp(200px, 20vw, 300px)" }, track: { min: 130 }, type: { min: 130 }, status: { min: 135 },
   submittedAt: { min: 115 }, updatedAt: { min: 115 }, reviewProgress: { min: 130 }, avgScore: { min: 105 }, decision: { min: 125 },
+  payment: { min: 115 }, attendance: { min: 115 }, presenter: { min: 130 },
 };
 
 /* The filters under the column titles. */

@@ -181,6 +181,7 @@ export const mockChairService: ChairService = {
   async setReviewDue() { /* mock mode keeps nothing */ },
   async removeReviewerFromPaper() { /* mock mode keeps nothing */ },
   async requestFix() { /* mock mode keeps nothing */ },
+  async saveRegistration() { /* mock mode keeps nothing */ },
   async loadConference(conferenceSlug) {
     if (SCREENING_PARITY && mockSlug(conferenceSlug) === "demo-dsai-2027") { const { PEER_PATCH, PEER_DECISION_TYPES, PEER_SIMILARITY } = await import("@/mocks/parity-peerreview"); return { dbId: "mock-conference", cfpStatus: CFP_STATUS, papers: (await import("@/mocks/parity-screening")).SCREENING_PAPERS.map((p) => { let v = String(p.versions); while (Number(v) > 1 && !p.screening[v]?.report) v = String(Number(v) - 1); const rec = p.screening[v]; const sim = PEER_SIMILARITY[p.dbId]; return { ...p, ...(PEER_PATCH[p.dbId] ?? {}), ...(rec?.report && sim !== undefined ? { screening: { ...p.screening, [v]: { ...rec, report: { ...rec.report, similarity: sim } } } } : {}) }; }), decisionTypes: PEER_DECISION_TYPES, criteria: DEFAULT_CRITERIA, screening: { initialCheck: true, plagiarism: true } }; }
     if (ANALYTICS_RICH && mockSlug(conferenceSlug) === "demo-dsai-2027") return { dbId: "mock-conference", cfpStatus: CFP_STATUS, papers: richPapers(), decisionTypes: [], criteria: DEFAULT_CRITERIA, screening: { initialCheck: true, plagiarism: true } };
