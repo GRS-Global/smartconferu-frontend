@@ -19,6 +19,10 @@ export interface Conference {
   country: string;
   /** Review deadline (YYYY-MM-DD), when the conference has one. */
   reviewDeadline?: string;
+  /** Submission (full paper) deadline (YYYY-MM-DD), when set in Conference Details. */
+  submissionDeadline?: string;
+  /** Abstract deadline (YYYY-MM-DD), when set in Conference Details. */
+  abstractDeadline?: string;
   pinned?: boolean;
 }
 

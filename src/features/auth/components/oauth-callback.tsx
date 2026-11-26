@@ -38,7 +38,7 @@ export function OAuthCallback() {
     void refreshSession().then((ok) => {
       if (!live) return;
       if (ok) { router.replace(next); router.refresh(); } else fail("We couldn't finish signing you in. Please try again.");
-    });
+    }).catch((e: unknown) => fail(e instanceof Error ? e.message : "We couldn't finish signing you in. Please try again."));
     return () => { live = false; };
   }, [router]);
 

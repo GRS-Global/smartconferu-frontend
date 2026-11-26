@@ -11,7 +11,9 @@ import type { ConferenceService, DashboardData } from "../conferences";
 interface DashboardResponse {
   conferences: Array<{
     conferenceId: string; slug: string; acronym: string; title: string; status: string; logoPath: string | null;
-    city: string | null; country: string | null; startDate: string | null; endDate: string | null; reviewDeadline: string | null; roles: string[];
+    city: string | null; country: string | null; startDate: string | null; endDate: string | null; reviewDeadline: string | null;
+    /** Older backends don't send these two; the screens then show the date as not set. */
+    submissionDeadline?: string | null; abstractDeadline?: string | null; roles: string[];
   }>;
   authorPapers: Array<{ submissionId: string; conferenceId: string; paperNo: number; status: string; notifiedOutcome: string | null }>;
   chairPapers: Array<{ submissionId: string; conferenceId: string; status: string; outcome: string }>;
@@ -62,6 +64,8 @@ async function loadDashboard(): Promise<DashboardData> {
       id: c.slug, number: i + 1, acronym: c.acronym, name: c.title, status,
       startDate: isoDay(c.startDate) || endDate, endDate, city: c.city ?? "", country: c.country ?? "",
       ...(c.reviewDeadline ? { reviewDeadline: isoDay(c.reviewDeadline) } : {}),
+      ...(c.submissionDeadline ? { submissionDeadline: isoDay(c.submissionDeadline) } : {}),
+      ...(c.abstractDeadline ? { abstractDeadline: isoDay(c.abstractDeadline) } : {}),
       ...(c.logoPath ? { logoUrl: publicFileUrl(c.logoPath) } : {}),
     };
     return { conference, roles };

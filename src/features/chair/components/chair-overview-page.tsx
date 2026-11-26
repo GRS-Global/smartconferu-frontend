@@ -7,7 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { DetailsDrawer } from "@/features/author/components/details-drawer";
-import { daysToISO, shiftIsoDate, toDate } from "@/features/author/format";
+import { daysToISO, toDate } from "@/features/author/format";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { ConferenceHero, DeadlineChip, HeroLink } from "@/features/workspace/components/hero";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
@@ -256,16 +256,18 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
   const lightest = loads.length ? Math.min(...loads) : 0;
   const maxLoad = Math.max(1, ...workload.map((w) => w.assigned));
 
-  // Dates worked out from the start date (the database keeps no Call for Papers dates), as the prototype does without one.
-  const subDeadline = shiftIsoDate(conference.startDate, -75);
+  // The dates the chair set in Conference Details (abstract, submission and review deadlines) and the conference dates. Nothing is
+  // guessed: a date that is not set is left out (BUG-004 in docs/qa/BUG_REPORT.md).
+  const abstractDeadline = info?.abstractDeadline ?? "";
+  const submissionDeadline = info?.submissionDeadline ?? "";
+  const reviewDeadline = info?.reviewDeadline ?? "";
   const milestones = [
-    { key: "abstract", label: "Abstract deadline", iso: shiftIsoDate(subDeadline, -30), end: undefined as string | undefined },
-    { key: "submission", label: "Full-paper deadline", iso: subDeadline, end: undefined },
-    { key: "review", label: "Reviews due", iso: shiftIsoDate(subDeadline, 28), end: undefined },
-    { key: "notification", label: "Author notification", iso: shiftIsoDate(subDeadline, 42), end: undefined },
-    { key: "cameraReady", label: "Camera-ready due", iso: shiftIsoDate(conference.startDate, -14), end: undefined },
+    { key: "abstract", label: "Abstract deadline", iso: abstractDeadline, end: undefined as string | undefined },
+    { key: "submission", label: "Full-paper deadline", iso: submissionDeadline, end: undefined },
+    { key: "review", label: "Reviews due", iso: reviewDeadline, end: undefined },
     { key: "event", label: "Conference dates", iso: conference.startDate, end: conference.endDate },
-  ].map((m) => ({ ...m, days: daysToISO(m.end || m.iso) })).sort((a, b) => toDate(a.iso).getTime() - toDate(b.iso).getTime());
+  ].filter((m) => m.iso).map((m) => ({ ...m, days: daysToISO(m.end || m.iso) })).sort((a, b) => toDate(a.iso).getTime() - toDate(b.iso).getTime());
+  const missingDates = [!abstractDeadline && "abstract", !submissionDeadline && "submission", !reviewDeadline && "review"].filter(Boolean) as string[];
   const next = milestones.find((m) => m.days != null && m.days >= 0) ?? milestones[milestones.length - 1];
 
   const critical: Array<{ text: string; cta: string; href: string }> = [];
@@ -461,7 +463,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
             )}
 
             <Panel title="Submissions over time" aside={dates.length > 1 ? <span className="flex items-center gap-2 text-[11px] font-semibold text-ink-faint"><span className="flex items-center gap-1"><span className="inline-block h-0.5 w-2.5 bg-primary" /> cumulative</span><span className="flex items-center gap-1"><span className="inline-block h-0 w-2.5 border-t border-dashed border-danger" /> deadline</span></span> : undefined}>
-              <Sparkline dates={dates} deadline={toDate(subDeadline).getTime()} />
+              <Sparkline dates={dates} deadline={submissionDeadline ? toDate(submissionDeadline).getTime() : null} />
               {dates.length > 1 && <div className="mt-1.5 flex justify-between"><span className="text-[10px] font-semibold text-ink-faint">{new Date(Math.min(...dates)).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span><span className="text-[10px] font-semibold text-ink-faint">{subs.filter((p) => p.submittedAt).length} submitted</span></div>}
             </Panel>
 
@@ -534,7 +536,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
                   <div key={m.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" style={{ background: past ? "var(--border-strong)" : soon ? "var(--warning)" : "var(--primary)" }} className="h-1.5 w-1.5 shrink-0 rounded-full" /><span className={`truncate text-xs font-semibold ${past ? "text-ink-faint" : "text-ink"}`}>{m.label}</span></div><div className="shrink-0 text-right"><div className={`text-[11px] font-semibold ${past ? "text-ink-faint" : "text-ink-soft"}`}>{m.end ? `${dayText(m.iso)} – ${dayText(m.end)}` : dayText(m.iso)}</div><div className={`text-xs font-bold ${past ? "text-ink-faint" : soon ? "text-warning" : "text-ink-muted"}`}>{rel(m.days)}</div></div></div>
                 );
               })}</div>
-              <p className="mt-3 text-[10px] leading-snug text-ink-faint">Dates are estimated from the conference schedule — link a Call for Papers to set them exactly.</p>
+              {missingDates.length > 0 && <p className="mt-3 text-[10px] leading-snug text-ink-faint">Not set yet: {missingDates.join(", ")} deadline{missingDates.length > 1 ? "s" : ""}. <Link href={`/chair/${e}/settings`} className="font-semibold text-primary hover:underline">Set {missingDates.length > 1 ? "them" : "it"} in Conference Details</Link>.</p>}
             </Panel>
 
             <Panel title={<span className="flex items-center gap-2"><Users size={14} aria-hidden="true" /> Reviewer workload</span>} aside={<Link href={reviewers} className="text-xs font-bold text-primary hover:underline">Manage</Link>}>

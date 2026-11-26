@@ -3,6 +3,8 @@
    reload calls POST /auth/refresh to get a new access token. Every request is plain JSON over
    HTTPS; errors arrive as { statusCode, code, message, details?, requestId }. */
 
+import { refreshWithRetry, UNREACHABLE_MESSAGE } from "@/lib/session-refresh";
+
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const BASE = `${API_URL}/api/v1`;
 
@@ -53,17 +55,21 @@ async function errorOf(res: Response): Promise<ApiError> {
   return new ApiError(res.status, body?.code ?? "UNKNOWN", message || `Request failed (${res.status}).`, body?.details);
 }
 
-/** Swaps the refresh cookie for a new access token. False when there is no valid session. */
+/** Swaps the refresh cookie for a new access token. False only when the backend says there is no valid session; a busy or
+ *  unreachable server is retried, then throws (the admin stays signed in — see lib/session-refresh.ts). */
 export function refreshSession(): Promise<boolean> {
   refreshing ??= (async () => {
     try {
-      const res = await send("/auth/refresh", { method: "POST" });
-      if (!res.ok) {
+      const r = await refreshWithRetry(() => send("/auth/refresh", { method: "POST" }));
+      if (r.kind === "ok") {
+        accessToken = r.token;
+        return true;
+      }
+      if (r.kind === "signed_out") {
         accessToken = null;
         return false;
       }
-      accessToken = ((await res.json()) as { accessToken: string }).accessToken;
-      return true;
+      throw new ApiError(503, "UNREACHABLE", UNREACHABLE_MESSAGE);
     } finally {
       refreshing = null;
     }

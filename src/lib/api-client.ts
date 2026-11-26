@@ -1,6 +1,7 @@
 import { API_URL } from "@/lib/config";
 import { AuthRequiredError, ServiceError } from "@/services/errors";
 import { endSupportView, hadSupportView, readSupportView } from "@/lib/support-view";
+import { refreshWithRetry, UNREACHABLE_MESSAGE } from "@/lib/session-refresh";
 
 /* One place for every call to the own backend (Backend/, NestJS): plain JSON over HTTPS, routes in ../API.md.
    - Base path /api/v1.
@@ -56,10 +57,10 @@ export function setAccessToken(token: string | null, notify = true): void {
   if (!token && had) emit("signed_out");
 }
 
-interface SessionBody { accessToken: string }
 let refreshing: Promise<boolean> | null = null;
 
-/** Gets a new access token from the refresh cookie. Resolves false when there is no valid session. Never throws. */
+/** Gets a new access token from the refresh cookie. Resolves false only when the backend says there is no valid session; a busy or
+ *  unreachable server is retried, then throws a ServiceError (the person stays signed in — see lib/session-refresh.ts). */
 export function refreshSession(): Promise<boolean> {
   if (hadSupportView()) {
     // The view's token can't be renewed: it is still good, or the view is over.
@@ -67,13 +68,10 @@ export function refreshSession(): Promise<boolean> {
   }
   refreshing ??= (async () => {
     try {
-      const res = await fetch(`${BASE}/auth/refresh`, { method: "POST", credentials: "include" });
-      if (!res.ok) { setAccessToken(null); return false; }
-      setAccessToken(((await res.json()) as SessionBody).accessToken);
-      return true;
-    } catch {
-      setAccessToken(null);
-      return false;
+      const r = await refreshWithRetry(() => fetch(`${BASE}/auth/refresh`, { method: "POST", credentials: "include" }));
+      if (r.kind === "ok") { setAccessToken(r.token); return true; }
+      if (r.kind === "signed_out") { setAccessToken(null); return false; }
+      throw new ServiceError(UNREACHABLE_MESSAGE);
     } finally {
       refreshing = null;
     }

@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SessionEnded } from "@/features/auth/components/session-ended";
 import { ConferenceHero } from "@/features/workspace/components/hero";
 import { AuthorShell } from "@/features/workspace/components/author-shell";
-import { daysToISO, downloadIcs, shiftIsoDate, toDate, type IcsEvent } from "../format";
+import { daysToISO, downloadIcs, toDate, type IcsEvent } from "../format";
 import { conferenceDest, newSubmissionHref } from "../links";
 import { conferenceNumbers, conferenceOver, submissionRows, type SubmissionRow } from "../status";
 import { authorTodos } from "../todos";
@@ -94,14 +94,11 @@ export function AuthorOverviewPage({ slug }: { slug: string }) {
     .sort((a, b) => (ATTENTION_ORDER[a.status.key] ?? 9) - (ATTENTION_ORDER[b.status.key] ?? 9) || dueTime(a) - dueTime(b));
   const doneCount = rows.length - attention.length;
 
-  /* Key dates. The organisers' call for papers is not in the database, so, as in the prototype for a conference without
-     one, the dates are worked out from the conference's start date. */
-  const subDeadline = shiftIsoDate(conference.startDate, -75);
+  /* Key dates: the deadlines the chair set in Conference Details and the conference days. Nothing is guessed — a date that
+     is not set is left out (BUG-004 in docs/qa/BUG_REPORT.md: authors were shown invented deadlines). */
   const milestones: Milestone[] = [
-    { key: "abstract", label: "Abstract due", iso: shiftIsoDate(subDeadline, -30) },
-    { key: "submission", label: "Full paper due", iso: subDeadline },
-    { key: "notification", label: "Results announced", iso: shiftIsoDate(subDeadline, 42) },
-    { key: "cameraReady", label: "Register & final version", iso: shiftIsoDate(conference.startDate, -14) },
+    { key: "abstract", label: "Abstract due", iso: conference.abstractDeadline ?? "" },
+    { key: "submission", label: "Full paper due", iso: conference.submissionDeadline ?? "" },
     { key: "event", label: "Conference days", iso: conference.startDate, end: conference.endDate },
   ]
     .filter((m) => m.iso)
