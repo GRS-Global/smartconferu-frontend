@@ -267,7 +267,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   return (
     <>
       <PageHeader title={title} breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: info.acronym, href: behalf ? `/chair/${encodeURIComponent(info.slug)}` : undefined }, { label: title }]} />
-      <div className="grid items-start gap-6 p-4 sm:p-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+      <div className="grid grid-cols-1 items-start gap-6 p-4 sm:p-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
       <div className="min-w-0 space-y-5">
         <div style={CARD} className="flex flex-wrap items-center gap-5 rounded-2xl bg-gradient-to-r from-[#EEF2FF] via-[#F1ECFF] to-[#E6F6FB] p-6">
           <ConferenceMonogram acronym={info.acronym} size={84} />

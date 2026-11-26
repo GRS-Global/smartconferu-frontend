@@ -178,7 +178,7 @@ export function ReviewFormPreview({ acronym, instructions, form, hiddenFields, e
         <h2 className="text-xl font-extrabold tracking-tight text-navy">Review a {acronym} paper</h2>
         <p className="mt-1 text-xs text-ink-muted">This is exactly how reviewers see the form.</p>
       </div>
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,48rem)_17rem]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,48rem)_17rem]">
         <div className="min-w-0 space-y-5">
           <section style={CARD} className="overflow-hidden rounded-2xl bg-white">
             <div className="flex items-center gap-3 bg-primary-soft/60 px-5 py-3.5">

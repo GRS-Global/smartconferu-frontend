@@ -53,10 +53,10 @@ function TitleCell({ title, sub }: { title: string; sub?: string | null }) {
 
 function Person({ name, sub }: { name: string; sub?: string | null }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex min-w-0 items-center gap-2.5">
       <Avatar name={name} size={32} />
       <div className="min-w-0">
-        <p className="whitespace-nowrap" style={{ color: "var(--text)" }}>
+        <p className="break-words md:whitespace-nowrap" style={{ color: "var(--text)" }}>
           {name}
         </p>
         {sub && (

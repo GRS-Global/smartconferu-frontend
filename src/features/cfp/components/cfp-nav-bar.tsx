@@ -35,7 +35,7 @@ export function CfpNavBar({ navItems, editMenuItems, editMenuActive }: { navItem
             <Pencil size={14} aria-hidden="true" /> Edit
             <ChevronDown size={12} aria-hidden="true" style={{ transition: "transform 160ms ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }} />
           </button>
-          <div role="menu" style={{ border: "1px solid var(--border)", boxShadow: "0 12px 28px rgba(15,23,42,0.14)", opacity: open ? 1 : 0, transform: open ? "translateY(0)" : "translateY(-6px)", pointerEvents: open ? "auto" : "none", transition: "opacity 160ms ease, transform 160ms ease" }} className="absolute left-0 top-full z-20 mt-1.5 w-52 overflow-hidden rounded-xl bg-white py-1.5">
+          <div role="menu" style={{ border: "1px solid var(--border)", boxShadow: "0 12px 28px rgba(15,23,42,0.14)", opacity: open ? 1 : 0, transform: open ? "translateY(0)" : "translateY(-6px)", pointerEvents: open ? "auto" : "none", transition: "opacity 160ms ease, transform 160ms ease" }} className="absolute right-0 top-full z-20 mt-1.5 w-52 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl bg-white py-1.5 sm:left-0 sm:right-auto">
             {editMenuItems.map((item) => {
               const Icon = item.icon;
               const color = item.danger ? "var(--danger)" : item.active ? "var(--primary)" : "var(--ink)";

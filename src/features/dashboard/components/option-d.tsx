@@ -542,7 +542,7 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
                 <thead>
                   <tr className="bg-canvas text-ink-soft">
                     <th scope="col" rowSpan={rowSpan} className={cn(TH, HEAD_BORDER, "w-16 rounded-tl-2xl")}><HeaderCell label={sortHead("ID", "id")} filter={idFilter} /></th>
-                    <th scope="col" rowSpan={rowSpan} className={cn(TH, HEAD_BORDER, "min-w-[280px]")}><HeaderCell label="Conference" filter={conferenceFilter} /></th>
+                    <th scope="col" rowSpan={rowSpan} className={cn(TH, HEAD_BORDER, "min-w-[220px] sm:min-w-[280px]")}><HeaderCell label="Conference" filter={conferenceFilter} /></th>
                     <th scope="col" rowSpan={rowSpan} className={cn(TH, HEAD_BORDER)}><HeaderCell label={sortHead("Conference date", "date", ["Latest first", "Earliest first"])} filter={datesFilter} /></th>
                     <th scope="col" rowSpan={rowSpan} className={cn(TH, HEAD_BORDER, "w-[170px]")}><HeaderCell label="Location" filter={locationFilter} /></th>
                     {hasOutcomes ? (
@@ -625,6 +625,8 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
                 </tbody>
               </table>
             </div>
+            {/* The table is wider than a phone: say so, otherwise the dates, location and roles look missing. */}
+            {filtered.length > 0 && <p className="border-t border-muted px-4 py-2.5 text-center text-xs font-semibold text-ink-muted md:hidden">Swipe sideways to see dates, location and roles →</p>}
             {filtered.length === 0 && (
               rows.length === 0 ? (
                 <EmptyState icon={Building2} title="You have no conferences yet." description="Conferences you chair, submit to, or review for will appear here." />

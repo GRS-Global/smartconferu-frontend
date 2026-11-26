@@ -59,7 +59,7 @@ export function ConferenceCell({ row, note }: { row: DashboardRow; note?: ReactN
         <span className={cn("font-extrabold", past ? "text-ink-soft" : "text-navy")}>{row.conf.acronym}</span>
         {row.hint.tone === "live" && <span className="rounded-full bg-danger px-1.5 py-0.5 text-[11px] font-bold text-white">Live now</span>}
       </div>
-      <div className="max-w-[340px] text-[12.5px] leading-snug text-ink-muted">{row.conf.name}</div>
+      <div className="max-w-[200px] text-[12.5px] leading-snug text-ink-muted sm:max-w-[340px]">{row.conf.name}</div>
       {note}
     </td>
   );

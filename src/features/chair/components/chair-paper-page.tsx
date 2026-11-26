@@ -293,7 +293,7 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
             onRecord={() => { setError(""); setConfirm(true); }} onNotify={() => void notify()} onShare={(r, v) => void share(r, v)} onEdit={(r) => { if (r.byChair) { router.push(`${base}/review/add`); return; } setError(""); setDlg({ kind: "edit", reviewer: r }); }}
             onDecideExtension={(r, v) => void decideExtension(r, v)} onReviewerAction={(type, r) => { setError(""); setRdlg({ type, reviewer: r }); }} onAddReview={() => router.push(`${base}/review/add`)} onAddReviewer={() => void openAdd()} hasMine={Boolean(mine)} />
         ) : (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="min-w-0 space-y-6">
               <PaperCard detail={detail} />
               <FilesCard detail={detail} onNotice={(title, text) => setToast({ title, text })} onAddSupporting={paper.withdrawn ? null : () => setManage("files-supporting")} />

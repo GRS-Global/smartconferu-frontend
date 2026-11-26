@@ -226,7 +226,7 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
               {periodError && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {periodError}</p>}
               <p className="mt-2.5 text-xs text-ink-faint">{policy.accepting ? "Leave blank to open straight away. " : "Enable “Accept New Submissions” to use a schedule. "}Submissions close at the end of the deadline set in <a href={detailsHref} className="font-semibold text-primary hover:underline">Conference Details</a>.</p>
             </div>
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {toggleRow("allowUpdates", "Allow Submission Updates", "Authors may revise their submission until the submission deadline.")}
               {toggleRow("allowMultiple", "Allow Multiple Submissions per Author", "When off, each author may submit only one paper.")}
               {toggleRow("editAfterAccept", "Allow Edits After Acceptance", "Authors may modify accepted submissions, e.g. to correct metadata.")}
@@ -238,7 +238,7 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
           <div className="space-y-4">
             <div style={{ border: "1px solid var(--border)" }} className="flex flex-wrap items-center justify-between gap-4 rounded-xl px-4 py-3">
               <div><div className="text-sm font-semibold text-ink"><HelpLabel help="idFormat">Submission Identifier Format</HelpLabel></div><div className="mt-0.5 text-xs text-ink-faint">How each submission is referenced across chair, reviewer and author views.</div></div>
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0">
                 <button type="button" onClick={() => update({ idFormat: "numeric" })} style={seg(policy.idFormat === "numeric")} className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors">Numeric (#{nextNumber})</button>
                 <button type="button" onClick={() => update({ idFormat: "prefixed" })} style={seg(policy.idFormat === "prefixed")} className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors">Prefixed ID ({prefix}-{nextNumber})</button>
               </div>

@@ -130,15 +130,15 @@ export function CfpManagerPage({ slug }: { slug: string }) {
   const preview = { acronym: conference.acronym, name: conference.name, venue: info.venue, country: info.country, deadline: showDate(info.submissionDeadline), webPage: info.webPage, html, accent: theme.accent };
 
   const row = (label: string, value: React.ReactNode, first = false) => (
-    <div style={first ? undefined : { borderTop: "1px solid var(--muted)" }} className="flex items-center gap-3 px-5 py-3.5"><span className="w-40 shrink-0 text-xs font-semibold text-ink-faint">{label}</span>{value}</div>
+    <div style={first ? undefined : { borderTop: "1px solid var(--muted)" }} className="flex flex-col gap-1 px-5 py-3.5 sm:flex-row sm:items-center sm:gap-3"><span className="shrink-0 text-xs font-semibold text-ink-faint sm:w-40">{label}</span>{value}</div>
   );
   const overview = (
-    <div className="grid items-start gap-6 lg:grid-cols-3">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
         <div style={CARD} className="overflow-hidden rounded-2xl bg-white">
-          {row("Conference web page", info.webPage ? <><a href={info.webPage} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium text-primary hover:underline">{info.webPage}</a><CopyButton text={info.webPage} label="Copy" /></> : <span className="text-sm text-ink-faint">Not set</span>, true)}
+          {row("Conference web page", info.webPage ? <><a href={info.webPage} target="_blank" rel="noreferrer" className="min-w-0 max-w-full flex-1 break-all text-sm font-medium text-primary hover:underline sm:truncate sm:break-normal">{info.webPage}</a><CopyButton text={info.webPage} label="Copy" /></> : <span className="text-sm text-ink-faint">Not set</span>, true)}
           {draft && row("Submission link", <span className="text-sm italic text-ink-faint">{SUBMISSION_LINK_PENDING}</span>)}
-          {cfp.status === "published" && row("Submission link", <><a href={link} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium text-primary hover:underline">{link}</a><CopyButton text={link} label="Copy" /></>)}
+          {cfp.status === "published" && row("Submission link", <><a href={link} target="_blank" rel="noreferrer" className="min-w-0 max-w-full flex-1 break-all text-sm font-medium text-primary hover:underline sm:truncate sm:break-normal">{link}</a><CopyButton text={link} label="Copy" /></>)}
           {row("Venue", <span className="text-sm text-ink">{where || "Not set"}</span>)}
           {draft ? row("Contact", info.contactEmail ? <a href={`mailto:${info.contactEmail}`} className="truncate text-sm font-medium text-primary hover:underline">{info.contactEmail}</a> : <span className="text-sm text-ink-faint">Not set</span>) : row("Submission deadline", <span className="text-sm font-medium text-ink">{showDate(info.submissionDeadline) || "Not set"}</span>)}
         </div>

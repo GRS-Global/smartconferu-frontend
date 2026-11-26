@@ -115,7 +115,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
         </div>
       </div>
 
-      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,7fr)_minmax(280px,3fr)]">
+      <div className="mt-5 grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,7fr)_minmax(280px,3fr)]">
         <section style={CARD} className="min-w-0 rounded-2xl bg-white p-5">
           <div role="tablist" aria-label="Message" className="mb-4 inline-flex gap-1 rounded-xl border border-line p-1">
             {(["edit", "preview"] as const).map((k) => <button key={k} type="button" role="tab" aria-selected={mode === k} onClick={() => setMode(k)} className={`h-7 cursor-pointer rounded-lg px-4 text-xs font-bold ${mode === k ? "bg-muted text-navy" : "text-ink-muted hover:text-navy"}`}>{k === "edit" ? "Edit" : "Preview"}</button>)}

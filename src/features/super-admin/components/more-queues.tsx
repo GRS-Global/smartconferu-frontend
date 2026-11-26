@@ -28,9 +28,9 @@ function TitleCell({ title, sub }: { title: string; sub?: string | null }) {
 }
 function Person({ name }: { name: string }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex min-w-0 items-center gap-2.5">
       <Avatar name={name} size={32} />
-      <span className="whitespace-nowrap">{name}</span>
+      <span className="break-words md:whitespace-nowrap">{name}</span>
     </div>
   );
 }

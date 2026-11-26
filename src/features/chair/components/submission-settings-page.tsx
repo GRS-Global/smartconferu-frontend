@@ -78,7 +78,7 @@ function Screening({ initial, steps, onSave, busy }: { initial: ScreeningCriteri
           <button type="button" role="switch" aria-checked={false} aria-label="Auto initial check" disabled style={{ background: "var(--border-strong)" }} className="relative mt-1 h-[22px] w-10 shrink-0 cursor-not-allowed rounded-full opacity-60 transition-colors"><span style={{ transform: "translateX(2px)" }} className="absolute left-0 top-[2px] h-[18px] w-[18px] rounded-full bg-white shadow transition-transform" /></button>
         </div>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div><label htmlFor="sc-col" className={LABEL}>Required Layout</label><select id="sc-col" value={c.column} disabled={!on.initialCheck} onChange={(e) => setC({ ...c, column: e.target.value as ScreeningCriteria["column"] })} onBlur={flush} className={`${CELL} cursor-pointer disabled:cursor-not-allowed`}><option value="single">Single column</option><option value="double">Double column</option><option value="either">Either</option></select></div>
         {num("sc-min", "Single Column · Min Pages", "min", problems.min, !on.initialCheck)}
         {num("sc-max", "Single Column · Max Pages", "max", problems.max, !on.initialCheck)}

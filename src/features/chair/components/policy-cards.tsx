@@ -143,7 +143,7 @@ export function VisibilityCard({ initial, mode, fields, onChange }: { initial: R
   const toggle = (id: string) => put({ ...p, hiddenFields: p.hiddenFields.includes(id) ? p.hiddenFields.filter((x) => x !== id) : [...p.hiddenFields, id] });
   return (
     <PolicyCard id="rs-visibility" icon={Eye} title="Review & Visibility" desc="Control what reviewers can access and what authors are asked to provide.">
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <Tile helpKey="doubleBlind" title="Double-blind review" help="Reviewers never see author names, emails or affiliations — in their queue, on the paper, or in search." checked={m === "double_blind"} onChange={(v) => put(p, v ? "double_blind" : "single_blind")} />
         <Tile helpKey="nonChairsSeeUnassigned" title="Reviewer Access to Unassigned Submissions" help="Reviewers can view submissions that are not assigned to them." checked={p.unassignedAccess} onChange={(v) => put({ ...p, unassignedAccess: v })} />
         <Tile helpKey="preSubmissionAbstracts" title="Allow Abstract Pre-Submission" help="Authors may submit an abstract ahead of the full paper." checked={p.abstractFirst} onChange={(v) => put({ ...p, abstractFirst: v })} />

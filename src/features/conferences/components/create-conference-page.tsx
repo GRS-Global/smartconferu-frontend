@@ -289,7 +289,7 @@ export function CreateConferencePage() {
       <LoadingOverlay open={saving} label="Sending your request…" hint="We're sending your conference for approval. Please don't close or refresh the page." />
       <LoadingOverlay open={fill.status === "loading"} label="Reading your website…" hint="We're filling in the conference details from your website. This can take up to a minute — please don't close or refresh the page." />
       <div inert={fill.status === "loading"} className="px-4 pb-8 sm:px-8">
-        <div className="mx-auto grid max-w-[1200px] items-start gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_340px] lg:pb-8 xl:gap-8">
+        <div className="mx-auto grid grid-cols-1 max-w-[1200px] items-start gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_340px] lg:pb-8 xl:gap-8">
           <div className="min-w-0 space-y-5">
             {/* Typing into the blank form counts as "start fresh": the new work becomes the draft. */}
             {draftOffer && !isDirty && (

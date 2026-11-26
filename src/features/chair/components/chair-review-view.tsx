@@ -187,7 +187,7 @@ export function ReviewBody(p: ReviewBodyProps) {
   // The paper's own outcome (a decision, or a stage such as "Plagiarism clear") is the selected tile, and gets a tile if it is not one of the choices.
   const tiles = p.outcomeType && !p.choices.some((t) => t.id === p.outcomeType?.id) ? [...p.choices, p.outcomeType] : p.choices;
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="space-y-6">
         <Compare detail={detail} />
         <section style={CARD} className="rounded-2xl bg-white p-5">

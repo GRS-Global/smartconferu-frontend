@@ -162,7 +162,7 @@ export function RequestDetailPage({ id }: { id: string }) {
             </div>
           )}
 
-          <div className="grid items-start gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
               <div style={CARD} className="rounded-2xl bg-white p-6">
                 <CardHeader icon={Clock} title="Where your request is" />

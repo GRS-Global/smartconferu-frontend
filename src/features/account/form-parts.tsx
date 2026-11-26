@@ -6,16 +6,19 @@ import { RESEARCH_AREA_GROUPS, RESEARCH_SUBAREAS } from "@/lib/research-areas";
 
 export function FormStepper({ steps, current, onStepClick }: { steps: Array<{ key: string; label: string }>; current: number; onStepClick: (i: number) => void }) {
   return (
-    <div className="flex items-center w-full mb-8">
+    <div className="mb-8 w-full">
+    <div className="flex items-center w-full">
       {steps.map((s, i) => {
         const reached = i <= current;
         return (
           <Fragment key={s.key}>
+            {/* On a phone the six labels do not fit in one row: only the numbered circles show, and the current step is named below the bar. */}
             <button
               type="button"
               onClick={() => onStepClick(i)}
-              className="flex flex-col items-center shrink-0 cursor-pointer"
-              style={{ minWidth: 88 }}
+              aria-label={`Step ${i + 1}: ${s.label}`}
+              aria-current={i === current ? "step" : undefined}
+              className="flex flex-col items-center shrink-0 cursor-pointer sm:min-w-[88px]"
             >
               <div
                 style={{
@@ -30,17 +33,19 @@ export function FormStepper({ steps, current, onStepClick }: { steps: Array<{ ke
               </div>
               <span
                 style={{ color: reached ? "var(--navy)" : "var(--ink-faint)" }}
-                className="mt-1.5 text-[11px] font-semibold text-center leading-tight"
+                className="mt-1.5 hidden text-[11px] font-semibold text-center leading-tight sm:block"
               >
                 {s.label}
               </span>
             </button>
             {i < steps.length - 1 && (
-              <div style={{ flex: 1, height: 2.5, marginBottom: 20, background: i < current ? "var(--primary)" : "var(--border)" }} />
+              <div className="mb-0 sm:mb-5" style={{ flex: 1, height: 2.5, background: i < current ? "var(--primary)" : "var(--border)" }} />
             )}
           </Fragment>
         );
       })}
+    </div>
+    <p className="mt-3 text-center text-xs font-semibold text-navy sm:hidden">Step {current + 1} of {steps.length}: {steps[current]?.label}</p>
     </div>
   );
 }

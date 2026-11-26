@@ -115,11 +115,11 @@ export function AuditLogPage() {
       <PageTitle title="Audit Log" icon={ScrollText} />
       <Card className="!p-0">
         <div className="flex flex-wrap items-end gap-3 px-6 pt-5 pb-4">
-          <label className="block">
+          <label className="block min-w-0 max-w-full">
             <span className={label} style={{ color: "var(--text-muted)" }}>
               Who
             </span>
-            <select className="sa-input !w-auto cursor-pointer" value={who} onChange={(e) => setWho(e.target.value)}>
+            <select className="sa-input !w-auto max-w-full cursor-pointer" value={who} onChange={(e) => setWho(e.target.value)}>
               <option value="all">Everyone</option>
               {[...actors.entries()]
                 .sort((a, b) => a[1].localeCompare(b[1]))
@@ -130,13 +130,13 @@ export function AuditLogPage() {
                 ))}
             </select>
           </label>
-          <label className="block">
+          <label className="block min-w-0 max-w-full">
             <span className={label} style={{ color: "var(--text-muted)" }}>
               From
             </span>
             <input type="date" className="sa-input !w-auto" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
           </label>
-          <label className="block">
+          <label className="block min-w-0 max-w-full">
             <span className={label} style={{ color: "var(--text-muted)" }}>
               To
             </span>

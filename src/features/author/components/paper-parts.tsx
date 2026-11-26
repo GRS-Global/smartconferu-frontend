@@ -318,10 +318,10 @@ export function FilesTable({ paper, onView, onDownload, onAddSupporting }: { pap
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-y border-line bg-canvas text-ink-soft">
-              <th scope="col" className={`${th} w-16`}>S.No.</th>
+              <th scope="col" className={`${th} hidden w-16 sm:table-cell`}>S.No.</th>
               <th scope="col" className={th}>File type</th>
               <th scope="col" className={th}>File name</th>
-              <th scope="col" className={th}>Date</th>
+              <th scope="col" className={`${th} hidden sm:table-cell`}>Date</th>
               <th scope="col" className={`${th} pr-6 text-right`}>Actions</th>
             </tr>
           </thead>
@@ -331,13 +331,13 @@ export function FilesTable({ paper, onView, onDownload, onAddSupporting }: { pap
               const Icon = r.icon;
               return (
                 <tr key={r.key} className={i < rows.length - 1 ? "border-b border-muted" : ""}>
-                  <td className="px-4 py-3 font-semibold tabular-nums text-ink-faint">{i + 1}</td>
+                  <td className="hidden px-4 py-3 font-semibold tabular-nums text-ink-faint sm:table-cell">{i + 1}</td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <span className="font-bold text-navy">{r.type}</span>
                     {r.version && <span className={`ml-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${r.latest ? "bg-primary-soft text-primary" : "bg-muted text-ink-muted"}`}>{r.version}{r.latest && n > 1 ? " · latest" : ""}</span>}
                   </td>
-                  <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 break-all font-semibold text-ink"><Icon size={14} aria-hidden="true" className="shrink-0 text-ink-faint" /> {r.file.name}</span></td>
-                  <td className="whitespace-nowrap px-4 py-3 text-ink-soft">{r.file.uploadedAt || paper.lastUpdate || "—"}</td>
+                  <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 break-words font-semibold text-ink"><Icon size={14} aria-hidden="true" className="shrink-0 text-ink-faint" /> {r.file.name}</span></td>
+                  <td className="hidden whitespace-nowrap px-4 py-3 text-ink-soft sm:table-cell">{r.file.uploadedAt || paper.lastUpdate || "—"}</td>
                   <td className="whitespace-nowrap px-4 py-2 pr-6 text-right">
                     <span className="inline-flex shrink-0 items-center gap-1.5">
                       <button type="button" onClick={() => onView(r.file)} disabled={!r.file.storagePath} aria-label={`View ${r.file.name}`} title={r.file.storagePath ? "View" : "This file is not stored yet"} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-primary transition-colors hover:border-primary-soft-border hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"><Eye size={15} aria-hidden="true" /></button>

@@ -128,7 +128,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
           <p className="text-xs leading-relaxed text-warning">{CFP_NEEDS_APPROVAL ? <><strong>Note:</strong> your CFP goes to the Super Admin for approval. Submissions open only once it is approved. Please make sure the CFP is ready — check the preview alongside.</> : <><strong>Warning:</strong> publishing opens submissions straight away: authors can use the submission link as soon as you publish. Please make sure the CFP is ready — check the preview alongside.</>}</p>
         </>
       ))}
-      <div className="grid items-start gap-6 lg:grid-cols-5">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
         <div className="space-y-6 lg:sticky lg:top-6 lg:col-span-2">
           <div style={CARD} className="rounded-2xl bg-white p-6">
             <h2 className="mb-4 flex items-center gap-2 text-[15px] font-extrabold text-navy"><Globe2 size={16} aria-hidden="true" className="text-primary" /> Choose the CFP web page</h2>

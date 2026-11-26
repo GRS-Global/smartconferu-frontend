@@ -167,7 +167,7 @@ export function FlyerDesignerBody({ conference, webPage, papers, saved, onSave }
         </div>
 
         {/* Settings */}
-        <section aria-label="Settings" className="w-full 2xl:w-80 shrink-0 grid md:grid-cols-2 2xl:grid-cols-1 gap-4">
+        <section aria-label="Settings" className="w-full 2xl:w-80 shrink-0 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-1 gap-4">
           <div style={card} className="bg-white rounded-2xl p-4 flex flex-col gap-3">
             <div style={{ color: "var(--navy)" }} className="text-[13px] font-extrabold">Words</div>
             <label className="flex flex-col gap-1">
