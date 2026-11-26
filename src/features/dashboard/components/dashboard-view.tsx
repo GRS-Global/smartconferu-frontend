@@ -1,15 +1,13 @@
 "use client";
 
-import { Plus, TriangleAlert } from "lucide-react";
-import Link from "next/link";
+import { TriangleAlert } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SessionEnded } from "@/features/auth/components/session-ended";
-import { PROTOTYPE_URL } from "@/lib/config";
 import { useRouter } from "next/navigation";
-import { openPrototypePage } from "@/lib/navigation";
+import { comingSoonHref, openPrototypePage } from "@/lib/navigation";
 import type { Conference, ConferenceRole } from "@/types/conference";
 import { buildDashboardRows } from "../derive";
 import { ROLE_META, type RoleFilter } from "../roles";
@@ -45,8 +43,7 @@ export function DashboardView({ variant }: { variant: DashboardVariant }) {
   return <Loaded variant={variant} data={state.data} reload={reload} />;
 }
 
-/** Page title and breadcrumb: "My Conferences", then the picked role once one is chosen. Under "As Chair" the header also offers "Create New Conference"
- *  (the same button the Calls for Papers and My Requests pages have). */
+/** Page title and breadcrumb: "My Conferences", then the picked role once one is chosen. ("Create New Conference" under "As Chair" sits beside the search box in the list toolbar.) */
 function Page({ role = "all", children }: { role?: RoleFilter; children: React.ReactNode }) {
   const crumbs = [{ label: "My Conferences" }, ...(role !== "all" ? [{ label: ROLE_META[role].chip }] : [])];
   return (
@@ -54,9 +51,6 @@ function Page({ role = "all", children }: { role?: RoleFilter; children: React.R
       <PageHeader
         title="My Conferences"
         breadcrumbs={crumbs}
-        actions={role === "chair" ? (
-          <Link href="/create-conference" className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-hover"><Plus size={16} aria-hidden="true" /> Create New Conference</Link>
-        ) : undefined}
       />
       {children}
     </>
@@ -78,7 +72,7 @@ function Loaded({ variant, data, reload }: { variant: DashboardVariant; data: No
     const { href, external } = roleLanding(conf.id, role);
     if (external) openPrototypePage(href); else router.push(href);
   }, [router]);
-  const onRegister = useCallback((conf: Conference) => { openPrototypePage(`${PROTOTYPE_URL}/prototype/registration/${encodeURIComponent(conf.id)}`); }, []);
+  const onRegister = useCallback(() => { router.push(comingSoonHref("registration")); }, [router]);
   const onOpenCertificates = useCallback(() => { router.push("/my-certificates"); }, [router]);
   const openWorkspace = useCallback((conferenceId: string) => { const { href, external } = roleLanding(conferenceId, "reviewer"); if (external) openPrototypePage(href); else router.push(href); }, [router]);
 

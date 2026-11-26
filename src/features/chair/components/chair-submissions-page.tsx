@@ -18,6 +18,7 @@ import { useChairConference } from "../use-chair-conference";
 import { AGE_OPTIONS, COLUMNS, COLUMN_WIDTHS, REVIEW_PROGRESS_OPTIONS, SCORE_BAND_OPTIONS, ageBucket, decisionOf, progressOf, readColumns, readViews, scoreBand, statusFilterValue, writeColumns, writeViews, type SavedView } from "../submission-columns";
 import { ColumnsPanel } from "./submissions-columns-panel";
 import { AssignReviewersDialog, ContactDialog, EditDecisionsDialog, EditTrackDialog } from "./submissions-bulk-dialogs";
+import { chairPaperHref } from "@/lib/routes";
 
 /* The chair's Submissions page (the prototype's ChairSubmissionsPage + SubmissionsListPanel, chair role): the stage cards (which are
    also the filter), saved views, the Columns picker, the list of submitted papers with a search box or a dropdown under the column
@@ -267,7 +268,7 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
                 {filtered.map((p, i) => {
                   const checked = selected.includes(p.dbId);
                   return (
-                    <tr key={p.dbId} onClick={() => router.push(`/submissions/${encodeURIComponent(p.id)}/chair`)} style={{ background: checked ? "var(--primary-soft)" : undefined, borderBottom: i < filtered.length - 1 ? "1px solid var(--muted)" : "none" }} className="cursor-pointer transition-colors">
+                    <tr key={p.dbId} onClick={() => router.push(chairPaperHref(slug, p.id))} style={{ background: checked ? "var(--primary-soft)" : undefined, borderBottom: i < filtered.length - 1 ? "1px solid var(--muted)" : "none" }} className="cursor-pointer transition-colors">
                       <td onClick={(e) => e.stopPropagation()} className="py-3.5 pl-4 pr-1 align-top">
                         <input type="checkbox" checked={checked} onChange={() => toggleOne(p.dbId)} aria-label={`Select submission ${p.id}`} style={{ accentColor: "var(--primary)" }} className="mt-0.5 h-4 w-4 cursor-pointer rounded" />
                       </td>

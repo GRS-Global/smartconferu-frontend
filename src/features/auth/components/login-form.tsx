@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { AuthMessage } from "@/components/ui/auth-message";
 import { PasswordField } from "@/components/ui/password-field";
 import { REGISTER_PATH, safeNext } from "@/lib/auth-redirect";
-import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE, PROTOTYPE_URL } from "@/lib/config";
+import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
 import { getSupabase } from "@/lib/supabase";
 import { MfaRequiredError } from "@/services/errors";
 import { authService } from "../auth-service";
@@ -119,12 +119,12 @@ export function LoginForm() {
 
   return (
     <div className="relative z-10 w-full max-w-[480px]">
-      <a href={`${PROTOTYPE_URL}/`} className="mb-8 flex flex-col items-center justify-center gap-3 text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
+      <Link href="/" className="mb-8 flex flex-col items-center justify-center gap-3 text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-lg">
           <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
         </span>
         <span className="text-xs text-white/60">{TAGLINE}</span>
-      </a>
+      </Link>
 
       <div className="rounded-2xl bg-white p-8 shadow-2xl">
         <h1 className="mb-1 text-xl font-bold text-navy">Welcome back</h1>
@@ -203,9 +203,9 @@ export function LoginForm() {
         </p>
       )}
       <p className="mt-6 text-center text-xs text-white/45">{SAMPLE_UI ? "This is a clickable prototype with sample data — no real accounts required." : "Your account and everything you add are saved for real."}</p>
-      <a href={`${PROTOTYPE_URL}/`} className="mt-4 flex items-center justify-center gap-1 text-xs font-semibold text-white/60 transition-colors hover:text-white">
+      <Link href="/" className="mt-4 flex items-center justify-center gap-1 text-xs font-semibold text-white/60 transition-colors hover:text-white">
         <ChevronLeft size={13} aria-hidden="true" /> Back to home
-      </a>
+      </Link>
     </div>
   );
 }

@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, AlertTriangle, Eye, Download, Search, Send, Check, Plus, Upload, SlidersHorizontal, FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Printer, AlertTriangle, Eye, Download, Search, Send, Check, Plus, Upload, SlidersHorizontal, FileText, Mail, Pencil, Ban } from "lucide-react";
 import { FlowToast, type FlowToastData } from "@/components/ui/flow-toast";
+import { DATA_SOURCE } from "@/lib/config";
 import type { Conference } from "@/types/conference";
 import { useIdSort } from "@/lib/use-id-sort";
 import { IdSortLabel } from "@/features/chair/components/screening-ui";
 import { CertCard, Pill, Notice, CertModal } from "../components";
 import { CertificateArtwork } from "../certificate-artwork";
+import { ImportDialog } from "../bulk/import-dialog";
+import { DownloadDialog } from "../bulk/download-dialog";
+import { PrintCertificate } from "../print-certificate";
+import { checkRows, designGaps, summarize, tokensUsed, type Warning } from "../bulk/checks";
+import { saveBlob, toCsv } from "../bulk/export-files";
 import { inputStyle, inputClass } from "../form-styles";
 import {
-  getCertificateType, getAudienceSource, AUDIENCE_SOURCES, AUDIENCE_CONDITIONS, MERGE_FIELDS, resolveAudience, deliveryStats, mergeValues, applyMerge,
+  getCertificateType, getAudienceSource, AUDIENCE_SOURCES, AUDIENCE_CONDITIONS, emailMergeFields, resolveAudience, deliveryStats, mergeValues, applyMerge,
   type AudienceContext, type CertificateDesign, type Distribution, type DistributionAudience, type DistributionEmail, type IssuedCertificate, type Recipient,
 } from "../data";
 import type { CertificateActions } from "../use-certificates";
@@ -26,6 +32,68 @@ const looksLikeEmail = (e: string | undefined) => /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)
    that can't go out, the covering email, and — once it has gone — how it landed.
    It used to be three separate pages and a four-step rail.
    --------------------------------------------------------------------------- */
+
+/** Withdraws one issued certificate; the reason is for the chairs only. */
+function WithdrawDialog({ row, onClose, onWithdraw }: { row: IssuedCertificate; onClose: () => void; onWithdraw: (reason: string) => Promise<void> }) {
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <CertModal
+      title={`Withdraw ${row.serial}?`}
+      subtitle={`${row.name}'s certificate stays in this list, but the public check will say it is no longer valid.`}
+      onClose={onClose}
+      maxWidth="max-w-md"
+      footer={
+        <>
+          <div className="flex-1" />
+          <button onClick={onClose} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-white hover:bg-[var(--muted)] transition-colors cursor-pointer">Keep it</button>
+          <button onClick={() => { setBusy(true); void onWithdraw(reason).finally(() => setBusy(false)); }} disabled={busy} style={{ background: "var(--danger)" }} className="px-5 py-2 rounded-lg text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-45 cursor-pointer">{busy ? "Withdrawing…" : "Withdraw"}</button>
+        </>
+      }
+    >
+      <label htmlFor="withdraw-reason" style={{ color: "var(--ink-soft)" }} className="text-xs font-semibold mb-1 block">Reason (only the chairs see it)</label>
+      <textarea id="withdraw-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} rows={3} placeholder="e.g. Sent to the wrong person" style={inputStyle} className={inputClass} />
+    </CertModal>
+  );
+}
+
+/** Corrects a certificate's details: the old one is withdrawn and a new one (next ID) is emailed. */
+function ReissueDialog({ row, onClose, onReissue }: { row: IssuedCertificate; onClose: () => void; onReissue: (changes: { name?: string; email?: string; affiliation?: string; roleLabel?: string; paperTitle?: string }) => Promise<void> }) {
+  const [form, setForm] = useState({ name: row.name, email: row.email, affiliation: row.affiliation, roleLabel: row.roleLabel, paperTitle: row.paperTitle });
+  const [busy, setBusy] = useState(false);
+  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const changes = Object.fromEntries((Object.keys(form) as Array<keyof typeof form>).filter((k) => form[k].trim() !== (row[k] ?? "").trim()).map((k) => [k, form[k].trim()]));
+  const canSave = form.name.trim() !== "" && Object.keys(changes).length > 0 && !busy;
+  const field = (k: keyof typeof form, text: string, type = "text") => (
+    <div>
+      <label htmlFor={`reissue-${k}`} style={{ color: "var(--ink-soft)" }} className="text-xs font-semibold mb-1 block">{text}</label>
+      <input id={`reissue-${k}`} type={type} value={form[k]} onChange={set(k)} style={inputStyle} className={inputClass} />
+    </div>
+  );
+  return (
+    <CertModal
+      title={`Correct and reissue ${row.serial}`}
+      subtitle="The new certificate gets the next ID and is emailed. This one is withdrawn and points to it."
+      onClose={onClose}
+      maxWidth="max-w-md"
+      footer={
+        <>
+          <div className="flex-1" />
+          <button onClick={onClose} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-white hover:bg-[var(--muted)] transition-colors cursor-pointer">Cancel</button>
+          <button onClick={() => { setBusy(true); void onReissue(changes).finally(() => setBusy(false)); }} disabled={!canSave} style={{ background: "var(--primary)" }} className="px-5 py-2 rounded-lg text-white text-sm font-bold hover:bg-[var(--primary-hover)] transition-colors disabled:opacity-45 cursor-pointer">{busy ? "Reissuing…" : "Reissue"}</button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        {field("name", "Name")}
+        {field("email", "Email", "email")}
+        {field("affiliation", "Affiliation")}
+        {field("roleLabel", "Role")}
+        {field("paperTitle", "Paper title")}
+      </div>
+    </CertModal>
+  );
+}
 
 function FunnelRow({ label, value, total, shade }: { label: string; value: number; total: number; shade: string }) {
   const pct = total ? Math.round((value / total) * 100) : 0;
@@ -45,7 +113,7 @@ function EmailModal({ dist, cert, conference, recipients, onClose, onSend, onPat
   const [index, setIndex] = useState(0);
   const type = getCertificateType(cert?.typeKey);
   const preview = recipients[Math.min(index, Math.max(0, recipients.length - 1))] || null;
-  const values = mergeValues(preview, conference);
+  const values = mergeValues(preview, conference, { typeKey: cert?.typeKey });
   const senderAddress = conference.contactEmail || `certificates@${(conference.acronym || "conference").toLowerCase().replace(/\s+/g, "")}.org`;
 
   return (
@@ -80,7 +148,7 @@ function EmailModal({ dist, cert, conference, recipients, onClose, onSend, onPat
             <textarea id="mail-body" value={dist.email.body} onChange={(e) => onPatch({ body: e.target.value })} rows={10} style={inputStyle} className={`${inputClass} leading-relaxed resize-y`} />
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {MERGE_FIELDS.flatMap((g) => g.fields).map((f) => (
+            {emailMergeFields(DATA_SOURCE === "api" ? "api" : "other").map((f) => (
               <button
                 key={f.token}
                 onClick={() => onPatch({ body: `${dist.email.body}{{${f.token}}}` })}
@@ -189,11 +257,18 @@ function AddPersonModal({ onClose, onAdd }: { onClose: () => void; onAdd: (form:
 export function RecipientsBody({ conference, dist, cert, audience, serialBase, actions, go }: { conference: Conference; dist: Distribution; cert: CertificateDesign | undefined; audience: AudienceContext; serialBase: number; actions: CertificateActions; go: Go }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [preview, setPreview] = useState<(Recipient & Partial<IssuedCertificate>) | null>(null);
   const [showEmail, setShowEmail] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showAudience, setShowAudience] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showDownload, setShowDownload] = useState(false);
+  const [printing, setPrinting] = useState(false);
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
+  const [manage, setManage] = useState<{ kind: "withdraw" | "reissue"; row: IssuedCertificate } | null>(null);
+  // Withdrawing, sending again and replacing need the own backend (or the mock); the Supabase tables have no such columns.
+  const canManage = DATA_SOURCE !== "supabase";
+  const [visible, setVisible] = useState(200);
   const [notice, setNotice] = useState<FlowToastData | null>(null);
   const idSort = useIdSort();
 
@@ -222,6 +297,12 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
       ...excluded.map((r) => ({ ...r, issue: r.reason })),
     ];
 
+  const rowId = (r: Row) => r.key || r.serial || r.name;
+  /* Checks against THIS certificate (a field it prints that the row lacks, a name too long for its box, a repeat). Only for a draft: once issued, the certificates are what they are. */
+  const warnings = new Map<string, Warning[]>();
+  if (!sent && cert) checkRows(cert.design, rows.map((r) => ({ ...r, key: rowId(r) })), conference).forEach((v, k) => warnings.set(k, v));
+  const warnSummary = summarize(warnings);
+  const gaps = !sent && cert ? designGaps(cert.design, conference) : { empty: [], unknown: [], unsigned: false };
   const issueCount = sent ? stats.bounced : rows.filter((r) => r.issue).length;
   const sendable = sent ? [] : rows.filter((r) => !r.issue);
 
@@ -229,8 +310,9 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
     if (!sent) {
       if (filter === "issues" && !r.issue) return false;
       if (filter === "ready" && r.issue) return false;
+      if (filter === "warnings" && !warnings.has(rowId(r))) return false;
     } else {
-      if (filter === "not-opened" && (r.opened || r.status === "bounced")) return false;
+      if (filter === "not-opened" && (r.opened || r.status === "bounced" || r.revokedAt)) return false;
       if (filter === "downloaded" && !r.downloaded) return false;
       if (filter === "bounced" && r.status !== "bounced") return false;
     }
@@ -239,10 +321,23 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
     return [r.name, r.email, r.paperTitle, r.affiliation].some((v) => (v || "").toLowerCase().includes(q));
   }), (r) => r.serial ?? "");
 
+  const previewIndex = previewKey === null ? -1 : filtered.findIndex((r) => rowId(r) === previewKey);
+  const preview = previewIndex >= 0 ? filtered[previewIndex] : null;
+  const stepPreview = (d: number) => { const next = filtered[previewIndex + d]; if (next) setPreviewKey(rowId(next)); };
+  useEffect(() => {
+    if (previewKey === null) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") { const n = filtered[previewIndex - 1]; if (n) setPreviewKey(rowId(n)); }
+      if (e.key === "ArrowRight") { const n = filtered[previewIndex + 1]; if (n) setPreviewKey(rowId(n)); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   const filters = sent
     ? [
       { key: "all", label: `Everyone ${rows.length}` },
-      { key: "not-opened", label: `Not opened ${rows.filter((r) => !r.opened && r.status !== "bounced").length}` },
+      { key: "not-opened", label: `Not opened ${rows.filter((r) => !r.opened && r.status !== "bounced" && !r.revokedAt).length}` },
       { key: "downloaded", label: `Downloaded ${stats.downloaded}` },
       { key: "bounced", label: `Bounced ${stats.bounced}` },
     ]
@@ -250,7 +345,14 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
       { key: "all", label: `All ${rows.length}` },
       { key: "ready", label: `Ready ${rows.length - issueCount}` },
       { key: "issues", label: `Needs a fix ${issueCount}` },
+      ...(warnings.size ? [{ key: "warnings", label: `Check ${warnings.size}` }] : []),
     ];
+
+  const exportCsv = () => {
+    const headers = ["Name", "Email", "Affiliation", "Role", "Paper ID", "Paper title", "Certificate ID", "Status"];
+    const status = (r: Row) => (sent ? (r.status === "bounced" ? "Bounced" : "Sent") : r.issue ? `Needs a fix: ${r.issue}` : "Ready");
+    saveBlob(toCsv(headers, rows.map((r) => [r.name, r.email || "", r.affiliation || "", r.roleLabel || "", r.paperId || "", r.paperTitle || "", r.serial || "", status(r)])), `${(dist.name || "certificates").replace(/[^\w\- ]+/g, "")} - recipients.csv`);
+  };
 
   const send = async () => {
     if (sending) return;
@@ -282,9 +384,14 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
             </p>
           </div>
           <div className="flex items-center gap-2.5">
-            <button style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer">
-              <Download size={15} /> {sent ? "Download all PDFs" : "Export CSV"}
+            <button onClick={exportCsv} disabled={rows.length === 0} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold bg-white hover:bg-[var(--canvas)] transition-colors disabled:opacity-45 cursor-pointer disabled:cursor-not-allowed">
+              <Download size={15} /> Export CSV
             </button>
+            {sent && (
+              <button onClick={() => setShowDownload(true)} disabled={dist.issued.length === 0} style={{ background: "var(--primary)" }} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-white text-sm font-bold hover:bg-[var(--primary-hover)] transition-colors disabled:opacity-45 cursor-pointer disabled:cursor-not-allowed">
+                <Download size={15} /> Download all
+              </button>
+            )}
             {!sent && (
               <button
                 onClick={() => setShowEmail(true)}
@@ -392,6 +499,25 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
           </Notice>
         )}
 
+        {(gaps.empty.length > 0 || gaps.unknown.length > 0 || gaps.unsigned) && (
+          <Notice tone="warning" icon={AlertTriangle}>
+            <strong>The certificate itself has a gap.</strong>{" "}
+            {gaps.unsigned && <>A signature on it still says “Name of signatory” (or has no name). Open the designer and type the signatory&apos;s name before you send. </>}
+            {gaps.empty.length > 0 && <>It prints the {gaps.empty.join(", ").toLowerCase()}, but there is nothing to print for that yet, so it comes out blank on every certificate. </>}
+            {gaps.unknown.length > 0 && <>It uses {gaps.unknown.map((t) => `{{${t}}}`).join(", ")}, which {gaps.unknown.length === 1 ? "is not a field" : "are not fields"}, so {gaps.unknown.length === 1 ? "it" : "they"} print nothing. Fix it in the designer (Fields tab).</>}
+          </Notice>
+        )}
+
+        {!sent && warnSummary.rows > 0 && (
+          <Notice
+            tone="warning" icon={AlertTriangle}
+            action={<button onClick={() => setFilter("warnings")} style={{ border: "1px solid var(--warning-border)", color: "var(--warning)" }} className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold bg-white transition-colors cursor-pointer">Show these {warnSummary.rows}</button>}
+          >
+            <strong>Check {warnSummary.rows} {warnSummary.rows === 1 ? "certificate" : "certificates"} before sending.</strong>{" "}
+            {[warnSummary.missing && `${warnSummary.missing} with data the certificate prints missing`, warnSummary.longNames && `${warnSummary.longNames} with a long name`, warnSummary.duplicates && `${warnSummary.duplicates} repeated`].filter(Boolean).join(" · ")}. They can still be sent.
+          </Notice>
+        )}
+
         <div className="flex items-center gap-3 flex-wrap">
           <div style={{ background: "var(--canvas)", border: "1px solid var(--border)" }} className="flex items-center gap-2 px-3 py-2 rounded-lg">
             <Search size={14} style={{ color: "var(--ink-faint)" }} />
@@ -420,8 +546,8 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
               <button onClick={() => setShowAdd(true)} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer">
                 <Plus size={13} /> Add someone
               </button>
-              <button style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer">
-                <Upload size={13} /> Import CSV
+              <button onClick={() => setShowImport(true)} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer">
+                <Upload size={13} /> Import file
               </button>
             </>
           )}
@@ -438,20 +564,25 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
                   <th style={{ color: "var(--ink-muted)" }} className="text-left font-semibold text-xs px-3 py-3 whitespace-nowrap">Role</th>
                   <th style={{ color: "var(--ink-muted)" }} className="text-left font-semibold text-xs px-3 py-3 whitespace-nowrap">Paper</th>
                   <th style={{ color: "var(--ink-muted)" }} className="text-left font-semibold text-xs px-3 py-3 whitespace-nowrap"><IdSortLabel label="Certificate ID" dir={idSort.dir} onToggle={idSort.toggle} /></th>
-                  <th className="px-3 py-3 w-16" />
+                  <th className="px-3 py-3 w-36" />
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r, i) => {
-                  const rowBorder = i < filtered.length - 1 ? "1px solid var(--muted)" : "none";
+                {filtered.slice(0, visible).map((r, i) => {
+                  const rowBorder = i < Math.min(filtered.length, visible) - 1 ? "1px solid var(--muted)" : "none";
                   const bounced = r.status === "bounced";
-                  const bg = bounced ? "var(--danger-soft)" : (!sent && r.issue) ? "var(--warning-soft)" : undefined;
+                  const bg = r.revokedAt ? "var(--canvas)" : bounced ? "var(--danger-soft)" : (!sent && r.issue) ? "var(--warning-soft)" : undefined;
                   return (
                     <tr key={r.key || r.serial} style={{ borderBottom: rowBorder, background: bg }}>
                       <td className="px-5 py-3">
                         {sent ? (
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            {bounced ? (
+                            {r.revokedAt ? (
+                              <>
+                                <Pill tone="danger">Withdrawn</Pill>
+                                {r.replacedBy && <Pill tone="muted">Replaced by {r.replacedBy}</Pill>}
+                              </>
+                            ) : bounced ? (
                               <>
                                 <Pill tone="danger">Bounced — {r.bounceReason}</Pill>
                                 <Pill tone="primary">In their account</Pill>
@@ -462,6 +593,7 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
                                 {r.opened ? <Pill tone="success">Opened</Pill> : <Pill tone="muted">Not opened</Pill>}
                                 {r.downloaded && <Pill tone="success">Downloaded</Pill>}
                                 {(r.verifiedCount ?? 0) > 0 && <Pill tone="accent">Verified ×{r.verifiedCount}</Pill>}
+                                {r.resentAt && <Pill tone="muted">Sent again</Pill>}
                               </>
                             )}
                           </div>
@@ -469,7 +601,10 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
                           ? <Pill tone="warning">{r.issue === "Has an email address on file" ? "No email" : r.issue === "Already has this certificate" ? "Already sent" : "Check"}</Pill>
                           : <Pill tone="primary">Ready</Pill>}
                       </td>
-                      <td style={{ color: "var(--ink)" }} className="px-3 py-3 font-medium whitespace-nowrap">{r.name}</td>
+                      <td style={{ color: "var(--ink)" }} className="px-3 py-3 font-medium whitespace-nowrap">
+                        {r.name}
+                        {(warnings.get(rowId(r)) ?? []).map((w) => <span key={w.text} title={w.text} style={{ background: "var(--warning-soft)", color: "var(--warning)" }} className="block mt-1 w-fit max-w-[260px] truncate px-2 py-0.5 rounded-full text-[10.5px] font-semibold">{w.text}</span>)}
+                      </td>
                       <td className="px-3 py-3 whitespace-nowrap">
                         {!sent && r.issue && r.issue !== "Already has this certificate" ? (
                           <>
@@ -490,18 +625,30 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
                       <td style={{ color: "var(--ink-muted)" }} className="px-3 py-3 text-xs max-w-[240px] truncate" title={r.paperTitle || ""}>{r.paperTitle || "—"}</td>
                       <td style={{ color: "var(--ink-faint)" }} className="px-3 py-3 text-xs whitespace-nowrap">{r.serial || "—"}</td>
                       <td className="px-3 py-3">
+                        <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => setPreview(r)}
+                          onClick={() => setPreviewKey(rowId(r))}
                           aria-label={`Preview the certificate for ${r.name}`}
                           style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }}
                           className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer"
                         >
                           <Eye size={13} />
                         </button>
+                        {sent && canManage && !r.revokedAt && r.serial && (
+                          <>
+                            <button type="button" disabled={!r.email} onClick={() => void actions.resend(r.serial!).then((ok) => { if (ok) setNotice({ title: "Email sent again", text: `${r.name} gets the same certificate (${r.serial}) again.` }); })} aria-label={`Send the email to ${r.name} again`} title={r.email ? "Send the email again (same ID)" : "No email address: reissue it with one"} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"><Mail size={13} /></button>
+                            <button type="button" onClick={() => setManage({ kind: "reissue", row: r as IssuedCertificate })} aria-label={`Correct and reissue the certificate for ${r.name}`} title="Correct the details and reissue (new ID; the old one is withdrawn)" style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer"><Pencil size={13} /></button>
+                            <button type="button" onClick={() => setManage({ kind: "withdraw", row: r as IssuedCertificate })} aria-label={`Withdraw the certificate of ${r.name}`} title="Withdraw this certificate" style={{ border: "1px solid var(--border)", color: "var(--danger)" }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--danger-soft)] transition-colors cursor-pointer"><Ban size={13} /></button>
+                          </>
+                        )}
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
+                {filtered.length > visible && (
+                  <tr><td colSpan={7} className="text-center py-3"><button onClick={() => setVisible((v) => v + 300)} style={{ color: "var(--primary)" }} className="text-xs font-bold hover:underline cursor-pointer">Show {Math.min(300, filtered.length - visible)} more of {filtered.length - visible} left</button></td></tr>
+                )}
                 {filtered.length === 0 && (
                   <tr><td colSpan={7} className="text-center py-10 text-sm" style={{ color: "var(--ink-faint)" }}>Nothing here.</td></tr>
                 )}
@@ -512,18 +659,58 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
       </div>
 
       {notice && <FlowToast toast={notice} onClose={() => setNotice(null)} />}
+      {manage?.kind === "withdraw" && <WithdrawDialog row={manage.row} onClose={() => setManage(null)} onWithdraw={async (reason) => { const ok = await actions.revoke(manage.row.serial, reason); if (ok) { setManage(null); setNotice({ title: "Certificate withdrawn", text: `${manage.row.serial} no longer verifies as valid.` }); } }} />}
+      {manage?.kind === "reissue" && <ReissueDialog row={manage.row} onClose={() => setManage(null)} onReissue={async (changes) => { const ok = await actions.reissue(manage.row.serial, changes); if (ok) { setManage(null); setNotice({ title: "Certificate replaced", text: `${manage.row.serial} is withdrawn and the corrected certificate has been emailed.` }); } }} />}
 
       {preview && cert && (
         <CertModal
           title={preview.name}
           subtitle={`Exactly what this person receives · ${preview.serial || "ID assigned on send"}`}
-          onClose={() => setPreview(null)}
+          onClose={() => setPreviewKey(null)}
           maxWidth="max-w-3xl"
+          footer={
+            <>
+              <button onClick={() => stepPreview(-1)} disabled={previewIndex <= 0} aria-label="Previous person" style={{ border: "1px solid var(--border)", color: "var(--ink-soft)" }} className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold bg-white disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"><ChevronLeft size={15} /> Previous</button>
+              <button onClick={() => setPrinting(true)} disabled={printing} title="Print this certificate (opens your browser's print dialog)" style={{ border: "1px solid var(--border)", color: "var(--ink-soft)" }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold bg-white disabled:opacity-50 cursor-pointer"><Printer size={14} /> {printing ? "Preparing…" : "Print"}</button>
+              <span style={{ color: "var(--ink-muted)" }} className="text-xs flex-1 text-center" aria-live="polite">{previewIndex + 1} of {filtered.length} · arrow keys also work</span>
+              <button onClick={() => stepPreview(1)} disabled={previewIndex >= filtered.length - 1} aria-label="Next person" style={{ border: "1px solid var(--border)", color: "var(--ink-soft)" }} className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold bg-white disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Next <ChevronRight size={15} /></button>
+            </>
+          }
         >
           <div className="flex justify-center">
             <CertificateArtwork design={cert.design} recipient={preview} conference={conference} width={620} />
           </div>
+          <div className="mt-4 text-xs space-y-1" role="status">
+            <div style={{ color: "var(--ink-muted)" }}>{[preview.email, preview.roleLabel, preview.paperTitle].filter(Boolean).join(" · ") || "No other details"}</div>
+            {(warnings.get(rowId(preview)) ?? []).length === 0
+              ? !sent && <div style={{ color: "var(--success)" }} className="font-semibold">No problems found for this certificate.</div>
+              : (warnings.get(rowId(preview)) ?? []).map((w) => <div key={w.text} style={{ color: "var(--warning)" }} className="font-semibold flex items-center gap-1.5"><AlertTriangle size={12} /> {w.text}</div>)}
+          </div>
         </CertModal>
+      )}
+
+      {showImport && (
+        <ImportDialog
+          existing={rows.map((r) => ({ name: r.name, email: r.email || "" }))}
+          usedFields={cert ? tokensUsed(cert.design) : []}
+          onClose={() => setShowImport(false)}
+          onImport={(people) => { actions.updateDistribution(dist.id, { manual: [...dist.manual, ...people.map((person) => ({ ...person, key: `manual:${crypto.randomUUID()}` }))] }); setShowImport(false); setFilter("all"); setNotice({ title: `Added ${people.length} ${people.length === 1 ? "person" : "people"}`, text: "They are on the list below. Check the ones marked, then review the email and send." }); }}
+        />
+      )}
+
+      {showDownload && cert && (
+        <DownloadDialog
+          cert={cert} conference={conference}
+          items={dist.issued.filter((r) => !r.revokedAt).map((r) => ({ key: r.serial, recipient: { name: r.name, affiliation: r.affiliation, roleLabel: r.roleLabel, paperId: r.paperId, paperTitle: r.paperTitle, serial: r.serial, issuedAt: r.issuedAt } }))}
+          onClose={() => setShowDownload(false)}
+        />
+      )}
+
+      {printing && preview && cert && (
+        <PrintCertificate
+          item={{ cert: { typeKey: cert.typeKey, design: cert.design }, recipient: { name: preview.name, affiliation: preview.affiliation || "", roleLabel: preview.roleLabel || "", paperId: preview.paperId || "", paperTitle: preview.paperTitle || "", serial: preview.serial || "", issuedAt: preview.issuedAt }, conference }}
+          onDone={() => setPrinting(false)}
+        />
       )}
 
       {showEmail && (

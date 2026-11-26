@@ -27,7 +27,7 @@ const ROLE_TONE: Record<string, { color: string; bg: string; label: string }> = 
 // The merge fields a chair can put in any email, by what they are about. The fields this email already uses come first, under "This email".
 const GROUPS: Array<[string, string[]]> = [
   ["Recipient", ["first_name", "last_name"]],
-  ["Paper", ["paper_title", "submission_id", "track", "presentation_type", "submission_link"]],
+  ["Paper", ["paper_title", "submission_id", "paper_number", "track", "presentation_type", "submission_link"]],
   ["Conference & dates", ["conference_name", "conference_acronym", "deadline", "registration_deadline", "camera_ready_deadline"]],
   ["Decision & registration", ["decision", "chair_note", "reviews_for_author", "registration_type"]],
 ];
@@ -58,6 +58,12 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
   back: { href: string; label: string } | null; busy: boolean; error: string; onSave: () => void; onReset: () => void; onDelete: () => void; onClose: () => void;
 }) {
   const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const snap = (e: EditingEmail) => JSON.stringify([e.label, e.subject, e.body.trim(), e.enabled]);
+  const openedAs = `${edit.key}#${edit.rev ?? 0}`;
+  const [start, setStart] = useState({ at: openedAs, value: snap(edit) });
+  // Another email opened, or "Reset to default" put the default text back: that is the new starting point.
+  if (start.at !== openedAs) setStart({ at: openedAs, value: snap(edit) });
+  const changed = edit.isNew || snap(edit) !== start.value;
   const box = useRef<HTMLDivElement>(null);
   // The editor is not a controlled input: its content is set once when this email opens and read back on every change.
   const editing = mode === "edit";
@@ -137,7 +143,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
           {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
           <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
             <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
-            <Button onClick={onSave} disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+            <Button onClick={onSave} disabled={busy || !changed} title={changed ? undefined : "No changes to save"}>{busy ? "Saving…" : "Save"}</Button>
           </div>
         </section>
 

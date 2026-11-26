@@ -2,12 +2,13 @@
 
 import { ArrowLeftRight, Check, ChevronDown, ChevronLeft, ChevronRight, HelpCircle, Lock, Menu as MenuIcon, Sparkles, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ConferenceTour, openSetupGuide, startConferenceTour } from "@/features/tour/conference-tour";
 import { readTourState } from "@/features/tour/tour-state";
 import { setupLocked, useConferenceSetup } from "@/features/tour/use-setup";
 import type { Conference, ConferenceRole } from "@/types/conference";
-import { CHAIR_SOON, MENUS, hrefOf, roleLanding, type MenuItem, type MenuLeaf } from "../menus";
+import { CHAIR_SOON, MENUS, hrefOf, roleLanding, type MenuItem } from "../menus";
 
 /* The frame of a conference workspace (the prototype's Sidebar + ConferenceShell): the conference's menu on the left, the page on
    the right. One component for the Author, Reviewer and Chair workspaces; each has its own menu (features/workspace/menus.ts).
@@ -159,7 +160,7 @@ export interface ShellProps {
 const isOn = (active: ActiveKey, key: string, childKey?: string) => active === (childKey ? `${key}/${childKey}` : key);
 const groupOn = (active: ActiveKey, item: MenuItem) => (item.children ?? []).some((c) => isOn(active, item.key, c.key));
 
-function ItemLink({ item, slug, on, className, style, onNavigate, children, label, current, tour }: { item: MenuLeaf; tour?: string; slug: string; on: boolean; className: string; style?: React.CSSProperties; onNavigate?: () => void; children: ReactNode; label?: string; current?: boolean }) {
+function ItemLink({ item, slug, on, className, style, onNavigate, children, label, current, tour }: { item: Pick<MenuItem, "app" | "key" | "label">; tour?: string; slug: string; on: boolean; className: string; style?: React.CSSProperties; onNavigate?: () => void; children: ReactNode; label?: string; current?: boolean }) {
   const { href, external } = hrefOf(item, slug);
   return external
     ? <a href={href} aria-label={label} title={label} style={style} className={className} data-tour={tour}>{children}</a>
@@ -180,6 +181,18 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
   const setup = useConferenceSetup(slug, role === "chair");
   const locked = role === "chair" && setupLocked(setup);
   const off = (key: string) => locked && key !== "settings";
+  // The lock also holds for a typed or bookmarked address: while the menu is locked only Conference Settings opens; any other page sends the chair there.
+  const router = useRouter();
+  const blocked = locked && !(active ?? "").startsWith("settings");
+  // Until we know whether the menu is locked, a chair page shows a placeholder instead of the page (otherwise a locked page would flash open before the check answers). If the check never answers, the page opens after a few seconds.
+  const [gaveUp, setGaveUp] = useState(false);
+  useEffect(() => {
+    if (role !== "chair" || setup.ready) return undefined;
+    const t = setTimeout(() => setGaveUp(true), 6000);
+    return () => clearTimeout(t);
+  }, [role, setup.ready]);
+  const checking = role === "chair" && !setup.ready && !gaveUp;
+  useEffect(() => { if (blocked) router.replace(`/chair/${encodeURIComponent(slug)}/settings`); }, [blocked, router, slug]);
   const LOCK_TITLE = "Finish setting up your conference to unlock this";
   const items: MenuItem[] = MENUS[role]
     .map((i) => (i.children ? { ...i, children: i.children.filter((c) => !c.screening || screening[c.screening]) } : i))
@@ -360,7 +373,18 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
           </span>
           <span className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-primary-soft-border bg-white px-2.5 text-[12.5px] font-bold text-primary"><MenuIcon size={15} aria-hidden="true" /> Menu</span>
         </button>
-        {children}
+        {checking ? (
+          <div role="status" aria-label="Loading the page" className="p-4 sm:p-8"><div className="h-64 animate-pulse rounded-2xl border border-line bg-white" /></div>
+        ) : blocked ? (
+          <div role="status" className="p-4 sm:p-8">
+            <div style={{ border: "1px solid var(--primary-soft-border)" }} className="mx-auto max-w-xl rounded-2xl bg-white p-8 text-center">
+              <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary"><Lock size={20} aria-hidden="true" /></span>
+              <h1 className="text-lg font-extrabold text-navy">This page is locked for now</h1>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">Finish the required setup ({setup.done} of {setup.total} done) to unlock the menu. Taking you to Conference Settings…</p>
+              <Link href={`/chair/${encodeURIComponent(slug)}/settings`} className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-hover">Open Conference Settings</Link>
+            </div>
+          </div>
+        ) : children}
       </div>
     </div>
   );

@@ -62,10 +62,18 @@ interface Overview {
   screening: { settings: { initialCheck?: boolean; plagiarism?: boolean }; criteria: Partial<ScreeningCriteria> };
 }
 
-const getConference = (slug: string) => api<ConferenceResponse>(`/conferences/${slug}`);
-const patchConference = (slug: string, body: Record<string, unknown>) => api<ConferenceResponse>(`/conferences/${slug}`, { method: "PATCH", body });
+// Reads that start together (loadInfo + loadSettings) share one request; the entry is dropped when it settles and on every write, so nothing is ever served stale.
+const inflight = new Map<string, Promise<ConferenceResponse>>();
+const getConference = (slug: string) => {
+  const hit = inflight.get(slug);
+  if (hit) return hit;
+  const p = api<ConferenceResponse>(`/conferences/${slug}`).finally(() => { if (inflight.get(slug) === p) inflight.delete(slug); });
+  inflight.set(slug, p);
+  return p;
+};
+const patchConference = (slug: string, body: Record<string, unknown>) => { inflight.delete(slug); return api<ConferenceResponse>(`/conferences/${slug}`, { method: "PATCH", body }); };
 /** The backend merges these top-level keys into the conference's `settings` (null removes one). */
-const mergeSetting = (slug: string, key: string, value: unknown) => api<ConferenceResponse>(`/conferences/${slug}/settings`, { method: "PATCH", body: { settings: { [key]: value } } });
+const mergeSetting = (slug: string, key: string, value: unknown) => { inflight.delete(slug); return api<ConferenceResponse>(`/conferences/${slug}/settings`, { method: "PATCH", body: { settings: { [key]: value } } }); };
 const notAvailable = (what: string) => new ServiceError(`${what} isn't available with the own backend yet.`);
 
 /* ---------------------------------------------------------------- mappers */
@@ -239,7 +247,8 @@ const implemented: Partial<ChairService> = {
   },
 
   async saveLogo(slug, file) {
-    if (!file) throw notAvailable("Removing the logo");
+    // No file: the logo is removed (the conference shows its initials again).
+    if (!file) { await api("/files/conference-logo", { method: "DELETE", query: { conferenceId: slug } }); return ""; }
     if (!/^image\/(png|jpeg|webp)$/.test(file.type)) throw new ServiceError("Use a PNG, JPEG or WebP image.");
     if (file.size > 5 * 1024 * 1024) throw new ServiceError("The logo is over 5 MB. Choose a smaller file.");
     const form = new FormData();
@@ -326,9 +335,9 @@ const implemented: Partial<ChairService> = {
   async loadCfpFacts(slug): Promise<CfpFacts> {
     const [members, cfp] = await Promise.all([
       api<MemberResponse[]>(`/conferences/${slug}/members`, { query: { role: "cfp_manager" } }).catch(() => [] as MemberResponse[]),
-      api<{ content: Record<string, unknown> }>(`/conferences/${slug}/cfp`),
+      api<{ content: Record<string, unknown>; status: string }>(`/conferences/${slug}/cfp`),
     ]);
-    return { managers: members.filter((m) => m.status !== "removed").length, publishing: str(cfp.content.publication).trim() !== "", description: str(cfp.content.description).trim() !== "" };
+    return { managers: members.filter((m) => m.status !== "removed").length, publishing: str(cfp.content.publication).trim() !== "", description: str(cfp.content.description).trim() !== "", inReview: cfp.status === "in_review" };
   },
 
   async loadReviewerPool(slug): Promise<ReviewerPool> {
@@ -504,6 +513,16 @@ const implemented: Partial<ChairService> = {
   },
   async requestLicenseExtension(slug, requestedDate, reason) { await api(`/conferences/${slug}/license-request`, { method: "POST", body: { requestedDate, ...(reason.trim() ? { reason: reason.trim() } : {}) } }); },
   async withdrawLicenseRequest(slug) { await api(`/conferences/${slug}/license-request`, { method: "DELETE" }); },
+
+  // Conference Settings › Submissions › Paper Screening: the two steps and the criteria (the auto initial check has its own switch and is left as it is).
+  async saveScreeningSetup(slug, setup) {
+    const c = setup.criteria;
+    const nums = [c.minPages, c.maxPages, c.doubleMinPages, c.doubleMaxPages, c.similarityLimit, c.aiLimit, c.correctionDays, c.revisionDays];
+    if (nums.some((n) => !Number.isFinite(n) || n < 0 || n > 1000) || !["single", "double", "either"].includes(c.column) || c.minPages > c.maxPages || c.doubleMinPages > c.doubleMaxPages) {
+      throw new ServiceError("Couldn't save that. Check the page limits: each minimum must be at or below its maximum.");
+    }
+    await api(`/conferences/${slug}/screening-settings`, { method: "PUT", body: { settings: { initialCheck: setup.initialCheck, plagiarism: setup.plagiarism }, criteria: c } });
+  },
 
   async decideExtension(requestId, approve) { await api(`/extension-requests/${requestId}/decision`, { method: "POST", body: { approve } }); },
   async renameReviewer(slug, memberId, name) { await api(`/conferences/${slug}/members/${memberId}`, { method: "PATCH", body: { displayName: nul(name) } }); },

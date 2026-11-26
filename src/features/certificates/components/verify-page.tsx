@@ -4,7 +4,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Check, XCircle, Download, Info } from "lucide-react";
-import { getCertificateService, type VerifiedCertificate } from "@/services/certificates";
+import { getCertificateService, type VerifiedCertificate, type WithdrawnCertificate } from "@/services/certificates";
 import { getCertificateType, formatConferenceDates } from "../data";
 
 // Display serif: used only on printed artefacts and this page's name line, never in the app's own screens.
@@ -30,7 +30,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function CertificateVerifyPage({ serial }: { serial: string }) {
-  const [state, setState] = useState<{ status: "loading" } | { status: "done"; found: VerifiedCertificate | null } | { status: "error"; message: string }>({ status: "loading" });
+  const [state, setState] = useState<{ status: "loading" } | { status: "done"; found: VerifiedCertificate | WithdrawnCertificate | null } | { status: "error"; message: string }>({ status: "loading" });
   useEffect(() => {
     let cancelled = false;
     getCertificateService()
@@ -51,6 +51,7 @@ export function CertificateVerifyPage({ serial }: { serial: string }) {
       </div>
     );
   }
+  if (state.found && state.found.revoked) return <WithdrawnPage found={state.found} />;
   const found = state.found;
 
   return (
@@ -98,6 +99,46 @@ export function CertificateVerifyPage({ serial }: { serial: string }) {
             </p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** A certificate a chair has withdrawn: it says so and shows nothing about the person; a corrected one is linked when there is one. */
+function WithdrawnPage({ found }: { found: WithdrawnCertificate }) {
+  return (
+    <div style={{ background: "var(--canvas)", minHeight: "100vh" }}>
+      <div style={{ background: "var(--gradient-header)" }} className="px-5 pt-6 pb-10">
+        <div className="max-w-xl mx-auto">
+          <Link href="/" className="flex items-center gap-2.5 mb-8 cursor-pointer">
+            <img src={LOGO_SRC} alt="" className="h-6 w-auto brightness-0 invert opacity-90" />
+            <span style={{ color: "var(--on-dark)" }} className="text-[13px] font-bold">Smartconferu Verify</span>
+          </Link>
+          <div className="flex flex-col items-center text-center">
+            <div style={{ background: "var(--warning)", boxShadow: "0 0 0 9px rgba(217,119,6,0.2)" }} className="w-16 h-16 rounded-full flex items-center justify-center">
+              <XCircle size={30} strokeWidth={2.5} className="text-white" />
+            </div>
+            <h1 className="text-white text-[22px] font-extrabold mt-4" style={{ letterSpacing: "-0.02em" }}>Certificate withdrawn</h1>
+            <p style={{ color: "var(--on-dark-soft)" }} className="text-[13px] mt-1.5 leading-relaxed max-w-xs">
+              The ID <strong className="text-white">{found.serial}</strong> was issued, but the conference has withdrawn it. It is no longer valid.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="max-w-xl mx-auto px-5 -mt-5 pb-10">
+        <div style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }} className="bg-white rounded-2xl p-5 space-y-3.5">
+          <Field label="CONFERENCE">{found.conference.name}<span style={{ color: "var(--ink-muted)" }} className="block text-xs font-normal mt-0.5">{found.conference.acronym}</span></Field>
+          <Field label="WITHDRAWN ON">{new Date(found.revokedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</Field>
+          {found.replacedBy && (
+            <Field label="REPLACED BY">
+              <Link href={`/verify/${encodeURIComponent(found.replacedBy)}`} style={{ color: "var(--primary)" }} className="hover:underline">{found.replacedBy}</Link>
+              <span style={{ color: "var(--ink-muted)" }} className="block text-xs font-normal mt-0.5">A corrected certificate was issued in its place.</span>
+            </Field>
+          )}
+          <p style={{ color: "var(--ink-muted)" }} className="text-[13px] leading-relaxed pt-1">
+            If you were given this certificate, ask the conference organisers{found.conference.contactEmail ? <> ({found.conference.contactEmail})</> : null} for the current one.
+          </p>
+        </div>
       </div>
     </div>
   );

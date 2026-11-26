@@ -21,7 +21,7 @@ export const EMAIL_SUMMARIES: Record<string, string> = {
   "cfpLive": "Public page link and submission link to share.",
   "submissionsOpen": "Form is now accepting papers.",
   "submissionReceived": "Submission ID, title, track, type, deadline for edits, view link.",
-  "newSubmissionAlert": "ID, title, track, author; link to paper.",
+  "newSubmissionAlert": "Paper ID and number, title, track, author; link to paper.",
   "submissionEdited": "What changed and when.",
   "submissionWithdrawn": "Confirmation that the paper is out of review.",
   "submittedOnBehalf": "Chair submitted it; check details; edit link.",

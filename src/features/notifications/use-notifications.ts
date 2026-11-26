@@ -70,7 +70,8 @@ export function useNotifications() {
     return () => window.removeEventListener(LIVE_NOTIFICATION_EVENT, again);
   }, []);
 
-  const loadedWithdrawals = state.status === "ready" && state.items.some((n) => n.kind === "withdrawn");
+  // The conferences this account chairs decide where a withdrawal and a conference decision lead, so they are asked for when one is listed.
+  const loadedWithdrawals = state.status === "ready" && state.items.some((n) => n.kind === "withdrawn" || n.kind === "conference_decision" || n.kind === "conference_suspension");
   useEffect(() => {
     if (!loadedWithdrawals) return;
     let cancelled = false;
@@ -151,15 +152,15 @@ export function useNotifications() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `unread.increase` is stable; `state` is read for the row only
   }, [state, unread.increase]);
 
-  /** Takes a notification out of the list for this visit (the header number follows when it was unread). */
+  /** Takes a notification out of the list for this visit. An unread one is marked read on the server first: hidden but still unread, it would be
+   *  counted on the bell again after the next reload with nothing on the page to read. */
   const dismiss = useCallback((id: string) => {
     const row = state.status === "ready" ? state.items.find((n) => n.id === id) : undefined;
     if (!row || dismissed.has(id)) return;
     setDismissed((d) => new Set(d).add(id));
-    if (!row.read && !row.email) unread.decrease(1, id); // the header number counts notifications only
+    if (!row.read && !row.email) void markRead(id); // also takes it off the bell
     setAnnouncement("Notification dismissed.");
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `unread.decrease` is stable
-  }, [state, dismissed, unread.decrease]);
+  }, [state, dismissed, markRead]);
 
   /** Marks every unread notification of the signed-in user read — the whole account, not only what is listed or filtered. */
   const markAll = useCallback(async (): Promise<boolean> => {

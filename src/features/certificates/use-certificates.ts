@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChairConference } from "@/features/chair/use-chair-conference";
+import { designFromTemplate } from "./studio/templates";
+import type { PaperSpec } from "./paper";
 import { sendActionEmails } from "@/services/action-emails";
 import { getCertificateService } from "@/services/certificates";
 import { AuthRequiredError } from "@/services/errors";
 import {
-  defaultDesign, defaultDistribution, reviewerRollup, type AudienceContext, type CertificateDesign, type CertTypeKey, type Design, type Distribution,
-  type DistributionAudience, type DistributionEmail, type ManualPerson, type Recipient,
+  defaultDistribution, reviewerRollup, type AudienceContext, type CertificateDesign, type CertTypeKey, type Design, type Distribution,
+  type DistributionAudience, type DistributionEmail, type ManualPerson, type Orientation, type Recipient,
 } from "./data";
 
 /* Loads a conference's certificate designs and sends and keeps them in step with the database (services/certificates.ts). Changes show at
@@ -19,7 +21,7 @@ export interface DesignPatch { name?: string; design?: Design | ((d: Design) => 
 export interface DistributionPatch { audience?: DistributionAudience | ((a: DistributionAudience) => DistributionAudience); email?: DistributionEmail | ((e: DistributionEmail) => DistributionEmail); manual?: ManualPerson[]; overrides?: Distribution["overrides"] }
 
 export interface CertificateActions {
-  createDesign(input: { name: string; typeKey: CertTypeKey; templateKey: string }): Promise<CertificateDesign | null>;
+  createDesign(input: { name: string; typeKey: CertTypeKey; templateKey: string; orientation?: Orientation; paper?: PaperSpec }): Promise<CertificateDesign | null>;
   updateDesign(id: string, patch: DesignPatch): void;
   deleteDesign(id: string): Promise<void>;
   duplicateDesign(id: string): Promise<void>;
@@ -28,6 +30,10 @@ export interface CertificateActions {
   deleteDistribution(id: string): Promise<void>;
   /** Issues the send and emails the certificates; resolves to a notice about the emails ("" when all went out), or null when issuing failed. */
   issue(distribution: Distribution, recipients: Recipient[]): Promise<string | null>;
+  /** After sending (own backend and mock): withdraws an issued certificate, sends its email again, or replaces it with a corrected one. Each resolves to whether it worked. */
+  revoke(serial: string, reason?: string): Promise<boolean>;
+  resend(serial: string): Promise<boolean>;
+  reissue(serial: string, changes: { name?: string; email?: string; affiliation?: string; roleLabel?: string; paperTitle?: string }): Promise<boolean>;
 }
 
 const messageOf = (e: unknown) => (e instanceof AuthRequiredError ? "Your session ended — please sign in again." : e instanceof Error ? e.message : "Something went wrong.");
@@ -70,11 +76,24 @@ export function useCertificates(slug: string) {
     timers.current.set(key, { t: setTimeout(() => { timers.current.delete(key); save().catch((e: unknown) => setError(messageOf(e))); }, SAVE_DELAY), save });
   }, []);
 
+  /** Runs a change to an issued certificate, then reads the sends again so the list shows what the backend now holds. */
+  const afterIssued = useCallback(async (job: (svc: Awaited<ReturnType<typeof getCertificateService>>) => Promise<void>) => {
+    if (!dbId) return false;
+    try {
+      const svc = await getCertificateService();
+      await job(svc);
+      const fresh = await svc.load(dbId);
+      setDesigns(fresh.designs);
+      setDistributions(fresh.distributions);
+      return true;
+    } catch (e) { setError(messageOf(e)); return false; }
+  }, [dbId]);
+
   const actions = useMemo<CertificateActions>(() => ({
-    async createDesign({ name, typeKey, templateKey }) {
+    async createDesign({ name, typeKey, templateKey, orientation, paper }) {
       if (!dbId) return null;
       try {
-        const made = await (await getCertificateService()).createDesign(dbId, { name, typeKey, design: defaultDesign(typeKey, templateKey) });
+        const made = await (await getCertificateService()).createDesign(dbId, { name, typeKey, design: designFromTemplate(templateKey, typeKey, orientation ?? "landscape", undefined, paper) });
         setDesigns((l) => [...l, made]);
         return made;
       } catch (e) { setError(messageOf(e)); return null; }
@@ -130,6 +149,9 @@ export function useCertificates(slug: string) {
         setDistributions((l) => l.filter((d) => d.id !== id));
       } catch (e) { setError(messageOf(e)); }
     },
+    async revoke(serial, reason) { return afterIssued(async (svc) => { if (!svc.revoke) throw new Error("Withdrawing certificates needs the own backend."); await svc.revoke(serial, reason); }); },
+    async resend(serial) { return afterIssued(async (svc) => { if (!svc.resend) throw new Error("Sending a certificate again needs the own backend."); await svc.resend(serial); }); },
+    async reissue(serial, changes) { return afterIssued(async (svc) => { if (!svc.reissue) throw new Error("Replacing a certificate needs the own backend."); await svc.reissue(serial, changes); }); },
     async issue(distribution, recipients) {
       const pending = timers.current.get(`dist:${distribution.id}`);
       try {
@@ -148,7 +170,7 @@ export function useCertificates(slug: string) {
         return "";
       } catch (e) { setError(messageOf(e)); return null; }
     },
-  }), [dbId, later]);
+  }), [dbId, later, afterIssued]);
 
   const reload = useCallback(() => { setLoaded("loading"); setTick((t) => t + 1); }, []);
   const retry = useCallback(() => { chair.retry(); reload(); }, [chair, reload]);

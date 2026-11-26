@@ -16,7 +16,7 @@ import { PhotoField, type PhotoValue } from "@/features/profile/components/photo
 import { initialsOf } from "@/features/profile/components/profile-avatar";
 import { DEFAULT_AFTER_LOGIN, LOGIN_PATH } from "@/lib/auth-redirect";
 import { cn } from "@/lib/cn";
-import { AUTH_CONFIGURED, DATA_SOURCE, PROTOTYPE_URL } from "@/lib/config";
+import { AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
 import { getProfileService } from "@/services/profile";
 import { authService } from "../auth-service";
 import { PRIVACY_URL, TERMS_URL } from "../legal-links";
@@ -97,12 +97,12 @@ export function RegisterForm() {
 
   return (
     <>
-      <a href={`${PROTOTYPE_URL}/`} className="relative z-10 mb-6 flex shrink-0 flex-col items-center justify-center gap-3 text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
+      <Link href="/" className="relative z-10 mb-6 flex shrink-0 flex-col items-center justify-center gap-3 text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-lg">
           <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
         </span>
         <span className="text-xs text-white/60">Create an account to submit and review papers</span>
-      </a>
+      </Link>
 
       {confirmEmail ? (
         <div className="relative z-10 w-full max-w-[800px]">
@@ -195,9 +195,9 @@ export function RegisterForm() {
         </div>
       )}
 
-      <a href={`${PROTOTYPE_URL}/`} className="relative z-10 mt-4 flex shrink-0 items-center justify-center gap-1 text-xs font-semibold text-white/60 transition-colors hover:text-white">
+      <Link href="/" className="relative z-10 mt-4 flex shrink-0 items-center justify-center gap-1 text-xs font-semibold text-white/60 transition-colors hover:text-white">
         <ChevronLeft size={13} aria-hidden="true" /> Back to home
-      </a>
+      </Link>
     </>
   );
 }

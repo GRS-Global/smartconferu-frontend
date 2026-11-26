@@ -11,6 +11,7 @@ import { countryCodeOf } from "@/lib/country-codes";
 import { getCfpService } from "@/services/cfps";
 import { AuthRequiredError } from "@/services/errors";
 import type { CfpRow } from "@/types/cfp";
+import { cfpManagerHref } from "@/lib/routes";
 
 /* Add a New Call for Papers (the prototype's CreateCFPPage): the conferences this account chairs, each with its CFP's state; "+" starts the CFP: the new-CFP wizard
    (new-cfp-wizard.tsx) for a conference whose CFP has no text yet, its manager for one with a draft, nothing for one that is already published or closed. A
@@ -91,7 +92,7 @@ export function CfpNewPage() {
                     <td className="px-5 py-3.5 text-center">
                       {taken
                         ? <span aria-label={`${c.acronym} already has a CFP`} title="This conference already has a CFP" className="inline-flex h-7 w-7 cursor-not-allowed items-center justify-center rounded-lg border-[1.5px] border-line text-line-strong"><Plus size={14} aria-hidden="true" /></span>
-                        : <Link href={draft ? `/cfp-manager/${encodeURIComponent(c.slug)}` : `/cfp/new/${encodeURIComponent(c.slug)}`} aria-label={draft ? `Continue draft CFP for ${c.acronym}` : `Add CFP for ${c.acronym}`} title={draft ? "Continue the existing draft" : "Add a new CFP"} className="inline-flex h-7 w-7 items-center justify-center rounded-lg border-[1.5px] border-line text-primary transition-colors hover:border-primary hover:bg-primary-soft"><Plus size={14} aria-hidden="true" /></Link>}
+                        : <Link href={draft ? cfpManagerHref(c.slug) : `/cfp/new/${encodeURIComponent(c.slug)}`} aria-label={draft ? `Continue draft CFP for ${c.acronym}` : `Add CFP for ${c.acronym}`} title={draft ? "Continue the existing draft" : "Add a new CFP"} className="inline-flex h-7 w-7 items-center justify-center rounded-lg border-[1.5px] border-line text-primary transition-colors hover:border-primary hover:bg-primary-soft"><Plus size={14} aria-hidden="true" /></Link>}
                     </td>
                   </tr>
                 );

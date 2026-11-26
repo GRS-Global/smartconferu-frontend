@@ -1,8 +1,8 @@
 "use client";
 
 import { TriangleAlert } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BackLinks } from "@/features/workspace/components/workspace-gate";
 
 export default function AppError({ reset }: { error: Error; reset: () => void }) {
   return (
@@ -12,7 +12,7 @@ export default function AppError({ reset }: { error: Error; reset: () => void })
           icon={TriangleAlert}
           title="Something went wrong loading this page."
           description="Try again. If it keeps happening, contact support."
-          action={<Button size="sm" onClick={reset}>Try again</Button>}
+          action={<BackLinks retry={reset} />}
         />
       </div>
     </div>

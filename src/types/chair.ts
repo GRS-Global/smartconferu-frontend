@@ -227,7 +227,7 @@ export interface LicenseRequest { id: string; requestedDate: string; reason: str
 /** A chair's request to have an archived conference deleted, and what the Super Admin answered (`conference_deletion_requests`, migration 0013). */
 export interface DeletionRequest { status: "pending" | "approved" | "rejected" | "cancelled"; reason: string; adminNote: string }
 /** What the Call for Papers already has, for the Conference Details rail: how many CFP managers, and whether the publishing intent is written. */
-export interface CfpFacts { managers: number; publishing: boolean; description: boolean }
+export interface CfpFacts { managers: number; publishing: boolean; description: boolean; /** The CFP waits for the Super Admin: what it shows is locked (own backend). */ inReview?: boolean }
 
 export interface ConferenceInfo {
   name: string; acronym: string; about: string; webPage: string; contactEmail: string; primaryArea: string; secondaryArea: string;

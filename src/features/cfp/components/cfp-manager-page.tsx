@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Dialog } from "@/components/ui/dialog";
 import { useConferenceInfo } from "@/features/chair/use-conference-info";
 import { useConferenceSetup } from "@/features/tour/use-setup";
@@ -60,9 +61,9 @@ export function CfpManagerPage({ slug }: { slug: string }) {
   const setup = useConferenceSetup(slug, true);
   const [cfp, setCfp] = useState<CfpDetail | null | undefined>(undefined);
   const [tick, setTick] = useState(0);
-  // The new-CFP wizard sends the chair here to finish the text (?tab=content).
+  // The new-CFP wizard sends the chair here to finish the text (?tab=content); the dashboard's "Publish CFP" opens the Publish tab (?tab=publish).
   const asked = useSearchParams().get("tab");
-  const [tab, setTab] = useState<Tab>(asked === "content" || asked === "managers" ? asked : "overview");
+  const [tab, setTab] = useState<Tab>(asked === "content" || asked === "managers" || asked === "publish" ? asked : "overview");
   const [closing, setClosing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -101,7 +102,9 @@ export function CfpManagerPage({ slug }: { slug: string }) {
   const submissionLink = cfp.status === "published" ? link : "";
   const where = [info.venue || [info.city, info.state].filter(Boolean).join(", "), info.country].filter(Boolean).join(" · ");
   const missing = setup.ready ? setup.tasks.filter((t) => !t.done).map((t) => t.label) : [];
-  const lockedWhy = "This CFP is closed and can't be updated";
+  // Closed for good, or waiting for the Super Admin: what was sent is what gets reviewed, so nothing can be changed meanwhile.
+  const frozen = closed || review;
+  const lockedWhy = review ? "Sent for approval: it can't be changed until the Super Admin decides" : "This CFP is closed and can't be updated";
 
   const close = async () => {
     setBusy(true); setError("");
@@ -113,14 +116,14 @@ export function CfpManagerPage({ slug }: { slug: string }) {
   };
 
   const editItems: CfpEditItem[] = [
-    { label: "Edit content", icon: FileText, onClick: () => setTab("content"), active: tab === "content", disabled: closed, disabledReason: lockedWhy },
-    { label: "Edit details", icon: Settings, onClick: () => setTab("details"), active: tab === "details", disabled: closed, disabledReason: lockedWhy },
-    { label: "Change theme", icon: Sparkles, onClick: () => setTab("theme"), active: tab === "theme", disabled: closed, disabledReason: lockedWhy },
-    { label: "Change logo", icon: FileUp, onClick: () => setTab("logo"), active: tab === "logo", disabled: closed, disabledReason: lockedWhy },
+    { label: "Edit content", icon: FileText, onClick: () => setTab("content"), active: tab === "content", disabled: frozen, disabledReason: lockedWhy },
+    { label: "Edit details", icon: Settings, onClick: () => setTab("details"), active: tab === "details", disabled: frozen, disabledReason: lockedWhy },
+    { label: "Change theme", icon: Sparkles, onClick: () => setTab("theme"), active: tab === "theme", disabled: frozen, disabledReason: lockedWhy },
+    { label: "Change logo", icon: FileUp, onClick: () => setTab("logo"), active: tab === "logo", disabled: frozen, disabledReason: lockedWhy },
     ...(closed || review ? [] : [{ label: "Close this CFP", icon: XCircle, onClick: () => { setError(""); setClosing(true); }, divider: true, danger: true }]),
   ];
   const navItems: CfpNavItem[] = [
-    ...(draft ? [{ label: "Publish", icon: ShieldCheck, onClick: () => setTab("publish"), active: tab === "publish", accent: true }] : []),
+    ...(draft || review ? [{ label: "Publish", icon: ShieldCheck, onClick: () => setTab("publish"), active: tab === "publish", accent: true }] : []),
     { label: "Managers", icon: User, onClick: () => setTab("managers"), active: tab === "managers" || tab === "add-manager" },
     { label: "View", icon: Eye, onClick: () => setTab("preview"), active: tab === "preview" },
   ];
@@ -133,9 +136,9 @@ export function CfpManagerPage({ slug }: { slug: string }) {
     <div className="grid items-start gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
         <div style={CARD} className="overflow-hidden rounded-2xl bg-white">
-          {row("Conference web page", info.webPage ? <a href={info.webPage} target="_blank" rel="noreferrer" className="truncate text-sm font-medium text-primary hover:underline">{info.webPage}</a> : <span className="text-sm text-ink-faint">Not set</span>, true)}
+          {row("Conference web page", info.webPage ? <><a href={info.webPage} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium text-primary hover:underline">{info.webPage}</a><CopyButton text={info.webPage} label="Copy" /></> : <span className="text-sm text-ink-faint">Not set</span>, true)}
           {draft && row("Submission link", <span className="text-sm italic text-ink-faint">{SUBMISSION_LINK_PENDING}</span>)}
-          {cfp.status === "published" && row("Submission link", <a href={link} target="_blank" rel="noreferrer" className="truncate text-sm font-medium text-primary hover:underline">{link}</a>)}
+          {cfp.status === "published" && row("Submission link", <><a href={link} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium text-primary hover:underline">{link}</a><CopyButton text={link} label="Copy" /></>)}
           {row("Venue", <span className="text-sm text-ink">{where || "Not set"}</span>)}
           {draft ? row("Contact", info.contactEmail ? <a href={`mailto:${info.contactEmail}`} className="truncate text-sm font-medium text-primary hover:underline">{info.contactEmail}</a> : <span className="text-sm text-ink-faint">Not set</span>) : row("Submission deadline", <span className="text-sm font-medium text-ink">{showDate(info.submissionDeadline) || "Not set"}</span>)}
         </div>
@@ -196,29 +199,29 @@ export function CfpManagerPage({ slug }: { slug: string }) {
       />
       <div className="mt-5" />
       <CfpNavBar navItems={navItems} editMenuItems={editItems} editMenuActive={tab === "content" || tab === "details" || tab === "theme" || tab === "logo"} />
-      {tab === "publish" && draft && (
+      {tab === "publish" && (draft || review) && (
         setup.ready
-          ? <PublishPanel slug={slug} acronym={conference.acronym} chosen={cfp.publicSlug} missing={missing} preview={preview} onCancel={() => setTab("overview")} onPublished={() => { setTab("overview"); reload(); setup.reload(); }} onSessionEnded={retry} />
+          ? <PublishPanel slug={slug} acronym={conference.acronym} chosen={cfp.publicSlug} missing={missing} preview={preview} onCancel={() => setTab("overview")} onPublished={() => { setTab("overview"); reload(); setup.reload(); }} onSessionEnded={retry} awaiting={review} />
           : <div role="status" aria-label="Checking what is still missing" className="h-48 animate-pulse rounded-2xl border border-line bg-white" />
       )}
-      {tab === "content" && !closed && <ContentPanel slug={slug} acronym={conference.acronym} initialHtml={html} preview={{ ...preview, submissionLink }} onDone={() => setTab("overview")} onSaved={reload} onSessionEnded={retry} />}
-      {tab === "details" && !closed && <DetailsPanel slug={slug} info={info} submissionLink={submissionLink} onDone={() => setTab("overview")} onSaved={() => { reloadInfo(); setup.reload(); }} onSessionEnded={retry} />}
+      {tab === "content" && !frozen && <ContentPanel slug={slug} acronym={conference.acronym} initialHtml={html} preview={{ ...preview, submissionLink }} onDone={() => setTab("overview")} onSaved={reload} onSessionEnded={retry} />}
+      {tab === "details" && !frozen && <DetailsPanel slug={slug} info={info} submissionLink={submissionLink} onDone={() => setTab("overview")} onSaved={() => { reloadInfo(); setup.reload(); }} onSessionEnded={retry} />}
       {tab === "managers" && <ManagersPanel key={cfp.managers.map((m) => m.id).join()} slug={slug} acronym={conference.acronym} managers={cfp.managers} onAdd={() => setTab("add-manager")} onDone={() => setTab("overview")} onChanged={reload} onSessionEnded={retry} />}
       {tab === "add-manager" && <AddManagerPanel slug={slug} acronym={conference.acronym} confName={conference.name} managers={cfp.managers} onDone={() => setTab("managers")} onAdded={reload} onSessionEnded={retry} />}
-      {tab === "logo" && !closed && (
+      {tab === "logo" && !frozen && (
         <div className="space-y-4">
           <BrandingTab slug={slug} acronym={conference.acronym} name={conference.name} logoUrl={info.logoUrl} onSaved={() => reloadInfo()} />
           <Button variant="outline" onClick={() => setTab("overview")}>Back to Overview</Button>
         </div>
       )}
-      {tab === "theme" && !closed && <ThemePanel slug={slug} acronym={conference.acronym} currentId={cfp.themeId} preview={{ ...preview, html, submissionLink }} onDone={() => setTab("overview")} onSaved={reload} onSessionEnded={retry} />}
+      {tab === "theme" && !frozen && <ThemePanel slug={slug} acronym={conference.acronym} currentId={cfp.themeId} preview={{ ...preview, html, submissionLink }} onDone={() => setTab("overview")} onSaved={reload} onSessionEnded={retry} />}
       {tab === "preview" && (
         <div className="mx-auto max-w-3xl space-y-5">
           <CfpPublicPreview {...preview} submissionLink={submissionLink} heading="How authors will see this CFP" />
           <button type="button" onClick={() => setTab("overview")} className="cursor-pointer rounded-lg border-[1.5px] border-line px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft">Back to Overview</button>
         </div>
       )}
-      {(tab === "overview" || (tab === "publish" && !draft) || ((tab === "content" || tab === "details" || tab === "theme" || tab === "logo") && closed)) && overview}
+      {(tab === "overview" || (tab === "publish" && !draft && !review) || ((tab === "content" || tab === "details" || tab === "theme" || tab === "logo") && frozen)) && overview}
       <Dialog open={closing} onClose={() => { if (!busy) setClosing(false); }} title="Close this CFP?" size="md">
         <p className="mb-5 text-sm leading-relaxed text-ink-soft">
           {draft

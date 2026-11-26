@@ -8,9 +8,10 @@ import Link from "next/link";
 import { getCfpService } from "@/services/cfps";
 import { AuthRequiredError } from "@/services/errors";
 import type { CfpRow } from "@/types/cfp";
+import { cfpManagerHref } from "@/lib/routes";
 
 /* My CFP (the prototype's CFPListPage): the Calls for Papers of the conferences this account chairs or manages, with where each one stands.
-   The acronym opens that CFP's manager (/cfp-manager/<conference>). The CFP of a conference is its own row in the database, so there is no
+   The acronym opens that CFP's manager (/chair/<conference>/cfp). The CFP of a conference is its own row in the database, so there is no
    such thing as a CFP without a conference; "Create New CFP" opens the list of conferences to start one for (cfp-new-page.tsx). */
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
@@ -22,7 +23,7 @@ const STATUS = {
   closed: { label: "Closed", color: "var(--danger)", bg: "var(--danger-soft)" },
 } as const;
 const showDate = (iso: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "—");
-const openHref = (r: CfpRow) => `/cfp-manager/${encodeURIComponent(r.slug)}`;
+const openHref = (r: CfpRow) => cfpManagerHref(r.slug);
 
 type State = { status: "loading" } | { status: "auth" } | { status: "error"; message: string } | { status: "ready"; rows: CfpRow[] };
 

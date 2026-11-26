@@ -24,6 +24,12 @@ const SETUP_OPEN_EVENT = "conference-setup-open";
 /** Opens the setup checklist from anywhere (the menu's "Finish setup" card). */
 export const openSetupGuide = () => window.dispatchEvent(new Event(SETUP_OPEN_EVENT));
 
+/* The tour takes the chair to a step's page only when the tour itself moved (Next, Back, start, resume), never just because a page opened: every page draws its
+   own shell, so without this a chair who went to another page by hand was sent straight back to the step's page and could not leave it. */
+const goKey = (slug: string) => `grs_tour_go_${slug}`;
+const wantGo = (slug: string) => { try { window.sessionStorage.setItem(goKey(slug), "1"); } catch { /* storage off: the next page just opens */ } };
+const takeGo = (slug: string) => { try { const on = window.sessionStorage.getItem(goKey(slug)) === "1"; window.sessionStorage.removeItem(goKey(slug)); return on; } catch { return false; } };
+
 type Mode = "off" | "tour" | "paused" | "checklist" | "focus";
 
 export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym: string; setup: ConferenceSetup & { reload: () => void } }) {
@@ -65,8 +71,14 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
       // A tour finished earlier is over, so this one begins at step 1. If "done" stayed saved, every page the running tour opens would start again from
       // step 1 and send the chair back to the first page, which sends them on again: an endless bounce between two pages that floods the server.
       if (readTourState(slug).tourDone) writeTourState(slug, { tourDone: false, tourStep: 0 });
+      wantGo(slug);
       // What the field steps ask about is what is saved right now.
-      void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, s]) => missingDetails(i, s.tracks.length > 0 && !(s.tracks.length === 1 && s.tracks[0].name === "General Track"))).catch(() => [] as string[]).then((open) => { setMissing(open); setMode("tour", open); });
+      void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, s]) => missingDetails(i, s.tracks.length > 0 && !(s.tracks.length === 1 && s.tracks[0].name === "General Track"))).catch(() => [] as string[]).then((open) => {
+        // A tour left (or skipped) past a required step that is still open starts again from that step: the required steps cannot be walked around by resuming.
+        const firstRequired = buildTourSteps(open).findIndex((st) => st.gate);
+        if (firstRequired >= 0 && readTourState(slug).tourStep > firstRequired) writeTourState(slug, { tourStep: firstRequired });
+        setMissing(open); setMode("tour", open);
+      });
     };
     const checklist = () => setMode("checklist");
     window.addEventListener(START_EVENT, start);
@@ -82,7 +94,7 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
     const step: ViewStep = { key: `focus-${focusTask.key}`, path: focusTask.at, targets: [focusTask.tour], focus: focusTask.key !== "tracks", badge: "required", hideSkipTour: true, noCounter: true, title: focusTask.label, text: focusTask.why, note: focusTask.done ? "Saved — this item is complete." : "Fill it in here and save, then come back to your checklist.", primary: { label: "Back to checklist", onClick: () => setMode("checklist") }, recover: { label: "Open the page", onClick: () => go(focusTask.at) } };
     return <SpotlightTour step={step} index={0} total={1} onBack={() => setMode("checklist")} onNext={() => setMode("checklist")} onSkipTour={exit} onFinishLater={exit} />;
   }
-  if (mode === "paused") return <PausedBar next={readTourState(slug).tourStep + 1} total={buildTourSteps(missing).length} onResume={() => setMode("tour")} onClose={() => { writeTourState(slug, { welcomed: true, finishLater: true }); exit(); }} />;
+  if (mode === "paused") return <PausedBar next={readTourState(slug).tourStep + 1} total={buildTourSteps(missing).length} onResume={() => { wantGo(slug); setMode("tour"); }} onClose={() => { writeTourState(slug, { welcomed: true, finishLater: true }); exit(); }} />;
   return <Runner key={`${slug}-${mode}`} slug={slug} open={missing} here={path} go={go} onExit={exit} onPause={() => setMode("paused")} />;
 }
 
@@ -90,6 +102,19 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
   const steps = useMemo(() => buildTourSteps(open), [open]);
   const [index, setIndex] = useState(() => { const s = readTourState(slug); return s.tourDone ? 0 : Math.min(s.tourStep, steps.length - 1); });
   const step = steps[index];
+  // A tour carried past a required step that is still open (progress saved by an older version, or a step walked around) goes back to that step. Only on arrival at a page:
+  // inside a page the field steps wait for their fields themselves.
+  useEffect(() => {
+    let off = false;
+    void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, st]) => {
+      if (off) return;
+      const now = missingDetails(i, st.tracks.length > 0 && !(st.tracks.length === 1 && st.tracks[0].name === "General Track"));
+      const firstOpen = steps.findIndex((x) => x.gate && (x.gate === "saved" ? now.some((k) => k !== "tracks" && open.includes(k)) : now.includes(x.key)));
+      if (firstOpen >= 0 && index > firstOpen) { wantGo(slug); setIndex(firstOpen); writeTourState(slug, { tourStep: firstOpen }); }
+    }).catch(() => undefined);
+    return () => { off = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // A required field step waits for its field: the page is read as the chair types (saved or not) and the answer is checked again on every change.
   const [domOk, setUnlocked] = useState(true);
   // The "Update Conference" step waits until what was missing is really saved (read again from the database every moment).
@@ -117,7 +142,8 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
   const base = `/chair/${encodeURIComponent(slug)}`;
   // A step that lives on a page takes the chair there if they are elsewhere.
   useEffect(() => {
-    if (!step?.path || `${base}/${step.path}` === here) return;
+    const wanted = takeGo(slug);
+    if (!wanted || !step?.path || `${base}/${step.path}` === here) return;
     // Safety net: a tour that keeps jumping between pages (6 jumps within 10 seconds) is stopped, never left to hammer the server.
     const key = `grs_tour_jumps_${slug}`;
     const now = Date.now();
@@ -129,7 +155,7 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
   }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!step) return null;
   const last = index === steps.length - 1;
-  const goTo = (i: number) => { setIndex(i); writeTourState(slug, { tourStep: i }); };
+  const goTo = (i: number) => { wantGo(slug); setIndex(i); writeTourState(slug, { tourStep: i }); };
   // The end of the tour: if required details are still open, say which instead of just closing.
   const finish = () => {
     writeTourState(slug, { welcomed: true, tourDone: true, tourStep: 0 });
@@ -162,8 +188,9 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
         if (step.group) { const after = steps.findIndex((s, i) => i > index && s.group !== step.group); if (after === -1) finish(); else goTo(after); } else next();
       },
     }
-    // A required step cannot be waved through, but the chair is not trapped either: move on and the next steps carry on.
-    : step.gate && !unlocked ? { label: "I'll do this later", onClick: () => goTo(index + 1) } : undefined;
+    // A required field step cannot be waved through, but the chair is not trapped either: move on and the next steps carry on. The "Update Conference" step has no such way out:
+    // moving on from it would leave the page (the next step is on another page) and lose everything typed and not yet saved.
+    : step.gate && step.gate !== "saved" && step.gate !== "tracks" && !unlocked ? { label: "I'll do this later", onClick: () => goTo(index + 1) } : undefined;
   if (recap) {
     const recapStep: ViewStep = {
       key: "recap", badge: "required", noCounter: true, hideSkipTour: true, title: "Almost there",
@@ -179,6 +206,7 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
   const view: ViewStep = { ...rest, primary, skip, gateOk: step.gate ? unlocked : undefined, recover: step.path ? { label: "Open the page", onClick: () => go(step.path) } : undefined };
   return (
     <SpotlightTour step={view} index={index} total={steps.length} onBack={() => goTo(Math.max(0, index - 1))} onNext={next}
+      onMinimize={() => { writeTourState(slug, { welcomed: true, tourStep: index }); onPause(); }}
       onSkipTour={() => { writeTourState(slug, { welcomed: true, dismissed: true, tourStep: index }); onExit(); }}
       onFinishLater={() => { writeTourState(slug, { welcomed: true, finishLater: true, tourStep: index }); onExit(); }} />
   );

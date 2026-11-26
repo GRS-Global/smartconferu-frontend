@@ -43,7 +43,7 @@ export function InstructionsPreview({ text, pdf = null, mode = "html", defaultOp
         <span className="shrink-0 text-xs font-semibold text-primary">{show ? "Hide" : "Show"}</span>
         <ChevronDown size={16} aria-hidden="true" className={`shrink-0 text-ink-muted transition-transform ${show ? "rotate-180" : ""}`} />
       </button>
-      {show && <div className="space-y-3 px-5 py-4">{mode === "pdf" ? (pdf ? <InstructionsPdfRow pdf={pdf} /> : <p className="text-sm text-ink-faint">No PDF attached yet.</p>) : <RichTextContent value={text.trim() ? text : standardInstructionsHtml()} />}</div>}
+      {show && <div className="space-y-3 px-5 py-4">{mode === "pdf" ? (pdf ? <InstructionsPdfRow pdf={pdf} /> : <p className="text-sm text-ink-faint">No PDF attached yet.</p>) : <div className="max-h-[360px] overflow-y-auto"><RichTextContent value={text.trim() ? text : standardInstructionsHtml()} /></div>}</div>}
     </section>
   );
 }
@@ -186,7 +186,7 @@ export function ReviewFormPreview({ acronym, instructions, form, hiddenFields, e
               <div className="flex-1"><div className="text-sm font-bold text-navy">Reviewer instructions</div><div className="text-[11px] text-ink-faint">Please read before you start your review</div></div>
               <button type="button" onClick={() => setShow(!show)} aria-expanded={show} className="inline-flex items-center gap-1 text-xs font-bold text-primary">{show ? "Hide" : "Show"} <ChevronUp size={13} className={show ? "" : "rotate-180"} aria-hidden="true" /></button>
             </div>
-            {show && <div className="space-y-3 px-5 py-4"><RichTextContent value={instructions.trim() ? instructions : standardInstructionsHtml()} /></div>}
+            {show && <div className="space-y-3 px-5 py-4"><div className="max-h-[360px] overflow-y-auto"><RichTextContent value={instructions.trim() ? instructions : standardInstructionsHtml()} /></div></div>}
           </section>
           <ReviewFormBody form={form} hiddenFields={hiddenFields} values={a} onChange={(id, v) => setA((x) => ({ ...x, [id]: v }))} />
         </div>

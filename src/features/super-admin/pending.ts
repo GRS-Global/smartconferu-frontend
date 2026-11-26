@@ -2,7 +2,7 @@
    prototype's pendingAll). Used by the sidebar counts, the bell, the review-promise strip, Ctrl K
    and the dashboard. */
 import { CalendarPlus, FileCheck2, Hourglass, Trash2 } from "lucide-react";
-import { loadCfps, loadConferences, loadDeletionRequests, loadLicenseRequests, type AdminConference, type DeletionRequest, type LicenseRequest } from "./services";
+import { loadCfps, loadConferences, loadDeletionRequests, loadLicenseRequests, type AdminCfp, type AdminConference, type DeletionRequest, type LicenseRequest } from "./services";
 import { daysSince, SLA_DAYS, type Icon } from "./components/ui";
 
 export type QueueKey = "requests" | "deletions" | "licenses" | "cfps";
@@ -29,7 +29,7 @@ export interface PendingItem {
 
 export const isLate = (p: { since: string }) => daysSince(p.since) > SLA_DAYS;
 
-export function pendingFrom(requests: AdminConference[], deletions: DeletionRequest[], licenses: LicenseRequest[] = [], cfps: AdminConference[] = []): PendingItem[] {
+export function pendingFrom(requests: AdminConference[], deletions: DeletionRequest[], licenses: LicenseRequest[] = [], cfps: AdminCfp[] = []): PendingItem[] {
   return [
     ...requests
       .filter((c) => c.status === "pending_approval")
@@ -70,7 +70,7 @@ export function pendingFrom(requests: AdminConference[], deletions: DeletionRequ
       acronym: c.acronym,
       title: c.title,
       person: c.requester?.name ?? "—",
-      since: c.createdAt ?? new Date().toISOString(),
+      since: c.cfpSubmittedAt ?? c.createdAt ?? new Date().toISOString(),
       href: `/super-admin/cfp-review?open=${c.id}`,
     })),
   ].sort((a, b) => a.since.localeCompare(b.since));

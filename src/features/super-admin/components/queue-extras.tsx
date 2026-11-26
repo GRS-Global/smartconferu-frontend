@@ -51,7 +51,7 @@ export function ClaimMarks({ claim, notes }: { claim: { admin: { name: string } 
 }
 
 /** The drawer's top line for a waiting item: since when, and who is on it. */
-export function ClaimBar({ queue, itemId, since, waiting, claim: claimed, onChanged }: { queue: QueueKey; itemId: string; since: string; waiting: React.ReactNode; claim: { admin: { id: string; name: string }; claimedAt: string } | null; onChanged: () => void }) {
+export function ClaimBar({ queue, itemId, since, waiting, claim: claimed, onChanged }: { queue: QueueKey; itemId: string; since: string; waiting?: React.ReactNode; claim: { admin: { id: string; name: string }; claimedAt: string } | null; onChanged: () => void }) {
   const { me } = useAdmin();
   const claim = SHOW_CLAIMS_AND_NOTES ? claimed : null;
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +61,11 @@ export function ClaimBar({ queue, itemId, since, waiting, claim: claimed, onChan
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-5 text-[13px]" style={{ color: "var(--text-muted)" }}>
-        <span className="inline-flex items-center gap-2">
-          Submitted {fmtDate(since)} · waiting {waiting}
-        </span>
+        {waiting ? (
+          <span className="inline-flex items-center gap-2">
+            Submitted {fmtDate(since)} · waiting {waiting}
+          </span>
+        ) : <span />}
         {SHOW_CLAIMS_AND_NOTES && !claim && (
           <button onClick={() => run(claimQueueItem(queue, itemId))} className="inline-flex items-center gap-1.5 font-semibold cursor-pointer" style={{ color: "var(--primary)" }}>
             <UserCheck size={15} />

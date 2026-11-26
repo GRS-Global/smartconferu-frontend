@@ -110,7 +110,7 @@ export function SubmissionFormPreview({ acronym, guidelines, types, tracks, extr
               <div className="flex-1"><div className="text-sm font-bold text-navy">Submission guidelines</div><div className="text-[11px] text-ink-faint">Please read before you submit</div></div>
               <button type="button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide} className="inline-flex items-center gap-1 text-xs font-bold text-primary">{showGuide ? "Hide" : "Show"} <ChevronUp size={13} className={showGuide ? "" : "rotate-180"} aria-hidden="true" /></button>
             </div>
-            {showGuide && (hasRichText(guidelines) ? <RichTextContent value={guidelines} className="px-5 py-4" /> : <div className="px-5 py-4 text-[13px] leading-relaxed"><p className="text-ink-faint">No guidelines written yet — add them under Conference Settings › Submissions.</p></div>)}
+            {showGuide && (hasRichText(guidelines) ? <RichTextContent value={guidelines} className="max-h-[360px] overflow-y-auto px-5 py-4" /> : <div className="px-5 py-4 text-[13px] leading-relaxed"><p className="text-ink-faint">No guidelines written yet — add them under Conference Settings › Submissions.</p></div>)}
           </section>
 
           <div style={{ background: "var(--gradient-primary)" }} className="rounded-2xl p-[1.5px]">

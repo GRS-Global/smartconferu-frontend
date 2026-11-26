@@ -8,7 +8,6 @@ import { Dialog } from "@/components/ui/dialog";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { HeroButton, HeroChip, PageHero } from "@/features/workspace/components/hero";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
-import { PROTOTYPE_URL } from "@/lib/config";
 import { sendActionEmails } from "@/services/action-emails";
 import { getChairService } from "@/services/chair";
 import type { ChairPaper, ScreeningFile, ScreeningRecord } from "@/types/chair";
@@ -19,6 +18,7 @@ import { useScreeningSave } from "../use-screening-save";
 import { SendDialog } from "./plagiarism-check-page";
 import type { ScreeningSendInput } from "./screening-email-form";
 import { CheckRow, PaperNav, SectionCard, VersionActions } from "./screening-detail-ui";
+import { chairPaperHref } from "@/lib/routes";
 import {
   Btn, CARD, DecisionChip, DecisionSelect, DecisionWarning, EmailCell, LoadingOverlay, LockNote, ScreeningSettingsButton, ScreeningToast, SentNote, daysAgo, type ScreeningToastData,
 } from "./screening-ui";
@@ -54,7 +54,7 @@ export function PlagiarismDetailPage({ slug, paperLabel }: { slug: string; paper
     </ConferenceShell>
   );
   if (!data.screening.plagiarism) {
-    return shell("Plagiarism Check", <div className="p-8"><div style={CARD} className="mx-auto max-w-xl rounded-2xl bg-white px-6 py-14 text-center"><h2 className="text-base font-bold text-navy">Plagiarism Check is turned off for this conference</h2><p className="mb-4 mt-1 text-sm text-ink-muted">Turn it on in Conference Settings › Submissions › Paper Screening.</p><a href={`${PROTOTYPE_URL}/prototype/chair/${e}/settings/submissions`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white"><Settings2 size={14} aria-hidden="true" /> Open Screening Settings</a></div></div>);
+    return shell("Plagiarism Check", <div className="p-8"><div style={CARD} className="mx-auto max-w-xl rounded-2xl bg-white px-6 py-14 text-center"><h2 className="text-base font-bold text-navy">Plagiarism Check is turned off for this conference</h2><p className="mb-4 mt-1 text-sm text-ink-muted">Turn it on in Conference Settings › Submissions › Paper Screening.</p><a href={`/chair/${e}/settings/submissions`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white"><Settings2 size={14} aria-hidden="true" /> Open Screening Settings</a></div></div>);
   }
   const paper = data.papers.find((p) => p.id === paperLabel && !p.withdrawn && p.outcome !== "upload_pending");
   if (!paper) {
@@ -168,7 +168,7 @@ export function PlagiarismDetailPage({ slug, paperLabel }: { slug: string; paper
           )}
           actions={(
             <>
-              <HeroButton icon={FileText} onClick={() => router.push(`/submissions/${encodeURIComponent(paper.id)}/chair`)} title="Abstract, authors, files and paper actions">Submission details</HeroButton>
+              <HeroButton icon={FileText} onClick={() => router.push(chairPaperHref(conference.id, paper.id))} title="Abstract, authors, files and paper actions">Submission details</HeroButton>
               <HeroButton icon={Eye} onClick={() => void openPaper(n, false)} title="Open this version's PDF">View PDF</HeroButton>
               <HeroButton icon={Download} primary onClick={() => void openPaper(n, true)} title="Download this version">Download</HeroButton>
             </>

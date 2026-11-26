@@ -5,6 +5,10 @@ import { useState, useEffect, useRef, type PointerEvent as ReactPointerEvent, ty
 import QRCodeLib from "qrcode";
 import { mergeValues, applyMerge, verifyUrl, BASE_SIZES, defaultElements, type Design, type Layout, type Recipient } from "./data";
 
+import { StudioPage } from "./studio/render";
+import { extrasOf } from "./merge-extras";
+import { docPage } from "./studio/model";
+
 // Display serif: used ONLY on printed artefacts (certificate artwork), never in app chrome.
 const SERIF_FAMILY = "var(--font-cormorant), 'Cormorant Garamond', 'Times New Roman', serif";
 // The platform's own mark, shown when the chair has not uploaded a logo.
@@ -52,11 +56,21 @@ export function CertificateArtwork({
   const qrDataUrl = qr.serial === serial ? qr.dataUrl : "";
 
   const orientation = design.orientation === "portrait" ? "portrait" : "landscape";
-  const { w, h } = BASE_SIZES[orientation];
+  const { w, h } = design.studio ? docPage(design.studio) : BASE_SIZES[orientation];
   const scale = width / w;
   const els = design.elements || defaultElements(orientation, design.signatories?.length || 1);
-  const values = mergeValues(recipient, conference);
+  const values = mergeValues(recipient, conference, extrasOf(design));
   const { ink, accent, paper, rule } = design.palette;
+
+  if (design.studio) {
+    return (
+      <div style={{ width, height: h * scale, position: "relative", flexShrink: 0 }}>
+        <div style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0, boxShadow: "0 10px 30px rgba(11,16,32,0.14)" }}>
+          <StudioPage doc={design.studio} values={values} serial={serial} w={w} h={h} />
+        </div>
+      </div>
+    );
+  }
 
   const startDrag = (e: ReactPointerEvent<HTMLDivElement>, id: string) => {
     if (!editable) return;

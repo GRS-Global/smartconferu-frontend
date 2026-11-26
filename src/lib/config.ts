@@ -7,7 +7,7 @@ export type DataSource = "supabase" | "mock" | "api";
 
 /** `api`: the own NestJS backend (plain JSON REST over HTTPS, see ../API.md). Services opt in one by one via services/api/*. */
 const rawSource = process.env.NEXT_PUBLIC_DATA_SOURCE;
-export const DATA_SOURCE: DataSource = rawSource === "mock" ? "mock" : rawSource === "api" ? "api" : "supabase";
+export const DATA_SOURCE: DataSource = rawSource === "mock" ? "mock" : rawSource === "supabase" ? "supabase" : "api";
 
 /** Own backend, e.g. http://localhost:3000 (no trailing slash, no /api/v1). Only used when DATA_SOURCE is `api`. */
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -18,8 +18,8 @@ export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 /** The public "anon" key; Row Level Security decides what each user may read. Never the service_role key. */
 export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-/** Base URL of the original Vite prototype, for screens not yet ported to this app. */
-export const PROTOTYPE_URL = (process.env.NEXT_PUBLIC_PROTOTYPE_URL ?? "http://localhost:5173").replace(/\/$/, "");
+/** The public marketing website (home, Terms, Privacy), when it is hosted apart from this app: no trailing slash; empty = use this app's own pages. */
+export const WEBSITE_URL = (process.env.NEXT_PUBLIC_WEBSITE_URL ?? "").replace(/\/$/, "");
 
 /** Sign-in goes through the own backend (NEXT_PUBLIC_DATA_SOURCE=api) instead of Supabase Auth. */
 export const AUTH_API = DATA_SOURCE === "api";

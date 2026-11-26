@@ -67,6 +67,10 @@ export interface Design {
   /** null = the platform mark; a data URL once the chair uploaded a logo. */
   logoSrc: string | null;
   elements: Elements;
+  /** Free-form studio document (features/certificates/studio). When present it is what is drawn everywhere; the fields above are the v1 design it was made from. */
+  studio?: import("./studio/model").StudioDoc;
+  /** Which certificate type this design is for (its row's `typeKey`, repeated here so a merge field can name it wherever only the design is at hand). */
+  typeKey?: CertTypeKey;
 }
 
 /* Signature blocks sit side by side and re-centre as a group when one is added or removed, but only the ones the chair has not already moved. */
@@ -121,7 +125,7 @@ export function defaultDesign(typeKey: CertTypeKey, templateKey: string, signato
   return {
     templateKey: template.key, layout: template.layout, palette: { ...template.palette }, orientation: "landscape",
     headline: "CERTIFICATE", typeLine: type.line, leadIn: "This certificate is proudly awarded to", bodyLine: type.body,
-    signatories: [signatory], showQr: true, showLogo: true, logoSrc: null, elements: defaultElements("landscape", 1),
+    signatories: [signatory], showQr: true, showLogo: true, logoSrc: null, elements: defaultElements("landscape", 1), typeKey,
   };
 }
 
@@ -134,6 +138,8 @@ export interface Recipient {
   name: string; email: string; affiliation: string; roleLabel: string;
   paperId?: string; paperTitle?: string; ticketType?: string;
   reviewsAssigned?: number; reviewsDone?: number; reviewerId?: string;
+  /** When the certificate was issued (ms); the merge field {{issueDate}} reads it, and uses today's date for one not issued yet. */
+  issuedAt?: number;
   manual?: boolean; source?: string; serial?: string;
 }
 
@@ -194,10 +200,12 @@ export const AUDIENCE_CONDITIONS: AudienceCondition[] = [
 export interface IssuedCertificate {
   key?: string; serial: string; name: string; email: string; affiliation: string; roleLabel: string; paperId: string; paperTitle: string;
   issuedAt: number; status: "sent" | "bounced"; bounceReason: string | null; opened: boolean; downloaded: boolean; verifiedCount: number;
+  /** Withdrawn by a chair (the public check says so); `replacedBy` is the ID of the corrected certificate. */
+  revokedAt?: number | null; revokeReason?: string | null; replacedBy?: string | null; resentAt?: number | null;
 }
 export interface DistributionAudience { sourceKey: string; conditions: string[]; excludeAlreadyIssued: boolean; timing: string }
 export interface DistributionEmail { subject: string; body: string; attachPdf: boolean; saveToAccount: boolean; bccConference: boolean }
-export interface ManualPerson { key: string; name: string; email: string; affiliation: string; roleLabel: string }
+export interface ManualPerson { key: string; name: string; email: string; affiliation: string; roleLabel: string; paperId?: string; paperTitle?: string }
 export interface Distribution {
   id: string; conferenceId: string; certId: string; name: string;
   audience: DistributionAudience; email: DistributionEmail; manual: ManualPerson[]; overrides: Record<string, { email?: string }>;
@@ -296,12 +304,30 @@ export function deliveryStats(issued: IssuedCertificate[]): DeliveryStats {
   };
 }
 
-/* ---------------- Merge fields ---------------- */
-export const MERGE_FIELDS: Array<{ group: string; fields: Array<{ token: string; label: string }> }> = [
-  { group: "Recipient", fields: [{ token: "recipientName", label: "Full name" }, { token: "affiliation", label: "Affiliation" }, { token: "roleLabel", label: "Role" }, { token: "serial", label: "Certificate ID" }] },
-  { group: "Submission", fields: [{ token: "paperTitle", label: "Paper title" }, { token: "paperId", label: "Paper ID" }] },
-  { group: "Conference", fields: [{ token: "conferenceName", label: "Conference name" }, { token: "conferenceAcronym", label: "Acronym" }, { token: "conferenceDates", label: "Dates" }, { token: "conferenceVenue", label: "Venue" }] },
+/* ---------------- Merge fields ----------------
+   Every field here has real data behind it: the recipient's row, the conference's own record, the certificate being issued or the signature block on
+   the design. Nothing is invented: a field whose data is missing prints nothing (and the checks say so).
+   `email` says where an EMAIL can use the field: "all" = every mode; "api" = only the own backend, which fills it itself (the Supabase mail server
+   knows just the original ten); "never" = the certificate's own text only. */
+export type FieldEmail = "all" | "api" | "never";
+export interface MergeField { token: string; label: string; email: FieldEmail }
+export const MERGE_FIELDS: Array<{ group: string; fields: MergeField[] }> = [
+  { group: "Recipient", fields: [{ token: "recipientName", label: "Full name", email: "all" }, { token: "affiliation", label: "Affiliation / institution", email: "all" }, { token: "roleLabel", label: "Role", email: "all" }] },
+  { group: "Submission", fields: [{ token: "paperTitle", label: "Paper title", email: "all" }, { token: "paperId", label: "Paper ID", email: "all" }] },
+  { group: "Conference", fields: [{ token: "conferenceName", label: "Conference name", email: "all" }, { token: "conferenceAcronym", label: "Acronym", email: "all" }, { token: "conferenceDates", label: "Dates", email: "all" }, { token: "conferenceVenue", label: "Venue", email: "all" }, { token: "conferenceCity", label: "City", email: "api" }, { token: "conferenceCountry", label: "Country", email: "api" }, { token: "conferenceYear", label: "Year", email: "api" }] },
+  { group: "Certificate", fields: [{ token: "certificateType", label: "Certificate type", email: "api" }, { token: "serial", label: "Certificate ID", email: "all" }, { token: "issueDate", label: "Issue date", email: "api" }, { token: "verificationUrl", label: "Verification link", email: "api" }] },
+  { group: "Signatory", fields: [{ token: "signatoryName", label: "Signatory name", email: "never" }, { token: "signatoryTitle", label: "Signatory designation", email: "never" }] },
 ];
+/** What people ask for that the platform has no record of yet, so there is no field for it (shown in the designer so nobody looks for it). */
+export const UNAVAILABLE_FIELDS: Array<{ label: string; why: string }> = [
+  { label: "Presentation date", why: "needs the programme, which is not in the database yet" },
+  { label: "Organizer name", why: "a conference has no organizer field yet" },
+  { label: "Chair / director signature fields", why: "signatures are pictures: add one from the Signatures tab" },
+];
+/** The fields an email can use in the current data source. */
+export function emailMergeFields(mode: "api" | "other"): MergeField[] {
+  return MERGE_FIELDS.flatMap((g) => g.fields).filter((f) => f.email === "all" || (f.email === "api" && mode === "api"));
+}
 
 type DatedConference = { startDate?: string; endDate?: string } | null | undefined;
 export function formatConferenceDates(conference: DatedConference): string {
@@ -311,8 +337,15 @@ export function formatConferenceDates(conference: DatedConference): string {
 }
 
 type MergeConference = { name?: string; acronym?: string; startDate?: string; endDate?: string; city?: string; country?: string } | null | undefined;
-type MergeRecipient = Partial<Pick<Recipient, "name" | "affiliation" | "roleLabel" | "serial" | "paperTitle" | "paperId">> | null | undefined;
-export function mergeValues(recipient: MergeRecipient, conference: MergeConference): Record<string, string> {
+type MergeRecipient = Partial<Pick<Recipient, "name" | "affiliation" | "roleLabel" | "serial" | "paperTitle" | "paperId" | "issuedAt">> | null | undefined;
+/** What does not come from the person or the conference: the certificate type, who signs, and the date to use when none was issued yet. */
+export interface MergeExtras { typeKey?: string; signatory?: { name?: string; title?: string }; now?: Date }
+
+const longDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+export function mergeValues(recipient: MergeRecipient, conference: MergeConference, extras: MergeExtras = {}): Record<string, string> {
+  const issued = recipient?.issuedAt !== undefined && recipient.issuedAt !== null ? new Date(recipient.issuedAt) : (extras.now ?? new Date());
+  const type = extras.typeKey ? CERTIFICATE_TYPES.find((t) => t.key === extras.typeKey) : undefined;
   return {
     recipientName: recipient?.name || "",
     affiliation: recipient?.affiliation || "",
@@ -324,6 +357,14 @@ export function mergeValues(recipient: MergeRecipient, conference: MergeConferen
     conferenceAcronym: conference?.acronym || "",
     conferenceDates: formatConferenceDates(conference),
     conferenceVenue: [conference?.city, conference?.country].filter(Boolean).join(", "),
+    conferenceCity: conference?.city || "",
+    conferenceCountry: conference?.country || "",
+    conferenceYear: conference?.startDate ? conference.startDate.slice(0, 4) : "",
+    certificateType: type?.label ?? "",
+    issueDate: Number.isNaN(issued.getTime()) ? "" : longDate(issued),
+    verificationUrl: recipient?.serial ? verifyUrl(recipient.serial) : "",
+    signatoryName: extras.signatory?.name?.trim() || "",
+    signatoryTitle: extras.signatory?.title?.trim() || "",
   };
 }
 

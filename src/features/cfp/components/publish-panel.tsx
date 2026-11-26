@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, Globe2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Check, Clock, Globe2, ShieldCheck } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { openSetupGuide } from "@/features/tour/conference-tour";
@@ -28,9 +28,11 @@ interface Props {
   /** Called once the CFP is published (the manager reloads it). */
   onPublished: () => void;
   onSessionEnded: () => void;
+  /** Already sent to the Super Admin: everything is shown read-only and it can't be sent again. */
+  awaiting?: boolean;
 }
 
-export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel, onPublished, onSessionEnded }: Props) {
+export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel, onPublished, onSessionEnded, awaiting = false }: Props) {
   const suggestedBase = acronym.trim().split(/\s+/).filter(Boolean);
   const suggestions = [...new Set([suggestedBase.join(""), suggestedBase.join("").toLowerCase(), suggestedBase.join("-"), suggestedBase.join("-").toLowerCase(), suggestedBase.join("_"), suggestedBase.join("_").toLowerCase()])].filter(Boolean);
   const [page, setPage] = useState(chosen || suggestions[0] || "");
@@ -39,8 +41,8 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
   const [taken, setTaken] = useState<string[]>([]);
   const [done, setDone] = useState<false | "live" | "review">(false);
   const [copied, setCopied] = useState(false);
-  const locked = Boolean(chosen);
-  const canPublish = missing.length === 0;
+  const locked = Boolean(chosen) || awaiting;
+  const canPublish = missing.length === 0 && !awaiting;
   const link = typeof window === "undefined" ? "" : `${window.location.origin}/submit/${encodeURIComponent(slug)}`;
 
   useEffect(() => {
@@ -101,7 +103,16 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
   );
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {!canPublish && notice("danger", (
+      {awaiting && (
+        <div role="status" className="flex flex-wrap items-start gap-3 rounded-xl border border-primary-soft-border bg-primary-soft px-4 py-3.5">
+          <Clock size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-primary" />
+          <div className="min-w-[16rem] flex-1">
+            <p className="text-sm font-bold text-navy">Sent for approval: waiting for the Super Admin</p>
+            <p className="mt-0.5 text-xs text-ink-soft">Your request is already in. You can read everything here, but it can&apos;t be sent again. Submissions open as soon as it is approved, and you will get a notification and an email.</p>
+          </div>
+        </div>
+      )}
+      {!awaiting && missing.length > 0 && notice("danger", (
         <>
           <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger" />
           <div className="min-w-[16rem] flex-1">
@@ -111,7 +122,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
           <button type="button" onClick={() => openSetupGuide()} className="h-9 cursor-pointer rounded-lg bg-danger px-4 text-xs font-bold text-white">Open the setup checklist</button>
         </>
       ))}
-      {notice("warning", (
+      {!awaiting && notice("warning", (
         <>
           <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-warning" />
           <p className="text-xs leading-relaxed text-warning">{CFP_NEEDS_APPROVAL ? <><strong>Note:</strong> your CFP goes to the Super Admin for approval. Submissions open only once it is approved. Please make sure the CFP is ready — check the preview alongside.</> : <><strong>Warning:</strong> publishing opens submissions straight away: authors can use the submission link as soon as you publish. Please make sure the CFP is ready — check the preview alongside.</>}</p>
@@ -144,7 +155,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
               <span style={{ borderRight: "none" }} className="whitespace-nowrap rounded-l-lg border-[1.5px] border-line bg-canvas px-3.5 py-2.5 text-sm font-medium text-ink-muted">/cfp/</span>
               <input id="cfp-page" value={locked ? chosen : page} disabled={locked} onChange={(e) => { setPage(e.target.value); setError(""); }} className="min-w-0 flex-1 rounded-r-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm outline-none focus:border-primary disabled:bg-canvas disabled:text-ink-faint" />
             </div>
-            {locked && <p className="text-xs text-ink-faint">You&apos;ve already chosen this page — it can only be set once.</p>}
+            {locked && chosen && <p className="text-xs text-ink-faint">You&apos;ve already chosen this page — it can only be set once.</p>}
             {error && <p role="alert" className="text-xs font-semibold text-danger">{error}</p>}
             <ul className="mt-3 list-inside list-disc space-y-1 text-xs text-ink-faint">
               <li>Letters, digits, underscores and hyphens only</li>
@@ -156,7 +167,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
           </div>
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={onCancel} disabled={busy}>Cancel</Button>
-            <button type="button" onClick={() => void publish()} disabled={!canPublish || busy} title={canPublish ? undefined : `${missing.length} thing${plural(missing.length)} left to fill in before you can publish`} className="flex cursor-pointer items-center gap-2 rounded-lg bg-success px-6 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"><ShieldCheck size={16} aria-hidden="true" /> {busy ? (CFP_NEEDS_APPROVAL ? "Sending…" : "Publishing…") : CFP_NEEDS_APPROVAL ? "Select Page and Send for Approval" : "Select Page and Publish"}</button>
+            <button type="button" onClick={() => void publish()} disabled={!canPublish || busy} title={awaiting ? "Already sent for approval" : canPublish ? undefined : `${missing.length} thing${plural(missing.length)} left to fill in before you can publish`} className="flex cursor-pointer items-center gap-2 rounded-lg bg-success px-6 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{awaiting ? <><Clock size={16} aria-hidden="true" /> Awaiting approval</> : <><ShieldCheck size={16} aria-hidden="true" /> {busy ? (CFP_NEEDS_APPROVAL ? "Sending…" : "Publishing…") : CFP_NEEDS_APPROVAL ? "Select Page and Send for Approval" : "Select Page and Publish"}</>}</button>
           </div>
         </div>
         <div className="lg:col-span-3">

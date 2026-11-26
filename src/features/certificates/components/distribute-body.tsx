@@ -50,11 +50,11 @@ function NewDistributionModal({ conference, certificates, presetCertId, audience
           <button onClick={onClose} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-white hover:bg-[var(--muted)] transition-colors cursor-pointer">Cancel</button>
           <button
             onClick={() => onCreate({ certId, sourceKey, name: name.trim() })}
-            disabled={!certId || count === 0}
+            disabled={!certId || Boolean(source.blockedReason)}
             style={{ background: "var(--gradient-primary)" }}
             className="px-5 py-2 rounded-lg text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-45 cursor-pointer disabled:cursor-not-allowed"
           >
-            Build the list
+            {count === 0 ? "Start an empty list" : "Build the list"}
           </button>
         </>
       }
@@ -111,6 +111,9 @@ function NewDistributionModal({ conference, certificates, presetCertId, audience
               );
             })}
           </div>
+          {count === 0 && !source.blockedReason && (
+            <p role="status" style={{ color: "var(--ink-muted)" }} className="text-xs leading-relaxed mt-3">Nobody is listed for this choice from your conference data yet. You can still start an empty list and add people by hand or import a file.</p>
+          )}
           <p style={{ color: "var(--ink-muted)" }} className="text-xs mt-2.5 leading-relaxed">{source.blockedReason || source.note}</p>
         </div>
 

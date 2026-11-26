@@ -1,32 +1,29 @@
 import {
   Award, BarChart3, Bell, Building2, Calendar, CreditCard, FileCheck, FileText, History, House, Image as ImageIcon, Mail, MessageSquare, Send, Settings, ShieldCheck, Users, type LucideIcon,
 } from "lucide-react";
-import { PROTOTYPE_URL } from "@/lib/config";
+import { comingSoonHref } from "@/lib/navigation";
 import type { ConferenceRole } from "@/types/conference";
 
-/* The conference menus of the three workspaces — the prototype's AUTHOR_SIDEBAR_ITEMS, REVIEWER_SIDEBAR_ITEMS and
-   CHAIR_SIDEBAR_ITEMS (src/author-journey.jsx). One entry is a page of this app (`app`) or, while its screen is not ported yet,
-   the prototype's page of the same name (`prototype`). When a screen is ported, move its entry from `prototype` to `app`: nothing
-   else has to change. Slugs are URL-encoded here; callers pass the conference's slug. */
+/* The conference menus of the three workspaces. Every entry is a page of this app (`app`); a screen that is not built yet points at the
+   internal "Coming soon" page. Slugs are URL-encoded here; callers pass the conference's slug. */
 
 export interface MenuLeaf {
   key: string;
   label: string;
   icon?: LucideIcon;
   /** A page of this app. */
-  app?: (slug: string) => string;
-  /** The prototype's page, until ported. */
-  prototype?: (slug: string) => string;
+  app: (slug: string) => string;
   /** Shown only while the conference runs this screening step (Conference Settings › Submissions). */
   screening?: "initialCheck" | "plagiarism";
 }
-export interface MenuItem extends MenuLeaf { children?: MenuLeaf[] }
+/** A top-level entry: a page of its own, or a group of `children` (then it has no page itself). */
+export interface MenuItem extends Omit<MenuLeaf, "app"> { app?: MenuLeaf["app"]; children?: MenuLeaf[] }
 
 const e = encodeURIComponent;
-const p = (path: (s: string) => string) => ({ prototype: (s: string) => `/prototype${path(s)}` });
+const soon = (key: "registration" | "programme") => ({ app: () => comingSoonHref(key) });
 
 export const AUTHOR_MENU: MenuItem[] = [
-  { key: "overview", label: "Dashboard", icon: House, app: (s) => `/conference/${e(s)}/author` },
+  { key: "overview", label: "Dashboard", icon: House, app: (s) => `/author/${e(s)}/dashboard` },
   { key: "submissions", label: "My Submissions", icon: FileText, app: (s) => `/author/${e(s)}/submissions` },
   { key: "flyer", label: "My flyer", icon: ImageIcon, app: (s) => `/author/${e(s)}/flyer` },
   { key: "certificates", label: "Certificates", icon: Award, app: (s) => `/author/${e(s)}/certificates` },
@@ -44,8 +41,8 @@ export const REVIEWER_MENU: MenuItem[] = [
 ];
 
 export const CHAIR_MENU: MenuItem[] = [
-  { key: "overview", label: "Dashboard", icon: Building2, app: (s) => `/conference/${e(s)}/chair` },
-  { key: "cfp", label: "Call for Papers", icon: Send, app: (s) => `/cfp-manager/${e(s)}` },
+  { key: "overview", label: "Dashboard", icon: Building2, app: (s) => `/chair/${e(s)}/dashboard` },
+  { key: "cfp", label: "Call for Papers", icon: Send, app: (s) => `/chair/${e(s)}/cfp` },
   {
     key: "submissions", label: "Submissions", icon: FileText,
     children: [
@@ -69,13 +66,13 @@ export const CHAIR_MENU: MenuItem[] = [
       { key: "manage", label: "Manage", app: (s) => `/chair/${e(s)}/peer-review/manage` },
     ],
   },
-  { key: "registration", label: "Registration", icon: Users, ...p((s) => `/chair/${e(s)}/registration`) },
+  { key: "registration", label: "Registration", icon: Users, ...soon("registration") },
   {
     key: "programme", label: "Program", icon: Calendar,
     children: [
-      { key: "overview", label: "Overview", ...p((s) => `/chair/${e(s)}/programme`) },
-      { key: "full", label: "Full Program", ...p((s) => `/chair/${e(s)}/programme/full`) },
-      { key: "manage", label: "Manage", ...p((s) => `/chair/${e(s)}/programme/manage`) },
+      { key: "overview", label: "Overview", ...soon("programme") },
+      { key: "full", label: "Full Program", ...soon("programme") },
+      { key: "manage", label: "Manage", ...soon("programme") },
     ],
   },
   {
@@ -106,10 +103,9 @@ export const CHAIR_SOON: Array<{ label: string; icon: LucideIcon }> = [{ label: 
 
 export const MENUS: Record<"author" | "reviewer" | "chair", MenuItem[]> = { author: AUTHOR_MENU, reviewer: REVIEWER_MENU, chair: CHAIR_MENU };
 
-/** Where a menu entry goes: a page of this app or the prototype's. */
-export function hrefOf(item: MenuLeaf, slug: string): { href: string; external: boolean } {
-  if (item.app) return { href: item.app(slug), external: false };
-  return { href: `${PROTOTYPE_URL}${item.prototype!(slug)}`, external: true };
+/** Where a menu entry goes: always a page of this app. */
+export function hrefOf(item: Pick<MenuItem, "app">, slug: string): { href: string; external: boolean } {
+  return { href: item.app ? item.app(slug) : `/chair/${e(slug)}`, external: false };
 }
 
 /* Which roles have their landing page in this app. Flip a role to true when its Dashboard page exists (the dashboard's "Enter",
@@ -118,8 +114,8 @@ export const ROLE_PORTED: Record<ConferenceRole, boolean> = { author: true, revi
 
 /** The page a role lands on in a conference. */
 export function roleLanding(slug: string, role: ConferenceRole): { href: string; external: boolean } {
-  if (role === "author") return { href: `/conference/${e(slug)}/author`, external: false };
+  if (role === "author") return { href: `/author/${e(slug)}/dashboard`, external: false };
   if (role === "reviewer" && ROLE_PORTED.reviewer) return { href: `/reviewer/${e(slug)}/overview`, external: false };
-  if (role === "chair" && ROLE_PORTED.chair) return { href: `/conference/${e(slug)}/chair`, external: false };
-  return { href: `${PROTOTYPE_URL}/prototype/conference/${e(slug)}/${role}`, external: true };
+  if (role === "chair" && ROLE_PORTED.chair) return { href: `/chair/${e(slug)}/dashboard`, external: false };
+  return { href: comingSoonHref("committee"), external: false };
 }

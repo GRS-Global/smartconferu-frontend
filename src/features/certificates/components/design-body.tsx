@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Award, Plus, Copy, Trash2, Pencil, Send } from "lucide-react";
 import { PageHero, HeroButton } from "@/features/workspace/components/hero";
 import type { Conference } from "@/types/conference";
-import { CertCard, Pill, CertModal, EmptyState } from "../components";
-import { CertificateArtwork, CertificateSwatch } from "../certificate-artwork";
-import { inputStyle, inputClass } from "../form-styles";
-import { CERTIFICATE_TYPES, CERTIFICATE_TEMPLATES, getCertificateType, getTemplate, defaultElements, sampleRecipient, type CertificateDesign, type CertTypeKey, type Design, type Distribution } from "../data";
+import { CertCard, Pill, EmptyState } from "../components";
+import { NewCertificateModal, type NewCertificateInput } from "./template-gallery";
+import { CertificateArtwork } from "../certificate-artwork";
+import { getCertificateType, sampleRecipient, type CertificateDesign, type Distribution } from "../data";
 import type { CertificateActions } from "../use-certificates";
 import type { Go } from "../routes";
 
@@ -16,114 +16,11 @@ import type { Go } from "../routes";
    Who receives it is the Distribute menu's business, and this page never asks.
    --------------------------------------------------------------------------- */
 
-function NewCertificateModal({ conference, onClose, onCreate }: { conference: Conference; onClose: () => void; onCreate: (input: { name: string; typeKey: CertTypeKey; templateKey: string }) => void }) {
-  const [typeKey, setTypeKey] = useState<CertTypeKey>(CERTIFICATE_TYPES[0].key);
-  const [templateKey, setTemplateKey] = useState(CERTIFICATE_TEMPLATES[0].key);
-  const [name, setName] = useState("");
-
-  const type = getCertificateType(typeKey);
-  const template = getTemplate(templateKey);
-
-  const previewDesign: Design = {
-    templateKey: template.key, layout: template.layout, palette: template.palette,
-    orientation: "landscape", headline: "CERTIFICATE", typeLine: type.line,
-    leadIn: "This certificate is proudly awarded to", bodyLine: type.body,
-    // The signature is left for the chair to fill in (the database holds no sample person).
-    signatories: [{ name: "", title: "Conference Chair" }],
-    showQr: true, showLogo: true, logoSrc: null,
-    elements: defaultElements("landscape", 1),
-  };
-
-  return (
-    <CertModal
-      title="New certificate"
-      subtitle="Pick what it is for and how it should look. You can change everything afterwards."
-      onClose={onClose}
-      maxWidth="max-w-4xl"
-      footer={
-        <>
-          <div className="flex-1" />
-          <button onClick={onClose} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-white hover:bg-[var(--muted)] transition-colors cursor-pointer">Cancel</button>
-          <button
-            onClick={() => onCreate({ name: name.trim() || `${conference?.acronym} — ${type.short}`, typeKey, templateKey })}
-            style={{ background: "var(--gradient-primary)" }}
-            className="px-5 py-2 rounded-lg text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            Create &amp; open the designer
-          </button>
-        </>
-      }
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-5">
-        <div className="space-y-4">
-          <div>
-            <div style={{ color: "var(--ink-faint)" }} className="text-[10.5px] font-bold tracking-wider mb-2">WHAT IS IT FOR?</div>
-            <div className="space-y-1.5">
-              {CERTIFICATE_TYPES.map((t) => {
-                const active = t.key === typeKey;
-                return (
-                  <button
-                    key={t.key}
-                    onClick={() => setTypeKey(t.key)}
-                    style={active
-                      ? { border: "1.5px solid var(--primary)", background: "var(--primary-soft)", color: "var(--primary)" }
-                      : { border: "1px solid var(--border)", background: "#FFFFFF", color: "var(--navy)" }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-[13px] font-bold transition-colors cursor-pointer"
-                  >
-                    {t.short}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <div style={{ color: "var(--ink-faint)" }} className="text-[10.5px] font-bold tracking-wider mb-2">STYLE</div>
-            <div className="grid grid-cols-2 gap-2">
-              {CERTIFICATE_TEMPLATES.map((t) => {
-                const active = t.key === templateKey;
-                return (
-                  <button
-                    key={t.key}
-                    onClick={() => setTemplateKey(t.key)}
-                    style={active ? { border: "2px solid var(--primary)" } : { border: "1px solid var(--border)" }}
-                    className="rounded-xl overflow-hidden bg-white transition-colors cursor-pointer"
-                    title={t.name}
-                  >
-                    <div className="p-1.5 flex justify-center" style={{ background: "var(--canvas)" }}>
-                      <CertificateSwatch design={{ palette: t.palette }} width={74} />
-                    </div>
-                    <div style={{ color: active ? "var(--primary)" : "var(--ink-muted)" }} className="text-[10.5px] font-bold px-1.5 py-1 truncate">{t.name}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="min-w-0">
-          <div style={{ background: "var(--canvas)", border: "1px solid var(--border)" }} className="rounded-xl p-4 flex justify-center">
-            <CertificateArtwork design={previewDesign} recipient={sampleRecipient(conference, type.key)} conference={conference} width={470} />
-          </div>
-          <div className="mt-4">
-            <label htmlFor="cert-name" style={{ color: "var(--ink-soft)" }} className="text-xs font-semibold mb-1 block">Name it (only you see this)</label>
-            <input
-              id="cert-name" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder={`${conference?.acronym} — ${type.short}`}
-              style={inputStyle} className={inputClass}
-            />
-          </div>
-        </div>
-      </div>
-    </CertModal>
-  );
-}
-
 export function DesignBody({ conference, certificates, distributions, actions, go }: { conference: Conference; certificates: CertificateDesign[]; distributions: Distribution[]; actions: CertificateActions; go: Go }) {
   const [showNew, setShowNew] = useState(false);
 
-  const create = async ({ name, typeKey, templateKey }: { name: string; typeKey: CertTypeKey; templateKey: string }) => {
-    const cert = await actions.createDesign({ name, typeKey, templateKey });
+  const create = async (input: NewCertificateInput) => {
+    const cert = await actions.createDesign(input);
     setShowNew(false);
     if (cert) go("chair-certificate-design", { certId: cert.id });
   };

@@ -17,6 +17,7 @@ export const GATE_HINTS: Record<string, string> = {
   areas: "Choose both a primary and a secondary area to continue.",
   language: "Choose a language to continue.",
   topics: `Add at least ${TOPICS_MIN} topics to continue.`,
+  tracks: "Add at least one track to continue.",
 };
 
 /** The required details that are still missing in what is saved (the field steps and the recap are built from this). */
@@ -45,6 +46,7 @@ export function gateOpen(key: string): boolean {
     case "about": return val("cd-ab") !== "";
     case "areas": return val("cd-a1") !== "" && val("cd-a2") !== "";
     case "language": return val("cd-lang") !== "";
+    case "tracks": return document.querySelector("[data-track-ready]")?.getAttribute("data-track-ready") === "1";
     case "topics": return document.querySelectorAll('[data-tour="cd-topics"] button[aria-label^="Remove "]').length >= TOPICS_MIN;
     default: return true;
   }
@@ -74,8 +76,8 @@ export function buildTourSteps(open: string[]): TourStep[] {
     ...(missing.areas ? [field("areas", "cd-classification", "Research areas", "Choose a primary and a secondary research area.")] : []),
     ...(missing.language ? [field("language", "cd-language", "Language", "The language papers are written and reviewed in.")] : []),
     ...(missing.topics ? [field("topics", "cd-topics", "Topics", `Add at least ${TOPICS_MIN} topics — the suggestions here can help.`)] : []),
-    ...(anyDetails ? [{ key: "save", path: "settings", targets: ["cd-save"], badge: "required", title: "Click “Update Conference”", text: "This is the button that stores your answers — nothing above is saved until you click it.", note: required, gate: "saved", gateHint: "Click Update Conference to continue." } satisfies TourStep] : []),
-    ...(missing.tracks ? [field("tracks", "ss-tracks", "Tracks", "Choose the tracks authors submit to.", "settings/submissions", false)] : []),
+    ...(anyDetails ? [{ key: "save", path: "settings", targets: ["cd-save"], badge: "required", title: "Click “Update Conference”", text: "This is the button that stores your answers — nothing above is saved until you click it.", note: required, gate: "saved", gateHint: "Fill what the button lists as still needed, then click Update Conference." } satisfies TourStep] : []),
+    ...(missing.tracks ? [field("tracks", "ss-tracks", "Tracks", "Add at least one track: authors pick one when they submit. Use Add track below.", "settings/submissions", false)] : []),
     // Submissions
     optional("submissions", "submissionRules", "nav-settings-submissions", "Submissions", "How authors submit: paper screening, the submission period, presentation types and author guidelines. Open the page and we'll go through them.", { label: "Open Submission Settings", path: "settings/submissions" }),
     onPage("submissions", "sub-screening", "settings/submissions", "ss-screening", "Paper screening", "Switch on an Initial check and a Plagiarism check if you want papers screened before they reach reviewers. Each one adds its own page to your menu."),

@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { AuthorOverviewPage } from "@/features/author/components/author-overview-page";
+import { LegacyRedirect } from "@/components/legacy-redirect";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-// Any slug is valid (it is matched against the signed-in user's own conferences on the client); one is listed so the route can be prerendered.
+// Any slug / label is valid (they are matched against the signed-in user's own conferences and papers on the client); one is listed so the route can be prerendered.
 export function generateStaticParams() {
   return [{ slug: "your-conference" }];
 }
 
-export default async function AuthorOverview({ params }: PageProps<"/conference/[slug]/author">) {
+/** The older address: moves to /author/<conference>/dashboard. */
+export default async function Legacy({ params }: PageProps<"/conference/[slug]/author">) {
   const { slug } = await params;
-  return <AuthorOverviewPage slug={slug} />;
+  return <LegacyRedirect to={`/author/${encodeURIComponent(slug)}/dashboard`} />;
 }

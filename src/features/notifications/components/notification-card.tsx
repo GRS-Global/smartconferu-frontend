@@ -38,7 +38,8 @@ export function NotificationCard({ item, action, audience, busy, onAction, onVie
   const toggle = item.read ? "Mark as unread" : "Mark as read";
   const isEmail = !!item.email;
   // The prototype's card does its page action; an email with nowhere to go opens the email.
-  const clickable = !!action || isEmail;
+  // A notification with nowhere to go is still read by clicking it (so it leaves the bell's count).
+  const clickable = !!action || isEmail || !item.read;
   const secondary = "rounded-lg border border-line bg-white px-3 py-1.5 text-[12.5px] font-bold text-navy transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60";
   const primary = "rounded-lg bg-primary px-3 py-1.5 text-[12.5px] font-bold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60";
   return (
@@ -49,6 +50,7 @@ export function NotificationCard({ item, action, audience, busy, onAction, onVie
         if (busy || (e.target as HTMLElement).closest("button, a, input, select")) return;
         if (action) onAction();
         else if (isEmail) onViewEmail();
+        else if (!item.read) onToggleRead();
       }}
       className={cn(
         "flex gap-3 border-b border-muted px-4 py-4 transition-colors last:border-b-0 hover:bg-canvas sm:gap-3.5 sm:px-5",

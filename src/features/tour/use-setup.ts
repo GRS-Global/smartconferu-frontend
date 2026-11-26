@@ -34,8 +34,11 @@ export const SETUP_EVENT = "conference-setup-change";
 /** Tell the shell (the locked menu, the checklist) that something saved may have changed what is still to do. */
 export const setupChanged = () => window.dispatchEvent(new Event(SETUP_EVENT));
 
+/** The last answer per conference, so the next chair page knows at once whether the menu is locked (the page itself still re-checks). */
+const LAST = new Map<string, ConferenceSetup>();
+
 export function useConferenceSetup(slug: string, enabled: boolean): ConferenceSetup & { reload: () => void } {
-  const [state, setState] = useState<ConferenceSetup>({ ready: false, tasks: [], done: 0, total: DEFS.length, left: 0, published: false, minutesLeft: 0, info: null });
+  const [state, setState] = useState<ConferenceSetup>(() => LAST.get(slug) ?? { ready: false, tasks: [], done: 0, total: DEFS.length, left: 0, published: false, minutesLeft: 0, info: null });
   const [tick, setTick] = useState(0);
   const reload = useCallback(() => setTick((t) => t + 1), []);
   useEffect(() => {
@@ -60,7 +63,9 @@ export function useConferenceSetup(slug: string, enabled: boolean): ConferenceSe
       });
       const doneCount = tasks.filter((t) => t.done).length;
       const published = data.cfpStatus === "published" || data.cfpStatus === "closed";
-      setState({ ready: true, tasks, done: doneCount, total: tasks.length, left: tasks.length - doneCount, published, minutesLeft: Math.max(1, Math.round(tasks.filter((t) => !t.done).reduce((n, t) => n + t.minutes, 0))), info });
+      const next: ConferenceSetup = { ready: true, tasks, done: doneCount, total: tasks.length, left: tasks.length - doneCount, published, minutesLeft: Math.max(1, Math.round(tasks.filter((t) => !t.done).reduce((n, t) => n + t.minutes, 0))), info };
+      LAST.set(slug, next);
+      setState(next);
     }).catch(() => undefined);
     return () => { cancelled = true; };
   }, [slug, enabled, tick]);

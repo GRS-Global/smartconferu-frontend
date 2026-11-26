@@ -59,13 +59,13 @@ export function ContentPanel({ slug, acronym, initialHtml, preview, onDone, onSa
       {/* The editor stays mounted under "Preview": it only reads its text when it first appears, so unmounting it would lose the unsaved edits. */}
       <div style={{ ...CARD, display: mode === "edit" ? undefined : "none" }} className="rounded-xl bg-white p-6">
         <h2 className="mb-4 flex items-center gap-2.5 text-[15px] font-extrabold text-navy"><FileText size={16} aria-hidden="true" className="text-primary" /> CFP Content</h2>
-        <RichTextEditor value={initialHtml} onChange={setHtml} label="CFP content" placeholder="Write the CFP content here…" headings />
+        <RichTextEditor value={initialHtml} onChange={setHtml} label="CFP content" placeholder="Write the CFP content here…" headings maxHeight={480} />
       </div>
       {mode === "preview" && <CfpPublicPreview {...preview} html={richTextToHtml(html)} heading="Preview — how authors will see this CFP" />}
       {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
-        <Button onClick={() => void save()} disabled={busy}>{busy ? "Saving…" : "Save Changes"}</Button>
+        <Button onClick={() => void save()} disabled={busy || html === initialHtml} title={html === initialHtml ? "No changes to save" : undefined}>{busy ? "Saving…" : "Save Changes"}</Button>
       </div>
     </div>
   );

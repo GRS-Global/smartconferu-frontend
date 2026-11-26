@@ -7,6 +7,7 @@ const rows: ConferenceRequest[] = process.env.NEXT_PUBLIC_MOCK_FIXTURES === "par
   : [];
 
 export const mockConferenceRequestService: ConferenceRequestService = {
+  async cancel(id) { const i = rows.findIndex((r) => r.id === id); if (i >= 0) rows.splice(i, 1); },
   async list() { return [...rows]; },
   async create(form) {
     const slug = (form.acronym || form.title).toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 40) || "conf";

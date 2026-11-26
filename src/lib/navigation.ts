@@ -1,11 +1,7 @@
-import { PROTOTYPE_URL } from "@/lib/config";
-
 export interface NavItem {
   label: string;
   /** Internal route of this app. */
   href?: string;
-  /** Screen not yet ported: opens the same page in the Vite prototype. */
-  prototypePath?: string;
 }
 
 export interface NavGroup {
@@ -50,15 +46,25 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 export function resolveHref(item: NavItem): { href: string; external: boolean } {
-  if (item.href) return { href: item.href, external: false };
-  return { href: `${PROTOTYPE_URL}${item.prototypePath ?? "/"}`, external: true };
+  return { href: item.href ?? "/dashboard", external: false };
 }
+
+/** Screens that are announced but not built yet: they open the internal "Coming soon" page (/coming-soon?feature=<key>). */
+export const COMING_SOON = {
+  registration: "Registration",
+  programme: "Programme",
+  "paper-edit": "Edit paper",
+  committee: "Committee workspace",
+  privacy: "Privacy Policy",
+} as const;
+export type ComingSoonKey = keyof typeof COMING_SOON;
+export const comingSoonHref = (key: ComingSoonKey): string => `/coming-soon?feature=${key}`;
 
 export function isActive(item: NavItem, pathname: string): boolean {
   return Boolean(item.href) && (pathname === item.href || pathname.startsWith(`${item.href}/`));
 }
 
-/** Full-page navigation to a screen that lives in the prototype (an absolute URL, not an internal route). */
+/** Full-page navigation to an address (callers use it when a destination is flagged `external`). */
 export function openPrototypePage(url: string): void {
   window.location.href = url;
 }

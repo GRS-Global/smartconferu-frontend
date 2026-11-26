@@ -18,6 +18,8 @@ import { PaperSplit } from "./paper-split";
 import { EnhanceReviewDialog } from "./enhance-review-dialog";
 import { ReviewFormBody } from "./review-form-preview";
 import { useChairPaper } from "../use-chair-paper";
+import { chairPaperHref } from "@/lib/routes";
+import { useCanonicalPath } from "@/lib/use-canonical-path";
 
 /* The chair's own review of a paper, on a page of its own (the prototype's ChairAddReviewPage, /submissions/:id/chair/review/add): the paper's header and
    abstract, a note that the review counts like any reviewer's (the average and Compare reviews, marked as the chair's; the authors see comments only if
@@ -38,6 +40,7 @@ const writeDraft = (key: string, d: { values: ReviewValues; savedAt: number } | 
 
 export function ChairAddReviewPage({ label }: { label: string }) {
   const { state, retry } = useChairPaper(label);
+  useCanonicalPath(state.status === "ready" ? chairPaperHref(state.conference.id, label, "review/add") : null);
   const gate = workspaceGate(state, retry, { title: label, loadingLabel: "Loading this paper", missingTitle: "We couldn't find that paper.", missingText: "It doesn't exist, or you are not a chair of its conference.", errorTitle: "Couldn't load this paper." });
   if (gate || state.status !== "ready") return gate;
   return <AddReview label={label} state={state} />;
@@ -68,7 +71,7 @@ function AddReview({ label, state }: { label: string; state: Extract<ReturnType<
   const answered = required.filter((f) => isFieldAnswered(values[f.id])).length;
   const complete = answered === required.length;
   const confBase = `/chair/${encodeURIComponent(conference.id)}`;
-  const back = `/submissions/${encodeURIComponent(paper.id)}/chair/review`;
+  const back = chairPaperHref(conference.id, paper.id, "review");
   const submit = async () => {
     setBusy(true); setError("");
     try {

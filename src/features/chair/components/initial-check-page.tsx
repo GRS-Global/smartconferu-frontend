@@ -10,7 +10,6 @@ import { useIdSort } from "@/lib/use-id-sort";
 import { useRangeSelect } from "@/lib/use-range-select";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
-import { PROTOTYPE_URL } from "@/lib/config";
 import { sendActionEmails } from "@/services/action-emails";
 import { getChairService } from "@/services/chair";
 import type { ChairPaper, ScreeningCheck, ScreeningFile, ScreeningRecord } from "@/types/chair";
@@ -18,6 +17,7 @@ import { CHECK_DECISIONS, COLUMN_OPTIONS, EMAILED, evaluateCheck, type CheckItem
 import { checkDecisionOf, inPeerReview, screeningStageOf } from "../stage";
 import { useChairConference } from "../use-chair-conference";
 import { ScreeningSearchParam } from "./screening-search-param";
+import { chairPaperHref } from "@/lib/routes";
 import {
   AutoStatus, AutoTag, BulkBar, Btn, CARD, CELL_INPUT, CELL_INPUT_ST, CellHint, DecisionChip, DecisionSelect, DecisionWarning, EMAIL_OPTIONS, EmailCell, FilterSelect, FilterText, IdCell, IdSortLabel, LoadingOverlay, LockNote, MovedNote, PlainText,
   BulkConfirmModal, RED_ST, ScreeningSettingsButton, ScreeningModal, ScreeningToast, SelectBox, SubmittedCell, SUBMITTED_OPTIONS, SummaryChip, TableFrame, Th, TitleCell, Toolbar, YES_NO, YesNoSwitch, YesNoText, decisionInfo, isControl, submittedBucket, yesNo, DueLine, type ScreeningToastData,
@@ -92,7 +92,7 @@ export function InitialCheckPage({ slug }: { slug: string }) {
     </ConferenceShell>
   );
   if (!data.screening.initialCheck) {
-    return shell(<div className="p-8"><div style={CARD} className="mx-auto max-w-xl rounded-2xl bg-white px-6 py-14 text-center"><Lock size={26} aria-hidden="true" className="mx-auto mb-3 text-ink-faint" /><h2 className="text-base font-bold text-navy">Initial Check is turned off for this conference</h2><p className="mb-4 mt-1 text-sm text-ink-muted">Turn it on in Conference Settings › Submissions › Paper Screening.</p><a href={`${PROTOTYPE_URL}/prototype/chair/${e}/settings/submissions`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white"><Settings2 size={14} aria-hidden="true" /> Open Screening Settings</a></div></div>);
+    return shell(<div className="p-8"><div style={CARD} className="mx-auto max-w-xl rounded-2xl bg-white px-6 py-14 text-center"><Lock size={26} aria-hidden="true" className="mx-auto mb-3 text-ink-faint" /><h2 className="text-base font-bold text-navy">Initial Check is turned off for this conference</h2><p className="mb-4 mt-1 text-sm text-ink-muted">Turn it on in Conference Settings › Submissions › Paper Screening.</p><a href={`/chair/${e}/settings/submissions`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white"><Settings2 size={14} aria-hidden="true" /> Open Screening Settings</a></div></div>);
   }
 
   const versionsOf = (p: ChairPaper) => Math.max(p.versions, (files[p.dbId] ?? []).length, 1);
@@ -266,7 +266,7 @@ export function InitialCheckPage({ slug }: { slug: string }) {
       >
         <td className="text-center">{latest && !locked && <SelectBox label={`Select ${p.id}`} checked={isSel} {...pick.box(p.dbId)} />}</td>
         <td><IdCell paper={p} n={n} latest={latest} count={count} open={open.has(p.dbId)} onToggle={() => toggleRow(p.dbId)} onOpenCheck={() => router.push(checkHref(p))} /></td>
-        <td><TitleCell paper={p} latest={latest} onOpenDetails={() => router.push(`/submissions/${encodeURIComponent(p.id)}/chair`)} onOpenPdf={() => void openFile(p, n, false)} onDownload={() => void openFile(p, n, true)} onOpenCheck={latest ? () => router.push(checkHref(p)) : null} /></td>
+        <td><TitleCell paper={p} latest={latest} onOpenDetails={() => router.push(chairPaperHref(slug, p.id))} onOpenPdf={() => void openFile(p, n, false)} onDownload={() => void openFile(p, n, true)} onOpenCheck={latest ? () => router.push(checkHref(p)) : null} /></td>
         <td><SubmittedCell at={v.uploadedAt} n={n} />{latest && <AutoStatus auto={v.auto} doubleBlind={doubleBlind} />}</td>
         {latest && !locked ? (
           <>

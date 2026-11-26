@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Bell, Calendar, Check, ChevronRight, Clock, CreditCard, FileCheck, FileText, Link2, Mail, Send, Settings, Star, Ticket, Users, XCircle, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { CopyButton } from "@/components/ui/copy-button";
 import { useEffect, useState, type ReactNode } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { AnimatedNumber } from "@/components/ui/animated-number";
@@ -11,13 +12,14 @@ import { ConferenceShell } from "@/features/workspace/components/conference-shel
 import { ConferenceHero, DeadlineChip, HeroLink } from "@/features/workspace/components/hero";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
 import { SetupGuide, type SetupStage } from "./setup-guide";
-import { PROTOTYPE_URL } from "@/lib/config";
+import { comingSoonHref } from "@/lib/navigation";
 import { getNotificationService } from "@/services/notifications";
 import type { AppNotification } from "@/types/notification";
 import type { ChairPaper } from "@/types/chair";
 import { CHAIR_STAGES, chairStageOf } from "../stage";
 import { prRowOf } from "../peer-review";
 import { useChairConference } from "../use-chair-conference";
+import { cfpManagerHref, chairPaperHref } from "@/lib/routes";
 
 /* The chair's Dashboard for one conference (the prototype's ChairConferenceOverview), markup for markup: the conference card, the
    "Submission link" card, the setup card, "Needs your attention", the metric strip, the submission pipeline, the papers waiting on the
@@ -211,17 +213,6 @@ function ChecklistRow({ done, label, href, external }: { done: boolean; label: s
   );
 }
 
-/** The small "Share" button (copies a link; the prototype's ShareLinkButton). */
-function ShareButton({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => { try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* clipboard unavailable here */ } };
-  return (
-    <button type="button" onClick={() => { void copy(); }} style={{ border: "1.5px solid var(--border)", color: "var(--ink-muted)", background: "#FFFFFF" }} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-colors hover:bg-canvas">
-      {copied ? <Check size={14} strokeWidth={2.5} aria-hidden="true" /> : <Link2 size={14} aria-hidden="true" />}
-      {copied ? "Copied!" : "Share"}
-    </button>
-  );
-}
 
 export function ChairOverviewPage({ slug }: { slug: string }) {
   const { state, retry } = useChairConference(slug, { board: true, pool: true, details: true, info: true, settings: true });
@@ -240,7 +231,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
   const e = encodeURIComponent(conference.id);
   const review = (filter: string) => `/chair/${e}/peer-review?filter=${filter}`;
   const reviewers = `/chair/${e}/peer-review/reviewers`;
-  const proto = (path: string) => `${PROTOTYPE_URL}/prototype${path}`;
+  const registrations = comingSoonHref("registration");
 
   const subs = data.papers;
   const active = subs.filter((p) => !p.withdrawn);
@@ -351,7 +342,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
   const profilePct = profileFields.length ? Math.round((profileFields.filter((v) => filled(v)).length / profileFields.length) * 100) : 0;
   const cfpOn = data.cfpStatus === "published" || data.cfpStatus === "closed";
   const checklist = [
-    { done: cfpOn, label: "Call for Papers published", href: proto(`/cfp-manager/${e}`), external: true },
+    { done: cfpOn, label: "Call for Papers published", href: cfpManagerHref(slug, "publish"), external: false },
     { done: pool.tracks.length > 1 || (pool.tracks.length === 1 && pool.tracks[0] !== "General Track"), label: "Tracks defined", href: `/chair/${e}/settings` },
     { done: pool.reviewers.length >= 3, label: "At least 3 reviewers invited", href: reviewers },
     { done: maxAssigned, label: "Every submission has reviewers", href: review("needs") },
@@ -363,8 +354,8 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
   const quick: Array<{ label: string; icon: LucideIcon; href: string; external?: boolean }> = [
     { label: "Assign reviewers", icon: Users, href: review("needs") },
     { label: "Record decisions", icon: FileCheck, href: review("ready") },
-    { label: "Edit Call for Papers", icon: Send, href: proto(`/cfp-manager/${e}`), external: true },
-    { label: "Registrations", icon: Ticket, href: proto(`/chair/${e}/registration`), external: true },
+    { label: "Edit Call for Papers", icon: Send, href: cfpManagerHref(slug), external: false },
+    { label: "Registrations", icon: Ticket, href: registrations },
     { label: "Conference details", icon: Settings, href: `/chair/${e}/settings` },
   ];
   const comingSoon: Array<{ label: string; icon: LucideIcon }> = [{ label: "Program & schedule", icon: Calendar }, { label: "Payments & invoicing", icon: CreditCard }, { label: "Communications", icon: Mail }];
@@ -405,7 +396,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
             </div>
             {setupLeft > 0
               ? <button type="button" disabled title={`${setupLeft} thing${plural(setupLeft)} left to fill in in "Set up your conference"`} className="h-9 cursor-not-allowed rounded-xl bg-primary px-4 text-xs font-bold text-white opacity-50">Publish CFP</button>
-              : <a href={proto(`/cfp-draft/${e}/publish`)} className="inline-flex h-9 items-center rounded-xl bg-primary px-4 text-xs font-bold text-white transition-shadow hover:shadow-[0_0_24px_rgba(124,58,237,0.35)]">Publish CFP</a>}
+              : <Link href={cfpManagerHref(slug, "publish")} className="inline-flex h-9 items-center rounded-xl bg-primary px-4 text-xs font-bold text-white transition-shadow hover:shadow-[0_0_24px_rgba(124,58,237,0.35)]">Publish CFP</Link>}
           </div>
         )}
         {data.cfpStatus === "published" && (
@@ -416,7 +407,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
               <p className="text-xs text-ink-muted">Send this to authors — they sign in (or register) and submit their paper here.</p>
               <code className="break-all font-sans text-xs text-primary">{submitUrl}</code>
             </div>
-            <ShareButton url={submitUrl} />
+            <CopyButton text={submitUrl} label="Copy link" />
           </div>
         )}
 
@@ -439,7 +430,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
           <Stat icon={Check} label="Decisions" value={decided} sub={`of ${rows.length}`} href={review("decided")} legend={[{ label: "Acc", value: accepted, color: "var(--success)" }, { label: "Rej", value: rejected, color: "var(--danger)" }, { label: "Pending", value: Math.max(0, rows.length - decided), color: "var(--warning)" }]} />
           <Stat icon={Star} label="Acceptance rate" value={rate == null ? "—" : `${rate}%`} sub={rate == null ? "no decisions" : `${accepted}/${decided}`} />
           <Stat icon={Users} label="Reviewers" value={pool.reviewers.length} sub={loads.length ? `${(loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1)} avg load` : "none active"} href={reviewers} />
-          <Stat icon={Ticket} label="Registrations" value="—" sub="opens the prototype" href={proto(`/chair/${e}/registration`)} external />
+          <Stat icon={Ticket} label="Registrations" value="—" sub="coming soon" href={registrations} />
         </div>
 
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-3">
@@ -461,7 +452,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
                     <div key={r.paper.dbId} className="flex items-center gap-3 py-1.5">
                       <span className="w-16 shrink-0 text-[11px] font-bold text-ink-faint">{r.paper.id}</span>
                       <div className="min-w-0 flex-1"><div className="truncate text-xs font-semibold text-ink">{r.paper.title}</div><div className="text-[11px] text-ink-muted">{decide ? "All reviews in — needs a decision" : "No reviewers assigned"}</div></div>
-                      <Link href={decide ? `/submissions/${encodeURIComponent(r.paper.id)}/chair/review` : review("needs")} className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-opacity hover:opacity-90 ${decide ? "bg-primary text-white" : "bg-primary-soft text-primary"}`}>{decide ? "Decide" : "Assign"}</Link>
+                      <Link href={decide ? chairPaperHref(slug, r.paper.id, "review") : review("needs")} className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-opacity hover:opacity-90 ${decide ? "bg-primary text-white" : "bg-primary-soft text-primary"}`}>{decide ? "Decide" : "Assign"}</Link>
                     </div>
                   ))}
                 </div>
@@ -491,7 +482,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
                 <div className="mt-5 border-t border-muted pt-4">
                   <div className="mb-1 flex items-center gap-2"><AlertTriangle size={13} aria-hidden="true" className="text-warning" /><span className="text-xs font-bold text-navy">Calls that need judgement</span><span className="rounded-full bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning">{borderline.length}</span></div>
                   <p className="mb-2.5 text-[11px] text-ink-faint">Undecided papers where reviewers disagree, or the average sits right on the accept line.</p>
-                  <div className="space-y-1.5">{borderline.slice(0, 5).map((r) => <Link key={r.paper.dbId} href={`/submissions/${encodeURIComponent(r.paper.id)}/chair/review`} className="flex w-full items-center gap-2.5 rounded-lg border border-line px-3 py-2 text-left transition-colors hover:border-primary hover:bg-canvas"><span className="w-16 shrink-0 text-[11px] font-bold text-ink-faint">{r.paper.id}</span><span className="flex-1 truncate text-xs font-semibold text-ink">{r.paper.title}</span>{r.split && <span className="shrink-0 rounded bg-warning-soft px-1.5 py-0.5 text-[9px] font-bold text-warning">SPLIT VOTE</span>}{r.avg != null && <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-ink-muted"><Star size={10} aria-hidden="true" /> {r.avg}</span>}<ChevronRight size={13} aria-hidden="true" className="shrink-0 text-ink-faint" /></Link>)}</div>
+                  <div className="space-y-1.5">{borderline.slice(0, 5).map((r) => <Link key={r.paper.dbId} href={chairPaperHref(slug, r.paper.id, "review")} className="flex w-full items-center gap-2.5 rounded-lg border border-line px-3 py-2 text-left transition-colors hover:border-primary hover:bg-canvas"><span className="w-16 shrink-0 text-[11px] font-bold text-ink-faint">{r.paper.id}</span><span className="flex-1 truncate text-xs font-semibold text-ink">{r.paper.title}</span>{r.split && <span className="shrink-0 rounded bg-warning-soft px-1.5 py-0.5 text-[9px] font-bold text-warning">SPLIT VOTE</span>}{r.avg != null && <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-ink-muted"><Star size={10} aria-hidden="true" /> {r.avg}</span>}<ChevronRight size={13} aria-hidden="true" className="shrink-0 text-ink-faint" /></Link>)}</div>
                 </div>
               )}
             </Panel>
@@ -517,7 +508,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
                     const r = rows.find((x) => x.paper.dbId === p.dbId);
                     const total = r?.reviewers.length ?? 0; const done = r?.reviewsIn ?? 0;
                     return (
-                      <Link key={p.dbId} href={`/submissions/${encodeURIComponent(p.id)}/chair/review`} className="block rounded-xl border border-line p-4 transition-all hover:border-primary hover:shadow-sm">
+                      <Link key={p.dbId} href={chairPaperHref(slug, p.id, "review")} className="block rounded-xl border border-line p-4 transition-all hover:border-primary hover:shadow-sm">
                         <div className="flex items-start justify-between gap-3"><div className="min-w-0 flex-1"><div className="mb-0.5 text-[11px] font-semibold text-ink-faint">{p.id}</div><div className="mb-1 text-sm font-semibold leading-snug text-ink">{p.title}</div><div className="truncate text-xs text-ink-muted">{p.authors.map((a) => a.name).join(", ")}</div></div><StatusBadge status={statusKeyOf(p)} /></div>
                         {total > 0 && <div className="mt-2.5 flex items-center gap-2"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div style={{ width: `${(done / total) * 100}%`, background: done >= total ? "var(--success)" : "var(--primary)" }} className="h-full" /></div><span className="shrink-0 text-[10px] font-bold text-ink-faint">{done}/{total} reviews</span></div>}
                       </Link>
@@ -552,7 +543,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
               )}
             </Panel>
 
-            <Panel title={<span className="flex items-center gap-2"><Ticket size={14} aria-hidden="true" /> Registrations</span>} aside={<a href={proto(`/chair/${e}/registration`)} className="text-xs font-bold text-primary hover:underline">Open</a>}>
+            <Panel title={<span className="flex items-center gap-2"><Ticket size={14} aria-hidden="true" /> Registrations</span>} aside={<a href={registrations} className="text-xs font-bold text-primary hover:underline">Open</a>}>
               <p className="text-xs text-ink-faint">No registrations yet.</p>
             </Panel>
 

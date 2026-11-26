@@ -16,6 +16,7 @@ import { sendActionEmails } from "@/services/action-emails";
 import { DEFAULT_CFP_PERMISSIONS, type CfpRow } from "@/types/cfp";
 import type { ConferenceInfo, PoolReviewer } from "@/types/chair";
 import { TEMPLATE_SECTIONS, templateDoc, type TemplateKey } from "../template";
+import { cfpManagerHref } from "@/lib/routes";
 
 /* New Call for Papers (the prototype's NewCFPFormPage and CreateCFPContentPage) for one of your conferences: five steps over the conference's own details
    (Basics, Conference Info, Dates, Areas & Topics, Review), saved to the conference; then how the CFP's text should start — empty, from a template of
@@ -97,7 +98,7 @@ function WizardForm({ slug, conference, info, retry, reload }: { slug: string; c
         } catch { failed = true; }
       }
       reload();
-      router.push(`/cfp-manager/${encodeURIComponent(slug)}?tab=${failed ? "managers" : "content"}`);
+      router.push(cfpManagerHref(slug, failed ? "managers" : "content"));
     } catch (e) {
       if (e instanceof AuthRequiredError) retry(); else setError(e instanceof Error ? e.message : "Something went wrong.");
       setBusy(false);

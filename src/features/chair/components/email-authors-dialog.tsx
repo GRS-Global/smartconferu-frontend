@@ -7,6 +7,7 @@ import { INPUT_CLASS } from "@/components/ui/field";
 import { frameEmailHtml } from "@/lib/email-frame";
 import { sendEmailEvent } from "@/services/action-emails";
 import type { ChairPaper } from "@/types/chair";
+import { authorPaperHref } from "@/lib/routes";
 
 /* Chair › a paper's page › "Email authors" (the prototype's EmailAuthorsModal): write to the authors of this one paper. The greeting ("Hi <first name>,") is
    fixed around what the chair writes and the sign-off comes from the email's frame, so nothing important is deleted by accident and no {{tokens}} are on
@@ -33,7 +34,7 @@ function textToHtml(text: string): string {
   }).join("");
 }
 
-export function EmailAuthorsDialog({ open, paper, conferenceName, acronym, onClose, onSent }: { open: boolean; paper: ChairPaper; conferenceName: string; acronym: string; onClose: () => void; onSent: (count: number, notice: string | null) => void }) {
+export function EmailAuthorsDialog({ open, paper, conferenceName, acronym, conferenceSlug, onClose, onSent }: { open: boolean; paper: ChairPaper; conferenceName: string; acronym: string; /** For the paper link the authors get. */ conferenceSlug: string; onClose: () => void; onSent: (count: number, notice: string | null) => void }) {
   const authors = paper.authors.filter((a) => a.email.trim());
   const [picked, setPicked] = useState<string[]>(() => { const c = authors.filter((a) => a.corresponding).map((a) => a.email); return c.length ? c : authors.slice(0, 1).map((a) => a.email); });
   const [subject, setSubject] = useState(`${paper.id}: `);
@@ -48,7 +49,7 @@ export function EmailAuthorsDialog({ open, paper, conferenceName, acronym, onClo
   const clean = body.split("\n").filter((l) => !/^\s*[•-]\s*$/.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim();
   const html = textToHtml(`Hi {{first_name}},\n\n${clean}`).replaceAll("{{submission_link}}", '<a href="{{submission_link}}" style="color:#4F46E5;">{{submission_link}}</a>');
   const first = authors.find((a) => picked.includes(a.email)) ?? authors[0];
-  const link = typeof window === "undefined" ? "" : `${window.location.origin}/submissions/${encodeURIComponent(paper.id)}/author`;
+  const link = typeof window === "undefined" ? "" : `${window.location.origin}${authorPaperHref(conferenceSlug, paper.id)}`;
   const previewDoc = () => {
     const filled = html.replaceAll("{{first_name}}", esc(first ? firstName(first.name) : "there")).replaceAll("{{paper_title}}", esc(paper.title)).replaceAll("{{submission_id}}", esc(paper.id)).replaceAll("{{submission_link}}", esc(link));
     const framed = frameEmailHtml(filled, { conferenceName, conferenceAcronym: acronym, title: subject.replace(`${paper.id}:`, "").trim() });

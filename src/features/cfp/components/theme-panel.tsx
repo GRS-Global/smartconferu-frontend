@@ -63,7 +63,7 @@ export function ThemePanel({ slug, acronym, currentId, preview, onDone, onSaved,
       {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
-        <button type="button" onClick={() => void apply()} disabled={busy} style={{ background: theme.accent, transition: "background 160ms ease" }} className="cursor-pointer rounded-lg px-6 py-2.5 text-sm font-bold text-white disabled:opacity-60">{busy ? "Applying…" : "Apply Theme"}</button>
+        <button type="button" onClick={() => void apply()} disabled={busy || selected === currentId} title={selected === currentId ? "No changes to save" : undefined} style={{ background: theme.accent, transition: "background 160ms ease" }} className="cursor-pointer rounded-lg px-6 py-2.5 text-sm font-bold text-white disabled:opacity-60">{busy ? "Applying…" : "Apply Theme"}</button>
       </div>
     </div>
   );

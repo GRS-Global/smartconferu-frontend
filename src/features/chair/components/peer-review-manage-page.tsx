@@ -17,6 +17,7 @@ import { ReviewFormPreview } from "./review-form-preview";
 import { ReviewFormBuilder } from "./review-form-builder";
 import { ReviewSettingsPanel } from "./review-settings-page";
 import { getChairService } from "@/services/chair";
+import { chairPaperHref } from "@/lib/routes";
 
 /* Peer Review › Manage (the prototype's PeerReviewPage): the Form tab and the Reviews tab. Reviews lists every reviewer of every paper
    as a row — the review status, when it was last sent and one column per scored / chosen field of the review form — with search, a
@@ -139,7 +140,7 @@ export function PeerReviewManagePage({ slug }: { slug: string }) {
                     const on = selected.includes(r.key);
                     const m = REVIEW_STATUS[r.state];
                     return (
-                      <tr key={r.key} {...pick.row(r.key)} onClick={() => router.push(`/submissions/${encodeURIComponent(r.paper.id)}/chair/review`)} className={`cursor-pointer transition-colors hover:bg-canvas ${on ? "bg-primary-soft" : ""}`}>
+                      <tr key={r.key} {...pick.row(r.key)} onClick={() => router.push(chairPaperHref(slug, r.paper.id, "review"))} className={`cursor-pointer transition-colors hover:bg-canvas ${on ? "bg-primary-soft" : ""}`}>
                         <td className="sticky left-0 z-[1] w-11 min-w-[44px] bg-inherit py-3 pl-4" onClick={(ev) => ev.stopPropagation()}><input type="checkbox" checked={on} aria-label={`Select ${r.paper.title}`} {...pick.box(r.key)} /></td>
                         <td title={r.paper.title} className="sticky left-11 z-[1] min-w-[260px] max-w-[260px] truncate bg-inherit px-4 py-3 font-semibold text-primary shadow-[2px_0_4px_-2px_rgba(15,23,42,0.12)]">{r.paper.title}</td>
                         <td className="whitespace-nowrap px-5 py-3 text-ink-faint">{r.paper.id}</td>

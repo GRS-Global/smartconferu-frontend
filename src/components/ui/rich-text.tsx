@@ -82,7 +82,7 @@ function Tool({ label, onRun, children }: { label: string; onRun: () => void; ch
 }
 
 /** `onChange(html)` is called as the text is typed ("" when it is empty). The field keeps its own content: `value` only seeds it. */
-export function RichTextEditor({ value, onChange, placeholder, label, headings = false }: { value: string; onChange: (html: string) => void; placeholder?: string; label: string; /** Adds "Section heading" and "Normal text" (the CFP's text has headed sections). */ headings?: boolean }) {
+export function RichTextEditor({ value, onChange, placeholder, label, headings = false, maxHeight }: { value: string; onChange: (html: string) => void; placeholder?: string; label: string; /** Adds "Section heading" and "Normal text" (the CFP's text has headed sections). */ headings?: boolean; /** Longer text scrolls inside the box (px) instead of making the page taller. */ maxHeight?: number }) {
   const box = useRef<HTMLDivElement>(null);
   const [empty, setEmpty] = useState(!hasRichText(value));
   useEffect(() => {
@@ -116,7 +116,7 @@ export function RichTextEditor({ value, onChange, placeholder, label, headings =
       </div>
       <div className="relative">
         {empty && placeholder && <div aria-hidden="true" className="pointer-events-none absolute left-[15.5px] top-3 text-sm text-ink-faint">{placeholder}</div>}
-        <div ref={box} role="textbox" aria-multiline="true" aria-label={label} contentEditable suppressContentEditableWarning onInput={read} onPaste={paste} style={{ border: "1.5px solid var(--border)" }} className="rich-text-content min-h-[160px] rounded-b-[0.7rem] bg-white px-[14px] py-3 !text-sm !leading-[1.6] !text-ink outline-none [&_li]:!m-0 [&_li]:!leading-[1.5] focus:!border-primary-soft-border" />
+        <div ref={box} role="textbox" aria-multiline="true" aria-label={label} contentEditable suppressContentEditableWarning onInput={read} onPaste={paste} style={{ border: "1.5px solid var(--border)", ...(maxHeight ? { maxHeight, overflowY: "auto" as const } : {}) }} className="rich-text-content min-h-[160px] rounded-b-[0.7rem] bg-white px-[14px] py-3 !text-sm !leading-[1.6] !text-ink outline-none [&_li]:!m-0 [&_li]:!leading-[1.5] focus:!border-primary-soft-border" />
       </div>
     </div>
   );

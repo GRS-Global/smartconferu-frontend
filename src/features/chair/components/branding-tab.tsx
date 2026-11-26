@@ -9,7 +9,8 @@ import { ConferenceMonogram } from "@/features/workspace/components/conference-s
    the emails. Drag a file onto the box or browse; nothing is saved until "Save logo" (Discard goes back to the saved one, Remove takes it off). The logo is stored in the
    public storage folder of the conference (`conferences.logo_path`); until there is one the monogram is used. The previews show where it will appear. */
 
-const ACCEPT = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+// What the server takes for a logo (PNG, JPEG, WebP); a GIF or SVG would be refused only after the upload.
+const ACCEPT = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 2 * 1024 * 1024;
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 // A checkerboard, so the edges of a transparent PNG / SVG are visible.
@@ -18,7 +19,7 @@ const size = (b: number) => (b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).t
 
 interface Pending { url: string; name: string; size: number | null; file: File | null }
 
-export function BrandingTab({ slug, acronym, name, logoUrl, onSaved }: { slug: string; acronym: string; name: string; logoUrl: string; onSaved: (url: string) => void }) {
+export function BrandingTab({ slug, acronym, name, logoUrl, onSaved, locked }: { slug: string; acronym: string; name: string; logoUrl: string; onSaved: (url: string) => void; /** Why the logo can't be changed right now (it is then shown read-only). */ locked?: string }) {
   const [saved, setSaved] = useState(logoUrl);
   const [pending, setPending] = useState<Pending | null>(logoUrl ? { url: logoUrl, name: "Current logo", size: null, file: null } : null);
   const [dragOver, setDragOver] = useState(false);
@@ -29,7 +30,7 @@ export function BrandingTab({ slug, acronym, name, logoUrl, onSaved }: { slug: s
 
   const handle = (file: File | undefined) => {
     if (!file) return;
-    if (!ACCEPT.includes(file.type)) { setError("Please choose a JPEG, PNG, GIF or SVG image."); return; }
+    if (!ACCEPT.includes(file.type)) { setError("Please choose a JPEG, PNG or WebP image."); return; }
     if (file.size > MAX_BYTES) { setError("That image is too large — please choose one under 2MB."); return; }
     setError(""); setDone(false);
     const reader = new FileReader();
@@ -60,7 +61,7 @@ export function BrandingTab({ slug, acronym, name, logoUrl, onSaved }: { slug: s
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary"><Camera size={16} aria-hidden="true" /></div>
             <div className="min-w-0"><h3 className="text-base font-bold leading-snug text-navy">Conference logo</h3><p className="mt-0.5 text-xs text-ink-faint">Shown beside {acronym}&apos;s name on the CFP, submission pages and emails.</p></div>
           </div>
-          <input ref={input} type="file" accept={ACCEPT.join(",")} className="hidden" aria-label="Choose a logo" onChange={(e) => { handle(e.target.files?.[0]); e.target.value = ""; }} />
+          <input ref={input} disabled={Boolean(locked)} type="file" accept={ACCEPT.join(",")} className="hidden" aria-label="Choose a logo" onChange={(e) => { handle(e.target.files?.[0]); e.target.value = ""; }} />
           <div className="grid items-stretch gap-5 sm:grid-cols-[168px_minmax(0,1fr)]">
             <div style={{ ...CHECKER, border: "1px solid var(--border)" }} className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl p-4">
               {pending
@@ -80,12 +81,12 @@ export function BrandingTab({ slug, acronym, name, logoUrl, onSaved }: { slug: s
             <div style={{ border: "1px solid var(--border)" }} className="mt-4 flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
               <FileText size={15} aria-hidden="true" className="shrink-0 text-ink-faint" />
               <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">{pending.name}</div><div className="text-xs text-ink-faint">{pending.size != null ? size(pending.size) : "Saved logo"}</div></div>
-              <button type="button" onClick={open} style={{ border: "1.5px solid var(--border)" }} className="h-8 cursor-pointer rounded-lg px-3 text-xs font-semibold text-ink-soft transition-colors hover:border-primary hover:text-primary">Replace</button>
-              <button type="button" onClick={() => setPending(null)} className="h-8 cursor-pointer rounded-lg px-3 text-xs font-semibold text-danger transition-colors hover:bg-danger-soft">Remove</button>
+              <button type="button" disabled={Boolean(locked)} onClick={open} style={{ border: "1.5px solid var(--border)" }} className="h-8 cursor-pointer rounded-lg px-3 text-xs font-semibold text-ink-soft transition-colors hover:border-primary hover:text-primary">Replace</button>
+              <button type="button" disabled={Boolean(locked)} onClick={() => setPending(null)} className="h-8 cursor-pointer rounded-lg px-3 text-xs font-semibold text-danger transition-colors hover:bg-danger-soft">Remove</button>
             </div>
           )}
           <div className="mt-5 flex flex-wrap gap-2">
-            {([[FileCheck, "JPEG, PNG, GIF or SVG"], [Download, "Up to 2 MB"], [Layers, "Square, 256 × 256 px or larger"], [Sparkles, "Transparent background looks best"]] as const).map(([Icon, text]) => (
+            {([[FileCheck, "JPEG, PNG or WebP"], [Download, "Up to 2 MB"], [Layers, "Square, 256 × 256 px or larger"], [Sparkles, "Transparent background looks best"]] as const).map(([Icon, text]) => (
               <span key={text} style={{ border: "1px solid var(--border)" }} className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink-muted"><Icon size={11} aria-hidden="true" /> {text}</span>
             ))}
           </div>
@@ -96,7 +97,7 @@ export function BrandingTab({ slug, acronym, name, logoUrl, onSaved }: { slug: s
               : <span className="text-xs text-ink-faint">{saved ? "Your saved logo is shown." : "No logo saved yet — the monogram is used."}</span>}
           <span className="flex-1" />
           <button type="button" onClick={discard} disabled={!dirty || busy} className="h-10 cursor-pointer rounded-xl px-4 text-sm font-semibold text-ink-muted transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">Discard</button>
-          <button type="button" onClick={() => void save()} disabled={!dirty || busy} style={{ background: dirty ? "var(--primary)" : "var(--border-strong)" }} className="h-10 cursor-pointer rounded-xl px-5 text-sm font-bold text-white transition-colors disabled:cursor-not-allowed">{busy ? "Saving…" : pending || !saved ? "Save logo" : "Remove logo"}</button>
+          <button type="button" onClick={() => void save()} disabled={!dirty || busy || Boolean(locked)} style={{ background: dirty ? "var(--primary)" : "var(--border-strong)" }} className="h-10 cursor-pointer rounded-xl px-5 text-sm font-bold text-white transition-colors disabled:cursor-not-allowed">{busy ? "Saving…" : pending || !saved ? "Save logo" : "Remove logo"}</button>
         </div>
       </div>
 

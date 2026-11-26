@@ -141,8 +141,12 @@ export interface AdminConference {
   suspended: boolean;
 }
 export const loadConferences = (status?: ConferenceStatus) => get<AdminConference[]>(`/admin/conferences${qs({ status })}`);
-export const decideConferenceRequest = (id: string, approve: boolean, note?: string) =>
-  post<void>(`/admin/conferences/${id}/decision`, { approve, note: note || null });
+/** The email text typed in the decision popup; `saveAsDefault` keeps it as the text of the next decisions. */
+export interface DecisionEmailEdit { subject: string; body: string; saveAsDefault: boolean }
+export const decideConferenceRequest = (id: string, approve: boolean, note?: string, email?: DecisionEmailEdit) =>
+  post<void>(`/admin/conferences/${id}/decision`, { approve, note: note || null, ...(email ? { emailSubject: email.subject, emailBody: email.body, saveEmailAsDefault: email.saveAsDefault } : {}) });
+/** Both decision emails as plain text (the popup's starting point) and the logo they carry. */
+export const loadDecisionEmails = () => get<import("./decision-email").DecisionEmails>("/admin/decision-emails");
 /** "Extend license": the license runs until `expiry` (YYYY-MM-DD); the chairs are told. */
 export const extendLicense = (id: string, expiry: string) => post<void>(`/admin/conferences/${id}/license`, { expiry });
 
@@ -172,7 +176,9 @@ export const decideLicenseRequest = (id: string, approve: boolean, v: { newExpir
 // ---------- Calls for Papers waiting for approval ----------
 
 export type CfpState = "draft" | "in_review" | "published" | "rejected" | "closed";
-export const loadCfps = (status: CfpState = "in_review") => get<AdminConference[]>(`/admin/cfps${qs({ status })}`);
+/** A conference in CFP Page Review: the page the chair chose and when the CFP was sent for approval. */
+export interface AdminCfp extends AdminConference { cfpPage: string | null; cfpSubmittedAt: string | null }
+export const loadCfps = (status: CfpState = "in_review") => get<AdminCfp[]>(`/admin/cfps${qs({ status })}`);
 export const decideCfp = (conferenceId: string, approve: boolean, note?: string | null) => post<void>(`/admin/conferences/${conferenceId}/cfp/decision`, { approve, note: note || null });
 
 // ---------- queue working state (claims, notes, messages) ----------

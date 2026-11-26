@@ -222,9 +222,20 @@ export function ReviewBody(p: ReviewBodyProps) {
           })}
           {tiles.length === 0 && <p className="text-sm text-ink-soft">This conference has no decision types yet.</p>}
         </div>
-        <label className="mt-4 flex items-center gap-1.5 text-[13px] font-bold text-navy" htmlFor="decision-note"><MessageSquare size={13} aria-hidden="true" /> Note to authors <span className="font-normal text-ink-faint">· optional</span></label>
-        <textarea id="decision-note" value={p.text} onChange={(e) => p.onNote(e.target.value)} disabled={p.notified} rows={5} maxLength={5000} placeholder="Sum up the reviews in your own words — what the authors did well and what to fix next. E.g. “All three reviewers liked the method. For the final version, add the statistical tests asked for in Section 4.”" className="mt-1.5 w-full rounded-xl border-[1.5px] border-line bg-canvas p-3 text-[13px] leading-relaxed outline-none focus:border-primary" />
-        {commentable > 0 && <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-faint"><MessageSquare size={12} aria-hidden="true" /> {shared} of {commentable} reviewer comment{commentable === 1 ? "" : "s"} will go to the authors.</p>}
+        <div style={{ border: "1px solid var(--border)" }} className="mt-4 overflow-hidden rounded-xl bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-soft">
+          <div className="flex items-start gap-2.5 border-b border-muted bg-canvas px-3.5 py-2.5">
+            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary"><MessageSquare size={14} aria-hidden="true" /></span>
+            <span className="min-w-0 flex-1">
+              <label htmlFor="decision-note" className="block text-[13px] font-bold text-navy">Note to authors <span className="font-normal text-ink-faint">· optional</span></label>
+              <span className="block text-[11.5px] leading-snug text-ink-muted">Goes with the decision email. Sum up the reviews in your own words.</span>
+            </span>
+          </div>
+          <textarea id="decision-note" value={p.text} onChange={(e) => p.onNote(e.target.value)} disabled={p.notified} rows={5} maxLength={5000} placeholder="E.g. “All three reviewers liked the method. For the final version, add the statistical tests asked for in Section 4.”" className="block w-full resize-y border-0 bg-white px-3.5 py-3 text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-faint disabled:bg-canvas disabled:text-ink-muted" />
+          <div className="flex items-center justify-between gap-2 border-t border-muted px-3.5 py-2 text-[11px] text-ink-faint">
+            <span className="flex min-w-0 items-center gap-1.5">{commentable > 0 ? <><Share2 size={11} aria-hidden="true" /> {shared} of {commentable} reviewer comment{commentable === 1 ? "" : "s"} also go to the authors</> : "Only this note goes to the authors"}</span>
+            <span className={`shrink-0 tabular-nums ${p.text.length > 4500 ? "font-semibold text-warning" : ""}`}>{p.text.length.toLocaleString()} / 5,000</span>
+          </div>
+        </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button disabled={!p.pick || p.busy} onClick={p.onRecord}>Record decision</Button>
           {p.current && !p.notified && <Button variant="outline" disabled={p.busy} onClick={p.onNotify}><Send size={14} aria-hidden="true" /> Notify authors</Button>}

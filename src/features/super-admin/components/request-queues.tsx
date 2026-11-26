@@ -11,7 +11,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, CalendarPlus, Check, ChevronRight, Mail, PartyPopper, Search, Trash2, X } from "lucide-react";
 import { ClaimBar, ClaimMarks, InternalNotes, useQueueState } from "./queue-extras";
-import { decideConferenceRequest, loadConferencePapers, loadConferences, loadDeletionRequests, type AdminConference, type AdminNote } from "../services";
+import { decideConferenceRequest, loadConferencePapers, loadConferences, loadDecisionEmails, loadDeletionRequests, type AdminConference, type AdminNote, type DecisionEmailEdit } from "../services";
+import { decisionEmailDoc, fillPlaceholders, PLACEHOLDERS, type DecisionEmails, type DecisionEmailText } from "../decision-email";
 import { useData } from "../use-data";
 import { Avatar, Badge, Button, Card, Drawer, errorText, ExtLink, Failed, Fields, fmtDate, Loading, Modal, PageTitle, Pagination, Section, SortTh, Toast, UNDO_MS, usePaging, useSort, WaitingBadge, type Tone } from "./ui";
 
@@ -68,35 +69,78 @@ function Person({ name, sub }: { name: string; sub?: string | null }) {
   );
 }
 
-/* The email this decision sends (the API's conference-emails "decided"), live as the reason is typed.
-   Collapsed to the subject line; open it to read the whole message. */
-function EmailPreview({ c, approve, reason }: { c: AdminConference; approve: boolean; reason: string }) {
-  const [open, setOpen] = useState(false);
-  const chair = c.requester?.name?.split(/\s+/)[0] ?? "there";
-  const subject = approve ? `${c.acronym} is approved` : `Your request for ${c.acronym}`;
-  const body = approve
-    ? `Dear ${chair},\n\nYour request to host ${c.acronym} (${c.title}) on Smartconferu has been approved. Open your conference to add the call for papers, tracks, deadlines and reviewers.`
-    : `Dear ${chair},\n\nThank you for your interest in hosting ${c.acronym} on Smartconferu. We weren't able to approve the request${reason.trim() ? `:\n\n“${reason.trim()}”` : "."}\n\nYou can send a new request any time from My Conferences.`;
+/* The email this decision sends, as the chair gets it: the platform frame (logo, heading, sign-off) around the text. Open "Edit" to change the subject
+   and the text; the placeholders ({{first_name}}…) are filled in for each conference. A change goes out with this decision only, unless
+   "Save as the default" is ticked: then the next decisions start from it. The starting text is the platform's (GET /admin/decision-emails). */
+function DecisionEmail({ c, approve, reason, defaults, mail, setMail, save, setSave }: { c: AdminConference; approve: boolean; reason: string; defaults: DecisionEmails | null; mail: DecisionEmailText | null; setMail: (m: DecisionEmailText) => void; save: boolean; setSave: (v: boolean) => void }) {
+  const [tab, setTab] = useState<"preview" | "edit">("preview");
+  const frame = useRef<HTMLIFrameElement>(null);
+  const body = useRef<HTMLTextAreaElement>(null);
+  const start = defaults ? (approve ? defaults.approved : defaults.declined) : null;
+  const changed = Boolean(start && mail && (mail.subject !== start.subject || mail.body !== start.body));
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  const values = useMemo(() => ({ first_name: c.requester?.name?.split(/\s+/)[0] ?? "there", conference_name: c.title, conference_acronym: c.acronym, dashboard_link: `${origin}/chair/${c.slug}/dashboard`, reason: reason.trim() || "(the reason you type above)" }), [c, reason, origin]);
+  const subject = mail ? fillPlaceholders(mail.subject, values, false) : "";
+  const doc = useMemo(() => (mail ? decisionEmailDoc({ text: mail, values, label: approve ? "Conference approved" : "Conference request declined", conferenceName: c.title, conferenceAcronym: c.acronym, logoUrl: defaults?.logoUrl || `${origin}/smartconferu-lockup.png` }) : ""), [mail, values, approve, c, defaults, origin]);
+  const fit = () => { const fr = frame.current; const h = fr?.contentDocument?.documentElement?.scrollHeight; if (fr && h) fr.style.height = `${h + 2}px`; };
+  const insert = (key: string) => {
+    if (!mail) return;
+    const el = body.current;
+    const at = el ? el.selectionStart : mail.body.length;
+    const token = `{{${key}}}`;
+    setMail({ ...mail, body: mail.body.slice(0, at) + token + mail.body.slice(el ? el.selectionEnd : at) });
+    requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(at + token.length, at + token.length); });
+  };
+  const needsLink = approve && mail !== null && !mail.body.includes("{{dashboard_link}}");
   return (
-    <div className="rounded-xl mb-4 text-[12.5px]" style={{ border: "1px solid var(--border)", background: "var(--canvas)" }}>
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 px-3.5 py-2.5 text-left cursor-pointer">
+    <div className="rounded-xl text-[12.5px]" style={{ border: "1px solid var(--border)", background: "var(--canvas)" }}>
+      <div className="flex flex-wrap items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
         <Mail size={15} className="shrink-0" style={{ color: "var(--primary)" }} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate" style={{ color: "var(--text-muted)" }}>
-            Email to {c.requester?.email ?? "the chair"}
-          </span>
-          <span className="block truncate font-semibold" style={{ color: "var(--text)" }}>
-            {subject}
-          </span>
+          <span className="block truncate" style={{ color: "var(--text-muted)" }}>Email to {c.requester?.email ?? "the chair"}</span>
+          <span className="block truncate font-semibold" style={{ color: "var(--text)" }}>{mail ? subject : "Loading the email…"}</span>
         </span>
-        <span className="text-[12px] font-semibold shrink-0" style={{ color: "var(--primary)" }}>
-          {open ? "Hide" : "Preview"}
-        </span>
-      </button>
-      {open && (
-        <p className="px-3.5 pb-3 whitespace-pre-line max-h-[180px] overflow-y-auto border-t pt-2.5" style={{ color: "var(--text-soft)", borderColor: "var(--border)" }}>
-          {body}
-        </p>
+        <div role="tablist" aria-label="Email view" className="flex rounded-lg p-0.5" style={{ background: "#fff", border: "1px solid var(--border)" }}>
+          {(["preview", "edit"] as const).map((t) => (
+            <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className="rounded-md px-3 py-1 text-[12px] font-semibold cursor-pointer" style={{ background: tab === t ? "var(--primary-soft)" : "transparent", color: tab === t ? "var(--primary)" : "var(--text-soft)" }}>{t === "preview" ? "Preview" : "Edit"}</button>
+          ))}
+        </div>
+      </div>
+      {!mail ? (
+        <p className="px-3.5 py-6 text-center" style={{ color: "var(--text-muted)" }}>Loading the email…</p>
+      ) : tab === "preview" ? (
+        <div className="max-h-[52vh] overflow-y-auto"><iframe ref={frame} title="Email preview" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" srcDoc={doc} onLoad={fit} className="block min-h-[260px] w-full border-0" /></div>
+      ) : (
+        <div className="space-y-3 p-3.5">
+          <label className="block">
+            <span className="mb-1 block text-[12px] font-semibold" style={{ color: "var(--text)" }}>Subject</span>
+            <input className="sa-input" value={mail.subject} maxLength={300} onChange={(e) => setMail({ ...mail, subject: e.target.value })} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] font-semibold" style={{ color: "var(--text)" }}>Message</span>
+            <textarea ref={body} rows={10} className="sa-input resize-y !h-auto py-2.5 leading-relaxed" value={mail.body} maxLength={10000} onChange={(e) => setMail({ ...mail, body: e.target.value })} />
+            <span className="mt-1 block text-[11.5px]" style={{ color: "var(--text-muted)" }}>A blank line starts a new paragraph. The sign-off and footer are added automatically.</span>
+          </label>
+          <div>
+            <span className="mb-1.5 block text-[12px] font-semibold" style={{ color: "var(--text)" }}>Insert a value that changes for each conference</span>
+            <div className="flex flex-wrap gap-1.5">
+              {PLACEHOLDERS[approve ? "approved" : "declined"].map((p) => (
+                <button key={p.key} type="button" title={p.hint} onClick={() => insert(p.key)} className="rounded-full px-2.5 py-1 text-[12px] cursor-pointer hover:border-[var(--primary)] hover:text-[var(--primary)]" style={{ border: "1px solid var(--border)", background: "#fff", color: "var(--text-soft)" }}>{"{{" + p.key + "}}"}</button>
+              ))}
+            </div>
+          </div>
+          {needsLink && <p role="alert" className="text-[12px] font-semibold" style={{ color: "var(--danger)" }}>Keep {"{{dashboard_link}}"} in the message: it is how the chair opens the conference.</p>}
+          {changed && start && <button type="button" onClick={() => setMail(start)} className="text-[12px] font-semibold cursor-pointer" style={{ color: "var(--primary)" }}>Reset to the saved text</button>}
+        </div>
+      )}
+      {changed && (
+        <label className="flex cursor-pointer items-start gap-2.5 px-3.5 py-3" style={{ borderTop: "1px solid var(--border)", background: "#fff" }}>
+          <input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} className="mt-0.5" />
+          <span>
+            <span className="block text-[12.5px] font-semibold" style={{ color: "var(--text)" }}>Save as the default for future {approve ? "approvals" : "declines"}</span>
+            <span className="block text-[11.5px]" style={{ color: "var(--text-muted)" }}>{save ? "The next conferences you decide will start from this text." : "Without this, the change is used for this conference only."}</span>
+          </span>
+        </label>
       )}
     </div>
   );
@@ -186,12 +230,12 @@ export function ConferenceRequestsPage() {
   const current = requests.find((c) => c.id === open || c.slug === open) ?? null;
   const th = (label: string, key: string, className?: string) => <SortTh label={label} sortKey={key} sort={sort} onSort={toggle} className={className} />;
 
-  const decide = (c: AdminConference, approve: boolean, reason: string) => {
+  const decide = (c: AdminConference, approve: boolean, reason: string, email?: DecisionEmailEdit) => {
     const key = `${c.id}:${Date.now()}`;
     setDecided((d) => ({ ...d, [c.id]: approve ? "approved" : "declined" }));
     setOpen(null);
     hold(key, () => {
-      decideConferenceRequest(c.id, approve, reason)
+      decideConferenceRequest(c.id, approve, reason, email)
         .then(() => reload())
         .catch((e: unknown) => {
           setDecided((d) => {
@@ -345,10 +389,27 @@ function RequestDrawer({
   notes: AdminNote[];
   onWorkChanged: () => void;
   onClose: () => void;
-  onDecide: (c: AdminConference, approve: boolean, reason: string) => void;
+  onDecide: (c: AdminConference, approve: boolean, reason: string, email?: DecisionEmailEdit) => void;
 }) {
   const [active, setActive] = useState<"approve" | "decline" | null>(null);
   const [reason, setReason] = useState("");
+  // The decision email: the platform's text, loaded once; what is typed in the popup starts from it each time the popup opens.
+  const [defaults, setDefaults] = useState<DecisionEmails | null>(null);
+  const [mail, setMail] = useState<DecisionEmailText | null>(null);
+  const [saveMail, setSaveMail] = useState(false);
+  useEffect(() => {
+    if (!active || defaults) return;
+    let alive = true;
+    loadDecisionEmails().then((d) => { if (alive) setDefaults(d); }, () => { /* the popup then shows no email and the decision still works */ });
+    return () => { alive = false; };
+  }, [active, defaults]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-seeds the editable email when the popup opens or its text arrives
+    setMail(active && defaults ? { ...(active === "approve" ? defaults.approved : defaults.declined) } : null);
+    setSaveMail(false);
+  }, [active, defaults]);
+  const mailChanged = Boolean(active && defaults && mail && (mail.subject !== (active === "approve" ? defaults.approved : defaults.declined).subject || mail.body !== (active === "approve" ? defaults.approved : defaults.declined).body));
+  const mailBlocked = active === "approve" && mail !== null && !mail.body.includes("{{dashboard_link}}");
   const pending = status === "pending";
   const footer = !pending ? (
     <div className="flex items-center gap-3 text-[13.5px]">
@@ -385,7 +446,6 @@ function RequestDrawer({
             ["Dates", c.startDate ? `${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}` : null],
             ["Venue", [c.venue, c.city, c.country].filter(Boolean).join(", ")],
             ["Research area", [c.primaryArea, c.secondaryArea].filter(Boolean).join(" › ")],
-            ["Est. submissions", detail(c, "estimatedSubmissions")],
           ]}
         />
       </Section>
@@ -396,7 +456,6 @@ function RequestDrawer({
             ["Chair", c.requester?.name],
             ["Role", detail(c, "requesterRole") ?? "Chair"],
             ["Email", c.requester?.email ?? c.contactEmail],
-            ["Phone", detail(c, "contactPhone")],
           ]}
         />
       </Section>
@@ -405,6 +464,7 @@ function RequestDrawer({
       {/* The decision is confirmed in a popup over the drawer: what happens, any reason, the email that goes out. */}
       {pending && (active === "approve" || active === "decline") && (
         <Modal
+          wide
           title={`${active === "approve" ? "Approve" : "Decline"}?`}
           subtitle={c.title}
           onClose={() => setActive(null)}
@@ -413,7 +473,7 @@ function RequestDrawer({
               <Button tone="neutral" variant="soft" onClick={() => setActive(null)}>
                 Cancel
               </Button>
-              <Button tone={active === "approve" ? "success" : "danger"} disabled={active === "decline" && !reason.trim()} onClick={() => onDecide(c, active === "approve", active === "decline" ? reason.trim() : "")}>
+              <Button tone={active === "approve" ? "success" : "danger"} disabled={(active === "decline" && !reason.trim()) || mailBlocked} onClick={() => onDecide(c, active === "approve", active === "decline" ? reason.trim() : "", mailChanged && mail ? { subject: mail.subject, body: mail.body, saveAsDefault: saveMail } : undefined)}>
                 {active === "approve" ? <Check size={16} /> : <X size={16} />}
                 {active === "approve" ? "Approve" : "Decline"}
               </Button>
@@ -448,7 +508,7 @@ function RequestDrawer({
               </div>
             </div>
           )}
-          <EmailPreview c={c} approve={active === "approve"} reason={reason} />
+          <DecisionEmail c={c} approve={active === "approve"} reason={reason} defaults={defaults} mail={mail} setMail={setMail} save={saveMail} setSave={setSaveMail} />
         </Modal>
       )}
     </Drawer>

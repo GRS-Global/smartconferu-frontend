@@ -97,7 +97,7 @@ const metaOf = (sub: AuthorSubmission) => [
 export function SubmissionCard({ row, index }: { row: SubmissionRow; index: number }) {
   const { sub, status, step } = row;
   const Icon = STATUS_ICON[status.key] || Hourglass;
-  const href = paperPageHref(sub.id);
+  const href = paperPageHref(sub.id, sub.conferenceId);
   const rise = { animationDelay: `${Math.min(index + 4, 10) * 60}ms` };
   const body = (
     <>
@@ -227,7 +227,7 @@ export function SubmissionsTable({ rows }: { rows: SubmissionRow[] }) {
         </thead>
         <tbody>
           {sorted.map(({ sub, status, step }, i) => {
-            const href = paperPageHref(sub.id);
+            const href = paperPageHref(sub.id, sub.conferenceId);
             return (
               <tr key={sub.dbId} onClick={() => { if (href) router.push(href); }} className={`border-b border-muted transition-colors ${href ? "cursor-pointer" : ""} ${i % 2 ? "ui-row-alt" : ""}`}>
                 <td className="whitespace-nowrap px-4 py-3.5 align-top font-extrabold tabular-nums text-navy">{sub.id}</td>

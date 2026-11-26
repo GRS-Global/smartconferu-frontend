@@ -5,6 +5,8 @@ import type { ConferenceRequest, NewConferenceInput } from "@/types/conference-r
 export interface ConferenceRequestService {
   list(): Promise<ConferenceRequest[]>;
   create(form: NewConferenceInput): Promise<{ id: string; slug: string }>;
+  /** Takes a request back while it still waits for approval (own backend and mock only; the request leaves the list). */
+  cancel?(id: string, reason?: string): Promise<void>;
 }
 
 export async function getConferenceRequestService(): Promise<ConferenceRequestService> {

@@ -11,7 +11,6 @@ import { useRangeSelect } from "@/lib/use-range-select";
 import { buildZip, saveBlob } from "@/lib/zip";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
-import { PROTOTYPE_URL } from "@/lib/config";
 import { sendActionEmails } from "@/services/action-emails";
 import { getChairService } from "@/services/chair";
 import type { ChairPaper, ScreeningFile, ScreeningRecord } from "@/types/chair";
@@ -19,6 +18,7 @@ import { CHECK_DECISIONS, EMAILED, fromIsoDay, inDays, isOverdue, MAX_REPORT_FIL
 import { checkDecisionOf, inPeerReview, screeningStageOf } from "../stage";
 import { useChairConference } from "../use-chair-conference";
 import { ScreeningSearchParam } from "./screening-search-param";
+import { chairPaperHref } from "@/lib/routes";
 import {
   BulkBar, BulkConfirmModal, CARD, DecisionChip, DecisionSelect, DecisionWarning, DueLine, EMAIL_OPTIONS, EmailCell, FilterSelect, FilterText, IdCell, IdSortLabel, InitialReportModal, LoadingOverlay, LockNote, MovedNote, ScreeningSettingsButton,
   ScreeningToast, SelectBox, SubmittedCell, SUBMITTED_OPTIONS, SummaryChip, TableFrame, Th, TitleCell, Toolbar, decisionInfo, isControl, submittedBucket, type ScreeningToastData,
@@ -70,7 +70,7 @@ export function PlagiarismCheckPage({ slug }: { slug: string }) {
     </ConferenceShell>
   );
   if (!data.screening.plagiarism) {
-    return shell(<div className="p-8"><div style={CARD} className="mx-auto max-w-xl rounded-2xl bg-white px-6 py-14 text-center"><Lock size={26} aria-hidden="true" className="mx-auto mb-3 text-ink-faint" /><h2 className="text-base font-bold text-navy">Plagiarism Check is turned off for this conference</h2><p className="mb-4 mt-1 text-sm text-ink-muted">Turn it on in Conference Settings › Submissions › Paper Screening.</p><a href={`${PROTOTYPE_URL}/prototype/chair/${e}/settings/submissions`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white"><Settings2 size={14} aria-hidden="true" /> Open Screening Settings</a></div></div>);
+    return shell(<div className="p-8"><div style={CARD} className="mx-auto max-w-xl rounded-2xl bg-white px-6 py-14 text-center"><Lock size={26} aria-hidden="true" className="mx-auto mb-3 text-ink-faint" /><h2 className="text-base font-bold text-navy">Plagiarism Check is turned off for this conference</h2><p className="mb-4 mt-1 text-sm text-ink-muted">Turn it on in Conference Settings › Submissions › Paper Screening.</p><a href={`/chair/${e}/settings/submissions`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white"><Settings2 size={14} aria-hidden="true" /> Open Screening Settings</a></div></div>);
   }
 
   const versionsOf = (p: ChairPaper) => Math.max(p.versions, (files[p.dbId] ?? []).length, 1);
@@ -283,7 +283,7 @@ export function PlagiarismCheckPage({ slug }: { slug: string }) {
       >
         <td className="text-center">{latest && selectable(x) && <SelectBox label={`Select ${p.id}`} checked={isSel} {...pick.box(p.dbId)} />}</td>
         <td><IdCell paper={p} n={n} latest={latest} count={count} open={open.has(p.dbId)} onToggle={() => toggleRow(p.dbId)} onOpenCheck={() => router.push(checkHref(p))} openTitle="Open this paper's plagiarism check" /></td>
-        <td><TitleCell paper={p} latest={latest} onOpenDetails={() => router.push(`/submissions/${encodeURIComponent(p.id)}/chair`)} onOpenPdf={() => void openPaper(p, n, false)} onDownload={() => void openPaper(p, n, true)} onOpenCheck={latest ? () => router.push(checkHref(p)) : null} checkTitle="Everything about this paper's plagiarism check" checkLabel="Check details" /></td>
+        <td><TitleCell paper={p} latest={latest} onOpenDetails={() => router.push(chairPaperHref(slug, p.id))} onOpenPdf={() => void openPaper(p, n, false)} onDownload={() => void openPaper(p, n, true)} onOpenCheck={latest ? () => router.push(checkHref(p)) : null} checkTitle="Everything about this paper's plagiarism check" checkLabel="Check details" /></td>
         <td><SubmittedCell at={v.uploadedAt} n={n} /></td>
         <td>
           {!data.screening.initialCheck

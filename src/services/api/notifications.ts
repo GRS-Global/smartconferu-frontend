@@ -1,6 +1,6 @@
 import { api } from "@/lib/api-client";
 import type { AppNotification } from "@/types/notification";
-import { NOTIFICATIONS_LIMIT, type NotificationService, type UnreadRow } from "../notifications";
+import type { NotificationService, UnreadRow } from "../notifications";
 import { ServiceError } from "../errors";
 
 /* The bell and the Notifications page through the own backend (Backend/src/modules/notifications): GET /me/notifications (the backend names the
@@ -36,8 +36,16 @@ async function me(): Promise<string> {
 
 export const apiNotificationService: NotificationService = {
   async list() {
-    const r = await api<NotificationPage>("/me/notifications", { query: { limit: Math.min(NOTIFICATIONS_LIMIT, PAGE) } });
-    return r.data.map(toNotification);
+    // The newest 500 (the page shows them 20 at a time), 100 per request.
+    const out: AppNotification[] = [];
+    let cursor: string | null = null;
+    for (let i = 0; i < 5; i += 1) {
+      const r: NotificationPage = await api<NotificationPage>("/me/notifications", { query: { limit: PAGE, cursor } });
+      out.push(...r.data.map(toNotification));
+      cursor = r.nextCursor;
+      if (!cursor) break;
+    }
+    return out;
   },
 
   async listEmails() {

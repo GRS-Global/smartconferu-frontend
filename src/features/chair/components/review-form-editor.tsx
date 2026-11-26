@@ -39,6 +39,8 @@ export function InstructionsEditor({ initial, stored, onSave, busy, mode: savedM
   const [drag, setDrag] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfError, setPdfError] = useState("");
+  const [start] = useState(() => JSON.stringify([html, mode, pdf]));
+  const changed = JSON.stringify([html, mode, pdf]) !== start;
   const save = () => { onSave(html); setSaved(true); setTimeout(() => setSaved(false), 2000); };
   const pick = (m: "html" | "pdf") => { if (m === mode) return; setMode(m); onMode(m); };
   const choose = async (file: File | undefined) => {
@@ -71,11 +73,11 @@ export function InstructionsEditor({ initial, stored, onSave, busy, mode: savedM
         </>
       ) : (
         <>
-          <RichTextEditor value={html} onChange={setHtml} label="Reviewer instructions" placeholder="What reviewers should focus on, scoring guidance, conflicts of interest, deadlines…" />
+          <RichTextEditor value={html} onChange={setHtml} label="Reviewer instructions" placeholder="What reviewers should focus on, scoring guidance, conflicts of interest, deadlines…" maxHeight={360} />
           <div className="mt-3 flex items-center justify-end gap-3">
             {!stored && <span className="mr-auto text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save this.</span>}
             {saved && !busy && <span className="flex items-center gap-1 text-xs font-semibold text-success"><Check size={13} aria-hidden="true" /> Saved</span>}
-            <button type="button" onClick={save} disabled={busy} className="h-10 cursor-pointer rounded-xl bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60">{busy ? "Saving…" : "Save instructions"}</button>
+            <button type="button" onClick={save} disabled={busy || !changed} title={changed ? undefined : "No changes to save"} className="h-10 cursor-pointer rounded-xl bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60">{busy ? "Saving…" : "Save instructions"}</button>
           </div>
         </>
       )}
@@ -93,17 +95,22 @@ interface FieldDraft extends ReviewField { key: number; optionsText: string }
 interface SectionDraft { key: number; id: string; name: string; fields: FieldDraft[] }
 const toDraft = (sections: ReviewSection[]): SectionDraft[] => sections.map((s) => ({ key: ++uid, id: s.id, name: s.name, fields: s.fields.map((f) => ({ ...f, key: ++uid, optionsText: (f.options ?? []).join(", ") })) }));
 
+const serialize = (secs: SectionDraft[]): ReviewSection[] => secs.map((s) => ({ id: s.id, name: s.name.trim(), fields: s.fields.map(({ key, optionsText, ...f }) => { void key; return { ...f, label: f.label.trim(), ...(f.type === "single_choice" ? { options: optionsText.split(",").map((o) => o.trim()).filter(Boolean) } : { options: undefined }), ...(f.type === "score" ? { max: f.max ?? 5 } : { max: undefined }) }; }) }));
+
 export function FormEditor({ initial, custom, stored, onSave, onReset, busy }: { initial: ReviewSection[]; custom: boolean; stored: boolean; onSave: (s: ReviewSection[]) => void; onReset: () => void; busy: boolean }) {
   const [secs, setSecs] = useState(() => toDraft(initial));
   const patchField = (sk: number, fk: number, patch: Partial<FieldDraft>) => setSecs((l) => l.map((s) => (s.key === sk ? { ...s, fields: s.fields.map((f) => (f.key === fk ? { ...f, ...patch } : f)) } : s)));
   const moveField = (sk: number, i: number, d: -1 | 1) => setSecs((l) => l.map((s) => { if (s.key !== sk) return s; const fs = [...s.fields]; [fs[i], fs[i + d]] = [fs[i + d], fs[i]]; return { ...s, fields: fs }; }));
-  const toSections = (): ReviewSection[] => secs.map((s) => ({ id: s.id, name: s.name.trim(), fields: s.fields.map(({ key, optionsText, ...f }) => { void key; return { ...f, label: f.label.trim(), ...(f.type === "single_choice" ? { options: optionsText.split(",").map((o) => o.trim()).filter(Boolean) } : { options: undefined }), ...(f.type === "score" ? { max: f.max ?? 5 } : { max: undefined }) }; }) }));
+  const toSections = (): ReviewSection[] => serialize(secs);
+  // Saving is offered only when the form differs from what was loaded (random keys are not part of the comparison).
+  const [start] = useState(() => JSON.stringify(serialize(secs)));
+  const changed = JSON.stringify(toSections()) !== start;
   const flat = secs.flatMap((s) => s.fields);
   const problems = secs.some((s) => !s.name.trim()) || flat.some((f) => !f.label.trim() || (f.type === "single_choice" && f.optionsText.split(",").map((o) => o.trim()).filter(Boolean).length < 2)) || secs.length === 0;
   const iconBtn = "flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-primary-soft hover:text-primary disabled:opacity-30";
   return (
     <Card icon={ClipboardList} title="Review form" desc={custom ? "The form reviewers fill in for this conference." : "The standard form. Change it and it becomes this conference's own."}
-      footer={<>{!stored && <span className="mr-auto text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save the form.</span>}{custom && <Button variant="ghost" disabled={busy || !stored} onClick={onReset}><RotateCcw size={14} aria-hidden="true" /> Use the standard form</Button>}<Button disabled={busy || !stored || problems} onClick={() => onSave(toSections())}>{busy ? "Saving…" : "Save form"}</Button></>}>
+      footer={<>{!stored && <span className="mr-auto text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save the form.</span>}{custom && <Button variant="ghost" disabled={busy || !stored} onClick={onReset}><RotateCcw size={14} aria-hidden="true" /> Use the standard form</Button>}<Button disabled={busy || !stored || problems || !changed} title={changed ? undefined : "No changes to save"} onClick={() => onSave(toSections())}>{busy ? "Saving…" : "Save form"}</Button></>}>
       <div className="space-y-5">
         {secs.map((s, si) => (
           <div key={s.key} className="rounded-xl border border-line p-4">

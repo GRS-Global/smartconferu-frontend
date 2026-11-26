@@ -1,5 +1,5 @@
 import { api } from "@/lib/api-client";
-import type { ConferenceRequest, NewConferenceInput } from "@/types/conference-request";
+import { requestStatusOf, type ConferenceRequest, type NewConferenceInput } from "@/types/conference-request";
 import type { ConferenceRequestService } from "../conference-requests";
 
 /* "Create New Conference" and the list of requests through the own backend: `POST /conferences` (the request waits for a Super Admin) and
@@ -20,7 +20,7 @@ export const apiConferenceRequestService: ConferenceRequestService = {
   async list() {
     const { requests } = await api<{ requests: ConferenceResponse[] }>("/conferences");
     return requests.map((r): ConferenceRequest => ({
-      id: r.id, slug: r.slug, acronym: r.acronym, title: r.title, status: r.status === "rejected" ? "rejected" : "pending", submittedAt: day(r.createdAt), decidedNote: r.adminNote ?? "",
+      id: r.id, slug: r.slug, acronym: r.acronym, title: r.title, status: requestStatusOf(r.status), submittedAt: day(r.createdAt), decidedNote: r.adminNote ?? "",
       type: r.details?.type ?? "conference", eventType: r.mode ?? "", webPage: r.webPage ?? "", venue: r.venue ?? "", city: r.city ?? "", country: r.country ?? "", startDate: day(r.startDate), endDate: day(r.endDate),
       primaryArea: r.primaryArea ?? "", secondaryArea: r.secondaryArea ?? "", contactEmail: r.contactEmail ?? "", about: r.about ?? "",
     }));
@@ -38,5 +38,9 @@ export const apiConferenceRequestService: ConferenceRequestService = {
       },
     });
     return { id: created.id, slug: created.slug };
+  },
+
+  async cancel(id: string, reason?: string) {
+    await api<void>(`/conferences/${id}/cancel-request`, { method: "POST", body: { reason: reason?.trim() || undefined } });
   },
 };

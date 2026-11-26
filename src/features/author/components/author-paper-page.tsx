@@ -19,6 +19,8 @@ import { useAuthorPaper } from "../use-author-paper";
 import { useConferenceCertificates } from "@/features/certificates/use-conference-certificates";
 import { DecisionCard, FilesTable, ManageCard, PaperBody, PaperTimeline, PresentationPanel, ScreeningNotice, certificateTitleOf, lockReasonOf } from "./paper-parts";
 import { StatusPill } from "./submission-parts";
+import { authorPaperHref } from "@/lib/routes";
+import { useCanonicalPath } from "@/lib/use-canonical-path";
 
 /* A paper's own page, as its author sees it (the prototype's SubmissionDetailPage, author layout): the header with its status
    and the author's timeline, the presentation panel once accepted, the correction / revision request, keywords, abstract and
@@ -26,6 +28,7 @@ import { StatusPill } from "./submission-parts";
    paper (edit details, authors, upload a new version, withdraw) still happen on the prototype's page of the same paper. */
 export function AuthorPaperPage({ label }: { label: string }) {
   const { state, retry, reload } = useAuthorPaper(label);
+  useCanonicalPath(state.status === "ready" ? authorPaperHref(state.paper.conference.id, label) : null);
   const certificates = useConferenceCertificates(state.status === "ready" ? state.paper.conference.id : "");
   const [fileError, setFileError] = useState("");
   const [dialog, setDialog] = useState<"details" | "authors" | "withdraw" | "files-paper" | "files-supporting" | null>(null);

@@ -33,6 +33,8 @@ import { ReviewBody } from "./chair-review-view";
 import { FilesCard, ManageCard, NoteCard, PaperCard, PaperTimeline, toAuthorPaper } from "./chair-paper-details";
 import { EditAuthorsDialog, EditDetailsDialog, UpdateFilesDialog, WithdrawDialog } from "@/features/author/components/paper-dialogs";
 import { EmailAuthorsDialog } from "./email-authors-dialog";
+import { chairPaperHref } from "@/lib/routes";
+import { useCanonicalPath } from "@/lib/use-canonical-path";
 
 /* A paper's page as its chair sees it (the prototype's SubmissionDetailPage, chair layout): the paper, "Reviewers & Scores" with each
    reviewer's progress and review (and the switch that shares their comments with the authors), and "Record decision" with the note to
@@ -95,6 +97,7 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
     if (t) setToast(t);
   }, []);
 
+  useCanonicalPath(state.status === "ready" ? chairPaperHref(state.conference.id, label, view === "review" ? "review" : undefined) : null);
   const gate = workspaceGate(state, retry, { title: label, loadingLabel: "Loading this paper", missingTitle: "We couldn't find that paper.", missingText: "It doesn't exist, or you are not a chair of its conference.", errorTitle: "Couldn't load this paper." });
   if (gate || state.status !== "ready") return gate;
   const { conference, roles, others, detail } = state;
@@ -246,7 +249,7 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
   const at = queue.indexOf(paper.id);
   const prevId = at > 0 ? queue[at - 1] : null;
   const nextId = at >= 0 && at < queue.length - 1 ? queue[at + 1] : null;
-  const base = `/submissions/${encodeURIComponent(paper.id)}/chair`;
+  const base = chairPaperHref(conference.id, paper.id);
   const confBase = `/chair/${encodeURIComponent(conference.id)}`;
   return (
     <ConferenceShell role="chair" conference={conference} roles={roles} others={others} active={isReview ? "peer-review/list" : "submissions/list"} screening={data.screening}>
@@ -258,10 +261,10 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
             <span className="h-5 w-px bg-line" aria-hidden="true" />
             <span className="min-w-0 truncate text-xs text-ink-soft">Paper <b className="tabular-nums text-navy">{at + 1} of {queue.length}</b>{queueView?.queueLabel && <span className="text-ink-faint"> · {queueView.queueLabel}</span>}</span>
             <div className="ml-auto flex items-center gap-1.5">
-              {prevId ? <Link href={`/submissions/${encodeURIComponent(prevId)}/chair/review`} title={`Previous: ${prevId}`} className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-white px-3 text-xs font-bold text-ink-soft hover:bg-canvas"><ChevronLeft size={14} aria-hidden="true" /> Prev</Link>
+              {prevId ? <Link href={chairPaperHref(conference.id, prevId, "review")} title={`Previous: ${prevId}`} className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-white px-3 text-xs font-bold text-ink-soft hover:bg-canvas"><ChevronLeft size={14} aria-hidden="true" /> Prev</Link>
                 : <span title="This is the first paper" className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-white px-3 text-xs font-bold text-ink-soft opacity-50"><ChevronLeft size={14} aria-hidden="true" /> Prev</span>}
               {/* Once this paper is decided, Next becomes the main action — decide, move on. */}
-              {nextId ? <Link href={`/submissions/${encodeURIComponent(nextId)}/chair/review`} title={`Next: ${nextId}`} className={`inline-flex h-8 items-center gap-1 rounded-lg border px-3 text-xs font-bold ${current ? "border-primary bg-primary text-white" : "border-line bg-white text-ink-soft hover:bg-canvas"}`}>{current ? "Next paper" : "Next"} <ChevronRight size={14} aria-hidden="true" /></Link>
+              {nextId ? <Link href={chairPaperHref(conference.id, nextId, "review")} title={`Next: ${nextId}`} className={`inline-flex h-8 items-center gap-1 rounded-lg border px-3 text-xs font-bold ${current ? "border-primary bg-primary text-white" : "border-line bg-white text-ink-soft hover:bg-canvas"}`}>{current ? "Next paper" : "Next"} <ChevronRight size={14} aria-hidden="true" /></Link>
                 : <span title="This is the last paper in the list" className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-white px-3 text-xs font-bold text-ink-soft opacity-50">Next <ChevronRight size={14} aria-hidden="true" /></span>}
             </div>
           </div>
@@ -318,7 +321,7 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
       <EditAuthorsDialog asChair paper={asAuthor} open={manage === "authors"} onClose={() => setManage(null)} onSaved={saved} onSessionEnded={retry} />
       <WithdrawDialog asChair paper={asAuthor} open={manage === "withdraw"} onClose={() => setManage(null)} onSaved={saved} onSessionEnded={retry} />
       <UpdateFilesDialog asChair paper={asAuthor} open={manage === "files-paper" || manage === "files-supporting"} initialTab={manage === "files-supporting" ? "supporting" : "paper"} onOpenFile={openFile} onClose={() => setManage(null)} onSaved={saved} onSessionEnded={retry} />
-      {emailOpen && <EmailAuthorsDialog open paper={paper} conferenceName={conference.name} acronym={conference.acronym} onClose={() => setEmailOpen(false)} onSent={(count) => { setEmailOpen(false); setToast({ title: `Email sent to ${count} author${count === 1 ? "" : "s"}`, text: "Every email is listed in Email Logs." }); }} />}
+      {emailOpen && <EmailAuthorsDialog open paper={paper} conferenceName={conference.name} acronym={conference.acronym} conferenceSlug={conference.id} onClose={() => setEmailOpen(false)} onSent={(count) => { setEmailOpen(false); setToast({ title: `Email sent to ${count} author${count === 1 ? "" : "s"}`, text: "Every email is listed in Email Logs." }); }} />}
       <FlowToast toast={toast} onClose={closeToast} />
     </ConferenceShell>
   );

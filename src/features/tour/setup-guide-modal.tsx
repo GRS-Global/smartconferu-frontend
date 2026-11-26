@@ -4,7 +4,7 @@ import { AlertTriangle, Check, ChevronDown, ChevronRight, Sparkles } from "lucid
 import { useEffect, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { INPUT_CLASS } from "@/components/ui/field";
-import { LANGUAGES } from "@/features/chair/languages";
+import { DEFAULT_LANGUAGE, LANGUAGES } from "@/features/chair/languages";
 import { getChairService } from "@/services/chair";
 import { setupChanged, type ConferenceSetup, type SetupStatus, type SetupTask } from "./use-setup";
 import { readTourState, writeTourState } from "./tour-state";
@@ -41,7 +41,7 @@ function TaskList({ slug, setup, tasks, go, onShow, onDirty, openKey }: { slug: 
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const value = (t: SetupTask) => (t.key === "abstractDeadline" ? setup.info?.abstractDeadline : t.key === "submissionDeadline" ? setup.info?.submissionDeadline : t.key === "language" ? setup.info?.language : t.key === "about" ? setup.info?.about : t.key === "webPage" ? setup.info?.webPage : "") ?? "";
+  const value = (t: SetupTask) => (t.key === "abstractDeadline" ? setup.info?.abstractDeadline : t.key === "submissionDeadline" ? setup.info?.submissionDeadline : t.key === "language" ? (setup.info?.language || DEFAULT_LANGUAGE) : t.key === "about" ? setup.info?.about : t.key === "webPage" ? setup.info?.webPage : "") ?? "";
   // "Complete required setup" asks the list to open the first editable task.
   useEffect(() => {
     const onOpen = (e: Event) => { const t = tasks.find((k) => k.key === (e as CustomEvent<string>).detail); if (t) { setOpen(t.key); setDraft(value(t)); setError(""); } };

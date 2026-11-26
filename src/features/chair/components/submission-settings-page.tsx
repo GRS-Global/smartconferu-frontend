@@ -1,7 +1,7 @@
 "use client";
 
 import { ClipboardCheck, Lock, ShieldCheck, Sparkles } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { FlowToast, type FlowToastData } from "@/components/ui/flow-toast";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
@@ -44,6 +44,13 @@ function Screening({ initial, steps, onSave, busy }: { initial: ScreeningCriteri
   const payload = () => ({ initialCheck: on.initialCheck, plagiarism: on.plagiarism, criteria: { column: c.column as ScreeningCriteria["column"], minPages: n(c.min), maxPages: n(c.max), doubleMinPages: n(c.dmin), doubleMaxPages: n(c.dmax), similarityLimit: n(c.sim), aiLimit: n(c.ai), correctionDays: n(c.cdays), revisionDays: n(c.rdays) } });
   const saved = useRef(JSON.stringify(payload()));
   const flush = () => { const now = JSON.stringify(payload()); if (ok && now !== saved.current) { saved.current = now; onSave(payload()); } };
+  // Also a moment after a change, without waiting for the box to be left: a layout picked from the list, or a number typed just before the page is
+  // reloaded or left, would otherwise never be saved.
+  useEffect(() => {
+    const t = setTimeout(flush, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `flush` reads the latest values; `c` is what changes
+  }, [c]);
   const toggleStep = (k: "initialCheck" | "plagiarism", v: boolean) => { const next = { ...on, [k]: v }; setOn(next); saved.current = JSON.stringify({ ...payload(), initialCheck: next.initialCheck, plagiarism: next.plagiarism }); onSave({ ...payload(), initialCheck: next.initialCheck, plagiarism: next.plagiarism }); };
   return (
     <section style={CARD} className="rounded-2xl bg-white p-6">

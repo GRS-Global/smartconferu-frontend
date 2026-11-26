@@ -1,6 +1,6 @@
 
 /* Where the Reviewer pages send people for screens that are not ported yet: the prototype's own pages (the same addresses its
-   pageToPath gives) on PROTOTYPE_URL. Change a function here to an internal route when its screen is ported. */
+   pageToPath gives). Every destination is a page of this app. */
 
 const SLUG = /^[a-z0-9][a-z0-9_-]{0,79}$/i;
 const PAPER = /^[A-Za-z0-9]{1,40}-\d{1,9}$/;

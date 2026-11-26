@@ -1,4 +1,3 @@
-import { PROTOTYPE_URL } from "@/lib/config";
 import type { AppNotification } from "@/types/notification";
 
 /* What a notification's action button says and where it goes, and which role's notification it is — from the prototype's
@@ -9,9 +8,7 @@ import type { AppNotification } from "@/types/notification";
    with a conference slug that has been checked to be a plain slug and a paper label ("ISBM-680") that has been checked
    to be one, both URL-encoded.
 
-   WHERE EACH ACTION GOES. A page that is ported to this app is `{ app: "/route" }`; a page that is still the prototype's is
-   `{ prototype: "/prototype/…" }` and opens on PROTOTYPE_URL (like the navigation menu's not-yet-ported screens).
-   When one of these pages is ported, change its \`prototype\` target to \`app\` below — nothing else has to change.
+   WHERE EACH ACTION GOES. Every action is a page of this app: `{ app: "/route" }`.
 
      kind                    label                        prototype page (pageToPath)                         target here
      member_invited          "See the invitation"         dashboard                                            app  /dashboard
@@ -35,8 +32,8 @@ import type { AppNotification } from "@/types/notification";
 
    As in the prototype, an action that needs a conference (or a paper) is left out when there is none. */
 
-export type ActionTarget = { app: string } | { prototype: string };
-export interface NotificationAction { label: string; href: string; /** True when it leaves this app for the prototype. */ external: boolean }
+export type ActionTarget = { app: string };
+export interface NotificationAction { label: string; href: string; /** True when it is a full page load instead of a client-side navigation (always false now). */ external: boolean }
 
 // A plain conference slug, as the dashboard uses it in its own links; a paper label such as ISBM-680.
 const SLUG = /^[a-z0-9][a-z0-9_-]{0,79}$/i;
@@ -48,23 +45,33 @@ type Maker = (n: Pick<AppNotification, "conference" | "paperLabel" | "email">, c
 const conf = (n: Pick<AppNotification, "conference">): string | null => (n.conference && SLUG.test(n.conference.slug) ? encodeURIComponent(n.conference.slug) : null);
 const paper = (n: Pick<AppNotification, "paperLabel">): string | null => (n.paperLabel && PAPER.test(n.paperLabel) ? encodeURIComponent(n.paperLabel) : null);
 
-const inConference = (label: string, path: (c: string) => string): Maker => (n) => {
-  const c = conf(n);
-  return c ? { label, target: { prototype: path(c) } } : null;
-};
-/** Like inConference, for a page that is ported: an internal route of this app. */
+/** A page of this app for a notification that names a conference. */
 const inConferenceApp = (label: string, path: (c: string) => string): Maker => (n) => {
   const c = conf(n);
   return c ? { label, target: { app: path(c) } } : null;
 };
 const myPaper: Maker = (n) => {
   const p = paper(n);
-  return p ? { label: "Open my paper", target: { app: `/submissions/${p}/author` } } : null;
+  const c = conf(n);
+  // Without its conference the older address still opens (and moves to the current one).
+  return p ? { label: "Open my paper", target: { app: c ? `/author/${c}/submissions/${p}` : `/submissions/${p}/author` } } : null;
 };
 
 const ACTIONS: Record<string, Maker> = {
   member_invited: () => ({ label: "See the invitation", target: { app: "/dashboard" } }),
-  conference_decision: () => ({ label: "Open My Conferences", target: { app: "/dashboard" } }),
+  // A decision on the conference itself: a conference this account chairs (approved, or brought back) opens its dashboard; a declined or deleted one
+  // is no longer chaired, so My Requests shows what happened.
+  conference_decision: (n, chairOf) => {
+    const c = conf(n);
+    return c && n.conference && chairOf.has(n.conference.slug)
+      ? { label: "Open the conference", target: { app: `/chair/${c}/dashboard` } }
+      : { label: "Open My Requests", target: { app: "/my-requests" } };
+  },
+  // The Super Admin's answer on the Call for Papers: its manager page (published, or sent back with the reason).
+  cfp_decision: inConferenceApp("Open Call for Papers", (c) => `/chair/${c}/cfp`),
+  // "Ask for info" on a conference request, and a suspension: the chair's own request / the conference.
+  conference_info_requested: () => ({ label: "Open My Requests", target: { app: "/my-requests" } }),
+  conference_suspension: inConferenceApp("Open the conference", (c) => `/chair/${c}/dashboard`),
   decision: inConferenceApp("Open my submissions", (c) => `/author/${c}/submissions`),
   withdrawn: (n, chairOf) => (n.conference && chairOf.has(n.conference.slug)
     ? inConferenceApp("Open submissions", (c) => `/chair/${c}`)(n, chairOf)
@@ -80,8 +87,8 @@ const ACTIONS: Record<string, Maker> = {
       : inConferenceApp("Open my review", (cc) => `/reviewer/${cc}`)(n, chairOf);
   },
   new_submission: inConferenceApp("Open submissions", (c) => `/chair/${c}`),
-  invitation_answer: inConference("Open reviewers", (c) => `/prototype/chair/${c}/peer-review/reviewers`),
-  assignment_declined: inConference("Find a replacement", (c) => `/prototype/chair/${c}/peer-review`),
+  invitation_answer: inConferenceApp("Open reviewers", (c) => `/chair/${c}/peer-review/reviewers`),
+  assignment_declined: inConferenceApp("Find a replacement", (c) => `/chair/${c}/peer-review`),
   // Initial Check is ported. As the prototype's chair notification about a new version (`notifyChairNewVersion`, ctx.screeningSearch = the paper's
   // ID) it opens with the ID filter set to that paper; without a paper it opens the plain table (as the database notification does there).
   new_version: (n) => {
@@ -93,7 +100,8 @@ const ACTIONS: Record<string, Maker> = {
   // "Ask for more time": the chair opens the paper's review page to approve or decline; the reviewer opens the review.
   extension_request: (n) => {
     const p = paper(n);
-    return p ? { label: "Review request", target: { app: `/submissions/${p}/chair/review` } } : null;
+    const c = conf(n);
+    return p ? { label: "Review request", target: { app: c ? `/chair/${c}/submissions/${p}/review` : `/submissions/${p}/chair/review` } } : null;
   },
   extension_answer: (n) => {
     const p = paper(n);
@@ -110,7 +118,8 @@ const ACTIONS: Record<string, Maker> = {
   fix_requested: myPaper,
   review_submitted: (n) => {
     const p = paper(n);
-    return p ? { label: "Open reviews", target: { app: `/submissions/${p}/chair/review` } } : null;
+    const c = conf(n);
+    return p ? { label: "Open reviews", target: { app: c ? `/chair/${c}/submissions/${p}/review` : `/submissions/${p}/chair/review` } } : null;
   },
   license_decision: inConferenceApp("Open Conference Details", (c) => `/chair/${c}/settings`),
   // What the own backend sends to the Super Admins (Backend notifySuperAdmins): each opens the console list where the request is answered.
@@ -119,7 +128,14 @@ const ACTIONS: Record<string, Maker> = {
     const c = conf(n);
     return { label: "Review request", target: { app: `/super-admin/conference-requests${c ? `?open=${c}` : ""}` } };
   },
-  cfp_review: () => ({ label: "Review CFP page", target: { app: "/super-admin/cfp-review" } }),
+  cfp_review: (n) => {
+    const c = conf(n);
+    return { label: "Review CFP page", target: { app: `/super-admin/cfp-review${c ? `?open=${c}` : ""}` } };
+  },
+  conference_request_cancelled: (n) => {
+    const c = conf(n);
+    return { label: "Open the request", target: { app: `/super-admin/conference-requests${c ? `?open=${c}` : ""}` } };
+  },
   conference_deletion_request: () => ({ label: "Review request", target: { app: "/super-admin/deletion-requests" } }),
   license_request: () => ({ label: "Review request", target: { app: "/super-admin/license-requests" } }),
   // A new institution / society / research area a member typed: its list page shows the request.
@@ -141,7 +157,7 @@ const ACTIONS: Record<string, Maker> = {
     const c = conf(n);
     if (!p) return null;
     if (n.email?.audience === "reviewer") return c ? { label: "Open paper", target: { app: `/reviewer/${c}/review/${p}` } } : null;
-    return { label: "Open paper", target: { app: `/submissions/${p}/author` } };
+    return { label: "Open paper", target: { app: c ? `/author/${c}/submissions/${p}` : `/submissions/${p}/author` } };
   },
 };
 
@@ -150,9 +166,7 @@ export function actionOf(n: Pick<AppNotification, "kind" | "conference" | "paper
   if (!Object.prototype.hasOwnProperty.call(ACTIONS, n.kind)) return null;
   const made = ACTIONS[n.kind](n, chairOf);
   if (!made) return null;
-  return "app" in made.target
-    ? { label: made.label, href: made.target.app, external: false }
-    : { label: made.label, href: `${PROTOTYPE_URL}${made.target.prototype}`, external: true };
+  return { label: made.label, href: made.target.app, external: false };
 }
 
 export type Audience = "author" | "reviewer" | "chair" | "admin";
@@ -166,6 +180,10 @@ const AUDIENCE: Record<string, Audience> = {
   invitation_answer: "chair",
   assignment_declined: "chair",
   conference_decision: "chair",
+  cfp_decision: "chair",
+  conference_info_requested: "chair",
+  conference_suspension: "chair",
+  conference_request_cancelled: "admin",
   coauthor_added: "author",
   screening: "author",
   review_reminder: "reviewer",

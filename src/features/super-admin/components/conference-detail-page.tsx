@@ -217,7 +217,7 @@ export function ConferenceDetailPage({ id }: { id: string }) {
           <ViewAsPanel
             who={`${c.acronym}'s chair`}
             userId={c.requester.id}
-            next={`/conference/${c.slug}/chair`}
+            next={`/chair/${c.slug}/dashboard`}
             onCancel={() => setViewingAs(false)}
             onStarted={(text) => {
               setViewingAs(false);

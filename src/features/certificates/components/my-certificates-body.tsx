@@ -55,6 +55,8 @@ type Mine = {
   conference: PageConference;
   type: ReturnType<typeof getCertificateType>;
   year: string;
+  /** Withdrawn by the conference: shown, but not to be downloaded. */
+  withdrawn: { replacedBy: string | null } | null;
 };
 const ROLE_CERTIFICATE: Record<string, (m: Mine) => boolean> = {
   author: (m) => ["presentation", "author", "publication", "participation"].includes(m.cert.typeKey),
@@ -83,6 +85,7 @@ export function MyCertificatesBody({ certs, scope, role }: { certs: MyCertificat
     conference: { ...c.conference, startDate: c.conference.startDate ?? undefined, endDate: c.conference.endDate ?? undefined, city: c.conference.city ?? undefined, country: c.conference.country ?? undefined, contactEmail: c.conference.contactEmail ?? undefined },
     type: getCertificateType(c.typeKey),
     year: conferenceYear({ acronym: c.conference.acronym, endDate: c.conference.endDate ?? undefined }, new Date(c.issuedAt).getTime()),
+    withdrawn: c.revokedAt ? { replacedBy: c.replacedBy ?? null } : null,
   })).filter((m) => !scope || (m.conferenceId === scope.id && (!role || !ROLE_CERTIFICATE[role] || ROLE_CERTIFICATE[role](m))));
 
   const q = query.trim().toLowerCase();
@@ -203,11 +206,11 @@ export function MyCertificatesBody({ certs, scope, role }: { certs: MyCertificat
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {g.items.map(({ cert, recipient, conference, type }) => (
+                  {g.items.map(({ cert, recipient, conference, type, withdrawn }) => (
                     <CertCard key={recipient.serial} padded={false} className="overflow-hidden flex flex-col">
                       <button
                         onClick={() => { setPreview({ cert, recipient, conference }); void recordCertificateEvent(recipient.serial, "opened"); }}
-                        style={{ background: "#E9EDF3" }}
+                        style={{ background: "#E9EDF3", opacity: withdrawn ? 0.45 : 1 }}
                         className="p-4 flex justify-center hover:opacity-90 transition-opacity cursor-pointer"
                         aria-label={`Open ${type.label} from ${conference?.acronym}`}
                       >
@@ -216,7 +219,15 @@ export function MyCertificatesBody({ certs, scope, role }: { certs: MyCertificat
 
                       <div className="p-4 flex flex-col gap-3 flex-1">
                         <div>
-                          <Pill tone={type.tone}>{type.label}</Pill>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <Pill tone={type.tone}>{type.label}</Pill>
+                            {withdrawn && <Pill tone="danger">Withdrawn</Pill>}
+                          </div>
+                          {withdrawn && (
+                            <p style={{ color: "var(--danger)" }} className="text-[12px] font-semibold mt-1.5 leading-snug">
+                              The conference has withdrawn this certificate.{withdrawn.replacedBy ? ` A corrected one (${withdrawn.replacedBy}) replaces it.` : ""}
+                            </p>
+                          )}
                           {recipient.paperTitle && <p style={{ color: "var(--navy)" }} className="text-[13px] font-semibold mt-2 leading-snug">{recipient.paperTitle}</p>}
                           {!recipient.paperTitle && recipient.roleLabel && <p style={{ color: "var(--navy)" }} className="text-[13px] font-semibold mt-2">{recipient.roleLabel}</p>}
                           <p style={{ color: "var(--ink-muted)" }} className="text-[11.5px] mt-1">
@@ -225,7 +236,7 @@ export function MyCertificatesBody({ certs, scope, role }: { certs: MyCertificat
                         </div>
 
                         <div className="flex gap-2 mt-auto">
-                          <button onClick={() => { setPreview({ cert, recipient, conference }); void recordCertificateEvent(recipient.serial, "opened"); }} style={{ background: "var(--primary)" }} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-white text-xs font-bold hover:bg-[var(--primary-hover)] transition-colors cursor-pointer">
+                          <button disabled={Boolean(withdrawn)} title={withdrawn ? "This certificate has been withdrawn" : undefined} onClick={() => { setPreview({ cert, recipient, conference }); void recordCertificateEvent(recipient.serial, "opened"); }} style={{ background: "var(--primary)" }} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-white text-xs font-bold hover:bg-[var(--primary-hover)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                             <Download size={13} /> Download PDF
                           </button>
                           <button

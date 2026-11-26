@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { AuthMessage } from "@/components/ui/auth-message";
 import { PasswordField } from "@/components/ui/password-field";
 import { DEFAULT_AFTER_LOGIN, LOGIN_PATH } from "@/lib/auth-redirect";
-import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE, PROTOTYPE_URL } from "@/lib/config";
+import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
 import { getSupabase } from "@/lib/supabase";
 import { authService } from "../auth-service";
 import { OLD_LINK_MESSAGE, readEmailLink } from "../email-link";
@@ -92,11 +92,11 @@ export function ResetPasswordForm() {
 
   return (
     <div className="relative z-10 w-full max-w-[480px]">
-      <a href={`${PROTOTYPE_URL}/`} className="mb-8 flex items-center justify-center text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
+      <Link href="/" className="mb-8 flex items-center justify-center text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-lg">
           <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
         </span>
-      </a>
+      </Link>
 
       <div className="rounded-2xl bg-white p-8 shadow-2xl">
         <h1 className="mb-1 text-xl font-bold text-navy">Set a new password</h1>

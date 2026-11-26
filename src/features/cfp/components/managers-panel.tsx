@@ -47,6 +47,9 @@ function Box({ checked, onChange, label }: { checked: boolean; onChange: () => v
 export function ManagersPanel({ slug, acronym, managers, onAdd, onDone, onChanged, onSessionEnded }: { slug: string; acronym: string; managers: CfpManager[]; onAdd: () => void; onDone: () => void; onChanged: () => void; onSessionEnded: () => void }) {
   const [rows, setRows] = useState<Row[]>(() => managers.map((m) => ({ id: m.id, ...(({ first, last }) => ({ first, last }))(split(m.name)), email: m.email, permissions: { ...m.permissions } })));
   const [removed, setRemoved] = useState<string[]>([]);
+  // What the table held when it opened: Save is offered once a name or permission changed, or someone was removed.
+  const [start] = useState(() => JSON.stringify(rows));
+  const dirty = removed.length > 0 || JSON.stringify(rows) !== start;
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -123,7 +126,7 @@ export function ManagersPanel({ slug, acronym, managers, onAdd, onDone, onChange
       {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
-        <Button onClick={() => void save()} disabled={busy}>{busy ? "Saving…" : "Save Changes"}</Button>
+        <Button onClick={() => void save()} disabled={busy || !dirty} title={dirty ? undefined : "No changes to save"}>{busy ? "Saving…" : "Save Changes"}</Button>
       </div>
     </div>
   );

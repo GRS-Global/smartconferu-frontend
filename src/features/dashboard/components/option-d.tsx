@@ -1,6 +1,7 @@
 "use client";
 
-import { Building2, ChevronRight, Funnel, X } from "lucide-react";
+import { Building2, ChevronRight, Funnel, Plus, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CheckList, ClearLink, FilterPopover, PopoverTitle, TextFilter } from "@/components/ui/filter-popover";
@@ -508,7 +509,12 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
                 );
               })}
             </div>
-            <SearchField label="Search conferences" value={search} onChange={setSearch} placeholder="Search by ID, name or short name…" />
+            <div className="flex flex-wrap items-center gap-3">
+              <SearchField label="Search conferences" value={search} onChange={setSearch} placeholder="Search by ID, name or short name…" />
+              {roleFilter === "chair" && (
+                <Link href="/create-conference" className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-hover"><Plus size={16} aria-hidden="true" /> Create New Conference</Link>
+              )}
+            </div>
           </div>
 
           <div className="-mt-1 flex min-h-[32px] flex-wrap items-center gap-2">

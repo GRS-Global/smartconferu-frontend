@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, TriangleAlert } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -22,13 +22,17 @@ import { NotificationCard } from "./notification-card";
  *  conference filter, day groups, each card's action and its read / unread and Dismiss buttons, "Mark all as read", and the
  *  "How should we tell you?" box. "Mark all as read" marks the whole account's unread notifications, whichever tab or
  *  conference is showing. */
+const PER_PAGE = 20;
+
 export function NotificationsPage({ scope }: { scope?: { slug: string; role: "author" | "reviewer"; acronym: string } } = {}) {
   const router = useRouter();
   const n = useNotifications();
   // The prototype's "How should we tell you?" boxes: its own page state (not saved there either).
-  const [prefs, setPrefs] = useState({ email: true, whatsapp: false, weekly: false });
+  const [prefs, setPrefs] = useState({ email: true, whatsapp: false });
   const [tab, setTab] = useState<TabKey>("all");
   const [conference, setConference] = useState("all");
+  // 20 to a page, as the app's other long lists (Activity Logs, Email Logs); a new tab or conference starts on page 1.
+  const [page, setPage] = useState(1);
   const [openEmail, setOpenEmail] = useState<AppNotification | null>(null); // an email copy being read in full
   const tabRefs = useRef<Partial<Record<TabKey, HTMLButtonElement | null>>>({});
 
@@ -107,7 +111,12 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
   const inConference = items.filter((x) => activeConference === "all" || x.conference?.slug === activeConference);
   // Newest first within each day group.
   const shown = inConference.filter((x) => inTab(x, tab)).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const groups = GROUPS.map((g) => ({ g, items: shown.filter((x) => groupOf(x.createdAt) === g) })).filter((x) => x.items.length);
+  const pages = Math.max(1, Math.ceil(shown.length / PER_PAGE));
+  const safe = Math.min(page, pages);
+  const onPage = shown.slice((safe - 1) * PER_PAGE, safe * PER_PAGE);
+  const groups = GROUPS.map((g) => ({ g, items: onPage.filter((x) => groupOf(x.createdAt) === g) })).filter((x) => x.items.length);
+  const arrow = (disabled: boolean) => ({ border: "1px solid var(--border)", color: disabled ? "var(--ink-faint)" : "var(--ink-muted)" });
+  const goPage = (p: number) => { setPage(p); document.getElementById("notifications-list")?.scrollIntoView({ block: "start", behavior: "smooth" }); };
 
   const act = async (item: AppNotification, action: NotificationAction) => {
     // The prototype marks it read, then goes. Here it is read first; if that fails nothing is shown as read and the person stays to see why.
@@ -117,7 +126,7 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
     else router.push(action.href);
   };
 
-  const pickTab = (key: TabKey) => { setTab(key); };
+  const pickTab = (key: TabKey) => { setTab(key); setPage(1); };
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const last = TABS.length - 1;
     const next = e.key === "ArrowRight" ? (index + 1) % TABS.length : e.key === "ArrowLeft" ? (index + last) % TABS.length : e.key === "Home" ? 0 : e.key === "End" ? last : -1;
@@ -158,7 +167,7 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
           {!scope && conferences.length > 1 && (
             <label className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
               Conference
-              <select value={activeConference} onChange={(e) => setConference(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-2 text-[13px] text-ink outline-none focus:border-primary">
+              <select value={activeConference} onChange={(e) => { setConference(e.target.value); setPage(1); }} className="rounded-lg border border-line bg-white px-2.5 py-2 text-[13px] text-ink outline-none focus:border-primary">
                 <option value="all">All conferences</option>
                 {conferences.map(([slug, acronym]) => <option key={slug} value={slug}>{acronym}</option>)}
               </select>
@@ -206,22 +215,31 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
                 </ul>
               </div>
             ))}
+            {shown.length > PER_PAGE && (
+              <div style={{ borderTop: "1px solid var(--border)" }} className="flex items-center justify-between px-5 py-3">
+                <span className="text-xs text-ink-faint">Showing {(safe - 1) * PER_PAGE + 1}–{Math.min(safe * PER_PAGE, shown.length)} of {shown.length}</span>
+                <div className="flex items-center gap-1.5">
+                  <button type="button" onClick={() => goPage(Math.max(1, safe - 1))} disabled={safe === 1} style={arrow(safe === 1)} aria-label="Previous page" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-canvas disabled:cursor-not-allowed"><ChevronLeft size={14} aria-hidden="true" /></button>
+                  <span className="px-1 text-xs font-semibold text-ink-muted">Page {safe} of {pages}</span>
+                  <button type="button" onClick={() => goPage(Math.min(pages, safe + 1))} disabled={safe === pages} style={arrow(safe === pages)} aria-label="Next page" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-canvas disabled:cursor-not-allowed"><ChevronRight size={14} aria-hidden="true" /></button>
+                </div>
+              </div>
+            )}
           </section>
 
           <aside className="flex flex-col gap-4">
             <section aria-labelledby="notification-prefs" className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5 shadow-card">
               <h2 id="notification-prefs" className="text-[15px] font-extrabold text-navy">How should we tell you?</h2>
               {([
-                ["email", "Email me as well"],
-                ["whatsapp", "WhatsApp / SMS for urgent ones"],
-                ["weekly", "Weekly summary"],
-              ] as const).map(([key, label]) => (
-                <label key={key} className="flex cursor-pointer items-center justify-between text-[13.5px] font-semibold text-ink">
-                  {label}
-                  <input type="checkbox" checked={prefs[key]} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} className="h-[18px] w-[18px] cursor-pointer accent-primary" />
+                ["email", "Email me as well", false],
+                ["whatsapp", "WhatsApp / SMS for urgent ones", true],
+              ] as const).map(([key, label, soon]) => (
+                <label key={key} className={`flex items-center justify-between gap-2 text-[13.5px] font-semibold ${soon ? "cursor-not-allowed text-ink-faint" : "cursor-pointer text-ink"}`}>
+                  <span className="flex items-center gap-2">{label}{soon && <span className="rounded-full bg-muted px-2 py-0.5 text-[10.5px] font-bold text-ink-muted">Coming soon</span>}</span>
+                  <input type="checkbox" checked={prefs[key]} disabled={soon} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} className="h-[18px] w-[18px] cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-50" />
                 </label>
               ))}
-              <p className="text-xs text-ink-faint">WhatsApp / SMS uses the mobile number in your profile.</p>
+              {/* Back with WhatsApp / SMS: <p className="text-xs text-ink-faint">WhatsApp / SMS uses the mobile number in your profile.</p> */}
             </section>
           </aside>
         </div>

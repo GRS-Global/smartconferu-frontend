@@ -33,6 +33,9 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
     startDate: info.startDate, endDate: info.endDate, abstractDeadline: info.abstractDeadline, submissionDeadline: info.submissionDeadline, topics: [...info.topics],
   });
   const [topic, setTopic] = useState("");
+  // What the form held when it opened: Save is offered once something differs.
+  const [start] = useState(() => JSON.stringify(form));
+  const dirty = JSON.stringify(form) !== start;
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -130,7 +133,7 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
       {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
-        <Button onClick={() => void save()} disabled={busy}>{busy ? "Saving…" : "Save Changes"}</Button>
+        <Button onClick={() => void save()} disabled={busy || !dirty} title={dirty ? undefined : "No changes to save"}>{busy ? "Saving…" : "Save Changes"}</Button>
       </div>
     </div>
   );

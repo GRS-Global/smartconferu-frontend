@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, X } from "lucide-react";
+import { Lock, Minus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PAD, placePopover, type Box, type Placement } from "./placement";
 import { findTargets, focusField, isClipped, isComfortablyVisible, revealTarget, unionRect, waitForTargets } from "./reveal";
@@ -69,9 +69,11 @@ const MAX_RE_REVEALS = 4; // after layout shifts, bring the target back into vie
 
 /** A step as the popover draws it: the runner has turned `skip` and `open` into actions. */
 export type ViewStep = Omit<TourStep, "skip" | "open"> & { skip?: TourAction; /** For a gated step: whether its field is filled in. */ gateOk?: boolean };
-interface StepProps { step: ViewStep; index: number; total: number; onBack: () => void; onNext: () => void; onSkipTour: () => void; onFinishLater: () => void }
+interface StepProps { step: ViewStep; index: number; total: number; onBack: () => void; onNext: () => void; onSkipTour: () => void; onFinishLater: () => void;
+  /** Fold the card away into the "Setup tour paused" bar (the chair needs the page underneath, e.g. a button the card covers); the tour carries on from this step. */
+  onMinimize?: () => void }
 
-function TourStepView({ step, index, total, onBack, onNext, onSkipTour, onFinishLater }: StepProps) {
+function TourStepView({ step, index, total, onBack, onNext, onSkipTour, onFinishLater, onMinimize }: StepProps) {
   const keyed = Boolean(step.targets?.length);
   const [phase, setPhase] = useState<"finding" | "ready" | "lost">(keyed ? "finding" : "ready");
   const [attempt, setAttempt] = useState(0);
@@ -228,7 +230,8 @@ function TourStepView({ step, index, total, onBack, onNext, onSkipTour, onFinish
           <div className="flex items-center gap-2">
             {!step.noCounter && <span className="text-[11px] font-bold tabular-nums text-ink-faint">Step {index + 1} of {total}</span>}
             <span style={{ background: badge.bg, color: badge.color }} className="rounded-full px-2 py-0.5 text-[10.5px] font-bold">{badge.label}</span>
-            <button type="button" onClick={onFinishLater} aria-label="Close — finish later" title="Close — finish later" className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-ink-faint hover:bg-canvas"><X size={14} aria-hidden="true" /></button>
+            {onMinimize && <button type="button" onClick={onMinimize} aria-label="Minimise — keep the tour for later" title="Minimise: the page is free to use, the tour waits in the bar" className="ml-auto flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-ink-faint hover:bg-canvas"><Minus size={14} aria-hidden="true" /></button>}
+            <button type="button" onClick={onFinishLater} aria-label="Close — finish later" title="Close — finish later" className={`${onMinimize ? "" : "ml-auto "}flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-ink-faint hover:bg-canvas`}><X size={14} aria-hidden="true" /></button>
           </div>
           <h4 id={titleId} className="mt-2 text-[15px] font-bold text-navy">{step.title}</h4>
           <p id={textId} className="mt-1 text-[13px] leading-relaxed text-ink-soft">{step.text}</p>

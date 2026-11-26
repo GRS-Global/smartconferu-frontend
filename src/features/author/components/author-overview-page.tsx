@@ -4,7 +4,6 @@ import { Check, ChevronRight, Lock, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SessionEnded } from "@/features/auth/components/session-ended";
 import { ConferenceHero } from "@/features/workspace/components/hero";
@@ -18,6 +17,7 @@ import { useConferenceCertificates } from "@/features/certificates/use-conferenc
 import { DetailsDrawer } from "./details-drawer";
 import { KeyDatesCompact, type Milestone } from "./key-dates";
 import { NumbersStrip, TodoPanel, WrapUp } from "./overview-parts";
+import { BackLinks } from "@/features/workspace/components/workspace-gate";
 import { EmptySubmissions, NewSubmissionButton, SubmissionCard } from "./submission-parts";
 
 /* Author · conference Overview, "Dashboard" in the menu (the prototype's AuthorHomeD, Option D — the main author page):
@@ -76,7 +76,7 @@ export function AuthorOverviewPage({ slug }: { slug: string }) {
               icon={TriangleAlert}
               title={missing ? "We couldn't find that conference." : state.config ? "The database connection isn't set up." : "Couldn't load your dashboard."}
               description={missing ? "It doesn't exist, or you have no papers in it. Pick one from My Conferences." : state.message}
-              action={missing || state.config ? undefined : <Button size="sm" onClick={retry}>Try again</Button>}
+              action={<BackLinks retry={missing || state.config ? undefined : retry} />}
             />
           </div>
         </div>

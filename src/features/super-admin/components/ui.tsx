@@ -230,12 +230,12 @@ function DrawerBody({ onClose, title, subtitle, children, footer }: { onClose: (
 }
 
 /** Centred popup (e.g. "Approve this conference?"). */
-export function Modal({ title, subtitle, children, footer, onClose }: { title: string; subtitle?: ReactNode; children: ReactNode; footer?: ReactNode; onClose: () => void }) {
+export function Modal({ title, subtitle, children, footer, onClose, wide }: { title: string; subtitle?: ReactNode; children: ReactNode; footer?: ReactNode; onClose: () => void; wide?: boolean }) {
   useEscape(onClose, true);
   return createPortal(
     <div className="sa-root fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "transparent", minHeight: 0 }}>
       <div className="absolute inset-0" style={{ background: "rgba(11,16,32,0.45)" }} onClick={onClose} />
-      <div className="relative w-full max-w-[520px] max-h-[calc(100vh-2rem)] bg-white rounded-2xl flex flex-col" style={{ boxShadow: "var(--shadow-pop)" }} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`relative w-full ${wide ? "max-w-[720px]" : "max-w-[520px]"} max-h-[calc(100vh-2rem)] bg-white rounded-2xl flex flex-col`} style={{ boxShadow: "var(--shadow-pop)" }} role="dialog" aria-modal="true" aria-label={title}>
         <header className="flex items-start justify-between gap-3 px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <div className="min-w-0">
             <h3 className="text-[16px] font-semibold leading-snug" style={{ color: "var(--text)" }}>

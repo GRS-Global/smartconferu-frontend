@@ -28,6 +28,7 @@ import { ScreeningReportModal } from "./screening-report-modal";
 import { daysUntil, declinedShown, isShort, PR_FILTERS, PR_STAGES, prRowOf, REVIEWER_STATE, type PrRow } from "../peer-review";
 import { useChairConference } from "../use-chair-conference";
 import { readPeerReviewView, savePeerReviewView } from "../peer-review-view";
+import { chairPaperHref } from "@/lib/routes";
 
 /* The chair's Peer Review list (the prototype's PeerReviewListPage): one bucket per job (needs reviewers, waiting on reviewers, needs my
    decision, reviewed) with the urgent parts as chips, and the table of papers with each reviewer's line, due date and score, and the
@@ -210,7 +211,7 @@ export function PeerReviewPage({ slug }: { slug: string }) {
     if ((e.target as HTMLElement).closest("a, button, input, select, label, textarea, [data-nav-stop]")) return;
     if (window.getSelection()?.toString()) return;
     rememberQueue();
-    router.push(`/submissions/${encodeURIComponent(r.paper.id)}/chair/review`);
+    router.push(chairPaperHref(slug, r.paper.id, "review"));
   };
   const rememberQueue = () => savePeerReviewView({
     ...readPeerReviewView(slug), conferenceId: slug, filter, query: f.title, track, sort, ic: icF, pl: plF, idq: f.id, rv: f.reviewers, du: f.due, sc: f.score, dc: f.decision,
@@ -551,7 +552,7 @@ export function PeerReviewPage({ slug }: { slug: string }) {
                     <td data-nav-stop className="py-3 pl-4 pr-1"><input className="cursor-pointer accent-primary" type="checkbox" aria-label={`Select ${r.paper.id}`} checked={selected.includes(r.paper.dbId)} {...pick.box(r.paper.dbId)} /></td>
                     <td className="whitespace-nowrap px-3 py-3 font-semibold text-ink-muted">{r.paper.id}</td>
                     <td className="px-3 py-3">
-                      <Link href={`/submissions/${encodeURIComponent(r.paper.id)}/chair/review`} onClick={rememberQueue} title={r.paper.title} className="line-clamp-2 max-w-[420px] font-semibold leading-snug text-navy hover:text-primary">{r.paper.title}</Link>
+                      <Link href={chairPaperHref(slug, r.paper.id, "review")} onClick={rememberQueue} title={r.paper.title} className="line-clamp-2 max-w-[420px] font-semibold leading-snug text-navy hover:text-primary">{r.paper.title}</Link>
                       {r.paper.track && <span className="mt-1 inline-block rounded bg-muted px-1.5 py-0.5 text-[10.5px] font-bold text-ink-soft">{r.paper.track}</span>}
                     </td>
                     <td className="px-3 py-3">

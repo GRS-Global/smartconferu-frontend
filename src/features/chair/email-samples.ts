@@ -8,6 +8,7 @@ export const EMAIL_SAMPLE_VALUES: Record<string, string> = {
  "paper_title": "Cloud-Native Architecture Patterns for Edge Computing",
  "submission_title": "Cloud-Native Architecture Patterns for Edge Computing",
  "submission_id": "ICTCS-142",
+ "paper_number": "142",
  "track": "Cloud & Edge Computing",
  "presentation_type": "Oral",
  "submission_link": "https://smartconferu.com/s/ictcs-142",

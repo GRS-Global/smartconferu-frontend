@@ -6,7 +6,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { PROTOTYPE_URL } from "@/lib/config";
+import { WEBSITE_URL } from "@/lib/config";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   BadgeCheck,
@@ -40,11 +40,15 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAdmin } from "../session";
-import { isLate, loadPending, QUEUE_INFO, type PendingItem, type QueueKey } from "../pending";
+import { get, post } from "../api";
+import { NOTIFICATIONS_CHANGED } from "../notification-events";
+import { actionOf } from "@/features/notifications/destinations";
+import { whenLabel } from "@/features/notifications/grouping";
+import { isLate, loadPending, type PendingItem, type QueueKey } from "../pending";
 import { clearWelcome, fmtTrustDate, peekWelcome, trustedUntil } from "../trusted-device";
 import { SearchPalette, type SearchPage } from "./search-palette";
 import { StepUpHost } from "./step-up-dialog";
-import { Avatar, SLA_DAYS, Toast, waitingLabel, type Icon } from "./ui";
+import { Avatar, SLA_DAYS, Toast, type Icon } from "./ui";
 
 interface NavLink {
   href: string;
@@ -69,7 +73,7 @@ interface NavSection {
 
 /** The public website's home page. The user app's own pages do not open for a Super Admin account (they send it back to this console), so the header
  *  link goes to the website itself. */
-const WEBSITE_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ?? `${PROTOTYPE_URL}/`;
+const WEBSITE_HOME = WEBSITE_URL ? `${WEBSITE_URL}/` : "/";
 
 /* Same order as the prototype's sidebar: everyday objects, approval queues (folding groups),
    reference lists, settings, the console's own admin. */
@@ -78,6 +82,7 @@ const NAV: NavSection[] = [
     caption: "Overview",
     links: [
       { href: "/super-admin", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/super-admin/notifications", label: "Notifications", icon: Bell },
       { href: "/super-admin/conferences", label: "Conferences", icon: Library },
       { href: "/super-admin/billing", label: "Billing", icon: Wallet, soon: true },
       { href: "/super-admin/users", label: "Users", icon: Users },
@@ -375,10 +380,10 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <a href={WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="sa-btn hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-semibold bg-white" style={{ border: "1px solid var(--border)", color: "var(--text-soft)" }}>
+            <a href={WEBSITE_HOME} target="_blank" rel="noopener noreferrer" className="sa-btn hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-semibold bg-white" style={{ border: "1px solid var(--border)", color: "var(--text-soft)" }}>
               Website home <ExternalLink size={14} />
             </a>
-            <NotificationsMenu pending={pending} onOpen={(p) => router.push(p.href)} />
+            <NotificationsMenu />
             <ProfileMenu onToast={setToast} />
           </div>
         </header>
@@ -395,52 +400,56 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
   );
 }
 
-const SEEN_KEY = "smartconferu.sa.seenPending";
-const pendingKey = (p: PendingItem) => `${p.queue}:${p.id}`;
-const readSeen = (): Set<string> => {
-  try {
-    return new Set(JSON.parse(window.sessionStorage.getItem(SEEN_KEY) ?? "[]") as string[]);
-  } catch {
-    return new Set();
-  }
-};
+interface BellRow {
+  id: string; kind: string; title: string; body: string | null; readAt: string | null; createdAt: string;
+  conferenceSlug: string | null; conferenceAcronym: string | null; paperLabel: string | null;
+}
 
-/** The bell on the right of the header: a red count of what waits for a decision. While something waiting has not been looked at yet (it arrived, or the
- *  page was opened with it waiting) the bell rings and the count pulses every few seconds; opening the list marks what is in it as seen (kept for this tab,
- *  so moving between console pages does not start it again). */
-function NotificationsMenu({ pending, onOpen }: { pending: PendingItem[]; onOpen: (p: PendingItem) => void }) {
+/** The bell on the right of the header: the red count is this account's unread notifications, and the list shows the newest few. Clicking one marks it
+ *  read and opens where it is answered (the same places as the Notifications page); "View all notifications" opens that page. It counts again every
+ *  minute, and at once when the Notifications page marks something read. While something is unread the bell rings and the count pulses. */
+function NotificationsMenu() {
+  const router = useRouter();
   const [open, toggle, setOpen] = useDropdown();
-  const [seen, setSeen] = useState<Set<string>>(() => new Set());
-  useEffect(() => {
-    setSeen(readSeen()); // eslint-disable-line react-hooks/set-state-in-effect
+  const [rows, setRows] = useState<BellRow[]>([]);
+  const [unread, setUnread] = useState(0);
+  const load = useCallback(() => {
+    get<{ data: BellRow[]; unread: number }>("/me/notifications?limit=6")
+      .then((r) => { setRows(r.data); setUnread(r.unread); })
+      .catch(() => undefined); // a failed count keeps the last one
   }, []);
-  const alert = pending.some((p) => !seen.has(pendingKey(p)));
-  const markSeen = () => {
-    const next = new Set(pending.map(pendingKey));
-    setSeen(next);
-    try {
-      window.sessionStorage.setItem(SEEN_KEY, JSON.stringify([...next]));
-    } catch {
-      /* storage off: it rings again on the next page */
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 60_000);
+    window.addEventListener(NOTIFICATIONS_CHANGED, load);
+    return () => { clearInterval(t); window.removeEventListener(NOTIFICATIONS_CHANGED, load); };
+  }, [load]);
+  const openRow = async (r: BellRow) => {
+    setOpen(false);
+    const action = actionOf({ kind: r.kind, paperLabel: r.paperLabel, conference: r.conferenceSlug && r.conferenceAcronym ? { slug: r.conferenceSlug, acronym: r.conferenceAcronym } : null });
+    if (!r.readAt) {
+      await post("/me/notifications/read", { ids: [r.id] }).catch(() => undefined);
+      load();
     }
+    router.push(action && !action.external ? action.href : "/super-admin/notifications");
   };
-  const count = pending.length > 99 ? "99+" : String(pending.length);
+  const count = unread > 99 ? "99+" : String(unread);
   return (
     <div className="relative">
       <button
-        className={`sa-icon-btn relative cursor-pointer${alert ? " sa-bell-alert" : ""}`}
-        aria-label={`Notifications, ${pending.length} waiting`}
+        className={`sa-icon-btn relative cursor-pointer${unread > 0 ? " sa-bell-alert" : ""}`}
+        aria-label={`Notifications, ${unread} unread`}
         aria-expanded={open}
         onClick={(e) => {
-          if (!open) markSeen();
+          if (!open) load();
           toggle(e);
         }}
       >
         <Bell size={20} />
-        {pending.length > 0 && (
+        {unread > 0 && (
           <span
             aria-hidden="true"
-            className={`absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full inline-flex items-center justify-center text-[10.5px] font-bold leading-none text-white${alert ? " sa-badge-alert" : ""}`}
+            className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full inline-flex items-center justify-center text-[10.5px] font-bold leading-none text-white sa-badge-alert"
             style={{ background: "var(--danger)", boxShadow: "0 0 0 2px #fff" }}
           >
             {count}
@@ -448,48 +457,45 @@ function NotificationsMenu({ pending, onOpen }: { pending: PendingItem[]; onOpen
         )}
       </button>
       {open && (
-        <div className="absolute right-0 top-12 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-xl py-2 sa-pop z-30" style={{ boxShadow: "var(--shadow-pop)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="absolute right-0 top-12 w-[360px] max-w-[calc(100vw-2rem)] bg-white rounded-xl py-2 sa-pop z-30" style={{ boxShadow: "var(--shadow-pop)" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between px-5 py-2">
             <p className="font-semibold text-[15px]" style={{ color: "var(--text)" }}>
-              Waiting for you
+              Notifications
             </p>
-            <span className="rounded-full px-2 py-0.5 text-[11.5px] font-bold text-white" style={{ background: "var(--primary)" }}>
-              {pending.length} new
-            </span>
+            {unread > 0 && (
+              <span className="rounded-full px-2 py-0.5 text-[11.5px] font-bold text-white" style={{ background: "var(--primary)" }}>
+                {count} new
+              </span>
+            )}
           </div>
-          <ul className="max-h-[320px] overflow-y-auto">
-            {pending.slice(0, 6).map((p) => {
-              const q = QUEUE_INFO[p.queue];
-              return (
-                <li key={`${p.queue}-${p.id}`}>
-                  <button
-                    onClick={() => {
-                      setOpen(false);
-                      onOpen(p);
-                    }}
-                    className="w-full flex items-center gap-3 px-5 py-2.5 text-left hover:bg-[var(--primary-soft)] cursor-pointer"
-                  >
-                    <span className="w-10 h-10 rounded-full inline-flex items-center justify-center shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
-                      <q.icon size={18} />
+          <ul className="max-h-[340px] overflow-y-auto">
+            {rows.map((r) => (
+              <li key={r.id}>
+                <button onClick={() => void openRow(r)} className="w-full flex items-start gap-3 px-5 py-2.5 text-left hover:bg-[var(--primary-soft)] cursor-pointer">
+                  <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: r.readAt ? "transparent" : "var(--primary)" }} aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className={`block text-[13.5px] truncate ${r.readAt ? "font-medium" : "font-semibold"}`} style={{ color: "var(--text)" }}>
+                      {r.title}
                     </span>
-                    <span className="min-w-0">
-                      <span className="block text-[13.5px] font-semibold truncate" style={{ color: "var(--text)" }}>
-                        {q.label}
-                      </span>
-                      <span className="block text-[12.5px] truncate" style={{ color: "var(--text-muted)" }}>
-                        {p.acronym} · {waitingLabel(p.since)}
-                      </span>
+                    <span className="block text-[12.5px] truncate" style={{ color: "var(--text-muted)" }}>
+                      {[r.conferenceAcronym, whenLabel(r.createdAt)].filter(Boolean).join(" · ")}
                     </span>
-                  </button>
-                </li>
-              );
-            })}
-            {pending.length === 0 && (
+                  </span>
+                  {!r.readAt && <span className="sr-only">Unread</span>}
+                </button>
+              </li>
+            ))}
+            {rows.length === 0 && (
               <li className="px-5 py-6 text-[13px] text-center" style={{ color: "var(--text-muted)" }}>
-                Nothing is waiting.
+                No notifications yet.
               </li>
             )}
           </ul>
+          <div className="px-5 pt-2 pb-1" style={{ borderTop: "1px solid var(--border)" }}>
+            <Link href="/super-admin/notifications" onClick={() => setOpen(false)} className="block py-1.5 text-center text-[13px] font-semibold" style={{ color: "var(--primary)" }}>
+              View all notifications
+            </Link>
+          </div>
         </div>
       )}
     </div>

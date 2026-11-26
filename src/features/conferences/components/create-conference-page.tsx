@@ -80,8 +80,6 @@ export function CreateConferencePage() {
   const [fill, setFill] = useState<{ status: "idle" | "loading" | "done" | "error"; message: string }>({ status: "idle", message: "" });
   const formRef = useRef(form);
   useEffect(() => { formRef.current = form; }, [form]);
-  const [isMac, setIsMac] = useState(false);
-  useEffect(() => { setIsMac(/Mac|iPhone|iPad/.test(navigator.userAgent)); }, []);
   const set = <K extends keyof NewConferenceInput>(k: K, v: NewConferenceInput[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   /* Saved draft (same behaviour as the prototype). The draft is the whole form plus the policy tick, kept in this browser only.
@@ -111,11 +109,11 @@ export function CreateConferencePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, policy, isDirty]);
   useEffect(() => {
-    if (!isDirty) return undefined;
+    if (!isDirty || saving) return undefined;
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [isDirty]);
+  }, [isDirty, saving]);
   const restoreDraft = () => {
     if (!draftOffer) return;
     const { confirmPolicy, ...saved } = draftOffer.form;
@@ -179,13 +177,16 @@ export function CreateConferencePage() {
   // In the prototype a real account's request is saved and sent for approval; the sample build creates the conference straight away.
   const live = !SAMPLE_UI;
 
+  // A conference can't be requested for days that are over: today (this computer's date) is the earliest start. Shown as soon as such a date is picked.
+  const todayIso = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
+  const datesInPast = Boolean((form.startDate && form.startDate < todayIso) || (form.endDate && form.endDate < todayIso));
   const checks: Array<{ key: string; label: string; ok: boolean; msg: string }> = [
     { key: "webPage", label: "Website", ok: URL_RE.test(form.webPage.trim()), msg: form.webPage.trim() ? "That doesn't look like a web address, e.g. https://yourconference.org" : "Add your conference website." },
     { key: "title", label: "Conference title", ok: Boolean(form.title.trim()), msg: "Add a title for your conference." },
     { key: "acronym", label: "Acronym", ok: Boolean(form.acronym.trim()), msg: "Add a short acronym, e.g. ISBM 2026." },
     ...(form.type === "other" ? [{ key: "typeInfo", label: "Type information", ok: Boolean(form.typeInfo.trim()), msg: "Briefly describe what this is." }] : []),
     // As in the prototype only the end date is required (picking a start date fills an empty end date, so one-day events take one click).
-    { key: "endDate", label: "Conference dates", ok: Boolean(form.endDate), msg: "Pick the conference dates." },
+    { key: "endDate", label: "Conference dates", ok: Boolean(form.endDate) && !datesInPast, msg: datesInPast ? "These dates are in the past. Pick today or a later date." : "Pick the conference dates." },
     { key: "primaryArea", label: "Primary area", ok: Boolean(form.primaryArea), msg: "Pick the main research area." },
     { key: "secondaryArea", label: "Secondary area", ok: Boolean(form.secondaryArea), msg: form.primaryArea ? "Pick a secondary area." : "Pick a primary area first." },
     { key: "eventType", label: "Event format", ok: Boolean(form.eventType), msg: "Choose how attendees will join." },
@@ -197,7 +198,7 @@ export function CreateConferencePage() {
   const missing = checks.filter((c) => !c.ok);
   const done = checks.length - missing.length;
   const canCreate = missing.length === 0 && policy;
-  const invalid = (k: string) => showErrors && missing.some((c) => c.key === k);
+  const invalid = (k: string) => (k === "startDate" ? datesInPast : (showErrors || (k === "endDate" && datesInPast)) && missing.some((c) => c.key === k));
   const msg = (k: string) => invalid(k) && <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {checks.find((c) => c.key === k)?.msg}</p>;
   const cls = (k: string) => fieldCls(invalid(k));
   const focus = (k: string) => { const el = document.getElementById(`cc-${k}`); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus({ preventScroll: true }); };
@@ -214,11 +215,15 @@ export function CreateConferencePage() {
       const { id } = await (await getConferenceRequestService()).create({ ...form, webPage });
       void sendActionEmails("conference_requested", { conferenceId: id });
       // The request exists now, so the unfinished draft has done its job (cleared only after a successful create).
+      // Blank the form too: this page can stay mounted behind the next one, and a filled form (or a rewritten draft) would be there on return.
       clearDraft();
+      setForm(EMPTY_NEW_CONFERENCE); setPolicy(false); setShowErrors(false);
+      // The loader stays up until the My Requests page takes over.
       router.push("/my-requests");
     } catch (e) {
       setError(e instanceof AuthRequiredError ? "Your session ended — please sign in again." : e instanceof Error ? e.message : "Something went wrong.");
-    } finally { setSaving(false); }
+      setSaving(false);
+    }
   };
 
   const section = (id: "basics" | "location", n: number, children: ReactNode) => {
@@ -281,6 +286,7 @@ export function CreateConferencePage() {
         </div>
       </div>
       {/* Smart Fill reads the website for a while: the shared full-screen loader covers the page, and the form behind it is inert (nothing can be typed) until the answer is in. */}
+      <LoadingOverlay open={saving} label="Sending your request…" hint="We're sending your conference for approval. Please don't close or refresh the page." />
       <LoadingOverlay open={fill.status === "loading"} label="Reading your website…" hint="We're filling in the conference details from your website. This can take up to a minute — please don't close or refresh the page." />
       <div inert={fill.status === "loading"} className="px-4 pb-8 sm:px-8">
         <div className="mx-auto grid max-w-[1200px] items-start gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_340px] lg:pb-8 xl:gap-8">
@@ -352,7 +358,7 @@ export function CreateConferencePage() {
                     <div>
                       <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Starts</span>
                       {/* Picking a start date fills an empty (or earlier) end date, so one-day events take one click. */}
-                      <input id="cc-startDate" type="date" aria-label="Start date" value={form.startDate} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: v && (!f.endDate || f.endDate < v) ? v : f.endDate })); }} className={cls("startDate")} />
+                      <input id="cc-startDate" type="date" aria-label="Start date" value={form.startDate} min={todayIso} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: v && (!f.endDate || f.endDate < v) ? v : f.endDate })); }} className={cls("startDate")} />
                     </div>
                     <div>
                       <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Ends</span>
@@ -501,7 +507,6 @@ export function CreateConferencePage() {
               </ul>
               <button type="button" onClick={() => void submit()} disabled={!canCreate || saving} title={canCreate ? undefined : "Fill in the required fields listed above first"} className={cn("mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50", canCreate && BTN_FX)}>
                 {saving && <Spinner size={15} tone="current" />}{submitLabel}
-                <kbd className="rounded bg-white/[0.18] px-1.5 py-0.5 font-sans text-[10px] font-semibold">{isMac ? "⌘" : "Ctrl"} ↵</kbd>
               </button>
               {error && <p role="alert" className="mt-2 text-xs font-medium text-danger">{error}</p>}
               <button type="button" onClick={leave} className="mt-2 h-9 w-full cursor-pointer rounded-xl text-xs font-semibold text-ink-muted transition-colors hover:bg-canvas">Cancel</button>

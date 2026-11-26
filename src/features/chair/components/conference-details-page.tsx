@@ -1,7 +1,7 @@
 "use client";
 
 import { useMasterDataVersion } from "@/lib/master-data";
-import { AlertTriangle, Globe, Layers, MapPin, Sparkles, X } from "lucide-react";
+import { AlertTriangle, Globe, Layers, Lock, MapPin, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { VenueSearchInput } from "@/components/ui/venue-search-input";
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
 import { cn } from "@/lib/cn";
-import { PROTOTYPE_URL } from "@/lib/config";
+import { cfpManagerHref } from "@/lib/routes";
 import { COUNTRIES } from "@/lib/country-codes";
 import { RESEARCH_AREA_GROUPS, RESEARCH_SUBAREAS } from "@/lib/research-areas";
 import { getChairService } from "@/services/chair";
@@ -22,7 +22,7 @@ import { suggestTopics } from "@/services/paper-ai";
 import type { CfpFacts, ConferenceInfo } from "@/types/chair";
 import { useConferenceInfo } from "../use-conference-info";
 import { SectionsRail } from "./sections-rail";
-import { LANGUAGES } from "../languages";
+import { DEFAULT_LANGUAGE, LANGUAGES } from "../languages";
 import { BrandingTab } from "./branding-tab";
 import { ConferenceStatusField } from "./conference-status-field";
 import { licenseEndOf, LicenseExpiryField } from "./license-expiry-field";
@@ -46,10 +46,17 @@ const selectCls = (value: string) => cn("w-full appearance-none rounded-lg borde
 
 type Tab = "basic" | "venue" | "branding";
 
+const LOCK_NOTE = "Your Call for Papers is waiting for the Super Admin's approval. What it shows (title, dates, venue, website, description, deadlines and logo) is locked until it is decided. Everything else can still be changed.";
+
 function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, tab, setTab }: { initial: ConferenceInfo; slug: string; types: string[]; typesSet: boolean; cfp: CfpFacts; onLogoSaved: () => void; onSave: (i: ConferenceInfo) => void; busy: boolean; tab: Tab; setTab: (t: Tab) => void }) {
   useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
-  const [f, setF] = useState(initial);
+  // The CFP waits for the Super Admin: what it shows stays as it was sent (the backend refuses a change too). The rest stays editable.
+  const lockCfp = Boolean(cfp.inReview);
+  // The language starts as English when none is saved yet; the setup checklist still counts it as open until it is saved.
+  const [f, setF] = useState<ConferenceInfo>(() => ({ ...initial, language: initial.language || DEFAULT_LANGUAGE }));
   const [topic, setTopic] = useState("");
+  // Saving is offered only when something changed (an unsaved default, like the language, counts as a change).
+  const dirty = JSON.stringify(f) !== JSON.stringify(initial);
   const set = <K extends keyof ConferenceInfo>(k: K, v: ConferenceInfo[K]) => setF((s) => ({ ...s, [k]: v }));
   const problems = {
     name: !f.name.trim() ? "Give the conference a name." : "",
@@ -60,7 +67,8 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
     about: words(f.about) > 1200 ? "Shorten it to 1,200 words." : "",
   };
   const ok = !Object.values(problems).some(Boolean);
-  const needed: Array<[string, boolean]> = [["website", Boolean(f.webPage.trim())], ["title", Boolean(f.name.trim())], ["dates", Boolean(f.startDate && f.endDate)], ["primary area", Boolean(f.primaryArea)], ["secondary area", Boolean(f.secondaryArea)], ["contact email", Boolean(f.contactEmail.trim())], ["topics", f.topics.length >= MIN_TOPICS]];
+  // The same details the setup checklist and the tour ask for: the button stays shut (and says what is missing) until all of them are filled, so the checklist can never stay open after Update.
+  const needed: Array<[string, boolean]> = [["website", Boolean(f.webPage.trim())], ["title", Boolean(f.name.trim())], ["dates", Boolean(f.startDate && f.endDate)], ["abstract deadline", Boolean(f.abstractDeadline)], ["submission deadline", Boolean(f.submissionDeadline)], ["description", Boolean(f.about.trim())], ["primary area", Boolean(f.primaryArea)], ["secondary area", Boolean(f.secondaryArea)], ["language", Boolean(f.language)], ["contact email", Boolean(f.contactEmail.trim())], ["topics", f.topics.length >= MIN_TOPICS]];
   const stillNeeded = needed.filter(([, d]) => !d).map(([l]) => l);
   const profile = [Boolean(f.webPage.trim()), f.topics.length > 0, typesSet, typesSet, cfp.managers > 0, cfp.publishing, cfp.description, Boolean(initial.logoUrl)];
   const pct = Math.round((profile.filter(Boolean).length / profile.length) * 100);
@@ -91,29 +99,30 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
       </section>
       <div role="tablist" aria-label="Conference details" className="mb-6 flex gap-1 border-b border-line">{tabBtn("basic", "Basic Details")}{tabBtn("venue", "Format & Venue")}{tabBtn("branding", "Branding")}</div>
 
-      {tab === "branding" ? <BrandingTab slug={slug} acronym={f.acronym} name={f.name} logoUrl={initial.logoUrl} onSaved={onLogoSaved} /> : <div className={cn("grid items-start gap-6", tab === "basic" && "xl:grid-cols-[minmax(0,1fr)_300px]")}>
+      {lockCfp && <div role="status" className="mb-4 flex items-start gap-2.5 rounded-xl border border-primary-soft-border bg-primary-soft px-4 py-3 text-xs leading-relaxed text-ink-soft"><Lock size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-primary" /><span>{LOCK_NOTE}</span></div>}
+      {tab === "branding" ? <BrandingTab slug={slug} acronym={f.acronym} name={f.name} logoUrl={initial.logoUrl} onSaved={onLogoSaved} locked={lockCfp ? LOCK_NOTE : undefined} /> : <div className={cn("grid items-start gap-6", tab === "basic" && "xl:grid-cols-[minmax(0,1fr)_300px]")}>
         <section style={CARD} className={cn("min-w-0 rounded-2xl bg-white p-6", tab !== "basic" && "mx-auto w-full lg:w-3/4")}>
           {tab === "basic" && (
             <div className="space-y-4">
               <div id="cd-identity" data-tour="cd-identity" className="scroll-mt-24 space-y-4">
-                <div><label htmlFor="cd-web" className={LABEL}><HelpLabel help="webPage">Website</HelpLabel> *</label><input id="cd-web" value={f.webPage} placeholder="https://…" onChange={(ev) => set("webPage", ev.target.value)} aria-invalid={Boolean(problems.web)} className={cn(INPUT_CLASS, bad(problems.web))} />{err(problems.web)}</div>
-                <div><label htmlFor="cd-name" className={LABEL}><HelpLabel help="name">Conference title</HelpLabel> *</label><input id="cd-name" value={f.name} maxLength={300} onChange={(ev) => set("name", ev.target.value)} aria-invalid={Boolean(problems.name)} className={cn(INPUT_CLASS, bad(problems.name))} />{err(problems.name)}</div>
+                <div><label htmlFor="cd-web" className={LABEL}><HelpLabel help="webPage">Website</HelpLabel> *</label><input id="cd-web" disabled={lockCfp} value={f.webPage} placeholder="https://…" onChange={(ev) => set("webPage", ev.target.value)} aria-invalid={Boolean(problems.web)} className={cn(INPUT_CLASS, bad(problems.web))} />{err(problems.web)}</div>
+                <div><label htmlFor="cd-name" className={LABEL}><HelpLabel help="name">Conference title</HelpLabel> *</label><input id="cd-name" disabled={lockCfp} value={f.name} maxLength={300} onChange={(ev) => set("name", ev.target.value)} aria-invalid={Boolean(problems.name)} className={cn(INPUT_CLASS, bad(problems.name))} />{err(problems.name)}</div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div><label htmlFor="cd-acr" className={LABEL}><HelpLabel help="acronym">Acronym</HelpLabel></label><input id="cd-acr" value={f.acronym} readOnly className={cn(INPUT_CLASS, "bg-canvas text-ink-muted")} /></div>
                   <div><label htmlFor="cd-tz" className={LABEL}><HelpLabel help="timezone">Timezone</HelpLabel></label><TimezoneSelect id="cd-tz" value={f.timezone} onChange={(v) => set("timezone", v)} className="w-full rounded-lg border-[1.5px] border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-primary" /></div>
                 </div>
               </div>
               <div id="cd-dates" className="scroll-mt-24 space-y-4">
-                <div><div className={LABEL}><HelpLabel help="dates">Conference dates</HelpLabel> *</div><div className="grid gap-3 sm:grid-cols-2"><input aria-label="Start date" type="date" value={f.startDate} onChange={(ev) => set("startDate", ev.target.value)} className={INPUT_CLASS} /><input aria-label="End date" type="date" value={f.endDate} onChange={(ev) => set("endDate", ev.target.value)} aria-invalid={Boolean(problems.dates)} className={cn(INPUT_CLASS, bad(problems.dates))} /></div>{err(problems.dates)}</div>
+                <div><div className={LABEL}><HelpLabel help="dates">Conference dates</HelpLabel> *</div><div className="grid gap-3 sm:grid-cols-2"><input aria-label="Start date" disabled={lockCfp} type="date" value={f.startDate} onChange={(ev) => set("startDate", ev.target.value)} className={INPUT_CLASS} /><input aria-label="End date" disabled={lockCfp} type="date" value={f.endDate} onChange={(ev) => set("endDate", ev.target.value)} aria-invalid={Boolean(problems.dates)} className={cn(INPUT_CLASS, bad(problems.dates))} /></div>{err(problems.dates)}</div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div data-tour="cd-abstract-deadline"><label htmlFor="cd-abs" className={LABEL}><HelpLabel help="abstractDeadline">Abstract deadline</HelpLabel></label><input id="cd-abs" type="date" value={f.abstractDeadline} onChange={(ev) => set("abstractDeadline", ev.target.value)} className={INPUT_CLASS} /></div>
-                  <div data-tour="cd-submission-deadline"><label htmlFor="cd-sub" className={LABEL}><HelpLabel help="submissionDeadline">Submission deadline</HelpLabel></label><input id="cd-sub" type="date" value={f.submissionDeadline} onChange={(ev) => set("submissionDeadline", ev.target.value)} className={INPUT_CLASS} /></div>
+                  <div data-tour="cd-abstract-deadline"><label htmlFor="cd-abs" className={LABEL}><HelpLabel help="abstractDeadline">Abstract deadline</HelpLabel></label><input id="cd-abs" disabled={lockCfp} type="date" value={f.abstractDeadline} onChange={(ev) => set("abstractDeadline", ev.target.value)} className={INPUT_CLASS} /></div>
+                  <div data-tour="cd-submission-deadline"><label htmlFor="cd-sub" className={LABEL}><HelpLabel help="submissionDeadline">Submission deadline</HelpLabel></label><input id="cd-sub" disabled={lockCfp} type="date" value={f.submissionDeadline} onChange={(ev) => set("submissionDeadline", ev.target.value)} className={INPUT_CLASS} /></div>
                 </div>
                 <p className="-mt-2 text-xs text-ink-faint">This is the only place the submission deadline is set — Submission Settings, the Call for Papers and the emails all use it.</p>
               </div>
               <div id="cd-about" data-tour="cd-about" className="scroll-mt-24 space-y-4">
                 <div><label htmlFor="cd-sum" className={LABEL}><HelpLabel help="summary">Summary</HelpLabel></label><input id="cd-sum" value={f.summary} maxLength={200} placeholder="One-line summary" onChange={(ev) => set("summary", ev.target.value)} className={INPUT_CLASS} /></div>
-                <div><label htmlFor="cd-ab" className={LABEL}><HelpLabel help="about">About the conference</HelpLabel></label><textarea id="cd-ab" rows={7} maxLength={20000} value={f.about} onChange={(ev) => set("about", ev.target.value)} className={INPUT_CLASS} /><div className="mt-1 text-right text-xs text-ink-faint">{words(f.about)} / 1,200 words</div>{err(problems.about)}</div>
+                <div><label htmlFor="cd-ab" className={LABEL}><HelpLabel help="about">About the conference</HelpLabel></label><textarea id="cd-ab" disabled={lockCfp} rows={7} maxLength={20000} value={f.about} onChange={(ev) => set("about", ev.target.value)} className={INPUT_CLASS} /><div className="mt-1 text-right text-xs text-ink-faint">{words(f.about)} / 1,200 words</div>{err(problems.about)}</div>
               </div>
               <div id="cd-area" className="scroll-mt-24 space-y-4">
                 <div data-tour="cd-classification" className="grid gap-3 sm:grid-cols-2">
@@ -147,7 +156,7 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
                 <div className={LABEL}><HelpLabel help="eventType">Event format</HelpLabel> *</div>
                 <div role="radiogroup" aria-label="Event format" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {([["in_person", "In-Person", "Attendees gather at a physical venue", MapPin], ["virtual", "Virtual", "Fully online, no physical venue", Globe], ["hybrid", "Hybrid", "Both in-person and online attendance", Layers]] as const).map(([k, l, d, Icon]) => (
-                    <button key={k} type="button" role="radio" aria-checked={f.mode === k} onClick={() => set("mode", k)} className={cn("flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] p-3 text-left transition-colors", f.mode === k ? "border-primary bg-primary-soft" : "border-line bg-white")}>
+                    <button key={k} type="button" role="radio" disabled={lockCfp} aria-checked={f.mode === k} onClick={() => set("mode", k)} className={cn("flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] p-3 text-left transition-colors", f.mode === k ? "border-primary bg-primary-soft" : "border-line bg-white")}>
                       <Icon size={16} aria-hidden="true" className={cn("mt-0.5 shrink-0", f.mode === k ? "text-primary" : "text-ink-faint")} />
                       <span><span className={cn("block text-sm font-semibold", f.mode === k ? "text-primary" : "text-ink")}>{l}</span><span className="mt-0.5 block text-xs text-ink-faint">{d}</span></span>
                     </button>
@@ -155,27 +164,27 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
                 </div>
               </div>
               {f.mode !== "virtual" && <>
-              <div><label htmlFor="cd-venue" className={LABEL}><HelpLabel help="venue">Venue name</HelpLabel></label><VenueSearchInput id="cd-venue" value={f.venue} placeholder="Venue name" onChange={(v) => set("venue", v)} onPick={(p) => setF((x) => ({ ...x, venue: p.venue || x.venue, address: p.address, city: p.city || x.city, state: p.state, country: p.country || x.country, postalCode: p.postalCode, lat: p.lat ?? x.lat, lng: p.lng ?? x.lng }))} className={INPUT_CLASS} /></div>
+              <div><label htmlFor="cd-venue" className={LABEL}><HelpLabel help="venue">Venue name</HelpLabel></label><VenueSearchInput id="cd-venue" disabled={lockCfp} value={f.venue} placeholder="Venue name" onChange={(v) => set("venue", v)} onPick={(p) => setF((x) => ({ ...x, venue: p.venue || x.venue, address: p.address, city: p.city || x.city, state: p.state, country: p.country || x.country, postalCode: p.postalCode, lat: p.lat ?? x.lat, lng: p.lng ?? x.lng }))} className={INPUT_CLASS} /></div>
               <div>
                 <label className={LABEL}><HelpLabel help="venueAddress">Venue address</HelpLabel></label>
-                <VenueMapPicker initialAddress={f.address} venue={f.venue} address={f.address} city={f.city} country={f.country} onLocationChange={(l) => setF((x) => ({ ...x, address: l.address, city: l.city || x.city, state: l.state || x.state, country: l.country || x.country, postalCode: l.postalCode, lat: l.lat, lng: l.lng }))} />
+                {!lockCfp && <VenueMapPicker initialAddress={f.address} venue={f.venue} address={f.address} city={f.city} country={f.country} onLocationChange={(l) => setF((x) => ({ ...x, address: l.address, city: l.city || x.city, state: l.state || x.state, country: l.country || x.country, postalCode: l.postalCode, lat: l.lat, lng: l.lng }))} />}
               </div>
               </>}
               <div className="grid gap-3 sm:grid-cols-2">
-                <div><label htmlFor="cd-city" className={LABEL}>{f.mode === "virtual" ? "Organizer city" : "City"} *</label><input id="cd-city" value={f.city} maxLength={120} onChange={(ev) => set("city", ev.target.value)} className={INPUT_CLASS} /></div>
-                <div><label htmlFor="cd-country" className={LABEL}>Country / region *</label><select id="cd-country" value={f.country} onChange={(ev) => set("country", ev.target.value)} className={cn(INPUT_CLASS, "cursor-pointer bg-white", !f.country && "text-ink-faint")}><option value="">Select a country</option>{f.country && !COUNTRIES.includes(f.country) && <option value={f.country}>{f.country}</option>}{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+                <div><label htmlFor="cd-city" className={LABEL}>{f.mode === "virtual" ? "Organizer city" : "City"} *</label><input id="cd-city" disabled={lockCfp} value={f.city} maxLength={120} onChange={(ev) => set("city", ev.target.value)} className={INPUT_CLASS} /></div>
+                <div><label htmlFor="cd-country" className={LABEL}>Country / region *</label><select id="cd-country" disabled={lockCfp} value={f.country} onChange={(ev) => set("country", ev.target.value)} className={cn(INPUT_CLASS, "cursor-pointer bg-white", !f.country && "text-ink-faint")}><option value="">Select a country</option>{f.country && !COUNTRIES.includes(f.country) && <option value={f.country}>{f.country}</option>}{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
               </div>
               {f.mode !== "virtual" && <div className="grid gap-3 sm:grid-cols-2">
-                <div><label htmlFor="cd-state" className={LABEL}>State / province</label><input id="cd-state" value={f.state} maxLength={120} onChange={(ev) => set("state", ev.target.value)} className={INPUT_CLASS} /></div>
+                <div><label htmlFor="cd-state" className={LABEL}>State / province</label><input id="cd-state" disabled={lockCfp} value={f.state} maxLength={120} onChange={(ev) => set("state", ev.target.value)} className={INPUT_CLASS} /></div>
                 <div><label htmlFor="cd-postal" className={LABEL}>Postal / ZIP code</label><input id="cd-postal" value={f.postalCode} maxLength={20} onChange={(ev) => set("postalCode", ev.target.value)} className={INPUT_CLASS} /></div>
               </div>}
             </div>
           )}
           <div className="mt-6 flex flex-wrap items-center justify-end gap-4 border-t border-muted pt-5">
             {tab === "venue"
-              ? <>{venueMissing.length > 0 && <span className="text-xs font-semibold text-danger">Still needed: {venueMissing.join(", ")}</span>}<Button className="disabled:!bg-slate-400 disabled:!opacity-100" disabled={!ok || busy || venueMissing.length > 0} onClick={() => onSave(f)}>{busy ? "Saving…" : "Save Venue"}</Button></>
+              ? <>{venueMissing.length > 0 && <span className="text-xs font-semibold text-danger">Still needed: {venueMissing.join(", ")}</span>}<Button className="disabled:!bg-slate-400 disabled:!opacity-100" disabled={!ok || busy || venueMissing.length > 0 || !dirty} title={dirty ? undefined : "No changes to save"} onClick={() => onSave(f)}>{busy ? "Saving…" : "Save Venue"}</Button></>
               : tab === "basic" && <>{stillNeeded.length > 0 && <span className="text-xs font-semibold text-danger">Still needed: {stillNeeded.join(", ")}</span>}
-            <span data-tour="cd-save" className="inline-flex"><Button className="disabled:!bg-slate-400 disabled:!opacity-100" disabled={!ok || stillNeeded.length > 0 || busy} onClick={() => onSave(f)}>{busy ? "Saving…" : "Update Conference"}</Button></span></>}
+            <span data-tour="cd-save" className="inline-flex"><Button className="disabled:!bg-slate-400 disabled:!opacity-100" disabled={!ok || stillNeeded.length > 0 || busy || !dirty} title={dirty ? undefined : "No changes to save"} onClick={() => onSave(f)}>{busy ? "Saving…" : "Update Conference"}</Button></span></>}
           </div>
         </section>
 
@@ -189,8 +198,8 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
             { id: "cd-topics", label: "Topics & research areas", meta: `${f.topics.length} topic${f.topics.length === 1 ? "" : "s"}` },
           ]}
           links={[{ label: "Presentation types", desc: types.join(", ") || "None yet", status: typesSet ? { label: "Done", done: true } : { label: "Incomplete" }, href: `/chair/${e}/settings/submissions` },
-            { label: "CFP managers", desc: "Who else can edit or publish this CFP", status: cfp.managers > 0 ? { label: "Done", done: true } : { label: "Incomplete" }, href: `${PROTOTYPE_URL}/prototype/cfp-draft/${e}/managers` },
-            { label: "Publishing intent", desc: "Where accepted papers will be published", status: cfp.publishing ? { label: "Done", done: true } : { label: "Incomplete" }, href: `${PROTOTYPE_URL}/prototype/cfp-draft/${e}/edit-content` }]}
+            { label: "CFP managers", desc: "Who else can edit or publish this CFP", status: cfp.managers > 0 ? { label: "Done", done: true } : { label: "Incomplete" }, href: cfpManagerHref(slug, "managers") },
+            { label: "Publishing intent", desc: "Where accepted papers will be published", status: cfp.publishing ? { label: "Done", done: true } : { label: "Incomplete" }, href: cfpManagerHref(slug, "content") }]}
         />}
       </div>}
     </div>

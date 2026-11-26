@@ -3,13 +3,13 @@
 import { ArrowUpDown, LayoutGrid, Rows3, Search, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SessionEnded } from "@/features/auth/components/session-ended";
 import { AuthorShell } from "@/features/workspace/components/author-shell";
 import { newSubmissionHref } from "../links";
 import { STATUS_FILTERS, submissionRows, type FilterKey } from "../status";
 import { useAuthorSubmissions } from "../use-author-submissions";
+import { BackLinks } from "@/features/workspace/components/workspace-gate";
 import { CARD_SORTS, EmptySubmissions, FilterStrip, NewSubmissionButton, SubmissionCard, SubmissionsTable, cardStyle, sortCards, type CardSortKey } from "./submission-parts";
 
 /** My Submissions: an author's papers in one conference, as cards or a table (the prototype's MySubmissionsPage). The page
@@ -52,7 +52,7 @@ export function MySubmissionsPage({ slug }: { slug: string }) {
               icon={TriangleAlert}
               title={missing ? "We couldn't find that conference." : state.config ? "The database connection isn't set up." : "Couldn't load your submissions."}
               description={missing ? "It doesn't exist, or you have no submissions in it. Pick one from My Conferences." : state.message}
-              action={missing ? undefined : state.config ? undefined : <Button size="sm" onClick={retry}>Try again</Button>}
+              action={<BackLinks retry={missing || state.config ? undefined : retry} />}
             />
           </div>
         </div>

@@ -265,7 +265,7 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
 
         {card("guidelines", BookOpen, "Submission Guidelines", "guidelines", "Displayed at the top of the submission form for all authors.", (
           <>
-            <RichTextEditor value={settings.submission.guidelines} onChange={setGuideDraft} placeholder="e.g. formatting requirements, page limits, anonymisation policy and templates…" label="Submission guidelines" />
+            <RichTextEditor value={settings.submission.guidelines} onChange={setGuideDraft} placeholder="e.g. formatting requirements, page limits, anonymisation policy and templates…" label="Submission guidelines" maxHeight={360} />
             <div className="mt-3 flex items-center justify-end gap-3">
               {guideSaved && <span className="flex items-center gap-1 text-xs font-semibold text-success"><Check size={13} aria-hidden="true" /> Saved</span>}
               <button type="button" onClick={saveGuidelines} className={PRIMARY_BTN}>Save Guidelines</button>
@@ -275,6 +275,8 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
 
         {card("tracks", Layers, "Tracks", "tracks", policy.tracksOn ? "Authors select one track when submitting." : "Disabled — the track field is hidden from the submission form.", (
           <>
+            {/* Read by the setup tour (gateOpen): a track other than the default placeholder has been added. */}
+            <span hidden data-track-ready={tracks.length > 0 && !(tracks.length === 1 && tracks[0].name === "General Track") ? "1" : "0"} />
             {policy.tracksOn && tracks.length === 0 && <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning"><AlertTriangle size={13} aria-hidden="true" /> Tracks are enabled but none are defined. Add at least one track.</p>}
             <OrderedNameTable items={trackNames} onChange={commitTracks} noun="Track" placeholder="e.g. Business Analytics" muted={!policy.tracksOn} />
           </>

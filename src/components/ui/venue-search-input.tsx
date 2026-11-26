@@ -32,7 +32,7 @@ function cityFromDescription(description: string, country: string) {
 
 interface Places { service: google.maps.places.AutocompleteService; details: google.maps.places.PlacesService; token: google.maps.places.AutocompleteSessionToken; newToken: () => google.maps.places.AutocompleteSessionToken }
 
-export function VenueSearchInput({ id, value, onChange, onPick, placeholder, className }: { id?: string; value: string; onChange: (v: string) => void; onPick: (p: VenuePatch) => void; placeholder?: string; className?: string }) {
+export function VenueSearchInput({ id, value, onChange, onPick, placeholder, className, disabled }: { id?: string; value: string; onChange: (v: string) => void; onPick: (p: VenuePatch) => void; placeholder?: string; className?: string; disabled?: boolean }) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const placesRef = useRef<Places | null>(null);
@@ -103,7 +103,7 @@ export function VenueSearchInput({ id, value, onChange, onPick, placeholder, cla
   const showList = enabled && open && (items.length > 0 || loading);
   return (
     <div ref={wrapRef} className="relative">
-      <input
+      <input disabled={disabled}
         id={id} value={value} maxLength={300} placeholder={placeholder} autoComplete="off" className={className} onKeyDown={onKeyDown}
         onChange={(e) => { setOpen(true); onChange(e.target.value); search(e.target.value); }}
         onFocus={() => { if (enabled) { ensurePlaces().catch(() => undefined); if (items.length) setOpen(true); } }}

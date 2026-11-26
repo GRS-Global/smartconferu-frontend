@@ -67,6 +67,8 @@ interface Draft { id?: string; serial: number; label: string; color: string; hex
 export function DecisionSettingsPage({ slug }: { slug: string }) {
   const { state, retry, reload } = useChairConference(slug);
   const [editor, setEditor] = useState<Draft | null>(null);
+  // The decision as it was when its editor opened ("Save" waits for a change to an existing one).
+  const [editorStart, setEditorStart] = useState("");
   const [touched, setTouched] = useState(false);
   const [del, setDel] = useState<DecisionType | null>(null);
   const [busy, setBusy] = useState(false);
@@ -99,7 +101,7 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
     const color = PRESETS.find((c) => !used.has(c)) ?? PRESETS[0];
     setEditor({ serial: types.length + 1, label: "", color, hex: color, outcome: "", description: "", authorLabel: "" }); setTouched(false); setError("");
   };
-  const openEdit = (t: DecisionType, i: number) => { setEditor({ id: t.id, serial: i + 1, label: t.label, color: t.color, hex: t.color, outcome: t.outcome, description: t.description, authorLabel: t.authorLabel ?? "" }); setTouched(false); setError(""); };
+  const openEdit = (t: DecisionType, i: number) => { const d: Draft = { id: t.id, serial: i + 1, label: t.label, color: t.color, hex: t.color, outcome: t.outcome, description: t.description, authorLabel: t.authorLabel ?? "" }; setEditor(d); setEditorStart(JSON.stringify(d)); setTouched(false); setError(""); };
   const maxSerial = editor ? (editor.id ? types.length : types.length + 1) : 1;
   const labelTrim = editor?.label.trim() ?? "";
   const errs = editor ? {
@@ -170,7 +172,7 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
         <Modal title={editor.id ? "Edit decision" : "Add decision"} subtitle="Chairs pick from these when recording a decision on a submission." icon={Check} onClose={() => { if (!busy) setEditor(null); }} maxWidth="max-w-xl" roomy
           actions={<>
             <button type="button" onClick={() => setEditor(null)} disabled={busy} className="h-10 cursor-pointer rounded-xl px-3 text-sm font-semibold text-ink-muted transition-colors hover:bg-canvas">Cancel</button>
-            <button type="button" onClick={() => void save()} disabled={busy || Boolean(errs.label || errs.hex)} className="h-10 cursor-pointer rounded-xl bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Saving…" : editor.id ? "Save changes" : "Add decision"}</button>
+            <button type="button" onClick={() => void save()} disabled={busy || Boolean(errs.label || errs.hex) || Boolean(editor.id && JSON.stringify(editor) === editorStart)} title={editor.id && JSON.stringify(editor) === editorStart ? "No changes to save" : undefined} className="h-10 cursor-pointer rounded-xl bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Saving…" : editor.id ? "Save changes" : "Add decision"}</button>
           </>}>
           <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-4">
             <div><label htmlFor="dc-serial" className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionSerial">S.No.</HelpLabel> <span className="text-danger">*</span></label><input id="dc-serial" type="number" min={1} max={maxSerial} value={editor.serial} onChange={(e) => setEditor({ ...editor, serial: e.target.value === "" ? 0 : Number(e.target.value) })} onBlur={() => setEditor({ ...editor, serial: Math.min(Math.max(Number(editor.serial) || maxSerial, 1), maxSerial) })} className={`${FIELD()} tabular-nums`} /></div>

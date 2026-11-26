@@ -424,7 +424,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
               <div className="flex-1"><div className="text-sm font-bold text-navy">Submission guidelines</div><div className="text-[11px] text-ink-faint">Please read before you submit</div></div>
               <button type="button" onClick={() => setShowGuide(!showGuide)} aria-expanded={showGuide} className="inline-flex items-center gap-1 text-xs font-bold text-primary">{showGuide ? "Hide" : "Show"} <ChevronUp size={13} className={showGuide ? "" : "rotate-180"} aria-hidden="true" /></button>
             </div>
-            {showGuide && <RichTextContent value={info.guidelines} className="px-5 py-4" />}
+            {showGuide && <RichTextContent value={info.guidelines} className="max-h-[360px] overflow-y-auto px-5 py-4" />}
           </section>
         )}
         <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-5 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.10)]">

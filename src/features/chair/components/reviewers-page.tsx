@@ -15,6 +15,7 @@ import type { ChairConference, PoolReviewer, ReviewBoard } from "@/types/chair";
 import { newAssignmentDue, reviewerConflict } from "../assign-rules";
 import { prRowOf, REVIEWER_STATE, type PrRow, type ReviewerState } from "../peer-review";
 import { useChairConference } from "../use-chair-conference";
+import { chairPaperHref } from "@/lib/routes";
 
 /* The chair's reviewer committee (the prototype's PeerReviewReviewersPane): everyone invited, with the papers each one has (and
    where each review stands), the workload, the review status, and the actions: add a reviewer (an invitation email goes out),
@@ -80,12 +81,13 @@ function TrackPicker({ tracks, picked, onChange }: { tracks: string[]; picked: s
   );
 }
 
-function ReviewerForm({ mode, initial, tracks, onClose, onSave, busy, error }: { mode: "add" | "edit"; initial: { name: string; email: string; tracks: string[] }; tracks: string[]; onClose: () => void; onSave: (v: { name: string; email: string; tracks: string[] }, assign: boolean) => void; busy: boolean; error: string }) {
+function ReviewerForm({ mode, initial, tracks, onClose, onSave, busy, error, canAssign }: { mode: "add" | "edit"; initial: { name: string; email: string; tracks: string[] }; tracks: string[]; onClose: () => void; onSave: (v: { name: string; email: string; tracks: string[] }, assign: boolean) => void; busy: boolean; error: string; /** A paper is ready to take a reviewer (else "Add & assign papers" would open an empty list). */ canAssign: boolean }) {
   const [name, setName] = useState(initial.name);
   const [email, setEmail] = useState(initial.email);
   const [picked, setPicked] = useState(initial.tracks);
   const ok = name.trim().length > 0 && /.+@.+\..+/.test(email.trim());
   const v = { name: name.trim(), email: email.trim(), tracks: picked };
+  const changed = v.name !== initial.name.trim() || JSON.stringify([...picked].sort()) !== JSON.stringify([...initial.tracks].sort());
   return (
     <>
       <div className="space-y-4">
@@ -103,8 +105,8 @@ function ReviewerForm({ mode, initial, tracks, onClose, onSave, busy, error }: {
       </div>
       {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <Button disabled={!ok || busy} onClick={() => onSave(v, false)}>{busy ? "Saving…" : mode === "edit" ? "Save" : "Add reviewer"}</Button>
-        {mode === "add" && <Button variant="outline" disabled={!ok || busy} onClick={() => onSave(v, true)}>Add &amp; assign papers</Button>}
+        <Button disabled={!ok || busy || (mode === "edit" && !changed)} title={mode === "edit" && !changed ? "No changes to save" : undefined} onClick={() => onSave(v, false)}>{busy ? "Saving…" : mode === "edit" ? "Save" : "Add reviewer"}</Button>
+        {mode === "add" && <Button variant="outline" disabled={!ok || busy || !canAssign} title={canAssign ? "Adds the reviewer, then opens the list of papers so you can assign some to them right away" : "No paper is ready for a reviewer yet (papers need their file and, when it is on, the screening first)"} onClick={() => onSave(v, true)}>Add &amp; assign papers</Button>}
         <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
       </div>
     </>
@@ -176,6 +178,8 @@ export function ReviewersPage({ slug }: { slug: string }) {
   const { conference, roles, others, data, board, pool, settings } = state;
   const all = rowsOf(pool.reviewers, data, board);
   const prs = data.papers.filter((p) => !p.withdrawn).map((p) => prRowOf(p, board, data.screening));
+  // The same papers the Assign dialog offers (a conflict depends on the reviewer, so it is not counted here).
+  const canAssign = prs.some((r) => !r.decided && !r.paper.withdrawn && r.stage !== "upload" && r.canAssign);
   const q = f.search.trim().toLowerCase();
   const rows = all
     .filter((r) => !q || r.rev.name.toLowerCase().includes(q) || r.rev.email.toLowerCase().includes(q))
@@ -249,6 +253,9 @@ export function ReviewersPage({ slug }: { slug: string }) {
     try { await (await getChairService()).removeReviewer(slug, modal.rev, paperIds); setToast({ title: "Reviewer removed", text: `${nameOf(modal.rev)} and their assignments were removed.` }); setModal(null); reload(); } catch (e) { fail(e); } finally { setBusy(false); }
   };
   const close = () => { if (!busy) { setModal(null); setError(""); } };
+  // A dialog closes only itself: when one closes because the next one opens (Add & assign papers: the form, then the papers), its close must not
+  // take the new one away too.
+  const closeOnly = (...kinds: Array<NonNullable<Modal>["kind"]>) => () => { if (!busy) { setModal((m) => (m && kinds.includes(m.kind) ? null : m)); setError(""); } };
 
   return (
     <ConferenceShell role="chair" conference={conference} roles={roles} others={others} active="peer-review/reviewers" screening={data.screening}>
@@ -327,7 +334,7 @@ export function ReviewersPage({ slug }: { slug: string }) {
                           {r.papers.map(({ row, state: st, due }) => (
                             <li key={row.paper.dbId} className="flex flex-wrap items-center gap-3 px-4 py-2 text-[13px]">
                               <span className="w-[72px] shrink-0 text-xs font-semibold text-ink-muted">{row.paper.id}</span>
-                              <Link href={`/submissions/${encodeURIComponent(row.paper.id)}/chair`} className="min-w-0 flex-1 truncate font-semibold text-navy hover:text-primary">{row.paper.title}</Link>
+                              <Link href={chairPaperHref(slug, row.paper.id)} className="min-w-0 flex-1 truncate font-semibold text-navy hover:text-primary">{row.paper.title}</Link>
                               <span style={{ color: REVIEWER_STATE[st].color }} className="text-[11px] font-bold">{REVIEWER_STATE[st].word}</span>
                               <span className="text-xs text-ink-muted">{st === "done" ? "" : `Due ${day(due)}`}</span>
                             </li>
@@ -344,13 +351,13 @@ export function ReviewersPage({ slug }: { slug: string }) {
         </div>
       </div>
 
-      <Dialog open={modal?.kind === "add" || modal?.kind === "edit"} onClose={close} title={modal?.kind === "edit" ? "Edit reviewer" : "Add reviewer"} size="md">
-        {(modal?.kind === "add" || modal?.kind === "edit") && <ReviewerForm key={modal.kind === "edit" ? modal.rev.memberId : "new"} mode={modal.kind} initial={modal.kind === "edit" ? { name: modal.rev.name, email: modal.rev.email, tracks: modal.rev.tracks } : { name: "", email: "", tracks: [] }} tracks={pool.tracks} onClose={close} onSave={(v, a) => void save(v, a)} busy={busy} error={error} />}
+      <Dialog open={modal?.kind === "add" || modal?.kind === "edit"} onClose={closeOnly("add", "edit")} title={modal?.kind === "edit" ? "Edit reviewer" : "Add reviewer"} size="md">
+        {(modal?.kind === "add" || modal?.kind === "edit") && <ReviewerForm key={modal.kind === "edit" ? modal.rev.memberId : "new"} mode={modal.kind} initial={modal.kind === "edit" ? { name: modal.rev.name, email: modal.rev.email, tracks: modal.rev.tracks } : { name: "", email: "", tracks: [] }} tracks={pool.tracks} onClose={close} onSave={(v, a) => void save(v, a)} busy={busy} error={error} canAssign={canAssign} />}
       </Dialog>
-      <Dialog open={modal?.kind === "assign"} onClose={close} title={modal?.kind === "assign" ? `Assign papers to ${modal.rev.name}` : "Assign papers"} size="xl">
+      <Dialog open={modal?.kind === "assign"} onClose={closeOnly("assign")} title={modal?.kind === "assign" ? `Assign papers to ${modal.rev.name}` : "Assign papers"} size="xl">
         {modal?.kind === "assign" && <AssignDialog key={modal.rev.memberId} rev={modal.rev} rows={prs} data={data} deadline={newAssignmentDue(settings, board.deadline)} load={all.find((x) => x.rev.memberId === modal.rev.memberId)?.assigned ?? 0} maxLoad={settings?.limits.maxPapersPerReviewer ?? null} onClose={close} onAssign={(ids, due) => void doAssign(ids, due)} busy={busy} error={error} />}
       </Dialog>
-      <Dialog open={modal?.kind === "remove"} onClose={close} title="Remove this reviewer?" size="md">
+      <Dialog open={modal?.kind === "remove"} onClose={closeOnly("remove")} title="Remove this reviewer?" size="md">
         {modal?.kind === "remove" && (
           <>
             <p className="text-sm text-ink-soft"><b className="text-navy">{modal.rev.name}</b> comes off the committee, and so do their assignments and reviews in this conference.</p>

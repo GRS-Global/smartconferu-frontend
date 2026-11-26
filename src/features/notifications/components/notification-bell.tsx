@@ -7,7 +7,7 @@ import { useUnreadCount } from "../notifications-context";
 
 const safeDecode = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
 
-/** The header bell, as the prototype's TopNav draws it: an in-app link to /notifications with the unread number (9+ above nine),
+/** The header bell, as the prototype's TopNav draws it: an in-app link to /notifications with the unread number (99+ above ninety-nine),
  *  lit while on that page. The number is in the accessible name too; the tooltip is just "Notifications". */
 export function NotificationBell() {
   const { unread: total, unreadIn } = useUnreadCount();
@@ -30,7 +30,7 @@ export function NotificationBell() {
       <Bell size={19} strokeWidth={2} aria-hidden="true" />
       {unread ? (
         <span aria-hidden="true" className="absolute right-1 top-1 flex h-[17px] min-w-[17px] items-center justify-center rounded-full border-2 border-white bg-danger px-1 text-[10px] font-bold leading-none text-white">
-          {unread > 9 ? "9+" : unread}
+          {unread > 99 ? "99+" : unread}
         </span>
       ) : null}
     </Link>

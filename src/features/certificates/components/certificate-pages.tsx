@@ -9,7 +9,7 @@ import { Notice } from "../components";
 import { certificatePath, type Go } from "../routes";
 import { useCertificates } from "../use-certificates";
 import { DesignBody } from "./design-body";
-import { DesignerBody } from "./designer-body";
+import { StudioEditor } from "../studio/studio-editor";
 import { DistributeBody } from "./distribute-body";
 import { RecipientsBody } from "./recipients-body";
 
@@ -72,7 +72,7 @@ export function CertificateDesignerPage({ slug, certId }: { slug: string; certId
   if (gate || !c.ready || !cert) return gate;
   return (
     <Frame c={c} active="certificates/design">
-      <DesignerBody key={cert.id} conference={c.ready.conference} cert={cert} actions={c.actions} go={go} />
+      <StudioEditor key={cert.id} conference={c.ready.conference} cert={cert} actions={c.actions} go={go} error={c.error} />
     </Frame>
   );
 }

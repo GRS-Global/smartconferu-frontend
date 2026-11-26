@@ -72,6 +72,8 @@ export interface QueueConfig<T> {
   icon: Icon;
   noun: string;
   idOf: (r: T) => string;
+  /** Another key `?open=` may carry (a notification knows a conference by its slug). */
+  altIdOf?: (r: T) => string;
   statusOf: (r: T) => string;
   since: (r: T) => string;
   resolvedAt?: (r: T) => string | null;
@@ -82,6 +84,8 @@ export interface QueueConfig<T> {
   drawerSubtitle: (r: T) => string;
   detail: (r: T) => ReactNode;
   actions: QueueAction<T>[];
+  /** Leave out the drawer's "Submitted … · waiting" line (the detail says when it was sent). */
+  hideWaiting?: boolean;
 }
 
 type Tab = "pending" | "resolved" | "all";
@@ -137,7 +141,7 @@ export function QueuePage<T>({ config: q, items, onChanged }: { config: QueueCon
   ]);
   const { sorted, sort, toggle } = useSort(rows, spec);
   const paging = usePaging(sorted, `${tab}|${query}|${sort.key}|${sort.dir}`);
-  const current = items.find((r) => q.idOf(r) === open) ?? null;
+  const current = items.find((r) => q.idOf(r) === open || (q.altIdOf ? q.altIdOf(r) === open : false)) ?? null;
 
   const decide = (r: T, action: QueueAction<T>, values: Values) => {
     const id = q.idOf(r);
@@ -338,7 +342,7 @@ function QueueDrawer<T>({
   const email = active?.email?.(item, values) ?? null;
   return (
     <Drawer open onClose={onClose} title={q.drawerTitle(item)} subtitle={q.drawerSubtitle(item)} footer={footer}>
-      {pending && <ClaimBar queue={q.queueKey} itemId={q.idOf(item)} since={q.since(item)} waiting={<WaitingBadge since={q.since(item)} />} claim={claim} onChanged={onWorkChanged} />}
+      {pending && <ClaimBar queue={q.queueKey} itemId={q.idOf(item)} since={q.since(item)} waiting={q.hideWaiting ? undefined : <WaitingBadge since={q.since(item)} />} claim={claim} onChanged={onWorkChanged} />}
       {q.detail(item)}
       <InternalNotes queue={q.queueKey} itemId={q.idOf(item)} notes={notes} onChanged={onWorkChanged} />
       {pending && active && (

@@ -23,6 +23,10 @@ export function SubmissionFormEditor({ initial, stored, onSave, busy }: { initia
   const patch = (k: number, p: Partial<Draft>) => setRows((l) => l.map((r) => (r.key === k ? { ...r, ...p } : r)));
   const move = (i: number, d: -1 | 1) => setRows((l) => { const n = [...l]; [n[i], n[i + d]] = [n[i + d], n[i]]; return n; });
   const optsOf = (r: Draft) => r.optionsText.split(",").map((o) => o.trim()).filter(Boolean);
+  const serialize = (l: Draft[]): SubmissionExtra[] => l.map(({ key, optionsText, ...f }) => { void key; return { ...f, label: f.label.trim(), ...(f.type === "single_choice" ? { options: optionsText.split(",").map((o) => o.trim()).filter(Boolean) } : { options: undefined }) }; });
+  // Saving is offered only when the questions differ from what was loaded (random keys are not part of the comparison).
+  const [start] = useState(() => JSON.stringify(serialize(rows)));
+  const changed = JSON.stringify(serialize(rows)) !== start;
   const bad = rows.some((r) => !r.label.trim() || (r.type === "single_choice" && optsOf(r).length < 2));
   const iconBtn = "flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-primary-soft hover:text-primary disabled:opacity-30";
   return (
@@ -57,7 +61,7 @@ export function SubmissionFormEditor({ initial, stored, onSave, busy }: { initia
         {!stored && <span className="mr-auto text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save the form.</span>}
         {rows.length > 0 && <Button variant="ghost" onClick={() => setRows([])}><RotateCcw size={14} aria-hidden="true" /> Remove all</Button>}
         <Button variant="outline" disabled={rows.length >= 30} onClick={() => setRows((l) => [...l, { key: ++uid, id: `q-${Date.now().toString(36)}${uid}`, type: "short_text", label: "", required: false, optionsText: "" }])}><Plus size={14} aria-hidden="true" /> Add question</Button>
-        <Button disabled={busy || !stored || bad} onClick={() => onSave(rows.map(({ key, optionsText, ...f }) => { void key; return { ...f, label: f.label.trim(), ...(f.type === "single_choice" ? { options: optionsText.split(",").map((o) => o.trim()).filter(Boolean) } : { options: undefined }) }; }))}>{busy ? "Saving…" : "Save form"}</Button>
+        <Button disabled={busy || !stored || bad || !changed} title={changed ? undefined : "No changes to save"} onClick={() => onSave(serialize(rows))}>{busy ? "Saving…" : "Save form"}</Button>
       </div>
     </section>
   );

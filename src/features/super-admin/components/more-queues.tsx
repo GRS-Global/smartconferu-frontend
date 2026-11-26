@@ -1,9 +1,10 @@
 "use client";
 /* License Extensions and CFP Page Review (the prototype's queues.jsx 2 and 3), on the shared QueuePage. */
 import { useMemo } from "react";
-import { AlertTriangle, Check, FileCheck2, Globe, Hourglass, Send, X } from "lucide-react";
-import { decideCfp, decideLicenseRequest, loadCfps, loadConferences, loadLicenseRequests, type AdminConference, type LicenseRequest } from "../services";
+import { AlertTriangle, Check, FileCheck2, Hourglass, Send, X } from "lucide-react";
+import { decideCfp, decideLicenseRequest, loadCfps, loadConferences, loadLicenseRequests, type AdminCfp, type AdminConference, type LicenseRequest } from "../services";
 import { useData } from "../use-data";
+import { CfpReviewDetail } from "./cfp-review-detail";
 import { QueuePage, type QueueConfig } from "./queue-page";
 import { Avatar, Badge, daysSince, Failed, Fields, fmtDate, Loading, Section } from "./ui";
 
@@ -178,25 +179,25 @@ const cfpFlags = (c: AdminConference) => {
   if (PAYMENT_WORDS.test(c.about ?? "")) flags.push("Mentions an external payment");
   return flags;
 };
-const topicsOf = (c: AdminConference) => (Array.isArray(c.details?.topics) ? (c.details.topics as unknown[]).length : 0);
 
 export function CfpReviewPage() {
   const { data, error, loading, reload } = useData(async () => {
     const [waiting, published, rejected] = await Promise.all([loadCfps("in_review"), loadCfps("published"), loadCfps("rejected")]);
     return [...waiting.map((c) => ({ ...c, cfpState: "pending" })), ...published.map((c) => ({ ...c, cfpState: "published" })), ...rejected.map((c) => ({ ...c, cfpState: "sent_back" }))];
   });
-  const config = useMemo<QueueConfig<AdminConference & { cfpState: string }>>(
+  const config = useMemo<QueueConfig<AdminCfp & { cfpState: string }>>(
     () => ({
       queueKey: "cfps",
       title: "CFP Page Review",
       icon: FileCheck2,
       noun: "page",
       idOf: (c) => c.id,
+      altIdOf: (c) => c.slug,
       statusOf: (c) => c.cfpState,
-      since: (c) => c.createdAt ?? "",
-      search: (c) => `${c.title} ${c.acronym} ${c.slug}`,
+      since: (c) => c.cfpSubmittedAt ?? c.createdAt ?? "",
+      search: (c) => `${c.title} ${c.acronym} ${c.slug} ${c.cfpPage ?? ""}`,
       columns: [
-        { label: "CFP page", sort: (c) => c.acronym, render: (c) => <TitleCell title={c.acronym} sub={`smartconferu.com/cfp/${c.slug}`} /> },
+        { label: "CFP page", sort: (c) => c.acronym, render: (c) => <TitleCell title={c.acronym} sub={c.cfpPage ? `smartconferu.com/cfp/${c.cfpPage}` : "No CFP page chosen yet"} /> },
         { label: "Chair", sort: (c) => c.requester?.name ?? "", render: (c) => <Person name={c.requester?.name ?? "—"} /> },
         { label: "Deadline", sort: (c) => c.submissionDeadline ?? "", render: (c) => <span className="whitespace-nowrap">{fmtDate(c.submissionDeadline)}</span> },
         {
@@ -218,30 +219,14 @@ export function CfpReviewPage() {
           },
         },
       ],
+      hideWaiting: true,
       drawerTitle: (c) => `CFP — ${c.acronym}`,
       drawerSubtitle: (c) => c.title,
       detail: (c) => {
         const flags = cfpFlags(c);
         return (
           <>
-            <Section title="Preview">
-              <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
-                <div className="px-5 py-4 text-white" style={{ background: "var(--gradient-primary)" }}>
-                  <p className="text-[11px] font-bold uppercase tracking-wider opacity-80">Call for papers</p>
-                  <p className="text-[16px] font-bold mt-1">{c.title}</p>
-                  <p className="text-[12.5px] opacity-85 mt-0.5">Submission deadline · {fmtDate(c.submissionDeadline)}</p>
-                </div>
-                <div className="p-5 text-[13.5px]" style={{ color: "var(--text-soft)" }}>
-                  <p className="line-clamp-4">{c.about ?? "No description yet."}</p>
-                  <p className="mt-3 text-[12.5px]" style={{ color: "var(--text-muted)" }}>
-                    {topicsOf(c)} topics listed
-                  </p>
-                </div>
-              </div>
-              <a className="inline-flex items-center gap-1.5 mt-3 text-[13px] font-semibold" style={{ color: "var(--primary)" }} href={`/cfp/${c.slug}`} target="_blank" rel="noreferrer">
-                <Globe size={14} /> Open full preview
-              </a>
-            </Section>
+            <CfpReviewDetail c={c} />
             <Section title="Automatic checks">
               <ul>
                 <CheckRow ok={!flags.includes("Submission deadline is already in the past")} label="Submission deadline is in the future" detail={fmtDate(c.submissionDeadline)} />
@@ -276,7 +261,7 @@ export function CfpReviewPage() {
           icon: Check,
           tone: "success",
           status: "published",
-          confirm: (c) => `smartconferu.com/cfp/${c.slug} goes live and ${c.requester?.name ?? "the chair"} is notified.`,
+          confirm: (c) => `${c.cfpPage ? `smartconferu.com/cfp/${c.cfpPage}` : `The CFP of ${c.acronym}`} goes live and ${c.requester?.name ?? "the chair"} is notified.`,
           email: (c) => ({ to: c.requester?.email ?? "the chairs", subject: `The Call for Papers of ${c.acronym} is live`, body: `Dear ${c.requester?.name.split(" ")[0] ?? "chair"},\n\nThe Call for Papers of ${c.acronym} has been approved. Submissions are open now.` }),
           run: (c) => decideCfp(c.id, true),
           toast: (c) => `CFP for ${c.acronym} is live`,
