@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smartconferu — Conference Management System</title>
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="description" content="Smartconferu is the complete academic conference platform — submissions, peer review, program committee, registration, and publishing in one connected workspace.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --background:#F8FAFC;
+    --foreground:#0B1020;
+    --primary:#7C3AED;
+    --primary-foreground:#FFFFFF;
+    --secondary:#7C3AED;
+    --secondary-foreground:#FFFFFF;
+    --accent:#06B6D4;
+    --accent-foreground:#0B1020;
+    --muted:#F1F5F9;
+    --muted-foreground:#64748B;
+    --card:#FFFFFF;
+    --border:#E2E8F0;
+    --radius:0.7rem;
+    --navy:#0B1020;
+    --lavender:#F5F3FF;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--foreground);background:var(--background);line-height:1.5;overflow-x:hidden;}
+  img{display:block;max-width:100%;}
+  a{text-decoration:none;color:inherit;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  ul{list-style:none;}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px;}
+  .wrap-narrow{max-width:1024px;margin:0 auto;padding:0 24px;}
+  .wrap-xnarrow{max-width:768px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- shared utility classes ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;padding:10px 18px;border-radius:0.7rem;transition:all .2s;white-space:nowrap;}
+  .btn-primary{background:var(--primary);color:#FFFFFF;}
+  .btn-primary:hover{opacity:.9;}
+  .btn-outline{background:transparent;color:var(--foreground);border:1.5px solid var(--border);}
+  .btn-outline:hover{border-color:rgba(124, 58, 237,.4);background:rgba(124, 58, 237,.05);}
+  .btn-ghost{color:var(--foreground);opacity:.75;}
+  .btn-ghost:hover{opacity:1;}
+  .btn-icon{width:40px;height:40px;padding:0;border-radius:0.7rem;}
+  .gradient-text{background:linear-gradient(135deg,#7C3AED 0%,#7C3AED 50%,#06B6D4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .reveal-up{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);}
+  .reveal-up.revealed{opacity:1;transform:translateY(0);}
+  .reveal-scale{opacity:0;transform:scale(.96);transition:opacity .6s ease,transform .6s cubic-bezier(.34,1.56,.64,1);}
+  .reveal-scale.revealed{opacity:1;transform:scale(1);}
+  .card-hover-lift{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;}
+  .card-hover-lift:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(124, 58, 237,.12);}
+  .shadow-card{box-shadow:0 4px 24px rgba(11,16,32,.06);}
+  .gradient-border-card{position:relative;background:#FFFFFF;border-radius:var(--radius);}
+  .gradient-border-card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);padding:1px;background:linear-gradient(135deg,rgba(124, 58, 237,.3),rgba(6,182,212,.2));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .eyebrow-pill{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;width:fit-content;}
+  @keyframes pulseSoft{0%,100%{opacity:.6;transform:scale(1);}50%{opacity:1;transform:scale(1.05);}}
+  .pulse-soft{animation:pulseSoft 3s ease-in-out infinite;}
+  @keyframes orbMove1{0%,100%{transform:translate(0) scale(1);}33%{transform:translate(30px,-20px) scale(1.1);}66%{transform:translate(-20px,15px) scale(.95);}}
+  @keyframes orbMove2{0%,100%{transform:translate(0) scale(1);}50%{transform:translate(-40px,25px) scale(1.08);}}
+  @keyframes orbMove3{0%,100%{transform:translate(0) scale(1);}40%{transform:translate(20px,-30px) scale(1.05);}80%{transform:translate(-15px,10px) scale(.98);}}
+  @keyframes badgeFloat{0%,100%{transform:translateY(0) rotate(0deg);}25%{transform:translateY(-6px) rotate(1deg);}75%{transform:translateY(-3px) rotate(-.5deg);}}
+  .section-eyebrow{color:var(--primary);font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;text-align:center;}
+  .section-title{font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;color:var(--foreground);letter-spacing:-0.02em;line-height:1.2;text-align:center;margin-bottom:14px;}
+  .section-sub{color:var(--muted-foreground);font-size:16px;line-height:1.6;text-align:center;max-width:620px;margin:0 auto;}
+  .section-head{max-width:640px;margin:0 auto 52px;}
+  section{padding:88px 0;}
+
+  /* ---------- Header ---------- */
+  header{position:fixed;top:0;left:0;right:0;z-index:50;transition:all .4s;background:transparent;border-bottom:1px solid transparent;}
+  header.scrolled{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(226,232,240,.8);}
+  nav.wrap{display:flex;align-items:center;justify-content:space-between;height:72px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-logo{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:center;gap:2px;}
+  .nav-links > *{position:relative;}
+  .nav-link-btn{padding:9px 14px;border-radius:0.7rem;font-size:14px;font-weight:600;color:var(--foreground);opacity:.72;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+  .nav-link-btn:hover{opacity:1;background:rgba(15,23,42,.05);}
+  .nav-dropdown{position:absolute;top:calc(100% + 8px);left:0;min-width:200px;background:#fff;border:1px solid var(--border);border-radius:0.7rem;box-shadow:0 16px 40px rgba(11,16,32,.12);padding:6px;opacity:0;pointer-events:none;transform:translateY(-6px);transition:all .18s;}
+  .nav-item:hover .nav-dropdown{opacity:1;pointer-events:auto;transform:translateY(0);}
+  .nav-dropdown a{display:block;padding:9px 12px;border-radius:0.7rem;font-size:13.5px;font-weight:600;color:var(--foreground);}
+  .nav-dropdown a:hover{background:var(--lavender);color:var(--primary);}
+  .nav-actions{display:flex;align-items:center;gap:10px;}
+  .mobile-toggle{display:none;}
+  .mobile-menu{position:fixed;inset:0;z-index:49;visibility:hidden;}
+  .mobile-menu.open{visibility:visible;}
+  .mobile-menu-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.3);backdrop-filter:blur(4px);opacity:0;transition:opacity .3s;}
+  .mobile-menu.open .mobile-menu-backdrop{opacity:1;}
+  .mobile-menu-panel{position:absolute;top:0;right:0;bottom:0;width:280px;max-width:85vw;background:#fff;box-shadow:-8px 0 30px rgba(11,16,32,.15);transform:translateX(100%);transition:transform .3s;display:flex;flex-direction:column;}
+  .mobile-menu.open .mobile-menu-panel{transform:translateX(0);}
+  .mobile-menu-head{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);}
+  .mobile-menu nav{padding:16px;display:flex;flex-direction:column;gap:4px;}
+  .mobile-menu nav a, .mobile-menu nav button.mm-link{width:100%;text-align:left;padding:12px;border-radius:0.7rem;font-size:14px;font-weight:600;color:var(--foreground);}
+  .mobile-menu nav a:hover, .mobile-menu nav button.mm-link:hover{background:var(--muted);}
+  .mobile-cta-row{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
+  .mobile-cta-row .btn{width:100%;}
+
+  /* ---------- Hero banner slider ---------- */
+  #hero{position:relative;padding:96px 0 40px;background:#F8FAFC;}
+  .banner{position:relative;height:min(78vh,620px);min-height:440px;border-radius:0.7rem;overflow:hidden;background:var(--navy);box-shadow:0 24px 60px rgba(11,16,32,.18);}
+  .banner-slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .8s ease,visibility 0s linear .8s;}
+  .banner-slide.active{opacity:1;visibility:visible;transition:opacity .8s ease;}
+  .banner-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.06);transition:transform 6s ease-out;}
+  .banner-slide.active .banner-media{transform:scale(1);}
+  .banner-slide::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,16,32,.78) 0%,rgba(11,16,32,.45) 45%,rgba(11,16,32,0) 75%);pointer-events:none;}
+  .banner-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:center;max-width:680px;padding:0 80px;color:#fff;}
+  .banner-eyebrow{align-self:flex-start;font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);margin-bottom:20px;}
+  .banner-title{font-size:clamp(2rem,4.2vw,3.4rem);line-height:1.08;font-weight:800;letter-spacing:-0.02em;margin-bottom:18px;}
+  .banner-sub{font-size:17px;line-height:1.6;color:rgba(255,255,255,.82);max-width:520px;margin-bottom:30px;}
+  .banner-ctas{display:flex;gap:12px;flex-wrap:wrap;}
+  .banner-ctas .btn{padding:13px 24px;font-size:15px;border-radius:0.7rem;}
+  .banner-btn-primary{background:#fff;color:var(--navy);}
+  .banner-btn-primary:hover{background:#F5F3FF;}
+  .banner-btn-ghost{color:#fff;border:1.5px solid rgba(255,255,255,.45);}
+  .banner-btn-ghost:hover{background:rgba(255,255,255,.1);border-color:#fff;}
+  .banner-slide.active .banner-content > *{animation:bannerIn .7s ease both;}
+  .banner-slide.active .banner-title{animation-delay:.08s;}
+  .banner-slide.active .banner-sub{animation-delay:.16s;}
+  .banner-slide.active .banner-ctas{animation-delay:.24s;}
+  @keyframes bannerIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .banner-arrow{position:absolute;top:50%;z-index:3;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .2s;}
+  .banner-arrow:hover{background:rgba(255,255,255,.25);}
+  .banner-arrow.prev{left:16px;}
+  .banner-arrow.next{right:16px;}
+  .banner-dots{position:absolute;bottom:22px;left:80px;z-index:3;display:flex;gap:8px;}
+  .banner-dot{width:34px;height:20px;display:flex;align-items:center;padding:0;}
+  .banner-dot span{display:block;width:100%;height:4px;border-radius:999px;background:rgba(255,255,255,.3);overflow:hidden;position:relative;}
+  .banner-dot span::after{content:"";position:absolute;inset:0;background:#fff;transform:scaleX(0);transform-origin:left;}
+  .banner-dot.active span::after{animation:bannerProgress var(--banner-interval,5s) linear forwards;}
+  .banner.paused .banner-dot.active span::after{animation-play-state:paused;}
+  @keyframes bannerProgress{to{transform:scaleX(1);}}
+  @media(prefers-reduced-motion:reduce){.banner-slide,.banner-media{transition:none;}.banner-slide.active .banner-content > *{animation:none;}}
+  .blob{position:absolute;border-radius:50%;pointer-events:none;}
+  .blob-primary{background:radial-gradient(circle,rgba(124, 58, 237,.15) 0,transparent 70%);filter:blur(40px);}
+  .blob-accent{background:radial-gradient(circle,rgba(6,182,212,.12) 0,transparent 70%);filter:blur(50px);}
+  .blob-secondary{background:radial-gradient(circle,rgba(124,58,237,.1) 0,transparent 70%);filter:blur(60px);}
+  .ht-chip{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:0.7rem;background:#fff;border:1px solid var(--border);box-shadow:0 2px 8px rgba(11,16,32,.04);transition:all .2s;}
+  .ht-chip:hover{border-color:rgba(124, 58, 237,.3);box-shadow:0 4px 14px rgba(11,16,32,.08);}
+  .ht-chip .emoji{font-size:14px;}
+  .ht-chip p.t1{font-size:11.5px;font-weight:700;color:var(--foreground);line-height:1;}
+  .ht-chip p.t2{font-size:9.5px;color:var(--muted-foreground);line-height:1;margin-top:2px;}
+  .ht-arrow{color:rgba(100,116,139,.4);flex-shrink:0;}
+
+  .green-dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;animation:pulseSoft 2s ease-in-out infinite;}
+  .browser-card{position:relative;border-radius:0.7rem;overflow:hidden;box-shadow:0 24px 80px rgba(124, 58, 237,.15),0 8px 32px rgba(11,16,32,.1);border:1px solid rgba(226,232,240,.6);background:#fff;}
+  .browser-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(241,245,249,.4);}
+  .browser-dots{display:flex;gap:6px;}
+  .browser-dots span{width:11px;height:11px;border-radius:50%;}
+  .bdot-r{background:rgba(248,113,113,.6);} .bdot-y{background:rgba(250,204,21,.6);} .bdot-g{background:rgba(74,222,128,.6);}
+  .browser-url{display:flex;align-items:center;gap:8px;padding:4px 12px;border-radius:0.7rem;background:#fff;border:1px solid var(--border);font-size:11px;color:var(--muted-foreground);}
+  .browser-body{padding:18px 20px;background:rgba(241,245,249,.2);}
+  .bb-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .bb-head p.label{font-size:11px;color:var(--muted-foreground);font-weight:500;}
+  .bb-head h3{font-size:14px;font-weight:800;}
+  .pill-open{padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:#EAF7EE;color:#15803D;border:1px solid #BBF7D0;}
+  .dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .dash-card{background:rgba(255,255,255,.95);border:1px solid rgba(226,232,240,.8);border-radius:0.7rem;box-shadow:0 4px 16px rgba(11,16,32,.06);padding:12px;text-align:center;}
+  .dash-card .num{font-size:18px;font-weight:800;}
+  .dash-card .lbl{font-size:10px;color:var(--muted-foreground);font-weight:600;}
+  .dash-card .sub{font-size:9px;color:rgba(100,116,139,.6);margin-top:2px;}
+  .dash-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .dash-row{background:rgba(255,255,255,.95);border:1px solid rgba(226,232,240,.8);border-radius:0.7rem;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .dash-row .id{font-size:10px;font-family:monospace;color:var(--muted-foreground);flex-shrink:0;}
+  .dash-row .title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dash-row .authors{font-size:10px;color:var(--muted-foreground);}
+  .status-pill{flex-shrink:0;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;}
+  .status-review{background:#DBEAFE;color:#1D4ED8;}
+  .status-accept{background:#DCFCE7;color:#15803D;}
+  .status-pending{background:#FEF9C3;color:#A16207;}
+  .status-draft{background:#F1F5F9;color:#475569;}
+  .progress-card{background:rgba(255,255,255,.95);border:1px solid rgba(226,232,240,.8);border-radius:0.7rem;padding:12px;}
+  .progress-track{height:6px;background:var(--muted);border-radius:999px;overflow:hidden;margin-top:8px;}
+  .progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#7C3AED,#06B6D4);}
+  .scroll-hint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.4;}
+  .scroll-hint p{font-size:12px;color:var(--muted-foreground);font-weight:500;}
+  .scroll-hint .pill{width:20px;height:32px;border:2px solid rgba(100,116,139,.4);border-radius:999px;display:flex;justify-content:center;padding-top:5px;}
+  .scroll-hint .pill span{width:4px;height:8px;border-radius:999px;background:rgba(100,116,139,.6);animation:bounce 1.4s infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+  /* ---------- Stats ---------- */
+  #stats{background:rgba(238,242,255,.4);}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  .stat-card{padding:32px 24px;border-radius:0.7rem;background:var(--card);border:1px solid var(--border);text-align:center;}
+  .stat-emoji{font-size:30px;margin-bottom:10px;}
+  .stat-num{font-size:44px;font-weight:800;letter-spacing:-0.02em;}
+  .stat-label{font-size:14px;font-weight:700;margin-top:6px;}
+  .stat-desc{font-size:12.5px;color:var(--muted-foreground);}
+
+  /* ---------- Workflow ---------- */
+  .workflow-wrap{display:flex;gap:64px;align-items:flex-start;}
+  .workflow-steps{flex:1;position:relative;}
+  .workflow-rail{position:absolute;left:19px;top:8px;bottom:8px;width:2px;background:var(--border);}
+  .workflow-rail-fill{position:absolute;left:19px;top:8px;width:2px;background:linear-gradient(180deg,var(--primary),var(--accent));transition:height .3s;}
+  .wf-step{position:relative;display:flex;gap:20px;padding-left:56px;margin-bottom:32px;transition:opacity .4s;opacity:.4;}
+  .wf-step.active{opacity:1;}
+  .wf-step:last-child{margin-bottom:0;}
+  .wf-icon{position:absolute;left:0;top:2px;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--muted);border:2px solid var(--border);transition:all .4s;}
+  .wf-step.active .wf-icon{box-shadow:0 0 20px rgba(124, 58, 237,.3);transform:scale(1.1);}
+  .wf-step h3{font-size:19px;font-weight:800;margin-bottom:8px;}
+  .wf-step p{color:var(--muted-foreground);font-size:14px;line-height:1.6;margin-bottom:12px;}
+  .wf-tags{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .wf-tags li{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted-foreground);}
+  .workflow-visual{flex:1;position:sticky;top:100px;}
+
+  /* ---------- Features grid ---------- */
+  .features-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+  .feature-card{border-radius:0.7rem;overflow:hidden;border:1px solid var(--border);background:var(--card);box-shadow:0 4px 24px rgba(11,16,32,.06);}
+  .feature-card .photo{height:200px;overflow:hidden;}
+  .feature-card .photo img{width:100%;height:100%;object-fit:cover;transition:transform .7s;}
+  .feature-card:hover .photo img{transform:scale(1.05);}
+  .feature-body{padding:24px;}
+  .feature-icon{width:42px;height:42px;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .feature-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .feature-body h3{font-size:17px;font-weight:800;}
+  .feature-body p.desc{color:var(--muted-foreground);font-size:14px;line-height:1.6;margin-bottom:16px;}
+  .feature-tags{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+  .feature-tags li{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted-foreground);}
+  .feature-link{font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+  .feature-card.tall .feature-body{display:flex;flex-direction:column;height:100%;}
+  .feature-card.tall .desc{flex:1;}
+
+  /* ---------- Roles ---------- */
+  .roles-tabs{display:flex;justify-content:center;margin-bottom:48px;}
+  .roles-tabs-inner{display:inline-flex;gap:6px;padding:6px;border-radius:0.7rem;background:var(--muted);border:1px solid var(--border);}
+  .role-tab{display:flex;align-items:center;gap:8px;padding:11px 20px;border-radius:0.7rem;font-size:14px;font-weight:700;color:var(--muted-foreground);transition:all .3s;}
+  .role-tab.active{background:linear-gradient(135deg,#7C3AED,#7C3AEDcc);color:#fff;box-shadow:0 4px 16px rgba(124, 58, 237,.3);}
+  .role-panel{display:none;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+  .role-panel.active{display:grid;}
+  .role-quote{font-size:17px;font-weight:600;font-style:italic;color:var(--muted-foreground);margin-bottom:20px;}
+  .role-feature-row{display:flex;gap:16px;padding:16px;border-radius:0.7rem;background:var(--card);border:1px solid var(--border);margin-bottom:14px;transition:all .2s;}
+  .role-feature-row:hover{border-color:rgba(124, 58, 237,.2);box-shadow:0 4px 20px rgba(11,16,32,.06);}
+  .role-feature-icon{width:40px;height:40px;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;background:rgba(124, 58, 237,.08);}
+  .role-feature-row h4{font-size:14px;font-weight:700;margin-bottom:2px;}
+  .role-feature-row p{font-size:12.5px;color:var(--muted-foreground);line-height:1.5;}
+  .role-mock{border-radius:0.7rem;overflow:hidden;border:1px solid var(--border);box-shadow:0 20px 60px rgba(124, 58, 237,.1),0 8px 24px rgba(11,16,32,.08);background:#fff;}
+  .role-mock-body{padding:18px;display:flex;flex-direction:column;gap:12px;}
+  .role-mock-card{background:var(--card);border:1px solid var(--border);border-radius:0.7rem;padding:14px;}
+  .role-mock-card .row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .role-mock-card .row p{font-size:13px;font-weight:600;line-height:1.3;}
+  .role-new-btn{width:100%;padding:11px;border-radius:0.7rem;color:#fff;font-size:14px;font-weight:700;background:linear-gradient(135deg,#7C3AED,#7C3AEDbb);}
+
+  /* ---------- Why Smartconferu ---------- */
+  #why-grs{background:#F8FAFC;position:relative;overflow:hidden;}
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .why-card{padding:26px;border-radius:0.7rem;background:#fff;}
+  .why-icon{width:48px;height:48px;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+  .why-card h3{font-size:16px;font-weight:800;margin-bottom:8px;}
+  .why-card p{font-size:14px;color:var(--muted-foreground);line-height:1.6;}
+
+  /* ---------- Security band ---------- */
+  #security{background:var(--navy);color:#fff;position:relative;overflow:hidden;}
+  .security-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+  #security h2{font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;margin-bottom:16px;}
+  #security p.desc{color:rgba(255,255,255,.6);font-size:16px;line-height:1.65;margin-bottom:28px;}
+  .avatar-stack{display:flex;}
+  .avatar-stack span{width:32px;height:32px;border-radius:50%;border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;margin-left:-8px;}
+  .avatar-stack span:first-child{margin-left:0;}
+  .sec-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .sec-badge{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:0.7rem;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;transition:all .3s;}
+  .sec-badge:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);}
+  .sec-badge .em{font-size:22px;}
+  .sec-badge span.lbl{color:rgba(255,255,255,.8);font-size:11.5px;font-weight:700;line-height:1.3;}
+
+  /* ---------- Integrations ---------- */
+  .integrations-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .integration-card{background:#fff;border-radius:0.7rem;padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;}
+  .integration-mark{width:40px;height:40px;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;}
+  .integration-card p.name{font-weight:700;font-size:14px;}
+  .integration-card span.tag{font-size:11.5px;color:var(--muted-foreground);background:var(--muted);padding:2px 10px;border-radius:999px;}
+
+  /* ---------- Lifecycle timeline ---------- */
+  .lifecycle-wrap{position:relative;}
+  .lifecycle-rail{position:absolute;left:24px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--primary),var(--secondary),var(--accent));opacity:.3;}
+  .lc-item{position:relative;display:flex;align-items:flex-start;gap:20px;margin-bottom:32px;padding-left:56px;}
+  .lc-dot{position:absolute;left:16px;top:2px;width:20px;height:20px;border-radius:50%;border:2px solid var(--primary);background:#fff;display:flex;align-items:center;justify-content:center;z-index:2;}
+  .lc-dot span{width:8px;height:8px;border-radius:50%;background:var(--primary);}
+  .lc-card{background:#fff;border-radius:0.7rem;padding:18px 20px;flex:1;}
+  .lc-card .num{font-size:12px;font-weight:800;color:rgba(124, 58, 237,.5);letter-spacing:.1em;}
+  .lc-card h3{font-size:16px;font-weight:800;margin:4px 0 4px;}
+  .lc-card p{font-size:13.5px;color:var(--muted-foreground);line-height:1.6;}
+  .lc-card .num-row{display:flex;align-items:center;gap:8px;}
+  @media(min-width:769px){
+    .lifecycle-rail{left:50%;margin-left:-1px;}
+    .lc-item{padding-left:0;gap:0;justify-content:space-between;}
+    .lc-dot{left:50%;transform:translateX(-50%);}
+    .lc-spacer{width:calc(50% - 32px);flex-shrink:0;}
+    .lc-card{width:calc(50% - 32px);flex:none;}
+    .lc-item.side-left .lc-card{text-align:right;}
+    .lc-item.side-left .lc-card .num-row{justify-content:flex-end;}
+    .lc-item.side-right .lc-card{text-align:left;}
+  }
+
+  /* ---------- Pricing ---------- */
+  .pricing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:28px;}
+  .pricing-toggle span{font-size:14px;font-weight:700;color:var(--muted-foreground);}
+  .pricing-toggle span.on{color:var(--foreground);}
+  .toggle-switch{width:52px;height:28px;border-radius:999px;background:#CBD5E1;position:relative;transition:background .3s;}
+  .toggle-switch.yearly{background:var(--primary);}
+  .toggle-switch .knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .3s;}
+  .toggle-switch.yearly .knob{transform:translateX(24px);}
+  .save-badge{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(100,116,139,.08);color:var(--muted-foreground);border:1px solid rgba(100,116,139,.15);}
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:44px;align-items:stretch;}
+  .price-card{position:relative;border-radius:0.7rem;background:#fff;border:1px solid var(--border);box-shadow:0 4px 24px rgba(11,16,32,.06);padding:32px 28px;display:flex;flex-direction:column;}
+  .price-card.popular{background:var(--navy);color:#fff;border:2px solid var(--primary);box-shadow:0 20px 60px rgba(124, 58, 237,.25);transform:scale(1.03);}
+  .popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:800;background:linear-gradient(90deg,#7C3AED,#7C3AED);color:#fff;white-space:nowrap;}
+  .plan-dot{width:40px;height:40px;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+  .plan-dot span{width:16px;height:16px;border-radius:50%;}
+  .price-card h3{font-size:20px;font-weight:800;margin-bottom:4px;}
+  .price-card p.plan-desc{font-size:13.5px;color:var(--muted-foreground);line-height:1.5;margin-bottom:20px;}
+  .price-card.popular p.plan-desc{color:rgba(255,255,255,.6);}
+  .price-amount{display:flex;align-items:flex-end;gap:4px;margin-bottom:20px;}
+  .price-amount .num{font-size:44px;font-weight:800;letter-spacing:-0.02em;}
+  .price-amount .per{font-size:14px;color:var(--muted-foreground);margin-bottom:8px;}
+  .price-card.popular .per{color:rgba(255,255,255,.5);}
+  .price-cta{width:100%;padding:13px;border-radius:0.7rem;font-size:14px;font-weight:700;border:2px solid var(--border);color:var(--foreground);margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+  .price-cta:hover{border-color:var(--primary);color:var(--primary);}
+  .price-cta.solid{background:#fff;color:var(--navy);border:none;}
+  .price-cta.solid:hover{background:var(--lavender);}
+  .price-divider{border-top:1px solid var(--border);margin-bottom:20px;}
+  .price-card.popular .price-divider{border-color:rgba(255,255,255,.1);}
+  .price-feats{display:flex;flex-direction:column;gap:12px;flex:1;}
+  .price-feats li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;}
+  .price-feats li.off{opacity:.35;}
+  .pricing-note{text-align:center;margin-top:36px;color:var(--muted-foreground);font-size:14px;}
+  .pricing-note strong{color:var(--foreground);}
+  .pricing-note a{color:var(--primary);font-weight:700;}
+
+  /* ---------- Support ---------- */
+  .support-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}
+  .support-feat{display:flex;gap:12px;margin-bottom:16px;align-items:flex-start;}
+  .support-feat .ic{width:36px;height:36px;border-radius:0.7rem;background:var(--lavender);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .support-feat h4{font-size:14px;font-weight:700;}
+  .support-feat p{font-size:13.5px;color:var(--muted-foreground);}
+  .chat-mock{max-width:360px;margin-left:auto;position:relative;border-radius:0.7rem;border:1px solid var(--border);box-shadow:0 24px 64px rgba(124, 58, 237,.15);background:#fff;}
+  .chat-head{background:var(--navy);padding:14px 16px;display:flex;align-items:center;gap:10px;border-radius:0.7rem 0.7rem 0 0;}
+  .chat-input{border-radius:0 0 0.7rem 0.7rem;}
+  .chat-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;position:relative;}
+  .chat-avatar .online{position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#4ADE80;border:2px solid var(--navy);}
+  .chat-head p.n{color:#fff;font-size:13.5px;font-weight:700;}
+  .chat-head p.s{color:rgba(255,255,255,.5);font-size:11px;}
+  .chat-body{height:220px;overflow-y:auto;padding:16px;background:#F8FAFC;display:flex;flex-direction:column;gap:10px;}
+  .chat-msg{max-width:82%;padding:9px 13px;border-radius:0.7rem;font-size:12.5px;line-height:1.5;opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease;}
+  .chat-msg.agent{align-self:flex-start;background:#fff;border:1px solid var(--border);color:var(--foreground);border-bottom-left-radius:4px;}
+  .chat-msg.user{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+  .chat-msg.show{opacity:1;transform:translateY(0);}
+  .chat-input{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .chat-input .box{flex:1;background:#F8FAFC;border:1px solid var(--border);border-radius:0.7rem;padding:8px 14px;font-size:13px;color:var(--muted-foreground);}
+  .chat-input .send{width:32px;height:32px;border-radius:0.7rem;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+  .chat-resolved{position:absolute;bottom:-14px;left:-14px;background:#fff;border-radius:0.7rem;padding:8px 12px;box-shadow:0 4px 20px rgba(11,16,32,.1);border:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;opacity:0;transform:translateY(6px);transition:opacity .4s ease .3s,transform .4s ease .3s;}
+  .chat-resolved.show{opacity:1;transform:translateY(0);}
+  .chat-notify{position:absolute;top:-10px;right:-10px;width:26px;height:26px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 14px rgba(124, 58, 237,.45);}
+  .chat-notify::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--primary);animation:pulseSoft 2.2s ease-in-out infinite;z-index:-1;}
+
+  /* ---------- Trust ---------- */
+  .trust-row{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-bottom:14px;}
+  .trust-chip{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:0.7rem;background:#fff;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .2s;}
+  .trust-chip:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(11,16,32,.08);}
+  .trust-mark{width:32px;height:32px;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;}
+  .trust-note{text-align:center;color:rgba(100,116,139,.6);font-size:11.5px;font-style:italic;margin-bottom:48px;}
+  .testimonial-card{position:relative;max-width:720px;margin:0 auto;padding:40px;border-radius:0.7rem;background:#fff;border:1px solid var(--border);box-shadow:0 16px 48px rgba(124, 58, 237,.1);overflow:hidden;}
+  .testimonial-card .quote-mark{position:absolute;top:8px;right:24px;font-size:100px;font-family:Georgia,serif;color:#7C3AED;opacity:.06;line-height:1;}
+  .stars{display:flex;gap:4px;margin-bottom:16px;}
+  .testimonial-card blockquote{font-size:18px;line-height:1.6;font-style:italic;margin-bottom:24px;}
+  .testimonial-person{display:flex;align-items:center;gap:14px;}
+  .t-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#7C3AED);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;}
+  .t-name{font-weight:700;font-size:14px;}
+  .t-role{font-size:12.5px;color:var(--muted-foreground);}
+  .mini-trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:900px;margin:40px auto 0;}
+  .mini-trust{background:#fff;border:1px solid var(--border);border-radius:0.7rem;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;}
+  .mini-trust .em{font-size:22px;}
+  .mini-trust p.h{font-size:12.5px;font-weight:700;}
+  .mini-trust p.s{font-size:11px;color:var(--muted-foreground);}
+
+  /* ---------- FAQ ---------- */
+  .faq-item{border:1px solid var(--border);border-radius:0.7rem;overflow:hidden;margin-bottom:12px;background:#fff;transition:border-color .2s;}
+  .faq-item:hover{border-color:rgba(124, 58, 237,.25);}
+  .faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;text-align:left;}
+  .faq-q span.qt{font-size:15px;font-weight:700;}
+  .faq-caret{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--muted);display:flex;align-items:center;justify-content:center;transition:transform .3s;color:var(--muted-foreground);}
+  .faq-item.open .faq-caret{transform:rotate(180deg);background:var(--lavender);color:var(--primary);}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.16,1,.3,1);}
+  .faq-item.open .faq-a{max-height:220px;}
+  .faq-a-inner{padding:0 20px 20px;color:var(--muted-foreground);font-size:14px;line-height:1.65;}
+
+  /* ---------- Final CTA ---------- */
+  #cta{position:relative;overflow:hidden;background:linear-gradient(135deg,#0B1020,#2E1065 35%,#4C1D95 65%,#6D28D9);color:#fff;text-align:center;}
+  #cta .cta-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);margin-bottom:24px;font-size:12px;font-weight:700;color:rgba(255,255,255,.8);}
+  #cta h2{font-size:clamp(2.25rem,5vw,3.5rem);font-weight:800;line-height:1.1;margin-bottom:20px;}
+  #cta p.sub{color:rgba(255,255,255,.65);font-size:17px;max-width:600px;margin:0 auto 36px;line-height:1.6;}
+  .cta-btns{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:32px;}
+  .cta-btns .btn{padding:14px 28px;font-size:15px;border-radius:0.7rem;}
+  .cta-btns .btn-primary{background:#fff;color:var(--navy);}
+  .cta-btns .btn-primary:hover{background:var(--lavender);opacity:1;}
+  .cta-btns .btn-outline{color:#fff;border:2px solid rgba(255,255,255,.25);}
+  .cta-btns .btn-outline:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.08);}
+  .cta-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;color:rgba(255,255,255,.4);font-size:12.5px;}
+  .cta-trust span{display:flex;align-items:center;gap:6px;}
+
+  /* ---------- Footer ---------- */
+  footer{background:var(--navy);color:#fff;padding-top:64px;padding-bottom:28px;}
+  .footer-grid{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:36px;margin-bottom:48px;}
+  .footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .footer-logo-chip{display:inline-flex;background:#fff;border-radius:0.7rem;padding:8px 12px;}
+  .footer-logo-chip .brand-logo{height:28px;}
+  .footer-desc{color:rgba(255,255,255,.5);font-size:13.5px;line-height:1.6;max-width:280px;margin-bottom:18px;}
+  .footer-social{display:flex;gap:10px;}
+  .footer-social a{width:36px;height:36px;border-radius:0.7rem;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;transition:background .15s;}
+  .footer-social a:hover{background:rgba(255,255,255,.1);}
+  .footer-col p.h5{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.3);margin-bottom:16px;}
+  .footer-col a{display:block;color:rgba(255,255,255,.55);font-size:13.5px;padding:6px 0;transition:color .15s;}
+  .footer-col a:hover{color:#fff;}
+  .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-bottom p{color:rgba(255,255,255,.35);font-size:13px;}
+  .footer-legal{display:flex;gap:24px;}
+  .footer-legal a{color:rgba(255,255,255,.35);font-size:13px;}
+  .footer-legal a:hover{color:rgba(255,255,255,.7);}
+
+  /* ---------- Back to top ---------- */
+  #backToTop{position:fixed;bottom:24px;right:20px;z-index:50;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,#7C3AED,#7C3AED);box-shadow:0 4px 20px rgba(124, 58, 237,.4);opacity:0;transform:translateY(10px);pointer-events:none;transition:all .3s;}
+  #backToTop.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+  #backToTop:hover{transform:scale(1.1);}
+
+  @media(max-width:1024px){
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .workflow-wrap{flex-direction:column;}
+    .workflow-visual{position:static;max-width:520px;margin:0 auto;}
+    .features-grid{grid-template-columns:1fr;}
+    .role-panel.active{grid-template-columns:1fr;}
+    .why-grid{grid-template-columns:1fr 1fr;}
+    .security-grid{grid-template-columns:1fr;}
+    .integrations-grid{grid-template-columns:repeat(2,1fr);}
+    .pricing-grid{grid-template-columns:1fr;max-width:420px;margin-left:auto;margin-right:auto;}
+    .price-card.popular{transform:none;}
+    .support-grid{grid-template-columns:1fr;}
+    .chat-mock{margin:0 auto;}
+    .footer-grid{grid-template-columns:1fr 1fr;}
+    .mini-trust-grid{grid-template-columns:1fr 1fr;}
+  }
+  @media(max-width:768px){
+    .nav-links,.nav-actions{display:none;}
+    .mobile-toggle{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:0.7rem;}
+    .mobile-toggle:hover{background:var(--muted);}
+    .why-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr;gap:28px;}
+    section{padding:64px 0;}
+    #hero{padding-top:84px;}
+    .banner{height:auto;min-height:520px;border-radius:0.7rem;}
+    .banner-content{padding:40px 24px 72px;}
+    .banner-slide::after{background:linear-gradient(180deg,rgba(11,16,32,.55) 0%,rgba(11,16,32,.8) 100%);}
+    .banner-arrow{display:none;}
+    .banner-dots{left:24px;}
+  }
+</style>
+</head>
+<body>
+<header id="siteHeader">
+  <nav class="wrap">
+    <a href="#" class="brand" aria-label="Smartconferu home">
+      <img src="/smartconferu-lockup.png" alt="Smartconferu" class="brand-logo">
+    </a>
+    <div class="nav-links">
+      <div class="nav-item">
+        <button class="nav-link-btn">Services
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+        </button>
+        <div class="nav-dropdown">
+          <a href="#features">Submission &amp; Review</a>
+          <a href="#features">Program Committee</a>
+          <a href="#features">Registration</a>
+          <a href="#features">Publishing</a>
+        </div>
+      </div>
+      <a href="#roles" class="nav-link-btn">For Conferences</a>
+      <a href="#trust" class="nav-link-btn">About Us</a>
+      <a href="#faq" class="nav-link-btn">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/login" id="navLoginLink" class="btn btn-outline">Log in</a>
+      <a href="#faq" class="btn btn-primary" style="background:linear-gradient(135deg,#7C3AED,#7C3AED)">Request Demo</a>
+    </div>
+    <button class="mobile-toggle" id="mobileMenuOpen" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+    </button>
+  </nav>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-backdrop" id="mobileMenuBackdrop"></div>
+  <div class="mobile-menu-panel">
+    <div class="mobile-menu-head">
+      <img src="/smartconferu-lockup.png" alt="Smartconferu" class="brand-logo">
+      <button id="mobileMenuClose" aria-label="Close menu" style="padding:8px;border-radius:0.7rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <nav>
+      <a href="#features">Services</a>
+      <a href="#roles">For Conferences</a>
+      <a href="#trust">About Us</a>
+      <a href="#faq">Contact</a>
+      <div class="mobile-cta-row">
+        <a href="/login" id="navLoginLinkMobile" class="btn btn-outline">Log in</a>
+        <a href="#faq" class="btn btn-primary" style="background:linear-gradient(135deg,#7C3AED,#7C3AED)">Request Demo</a>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<main>
+
+<section id="hero">
+  <div class="wrap">
+    <div class="banner" id="heroBanner" aria-roledescription="carousel" aria-label="Highlights">
+      <div class="banner-slide active" role="group" aria-roledescription="slide" aria-label="1 of 4">
+        <img class="banner-media" src="/home/banners/slide-1.jpg" alt="" style="object-position:center 70%" fetchpriority="high">
+        <div class="banner-content">
+          <span class="banner-eyebrow">Conference Management Platform</span>
+          <h1 class="banner-title">Your entire conference, finally connected in one platform.</h1>
+          <p class="banner-sub">Submissions, peer review, program committee and registration — built for the way academic conferences actually run.</p>
+          <div class="banner-ctas">
+            <a href="#faq" class="btn banner-btn-primary">Request a Demo
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+            <a href="/create-conference" class="btn banner-btn-ghost">Create a Conference</a>
+          </div>
+        </div>
+      </div>
+      <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="2 of 4" aria-hidden="true">
+        <img class="banner-media" src="/home/banners/slide-2.jpg" alt="" style="object-position:center 55%">
+        <div class="banner-content">
+          <span class="banner-eyebrow">Peer Review</span>
+          <h2 class="banner-title">Blind review and conflict detection, handled for you.</h2>
+          <p class="banner-sub">Auto-assign reviewers, flag conflicts of interest and track every score in real time.</p>
+          <div class="banner-ctas">
+            <a href="#features" class="btn banner-btn-primary" tabindex="-1">Explore Peer Review
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="3 of 4" aria-hidden="true">
+        <img class="banner-media" src="/home/banners/slide-3.jpg" alt="" style="object-position:center 65%">
+        <div class="banner-content">
+          <span class="banner-eyebrow">Registration &amp; Payments</span>
+          <h2 class="banner-title">Registration and payments, built right in.</h2>
+          <p class="banner-sub">Chair-defined fees, USD or INR, and presentation slot booking — linked to every accepted paper.</p>
+          <div class="banner-ctas">
+            <a href="#features" class="btn banner-btn-primary" tabindex="-1">See Registration
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="4 of 4" aria-hidden="true">
+        <img class="banner-media" src="/home/banners/slide-4.jpg" alt="" style="object-position:center 50%">
+        <div class="banner-content">
+          <span class="banner-eyebrow">Publishing</span>
+          <h2 class="banner-title">From accepted paper to published proceedings.</h2>
+          <p class="banner-sub">Collect camera-ready files, issue certificates and publish open-access proceedings in one flow.</p>
+          <div class="banner-ctas">
+            <a href="#features" class="btn banner-btn-primary" tabindex="-1">Explore Publishing
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <button class="banner-arrow prev" type="button" aria-label="Previous slide">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button class="banner-arrow next" type="button" aria-label="Next slide">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <div class="banner-dots">
+        <button type="button" class="banner-dot active" aria-label="Go to slide 1" aria-current="true"><span></span></button>
+        <button type="button" class="banner-dot" aria-label="Go to slide 2"><span></span></button>
+        <button type="button" class="banner-dot" aria-label="Go to slide 3"><span></span></button>
+        <button type="button" class="banner-dot" aria-label="Go to slide 4"><span></span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="stats">
+  <div class="wrap">
+    <div class="section-head reveal-up">
+      <p class="section-eyebrow">By the numbers</p>
+      <h2 class="section-title">Trusted by the academic community</h2>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card reveal-up card-hover-lift"><div class="stat-emoji">👩‍🔬</div><div class="stat-num gradient-text" data-count="12400" data-suffix="+">0</div><p class="stat-label">Researchers</p><p class="stat-desc">active on the platform</p></div>
+      <div class="stat-card reveal-up card-hover-lift" style="transition-delay:.08s"><div class="stat-emoji">🎓</div><div class="stat-num gradient-text" data-count="340" data-suffix="+">0</div><p class="stat-label">Conferences Hosted</p><p class="stat-desc">across disciplines</p></div>
+      <div class="stat-card reveal-up card-hover-lift" style="transition-delay:.16s"><div class="stat-emoji">📄</div><div class="stat-num gradient-text" data-count="58000" data-suffix="+">0</div><p class="stat-label">Papers Submitted</p><p class="stat-desc">through our platform</p></div>
+      <div class="stat-card reveal-up card-hover-lift" style="transition-delay:.24s"><div class="stat-emoji">⚡</div><div class="stat-num gradient-text" data-count="99.9" data-suffix="%" data-decimal="1">0</div><p class="stat-label">Platform Uptime</p><p class="stat-desc">SLA guaranteed</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="workflow">
+  <div class="wrap">
+    <div class="section-head reveal-up">
+      <p class="section-eyebrow">How it works</p>
+      <h2 class="section-title">Built for conferences that run end-to-end</h2>
+      <p class="section-sub">Every paper follows a structured journey. Smartconferu manages each step automatically — so chairs focus on quality, not coordination.</p>
+    </div>
+    <div class="workflow-wrap">
+      <div class="workflow-steps" id="workflowSteps">
+        <div class="workflow-rail"></div>
+        <div class="workflow-rail-fill" id="workflowRailFill" style="height:0"></div>
+        <div class="wf-step active" data-step="0">
+          <div class="wf-icon" style="background:linear-gradient(135deg,#7C3AED,#7C3AEDcc)"><span>📄</span></div>
+          <div><h3>Author submits the paper</h3><p>Authors upload their manuscript, add co-authors, and complete the submission form. Versioned file management means revisions are tracked automatically.</p>
+            <ul class="wf-tags">
+              <li><span class="dot" style="background:#7C3AED"></span>Multi-author forms</li>
+              <li><span class="dot" style="background:#7C3AED"></span>File versioning</li>
+              <li><span class="dot" style="background:#7C3AED"></span>Submission confirmation</li>
+              <li><span class="dot" style="background:#7C3AED"></span>Deadline enforcement</li>
+            </ul>
+          </div>
+        </div>
+        <div class="wf-step" data-step="1">
+          <div class="wf-icon"><span>👥</span></div>
+          <div><h3>Chair assigns reviewers</h3><p>Program chairs assign reviewers manually or via bidding. The system automatically detects conflicts of interest so you never have to cross-check manually.</p>
+            <ul class="wf-tags">
+              <li><span class="dot" style="background:#7C3AED"></span>Reviewer bidding</li>
+              <li><span class="dot" style="background:#7C3AED"></span>Auto conflict detection</li>
+              <li><span class="dot" style="background:#7C3AED"></span>Load balancing</li>
+              <li><span class="dot" style="background:#7C3AED"></span>Bulk assignment</li>
+            </ul>
+          </div>
+        </div>
+        <div class="wf-step" data-step="2">
+          <div class="wf-icon"><span>🔍</span></div>
+          <div><h3>Structured peer evaluation</h3><p>Reviewers score papers on customizable criteria. Confidence levels, detailed comments, and confidential PC remarks are all captured in one structured form.</p>
+            <ul class="wf-tags">
+              <li><span class="dot" style="background:#06B6D4"></span>Customizable rubrics</li>
+              <li><span class="dot" style="background:#06B6D4"></span>Confidence scoring</li>
+              <li><span class="dot" style="background:#06B6D4"></span>PC-only remarks</li>
+              <li><span class="dot" style="background:#06B6D4"></span>Deadline reminders</li>
+            </ul>
+          </div>
+        </div>
+        <div class="wf-step" data-step="3">
+          <div class="wf-icon"><span>✓</span></div>
+          <div><h3>Chair makes final decisions</h3><p>All reviews consolidated. Chairs see aggregated scores, reviewer consensus, and can accept, reject, or request revisions — with one-click notification to authors.</p>
+            <ul class="wf-tags">
+              <li><span class="dot" style="background:#10B981"></span>Score aggregation</li>
+              <li><span class="dot" style="background:#10B981"></span>Consensus view</li>
+              <li><span class="dot" style="background:#10B981"></span>Revision requests</li>
+              <li><span class="dot" style="background:#10B981"></span>Author notifications</li>
+            </ul>
+          </div>
+        </div>
+        <div class="wf-step" data-step="4">
+          <div class="wf-icon"><span>📖</span></div>
+          <div><h3>Proceedings generated</h3><p>Camera-ready papers collected, formatted, and exported. Generate publication-ready proceedings in standard formats — ready for archiving or journal submission.</p>
+            <ul class="wf-tags">
+              <li><span class="dot" style="background:#F59E0B"></span>Camera-ready collection</li>
+              <li><span class="dot" style="background:#F59E0B"></span>Proceedings export</li>
+              <li><span class="dot" style="background:#F59E0B"></span>DOI assignment</li>
+              <li><span class="dot" style="background:#F59E0B"></span>Archive formats</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="workflow-visual">
+        <div class="browser-card">
+          <div class="browser-bar">
+            <div class="browser-dots"><span class="bdot-r"></span><span class="bdot-y"></span><span class="bdot-g"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></span><span style="font-size:11px;color:var(--muted-foreground)">Submit — Smartconferu</span></div>
+            <div style="width:48px"></div>
+          </div>
+          <div style="padding:22px;min-height:280px;">
+            <p style="font-size:12px;font-weight:800;margin-bottom:12px;">New Submission</p>
+            <div style="height:32px;border-radius:0.7rem;background:var(--muted);border:1px solid var(--border);display:flex;align-items:center;padding:0 12px;margin-bottom:8px;"><span style="font-size:12px;color:var(--muted-foreground)">Paper Title</span></div>
+            <div style="height:32px;border-radius:0.7rem;background:var(--muted);border:1px solid var(--border);display:flex;align-items:center;padding:0 12px;margin-bottom:8px;"><span style="font-size:12px;color:var(--muted-foreground)">Abstract</span></div>
+            <div style="height:32px;border-radius:0.7rem;background:var(--muted);border:1px solid var(--border);display:flex;align-items:center;padding:0 12px;margin-bottom:8px;"><span style="font-size:12px;color:var(--muted-foreground)">Keywords</span></div>
+            <div style="height:32px;border-radius:0.7rem;background:var(--muted);border:1px solid var(--border);display:flex;align-items:center;padding:0 12px;margin-bottom:14px;"><span style="font-size:12px;color:var(--muted-foreground)">Upload PDF</span></div>
+            <button style="width:100%;height:36px;border-radius:0.7rem;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#7C3AED,#7C3AED)">Submit Paper</button>
+          </div>
+          <div style="display:flex;border-top:1px solid var(--border);">
+            <button style="flex:1;padding:10px 0;font-size:10px;font-weight:700;color:var(--primary);border-bottom:2px solid var(--primary);background:rgba(124, 58, 237,.03)">Submit</button>
+            <button style="flex:1;padding:10px 0;font-size:10px;font-weight:700;color:#94A3B8;">Assign</button>
+            <button style="flex:1;padding:10px 0;font-size:10px;font-weight:700;color:#94A3B8;">Review</button>
+            <button style="flex:1;padding:10px 0;font-size:10px;font-weight:700;color:#94A3B8;">Decide</button>
+            <button style="flex:1;padding:10px 0;font-size:10px;font-weight:700;color:#94A3B8;">Publish</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" style="background:rgba(238,242,255,.3)">
+  <div class="wrap">
+    <div class="section-head reveal-up">
+      <p class="section-eyebrow">Services We Provide</p>
+      <h2 class="section-title">Everything a conference needs, in one place</h2>
+      <p class="section-sub">From opening the call for papers to publishing final proceedings, Smartconferu covers the full lifecycle.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal-scale" style="grid-column:span 1;">
+        <div class="photo"><img src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Researchers collaborating on papers"></div>
+        <div class="feature-body">
+          <div class="feature-head"><div class="feature-icon" style="background:#7C3AED15;border:1px solid #7C3AED30">📨</div><h3>Submission &amp; Review</h3></div>
+          <p class="desc">Author submissions, versioned files, reviewer assignment, bidding, and structured evaluation — end to end.</p>
+          <ul class="feature-tags">
+            <li><span class="dot" style="background:#7C3AED"></span>Custom submission forms</li>
+            <li><span class="dot" style="background:#7C3AED"></span>Versioned file uploads</li>
+            <li><span class="dot" style="background:#7C3AED"></span>Reviewer bidding system</li>
+            <li><span class="dot" style="background:#7C3AED"></span>Structured scoring rubrics</li>
+            <li><span class="dot" style="background:#7C3AED"></span>Blind review enforcement</li>
+          </ul>
+          <a href="#" class="feature-link" style="color:#7C3AED">Learn more →</a>
+        </div>
+      </div>
+      <div class="feature-card tall reveal-scale" style="transition-delay:.1s">
+        <div class="feature-body">
+          <div class="feature-head"><div class="feature-icon" style="background:#7C3AED15;border:1px solid #7C3AED30">👥</div><h3>Program Committee</h3></div>
+          <p class="desc">Invite, manage, and coordinate your PC — with automatic conflict-of-interest detection built in.</p>
+          <ul class="feature-tags" style="grid-template-columns:1fr">
+            <li><span class="dot" style="background:#7C3AED"></span>Bulk PC invitations</li>
+            <li><span class="dot" style="background:#7C3AED"></span>Auto COI detection</li>
+            <li><span class="dot" style="background:#7C3AED"></span>Role-based access</li>
+            <li><span class="dot" style="background:#7C3AED"></span>Load balancing</li>
+          </ul>
+          <a href="#" class="feature-link" style="color:#7C3AED">Learn more →</a>
+        </div>
+      </div>
+      <div class="feature-card tall reveal-scale" style="transition-delay:.2s">
+        <div class="feature-body">
+          <div class="feature-head"><div class="feature-icon" style="background:#06B6D415;border:1px solid #06B6D430">🎟</div><h3>Registration</h3></div>
+          <p class="desc">Flexible attendee registration forms with online payments, built to match your event's structure.</p>
+          <ul class="feature-tags" style="grid-template-columns:1fr">
+            <li><span class="dot" style="background:#06B6D4"></span>Custom form builder</li>
+            <li><span class="dot" style="background:#06B6D4"></span>Online payments</li>
+            <li><span class="dot" style="background:#06B6D4"></span>Attendance tiers</li>
+            <li><span class="dot" style="background:#06B6D4"></span>Automated invoices</li>
+          </ul>
+          <a href="#" class="feature-link" style="color:#06B6D4">Learn more →</a>
+        </div>
+      </div>
+      <div class="feature-card reveal-scale" style="transition-delay:.3s">
+        <div class="photo"><img src="https://images.pexels.com/photos/267669/pexels-photo-267669.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Stack of academic journals and proceedings"></div>
+        <div class="feature-body">
+          <div class="feature-head"><div class="feature-icon" style="background:#F59E0B15;border:1px solid #F59E0B30">📖</div><h3>Publishing</h3></div>
+          <p class="desc">Generate camera-ready proceedings and export publication-ready records in the formats you need.</p>
+          <ul class="feature-tags">
+            <li><span class="dot" style="background:#F59E0B"></span>Proceedings generator</li>
+            <li><span class="dot" style="background:#F59E0B"></span>DOI assignment</li>
+            <li><span class="dot" style="background:#F59E0B"></span>Archive export</li>
+            <li><span class="dot" style="background:#F59E0B"></span>Camera-ready collection</li>
+          </ul>
+          <a href="#" class="feature-link" style="color:#F59E0B">Learn more →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roles">
+  <div class="wrap">
+    <div class="section-head reveal-up">
+      <p class="section-eyebrow">Built For Every Role</p>
+      <h2 class="section-title">One platform, three points of view</h2>
+      <p class="section-sub">Authors, reviewers, and chairs each get a workspace shaped around what they actually need to do.</p>
+    </div>
+    <div class="roles-tabs reveal-up">
+      <div class="roles-tabs-inner" id="rolesTabs">
+        <button class="role-tab active" data-role="authors"><span>✍️</span>For Authors</button>
+        <button class="role-tab" data-role="reviewers"><span>🔍</span>For Reviewers</button>
+        <button class="role-tab" data-role="chairs"><span>🎓</span>For Chairs</button>
+      </div>
+    </div>
+
+    <div class="role-panel active" data-panel="authors">
+      <div>
+        <p class="role-quote">“Submit, revise, and track your papers from one dashboard.”</p>
+        <div class="role-feature-row"><div class="role-feature-icon">📝</div><div><h4>Multi-author submission forms</h4><p>Add co-authors, affiliations, and manage permissions in one step.</p></div></div>
+        <div class="role-feature-row"><div class="role-feature-icon">📊</div><div><h4>Real-time status timeline</h4><p>Track every stage from submitted to decision — no email chasing.</p></div></div>
+        <div class="role-feature-row"><div class="role-feature-icon">💬</div><div><h4>Direct reviewer feedback</h4><p>Receive structured comments and scores when decisions are made.</p></div></div>
+      </div>
+      <div class="role-mock">
+        <div class="browser-bar"><div class="browser-dots"><span class="bdot-r"></span><span class="bdot-y"></span><span class="bdot-g"></span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-foreground)"><span>✍️</span>My Submissions</div><div style="width:48px"></div></div>
+        <div class="role-mock-body">
+          <div class="role-mock-card"><div class="row"><p>Deep Learning in Medical Imaging</p><span class="status-pill status-review">Under Review</span></div><div class="progress-track"><div class="progress-fill" style="width:65%"></div></div></div>
+          <div class="role-mock-card"><div class="row"><p>Attention Mechanisms Survey</p><span class="status-pill status-accept">Accepted</span></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+          <div class="role-mock-card"><div class="row"><p>Transformer Efficiency</p><span class="status-pill status-draft">Draft</span></div><div class="progress-track"><div class="progress-fill" style="width:20%"></div></div></div>
+          <button class="role-new-btn">New Submission</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="role-panel" data-panel="reviewers">
+      <div>
+        <p class="role-quote">“See only what's relevant to you, evaluate with structure.”</p>
+        <div class="role-feature-row"><div class="role-feature-icon">📥</div><div><h4>Assigned-paper queue</h4><p>See exactly which papers are yours to review — nothing else.</p></div></div>
+        <div class="role-feature-row"><div class="role-feature-icon">🧮</div><div><h4>Structured scoring &amp; confidence</h4><p>Score against customizable rubrics with a confidence rating.</p></div></div>
+        <div class="role-feature-row"><div class="role-feature-icon">🔒</div><div><h4>Confidential PC remarks</h4><p>Leave notes for the chair only, separate from author-facing comments.</p></div></div>
+      </div>
+      <div class="role-mock">
+        <div class="browser-bar"><div class="browser-dots"><span class="bdot-r"></span><span class="bdot-y"></span><span class="bdot-g"></span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-foreground)"><span>🔍</span>Review Queue</div><div style="width:48px"></div></div>
+        <div class="role-mock-body">
+          <div class="role-mock-card"><div class="row"><p>Federated Learning Privacy Analysis</p><span class="status-pill status-pending">Due in 3 days</span></div></div>
+          <div class="role-mock-card"><div class="row"><p>NLP for Low-Resource Languages</p><span class="status-pill status-review">In progress</span></div></div>
+          <div class="role-mock-card"><div class="row"><p>Transformer Efficiency</p><span class="status-pill status-accept">Submitted</span></div></div>
+          <button class="role-new-btn">Start Next Review</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="role-panel" data-panel="chairs">
+      <div>
+        <p class="role-quote">“Run the whole conference without leaving one screen.”</p>
+        <div class="role-feature-row"><div class="role-feature-icon">👥</div><div><h4>PC invitations &amp; roles</h4><p>Invite your program committee in bulk and set granular permissions.</p></div></div>
+        <div class="role-feature-row"><div class="role-feature-icon">⚖️</div><div><h4>Automatic conflict detection</h4><p>Never manually cross-check reviewer assignments for conflicts again.</p></div></div>
+        <div class="role-feature-row"><div class="role-feature-icon">⚙️</div><div><h4>Full configuration control</h4><p>Deadlines, tracks, forms, and decisions — all from one dashboard.</p></div></div>
+      </div>
+      <div class="role-mock">
+        <div class="browser-bar"><div class="browser-dots"><span class="bdot-r"></span><span class="bdot-y"></span><span class="bdot-g"></span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-foreground)"><span>🎓</span>Chair Console</div><div style="width:48px"></div></div>
+        <div class="role-mock-body">
+          <div class="dash-stats" style="margin-bottom:0">
+            <div class="dash-card"><div class="num" style="color:var(--primary)">247</div><div class="lbl">Total</div></div>
+            <div class="dash-card"><div class="num" style="color:var(--accent)">183</div><div class="lbl">In Review</div></div>
+            <div class="dash-card"><div class="num" style="color:#22C55E">41</div><div class="lbl">Accepted</div></div>
+          </div>
+          <button class="role-new-btn">Assign Reviewers</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="why-grs">
+  <div class="blob blob-primary" style="width:384px;height:384px;top:0;right:0;opacity:.3"></div>
+  <div class="wrap-narrow" style="position:relative;z-index:1">
+    <div class="section-head reveal-up">
+      <div class="eyebrow-pill" style="background:rgba(124, 58, 237,.08);border:1px solid rgba(124, 58, 237,.15);color:var(--primary);margin:0 auto 16px;width:fit-content;"><span class="dot pulse-soft" style="background:var(--primary)"></span>Why Smartconferu</div>
+      <h2 class="section-title" style="color:var(--navy)">The platform serious conferences choose</h2>
+      <p class="section-sub">Built by academics, for academics. Every feature is designed around how real conferences actually work.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card gradient-border-card card-hover-lift reveal-up"><div class="why-icon" style="background:#7C3AED14;color:#7C3AED"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><h3>Launch in Minutes</h3><p>Create your conference, set up your call for papers, and go live — all in under 10 minutes.</p></div>
+      <div class="why-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.07s"><div class="why-icon" style="background:#7C3AED14;color:#7C3AED"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div><h3>Enterprise-Grade Security</h3><p>SOC 2 compliant infrastructure with end-to-end encryption and role-based access control.</p></div>
+      <div class="why-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.14s"><div class="why-icon" style="background:#06B6D414;color:#06B6D4"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div><h3>Built for Collaboration</h3><p>Authors, reviewers, chairs, and attendees — everyone works in one unified platform.</p></div>
+      <div class="why-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.21s"><div class="why-icon" style="background:#F59E0B14;color:#F59E0B"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div><h3>Powerful Analytics</h3><p>Real-time dashboards for submission trends, reviewer performance, and registration metrics.</p></div>
+      <div class="why-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.28s"><div class="why-icon" style="background:#10B98114;color:#10B981"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><h3>Global Scale</h3><p>Trusted by researchers across 60+ countries. Multi-language, multi-timezone, multi-currency.</p></div>
+      <div class="why-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.35s"><div class="why-icon" style="background:#EC489914;color:#EC4899"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div><h3>End-to-End Workflow</h3><p>From the first submission to published proceedings — no third-party tools required.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="security">
+  <div class="blob" style="width:600px;height:600px;top:50%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(124, 58, 237,.6) 0%,transparent 70%);opacity:.1"></div>
+  <div class="wrap-narrow" style="position:relative;z-index:1">
+    <div class="security-grid">
+      <div class="reveal-up">
+        <div class="eyebrow-pill" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:var(--accent);margin-bottom:16px;"><span class="dot pulse-soft" style="background:var(--accent)"></span>Security &amp; Reliability</div>
+        <h2>Infrastructure you can trust</h2>
+        <p class="desc">Your conference data is protected by enterprise-grade security, with 99.9% uptime backed by SLA. We handle the infrastructure so you can focus on your research community.</p>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="avatar-stack"><span style="background:#7C3AED">A</span><span style="background:#7C3AED">B</span><span style="background:#06B6D4">C</span></div>
+          <p style="color:rgba(255,255,255,.5);font-size:14px;">Trusted by 340+ conferences worldwide</p>
+        </div>
+      </div>
+      <div class="sec-badges reveal-up" style="transition-delay:.1s">
+        <div class="sec-badge"><span class="em">🟢</span><span class="lbl">99.9% Uptime SLA</span></div>
+        <div class="sec-badge"><span class="em">🔒</span><span class="lbl">SOC 2 Type II</span></div>
+        <div class="sec-badge"><span class="em">🇪🇺</span><span class="lbl">GDPR Compliant</span></div>
+        <div class="sec-badge"><span class="em">🔐</span><span class="lbl">End-to-End Encryption</span></div>
+        <div class="sec-badge"><span class="em">💾</span><span class="lbl">Daily Backups</span></div>
+        <div class="sec-badge"><span class="em">🛡️</span><span class="lbl">DDoS Protection</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff;position:relative;overflow:hidden;">
+  <div class="blob blob-accent" style="width:320px;height:320px;bottom:0;left:0;opacity:.2"></div>
+  <div class="wrap-narrow" style="position:relative;z-index:1">
+    <div class="section-head reveal-up">
+      <div class="eyebrow-pill" style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);color:var(--accent);margin:0 auto 16px;width:fit-content;"><span class="dot pulse-soft" style="background:var(--accent)"></span>Integrations</div>
+      <h2 class="section-title" style="color:var(--navy)">Connects with your ecosystem</h2>
+      <p class="section-sub">Smartconferu integrates with the tools and publishers your community already uses.</p>
+    </div>
+    <div class="integrations-grid">
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up"><div class="integration-mark" style="background:#00629B">I</div><p class="name">IEEE Xplore</p><span class="tag">Publishing</span></div>
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.06s"><div class="integration-mark" style="background:#E2001A">S</div><p class="name">Springer</p><span class="tag">Publishing</span></div>
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.12s"><div class="integration-mark" style="background:#635BFF">S</div><p class="name">Stripe</p><span class="tag">Payments</span></div>
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.18s"><div class="integration-mark" style="background:#2D8CFF">Z</div><p class="name">Zoom</p><span class="tag">Virtual Events</span></div>
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.24s"><div class="integration-mark" style="background:#4A154B">S</div><p class="name">Slack</p><span class="tag">Notifications</span></div>
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.3s"><div class="integration-mark" style="background:#4285F4">G</div><p class="name">Google Scholar</p><span class="tag">Research</span></div>
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.36s"><div class="integration-mark" style="background:#E05B2B">C</div><p class="name">Crossref</p><span class="tag">DOI</span></div>
+      <div class="integration-card gradient-border-card card-hover-lift reveal-up" style="transition-delay:.42s"><div class="integration-mark" style="background:#FF4A00">Z</div><p class="name">Zapier</p><span class="tag">Automation</span></div>
+    </div>
+    <p style="text-align:center;margin-top:32px;color:var(--muted-foreground);font-size:14px;">+ many more via our open API and Zapier integration</p>
+  </div>
+</section>
+
+<section style="background:#F8FAFC;position:relative;overflow:hidden;">
+  <div class="blob blob-secondary" style="width:384px;height:384px;top:0;right:0;opacity:.3"></div>
+  <div class="wrap-xnarrow" style="position:relative;z-index:1">
+    <div class="section-head reveal-up">
+      <div class="eyebrow-pill" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);color:var(--secondary);margin:0 auto 16px;width:fit-content;"><span class="dot pulse-soft" style="background:var(--secondary)"></span>Conference Lifecycle</div>
+      <h2 class="section-title" style="color:var(--navy)">From idea to proceedings</h2>
+      <p class="section-sub">Smartconferu supports every phase of your conference — in one connected platform.</p>
+    </div>
+    <div class="lifecycle-wrap">
+      <div class="lifecycle-rail"></div>
+      <div class="lc-item side-left reveal-up"><div class="lc-dot"><span></span></div><div class="lc-card gradient-border-card card-hover-lift"><div class="num-row"><span style="font-size:20px">🚀</span><span class="num">01</span></div><h3>Create Conference</h3><p>Set up your event, define tracks, and configure submission guidelines.</p></div><div class="lc-spacer"></div></div>
+      <div class="lc-item side-right reveal-up" style="transition-delay:.08s"><div class="lc-dot"><span></span></div><div class="lc-spacer"></div><div class="lc-card gradient-border-card card-hover-lift"><div class="num-row"><span style="font-size:20px">📨</span><span class="num">02</span></div><h3>Open Submissions</h3><p>Authors submit papers through a branded, customizable portal.</p></div></div>
+      <div class="lc-item side-left reveal-up" style="transition-delay:.16s"><div class="lc-dot"><span></span></div><div class="lc-card gradient-border-card card-hover-lift"><div class="num-row"><span style="font-size:20px">🔍</span><span class="num">03</span></div><h3>Peer Review</h3><p>Assign reviewers, manage bidding, and collect structured evaluations.</p></div><div class="lc-spacer"></div></div>
+      <div class="lc-item side-right reveal-up" style="transition-delay:.24s"><div class="lc-dot"><span></span></div><div class="lc-spacer"></div><div class="lc-card gradient-border-card card-hover-lift"><div class="num-row"><span style="font-size:20px">✅</span><span class="num">04</span></div><h3>Decisions</h3><p>Chairs review scores, make accept/reject decisions, and notify authors.</p></div></div>
+      <div class="lc-item side-left reveal-up" style="transition-delay:.32s"><div class="lc-dot"><span></span></div><div class="lc-card gradient-border-card card-hover-lift"><div class="num-row"><span style="font-size:20px">📅</span><span class="num">05</span></div><h3>Build Program</h3><p>Schedule sessions, assign time slots, and publish the conference program.</p></div><div class="lc-spacer"></div></div>
+      <div class="lc-item side-right reveal-up" style="transition-delay:.4s;margin-bottom:0"><div class="lc-dot"><span></span></div><div class="lc-spacer"></div><div class="lc-card gradient-border-card card-hover-lift"><div class="num-row"><span style="font-size:20px">📖</span><span class="num">06</span></div><h3>Publish Proceedings</h3><p>Generate camera-ready proceedings and export to major publishers.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="background:#F8FAFC;position:relative;overflow:hidden;">
+  <div class="blob blob-primary" style="width:384px;height:384px;top:0;left:25%;opacity:.4"></div>
+  <div class="blob blob-secondary" style="width:320px;height:320px;bottom:0;right:25%;opacity:.3"></div>
+  <div class="wrap-narrow" style="position:relative;z-index:1">
+    <div class="section-head reveal-up" style="margin-bottom:0">
+      <div class="eyebrow-pill" style="background:rgba(124, 58, 237,.08);border:1px solid rgba(124, 58, 237,.15);color:var(--primary);margin:0 auto 16px;width:fit-content;"><span class="dot pulse-soft" style="background:var(--primary)"></span>Pricing</div>
+      <h2 class="section-title" style="color:var(--navy)">Simple, transparent pricing</h2>
+      <p class="section-sub">Choose the plan that fits your conference. Upgrade or downgrade anytime.</p>
+      <div class="pricing-toggle">
+        <span class="on" id="labelMonthly">Monthly</span>
+        <button class="toggle-switch" id="pricingToggle" aria-label="Toggle billing period"><span class="knob"></span></button>
+        <span id="labelYearly">Yearly</span>
+        <span class="save-badge">Save up to 20%</span>
+      </div>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal-up">
+        <div class="plan-dot" style="background:#7C3AED18"><span style="background:#7C3AED"></span></div>
+        <h3>Starter</h3><p class="plan-desc">Perfect for small workshops and single-track events.</p>
+        <div class="price-amount"><span class="num">$<span class="price-val" data-monthly="49" data-yearly="39">49</span></span><span class="per">/mo</span></div>
+        <a href="/register" class="price-cta">Start Free Trial<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+        <div class="price-divider"></div>
+        <ul class="price-feats">
+          <li>✅&nbsp; Up to 100 submissions</li><li>✅&nbsp; 1 conference per year</li><li>✅&nbsp; Basic peer review workflow</li><li>✅&nbsp; Email notifications</li><li>✅&nbsp; PDF proceedings export</li>
+          <li class="off">✕&nbsp; Multi-track program</li><li class="off">✕&nbsp; Custom registration forms</li><li class="off">✕&nbsp; Analytics dashboard</li><li class="off">✕&nbsp; Priority support</li><li class="off">✕&nbsp; API access</li>
+        </ul>
+      </div>
+      <div class="price-card popular reveal-up" style="transition-delay:.08s">
+        <span class="popular-badge">⭐ Most Popular</span>
+        <div class="plan-dot" style="background:#7C3AED18"><span style="background:#7C3AED"></span></div>
+        <h3>Professional</h3><p class="plan-desc">For growing conferences that need full control.</p>
+        <div class="price-amount"><span class="num">$<span class="price-val" data-monthly="149" data-yearly="119">149</span></span><span class="per">/mo</span></div>
+        <button class="price-cta solid">Get Started<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+        <div class="price-divider"></div>
+        <ul class="price-feats" style="color:rgba(255,255,255,.8)">
+          <li>✅&nbsp; Up to 1,000 submissions</li><li>✅&nbsp; 5 conferences per year</li><li>✅&nbsp; Advanced peer review &amp; bidding</li><li>✅&nbsp; Email notifications</li><li>✅&nbsp; PDF proceedings export</li><li>✅&nbsp; Multi-track program</li><li>✅&nbsp; Custom registration forms</li><li>✅&nbsp; Analytics dashboard</li>
+          <li class="off" style="color:rgba(255,255,255,.3)">✕&nbsp; Priority support</li><li class="off" style="color:rgba(255,255,255,.3)">✕&nbsp; API access</li>
+        </ul>
+      </div>
+      <div class="price-card reveal-up" style="transition-delay:.16s">
+        <div class="plan-dot" style="background:#06B6D418"><span style="background:#06B6D4"></span></div>
+        <h3>Enterprise</h3><p class="plan-desc">For large-scale events and academic institutions.</p>
+        <div class="price-amount"><span class="num">$<span class="price-val" data-monthly="399" data-yearly="319">399</span></span><span class="per">/mo</span></div>
+        <a href="#faq" class="price-cta">Contact Sales<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+        <div class="price-divider"></div>
+        <ul class="price-feats">
+          <li>✅&nbsp; Unlimited submissions</li><li>✅&nbsp; Unlimited conferences</li><li>✅&nbsp; Advanced peer review &amp; bidding</li><li>✅&nbsp; Email notifications</li><li>✅&nbsp; PDF proceedings export</li><li>✅&nbsp; Multi-track program</li><li>✅&nbsp; Custom registration forms</li><li>✅&nbsp; Analytics dashboard</li><li>✅&nbsp; Priority support</li><li>✅&nbsp; API access</li>
+        </ul>
+      </div>
+    </div>
+    <p class="pricing-note reveal-up">All plans include a <strong>14-day free trial</strong>. No credit card required. · Need a custom plan? <a href="#faq">Talk to us</a></p>
+  </div>
+</section>
+
+<section id="support" style="background:#fff;position:relative;overflow:hidden;">
+  <div class="blob blob-primary" style="width:500px;height:500px;top:0;right:0;opacity:.3"></div>
+  <div class="blob blob-accent" style="width:400px;height:400px;bottom:0;left:0;opacity:.2"></div>
+  <div class="wrap-narrow" style="position:relative;z-index:1">
+    <div class="support-grid">
+      <div class="reveal-up">
+        <div class="eyebrow-pill" style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);color:var(--accent);margin-bottom:16px;"><span class="dot pulse-soft" style="background:var(--accent)"></span>24/7 Support</div>
+        <h2 class="section-title" style="text-align:left;color:var(--navy)">Expert help, whenever you need it</h2>
+        <p style="color:var(--muted-foreground);font-size:16px;line-height:1.65;margin-bottom:28px;">Our support team is available around the clock to help you set up conferences, manage submissions, and resolve any issues — fast.</p>
+        <div class="support-feat"><div class="ic">⚡</div><div><h4>Instant responses</h4><p>Average first response under 2 minutes</p></div></div>
+        <div class="support-feat"><div class="ic">🎓</div><div><h4>Academic expertise</h4><p>Support agents trained in conference workflows</p></div></div>
+        <div class="support-feat"><div class="ic">🌍</div><div><h4>Global coverage</h4><p>Support in multiple languages, 24/7/365</p></div></div>
+      </div>
+      <div class="reveal-up" style="transition-delay:.1s">
+        <div class="chat-mock">
+          <div class="chat-notify"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/></svg></div>
+          <div class="chat-head">
+            <div class="chat-avatar">S<span class="online"></span></div>
+            <div style="flex:1"><p class="n">Sarah — Smartconferu Support</p><p class="s">Online · Typically replies instantly</p></div>
+            <div class="browser-dots"><span class="bdot-r"></span><span class="bdot-y"></span><span class="bdot-g"></span></div>
+          </div>
+          <div class="chat-body" id="chatBody">
+            <div class="chat-msg agent">Hi! I saw you're setting up "ISBM 2026 Conference" and filling in your event details.</div>
+            <div class="chat-msg user">Can I manage peer reviews?</div>
+            <div class="chat-msg agent">Yes! You can manage reviewers, reviews and submissions all from one dashboard — including bidding, scoring, and conflict detection.</div>
+          </div>
+          <div class="chat-input"><div class="box">Type a message…</div><div class="send"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></div></div>
+          <div class="chat-resolved" id="chatResolved"><span style="color:#22C55E">✓</span>Issue resolved in 3 min</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="trust" style="background:rgba(238,242,255,.3)">
+  <div class="wrap">
+    <div class="section-head reveal-up" style="margin-bottom:36px">
+      <p class="section-eyebrow">Trusted By</p>
+      <p style="text-align:center;color:var(--muted-foreground);font-size:14px;margin-bottom:0;">Built for institutions like yours</p>
+    </div>
+    <div class="trust-row reveal-up">
+      <div class="trust-chip"><div class="trust-mark" style="background:linear-gradient(135deg,#7C3AED,#7C3AEDaa)">GU</div><span>Global University</span></div>
+      <div class="trust-chip"><div class="trust-mark" style="background:linear-gradient(135deg,#7C3AED,#7C3AEDaa)">RI</div><span>Research Institute</span></div>
+      <div class="trust-chip"><div class="trust-mark" style="background:linear-gradient(135deg,#06B6D4,#06B6D4aa)">TC</div><span>Tech Consortium</span></div>
+      <div class="trust-chip"><div class="trust-mark" style="background:linear-gradient(135deg,#10B981,#10B981aa)">NS</div><span>National Society</span></div>
+      <div class="trust-chip"><div class="trust-mark" style="background:linear-gradient(135deg,#F59E0B,#F59E0Baa)">IC</div><span>Innovation Council</span></div>
+      <div class="trust-chip"><div class="trust-mark" style="background:linear-gradient(135deg,#EF4444,#EF4444aa)">AA</div><span>Academic Alliance</span></div>
+    </div>
+    <p class="trust-note">Placeholder institution badges — swap in real partner/client logos once confirmed.</p>
+    <div class="testimonial-card reveal-up">
+      <div class="quote-mark">“</div>
+      <div class="stars">★★★★★</div>
+      <blockquote>“We moved our review process to Smartconferu and cut assignment time in half. The conflict-of-interest detection alone saved our PC chairs hours of manual checking.”</blockquote>
+      <div class="testimonial-person"><div class="t-avatar">AJ</div><div><p class="t-name">Dr. Amit Joshi</p><p class="t-role">Program Chair, ISBM 2026</p></div></div>
+    </div>
+    <div class="mini-trust-grid reveal-up">
+      <div class="mini-trust"><span class="em">🔒</span><p class="h">Blind review enforced</p><p class="s">Author anonymity protected</p></div>
+      <div class="mini-trust"><span class="em">⚡</span><p class="h">99.9% uptime SLA</p><p class="s">Conference-critical reliability</p></div>
+      <div class="mini-trust"><span class="em">🛡</span><p class="h">GDPR compliant</p><p class="s">Researcher data protected</p></div>
+      <div class="mini-trust"><span class="em">🌐</span><p class="h">Global infrastructure</p><p class="s">Fast anywhere in the world</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap-xnarrow">
+    <div class="section-head reveal-up">
+      <p class="section-eyebrow">FAQ</p>
+      <h2 class="section-title">Common questions</h2>
+      <p class="section-sub">Everything you need to know before running your first conference on Smartconferu.</p>
+    </div>
+    <div class="reveal-up" id="faqList">
+      <div class="faq-item">
+        <button class="faq-q"><span class="qt">What is Smartconferu?</span><span class="faq-caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span></button>
+        <div class="faq-a"><div class="faq-a-inner">Smartconferu is a complete academic conference management platform. It handles every stage of the conference lifecycle — from opening the call for papers to publishing final proceedings — in one connected workspace.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span class="qt">Who can use Smartconferu?</span><span class="faq-caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span></button>
+        <div class="faq-a"><div class="faq-a-inner">Smartconferu is designed for conference chairs, program committee members, authors, and reviewers. Each role gets a purpose-built workspace so everyone sees exactly what they need.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span class="qt">How does peer review work on Smartconferu?</span><span class="faq-caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span></button>
+        <div class="faq-a"><div class="faq-a-inner">Chairs assign papers to reviewers manually or via a bidding system. Reviewers score submissions on customizable criteria with confidence levels. Conflict-of-interest detection runs automatically before any assignment is made.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span class="qt">Can chairs manage the full submission process?</span><span class="faq-caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span></button>
+        <div class="faq-a"><div class="faq-a-inner">Yes. Chairs control deadlines, tracks, submission forms, and review criteria. They can monitor all submissions, assign reviewers in bulk, view aggregated scores, and make accept/reject/revise decisions — all from one dashboard.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span class="qt">Can chairs manage reviewers and their workload?</span><span class="faq-caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span></button>
+        <div class="faq-a"><div class="faq-a-inner">Absolutely. Chairs can invite PC members, set their roles and permissions, monitor review progress, send deadline reminders, and use the load-balancing tool to ensure fair distribution of papers.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span class="qt">Does Smartconferu support registration and payments?</span><span class="faq-caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span></button>
+        <div class="faq-a"><div class="faq-a-inner">Yes. The registration module includes flexible form builders, online payment processing, attendance tier management, and automated invoice generation — tailored to your conference structure.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span class="qt">Can it handle large conferences with hundreds of submissions?</span><span class="faq-caret"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span></button>
+        <div class="faq-a"><div class="faq-a-inner">Smartconferu is built to scale. It handles hundreds to thousands of submissions, with bulk operations for assignment and decisions, 99.9% uptime guarantees, and infrastructure that supports global access without performance degradation.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="blob" style="width:288px;height:288px;top:25%;left:16%;background:radial-gradient(circle,rgba(99,102,241,.6) 0%,transparent 70%);opacity:.2;animation:orbMove1 12s ease-in-out infinite"></div>
+  <div class="blob" style="width:320px;height:320px;bottom:25%;right:20%;background:radial-gradient(circle,rgba(6,182,212,.5) 0%,transparent 70%);opacity:.15;animation:orbMove2 15s ease-in-out infinite"></div>
+  <div class="wrap-xnarrow" style="position:relative;z-index:1">
+    <div class="cta-badge"><span class="dot pulse-soft" style="background:var(--accent)"></span>No credit card required</div>
+    <h2>Ready to run your next conference on Smartconferu?</h2>
+    <p class="sub">From submissions to final proceedings, manage your entire conference in one connected platform. Set up your call for papers in minutes.</p>
+    <div class="cta-btns">
+      <a href="/create-conference" class="btn btn-primary">Create a Conference<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></a>
+      <a href="#faq" class="btn btn-outline">Request a Demo<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+    </div>
+    <div class="cta-trust">
+      <span>✓ No credit card required</span>
+      <span>✓ Set up in minutes</span>
+      <span>✓ 99.9% uptime SLA</span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <span class="footer-logo-chip"><img src="/smartconferu-lockup.png" alt="Smartconferu" class="brand-logo"></span>
+        </div>
+        <p class="footer-desc">A complete conference management platform — submissions, review, program committee, and publishing, all in one place.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="LinkedIn"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="color:rgba(255,255,255,.6)"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.761 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
+          <a href="#" aria-label="X (Twitter)"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="color:rgba(255,255,255,.6)"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <p class="h5">Services</p>
+        <a href="#features">Conference Management</a>
+        <a href="#features">Registration</a>
+        <a href="#features">Publishing</a>
+        <a href="#features">Analytics</a>
+      </div>
+      <div class="footer-col">
+        <p class="h5">About Us</p>
+        <a href="#trust">Overview</a>
+        <a href="#faq">Contact</a>
+        <a href="#">Careers</a>
+        <a href="#trust">Testimonials</a>
+      </div>
+      <div class="footer-col">
+        <p class="h5">Conferences</p>
+        <a href="#cta">Create Conference</a>
+        <a href="#">License Information</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Smartconferu. All rights reserved.</p>
+      <div class="footer-legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
+    </div>
+  </div>
+</footer>
+
+<button id="backToTop" aria-label="Back to top">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg>
+</button>
+
+<script type="module" src="/home/home-interactions.js"></script>
+<script type="module" src="/home/home-auth.js"></script>
+</body>
+</html>

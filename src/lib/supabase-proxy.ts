@@ -18,7 +18,8 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   // open to them, because the emailed link signs the person in (a recovery session) before the new password is set.
   const onLogin = pathname === LOGIN_PATH || pathname === REGISTER_PATH;
   // /verify/<certificate id> is the page a certificate's QR code opens: employers and universities with no account must be able to see it.
-  const onPublic = onLogin || pathname === RESET_PASSWORD_PATH || pathname.startsWith("/verify/") || pathname === "/smart-cfp";
+  // "/", "/terms" and "/privacy" are public static pages (public/home, public/terms, public/privacy through rewrites in next.config.ts).
+  const onPublic = onLogin || pathname === "/" || pathname === "/terms" || pathname === "/privacy" || pathname === RESET_PASSWORD_PATH || pathname.startsWith("/verify/") || pathname === "/smart-cfp";
 
   // Without keys there is no session to check: only the public pages (which explain the problem) are reachable.
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
