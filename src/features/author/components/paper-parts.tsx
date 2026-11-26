@@ -5,7 +5,7 @@ import {
   Mail, MessageSquare, Paperclip, Pencil, Plus, Tag, Ticket, User, UserPlus, Users, X, XCircle, type LucideIcon,
 } from "lucide-react";
 import { Fragment } from "react";
-import type { AuthorPaper, PaperFile, PaperPageAuthor, PaperScreeningNotice, SharedComment } from "@/types/author-submission";
+import type { AuthorPaper, AuthorRegistration, PaperFile, PaperPageAuthor, PaperScreeningNotice, SharedComment } from "@/types/author-submission";
 import { conferenceDest, newSubmissionHref, type Dest } from "../links";
 import { DestLink } from "./overview-parts";
 
@@ -104,6 +104,8 @@ const PRIMARY_LINK = "rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-w
  *  programme is not in the database, so a registered paper has no slot yet; its flyer and certificate follow the prototype's rules. */
 export function PresentationPanel({ paper }: { paper: AuthorPaper }) {
   if (paper.result !== "registered" && paper.result !== "not_registered") return null;
+  // The own backend: no registration or programme module yet, so the author sees what the organisers recorded by hand.
+  if (paper.registration) return <RegistrationPanel paper={paper} registration={paper.registration} />;
   const slug = paper.conference.id;
   if (paper.result === "not_registered") {
     return (
@@ -147,6 +149,54 @@ export function PresentationPanel({ paper }: { paper: AuthorPaper }) {
           </div>
         </div>
       </aside>
+    </div>
+  );
+}
+
+const PAYMENT_TEXT: Record<AuthorRegistration["payment"], { label: string; color: string; bg: string; text: string }> = {
+  paid: { label: "Paid", color: "#15803D", bg: "var(--success-soft)", text: "The organisers have received your registration fee." },
+  waived: { label: "Fee waived", color: "#0369A1", bg: "#E0F2FE", text: "The organisers have waived the registration fee for this paper." },
+  not_paid: { label: "Payment pending", color: "#B45309", bg: "var(--warning-soft)", text: "The organisers haven't recorded your registration fee yet. Follow the payment instructions in your acceptance email; once they receive it, it shows here." },
+};
+
+/** An accepted paper's registration as the organisers recorded it: payment, how it is presented and who presents it (read-only). */
+function RegistrationPanel({ paper, registration: r }: { paper: AuthorPaper; registration: AuthorRegistration }) {
+  const pay = PAYMENT_TEXT[r.payment];
+  const done = r.payment !== "not_paid";
+  const facts: Array<[string, string]> = [
+    ["Payment", pay.label],
+    ["Attending", r.attendance === "physical" ? "In person (physical)" : r.attendance === "virtual" ? "Online (virtual)" : "Not confirmed yet"],
+    ["Presenter", r.presenterName || "Not confirmed yet"],
+  ];
+  return (
+    <div className="mb-5 grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
+      <section aria-label="Registration and attendance" style={done ? CARD : { border: "1px solid #FDE68A", background: "#FFFBEB" }} className={`rounded-2xl p-5 ${done ? "bg-white" : ""} lg:col-span-2`}>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="flex items-center gap-2 text-base font-extrabold text-navy"><Ticket size={17} aria-hidden="true" className={done ? "text-primary" : "text-warning"} /> Registration &amp; attendance</h3>
+          <span style={{ color: pay.color, background: pay.bg }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold">{done && <Check size={12} strokeWidth={3} aria-hidden="true" />}{pay.label}</span>
+        </div>
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {facts.map(([k, v]) => (
+            <div key={k} className="rounded-xl border border-line bg-white px-3.5 py-2.5">
+              <dt className="text-[11px] font-extrabold uppercase tracking-wider text-ink-faint">{k}</dt>
+              <dd className="mt-0.5 text-sm font-bold text-navy">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <p style={done ? undefined : { color: "#92400E" }} className={`mt-3 text-[12.5px] leading-relaxed ${done ? "text-ink-muted" : ""}`}>{pay.text} To change how you attend or who presents, write to the organisers of {paper.conference.acronym}.</p>
+      </section>
+      {done && (
+        <aside className="flex flex-col gap-4">
+          <DestLink dest={conferenceDest.flyer(paper.conference.id)} style={CARD} className="flex items-center gap-3.5 rounded-2xl bg-white p-4 text-left hover:border-primary">
+            <div style={{ background: "linear-gradient(160deg,#2E1065,#7C3AED 70%,#06B6D4)" }} className="flex h-20 w-16 shrink-0 items-center justify-center rounded-lg"><ImageIcon size={20} aria-hidden="true" className="text-white/80" /></div>
+            <div className="min-w-0">
+              <div className="text-sm font-extrabold text-navy">Your flyer is ready</div>
+              <div className="mb-1.5 mt-0.5 text-[12.5px] text-ink-muted">&quot;I&apos;m presenting at {paper.conference.acronym}&quot;</div>
+              <span className="text-[13px] font-bold text-primary">View &amp; download</span>
+            </div>
+          </DestLink>
+        </aside>
+      )}
     </div>
   );
 }

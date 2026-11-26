@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, ChevronDown, ChevronsUpDown, ChevronUp, Clock, Eye, FileText, Layers, Mail, Pencil, PlusCircle, ShieldCheck, Tag, Ticket, Trash2, X, XCircle, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronsUpDown, ChevronUp, Clock, Download, Eye, FileText, Layers, Mail, Pencil, PlusCircle, ShieldCheck, Tag, Ticket, Trash2, X, XCircle, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
@@ -12,10 +12,10 @@ import { ConferenceStatusPill, PageHero } from "@/features/workspace/components/
 import { ConferenceShell } from "@/features/workspace/components/conference-shell";
 import { workspaceGate } from "@/features/workspace/components/workspace-gate";
 import { getChairService } from "@/services/chair";
-import type { ChairPaper, DecisionType, PoolReviewer } from "@/types/chair";
+import { PAYMENT_LABELS, attendanceLabel, type ChairPaper, type DecisionType, type PoolReviewer } from "@/types/chair";
 import { chairStageOf, type Screening } from "../stage";
 import { useChairConference } from "../use-chair-conference";
-import { AGE_OPTIONS, COLUMNS, COLUMN_WIDTHS, REVIEW_PROGRESS_OPTIONS, SCORE_BAND_OPTIONS, ageBucket, decisionOf, progressOf, readColumns, readViews, scoreBand, statusFilterValue, writeColumns, writeViews, type SavedView } from "../submission-columns";
+import { AGE_OPTIONS, COLUMNS, COLUMN_WIDTHS, REGISTRATION_COLUMNS, REVIEW_PROGRESS_OPTIONS, SCORE_BAND_OPTIONS, ageBucket, decisionOf, presenterOf, progressOf, readColumns, readViews, registrationFilterValue, scoreBand, statusFilterValue, writeColumns, writeViews, type SavedView } from "../submission-columns";
 import { ColumnsPanel } from "./submissions-columns-panel";
 import { AssignReviewersDialog, ContactDialog, EditDecisionsDialog, EditTrackDialog } from "./submissions-bulk-dialogs";
 import { chairPaperHref } from "@/lib/routes";
@@ -48,6 +48,16 @@ const SORTS: Record<string, (p: ChairPaper) => string | number | null> = {
 const FCTL = "h-7 w-full rounded-md border-[1.5px] border-line bg-white text-[11px] normal-case tracking-normal outline-none focus:border-primary";
 type Opt = [string, string, boolean?];
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
+/** One CSV cell. A value an author typed that starts like a formula (=, +, -, @) gets a leading ' so Excel shows it as text. */
+const FORMULA_START = /^[=+\-@\t\r]/;
+const csvCell = (v: unknown) => { const s = String(v ?? ""); return `"${(FORMULA_START.test(s) ? `'${s}` : s).replace(/"/g, '""')}"`; };
+const BOM = String.fromCharCode(0xfeff);
+const CRLF = String.fromCharCode(13, 10);
+/** The registration counts above the list on the Registration stage; each one is also a filter. */
+const REG_CHIPS: Array<{ key: "payment" | "attendance"; value: string }> = [
+  { key: "payment", value: "Paid" }, { key: "payment", value: "Waived" }, { key: "payment", value: "Not paid" },
+  { key: "attendance", value: "Physical" }, { key: "attendance", value: "Virtual" }, { key: "attendance", value: "Not known" },
+];
 
 export function ChairSubmissionsPage({ slug }: { slug: string }) {
   const { state, retry, reload } = useChairConference(slug, { board: true, pool: true });
@@ -73,17 +83,20 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
   const stageOf = (p: ChairPaper) => chairStageOf(p, screening);
   const matchQuick = (p: ChairPaper, k: QuickKey) => (k === "all" ? true : k === "withdrawn" ? p.withdrawn : stageOf(p).key === k);
   const inStage = data.papers.filter((p) => matchQuick(p, quick));
-  const shownColumns = visibleKeys.map((k) => COLUMNS.find((c) => c.key === k)).filter((c): c is (typeof COLUMNS)[number] => Boolean(c));
+  // On the Registration stage the payment, attendance and presenter columns are always shown.
+  const shownKeys = quick === "registration" ? [...visibleKeys, ...REGISTRATION_COLUMNS.filter((k) => !visibleKeys.includes(k))] : visibleKeys;
+  const shownColumns = shownKeys.map((k) => COLUMNS.find((c) => c.key === k)).filter((c): c is (typeof COLUMNS)[number] => Boolean(c));
 
   /* The filters under the column titles: a search box (id, title) or a dropdown that lists what the stage's papers hold. */
   const getters: Record<string, (p: ChairPaper) => string> = {
     track: (p) => p.track || "", type: (p) => p.presentationType || "", status: (p) => statusFilterValue(p, screening), decision: (p) => decisionOf(p, data)?.label ?? "Pending",
+    ...registrationFilterValue,
   };
   const fixedOptions: Record<string, Array<[string, string]>> = { submittedAt: AGE_OPTIONS, updatedAt: AGE_OPTIONS, reviewProgress: REVIEW_PROGRESS_OPTIONS, avgScore: SCORE_BAND_OPTIONS };
   const fixedTests: Record<string, (p: ChairPaper, v: string) => boolean> = {
     submittedAt: (p, v) => ageBucket(p.submittedAt ?? "") === v, updatedAt: (p, v) => ageBucket(p.lastUpdate) === v, reviewProgress: (p, v) => progressOf(p) === v, avgScore: (p, v) => scoreBand(p) === v,
   };
-  const selectLabels: Record<string, string> = { track: "Track", type: "Presentation type", status: "Status", submittedAt: "Submitted on", updatedAt: "Last update", reviewProgress: "Review progress", avgScore: "Average score", decision: "Decision" };
+  const selectLabels: Record<string, string> = { track: "Track", type: "Presentation type", status: "Status", submittedAt: "Submitted on", updatedAt: "Last update", reviewProgress: "Review progress", avgScore: "Average score", decision: "Decision", payment: "Payment", attendance: "Attending", presenter: "Presenter" };
   const optionsOf = (key: string): Opt[] | null => {
     if (fixedOptions[key]) return fixedOptions[key];
     const get = getters[key];
@@ -168,6 +181,25 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
     );
   };
   const clearAll = () => { setColFilters({}); setQuick("all"); };
+  /* The list as it is filtered now (or the ticked papers) as a CSV file: who paid and who comes, for the registration desk. */
+  const exportCsv = () => {
+    const rows = selected.length ? filtered.filter((p) => selected.includes(p.dbId)) : filtered;
+    const header = ["Paper ID", "Title", "Track", "Presentation type", "Status", "Decision", "Payment", "Attending", "Presenter", "Presenter email", "Corresponding author", "Corresponding email", "All authors", "Payment note"];
+    const body = rows.map((p) => {
+      const r = p.registration;
+      const corr = p.authors.find((a) => a.corresponding) ?? p.authors[0];
+      return [p.id, p.title, p.track, p.presentationType, stageOf(p).status, decisionOf(p, data)?.label ?? "Pending", r ? PAYMENT_LABELS[r.payment] : "", r ? attendanceLabel(r.attendance) : "", r ? presenterOf(p) : "", r?.presenterEmail ?? "", corr?.name ?? "", corr?.email ?? "", p.authors.map((a) => a.name).join("; "), r?.note ?? ""];
+    });
+    // The BOM lets Excel read names with accents correctly.
+    const csv = BOM + [header, ...body].map((row) => row.map(csvCell).join(",")).join(CRLF);
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = `${(conference.acronym || "submissions").replace(/[^\w-]+/g, "-")}-${quick === "registration" ? "registrations" : "submissions"}-${ymd(new Date())}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  const regBase = data.papers.filter((p) => matchQuick(p, "registration") && p.registration);
+  const regCount = (key: "payment" | "attendance", value: string) => regBase.filter((p) => registrationFilterValue[key](p) === value).length;
   const emptyHint = data.papers.length === 0 ? `No papers have been submitted to ${conference.acronym} yet.` : "No submissions match your filters.";
   const bulkBtn = "flex items-center gap-1.5 text-xs font-semibold text-navy hover:underline";
   const due0 = board?.deadline || ymd(new Date(Date.now() + 28 * 86400000));
@@ -220,6 +252,24 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
           </div>
         )}
 
+        {/* Registration stage: who paid and how they attend; each count filters the list */}
+        {quick === "registration" && !activeViewId && regBase.length > 0 && (
+          <div role="group" aria-label="Filter by payment and attendance" className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-white px-4 py-3">
+            <span className="mr-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-faint">Payment</span>
+            {REG_CHIPS.map((c, i) => {
+              const on = colFilters[c.key] === c.value;
+              return (
+                <span key={`${c.key}-${c.value}`} className="contents">
+                  {i === 3 && <span className="ml-3 mr-1 text-[11px] font-extrabold uppercase tracking-wider text-ink-faint">Attending</span>}
+                  <button type="button" aria-pressed={on} onClick={() => setFilter(c.key, on ? "all" : c.value)}
+                    style={{ background: on ? "var(--primary)" : "var(--canvas)", color: on ? "#FFFFFF" : "var(--ink-soft)", border: `1px solid ${on ? "var(--primary)" : "var(--border)"}` }}
+                    className="rounded-full px-3 py-1 text-xs font-bold transition-colors">{c.value} <span style={{ opacity: 0.75 }}>{regCount(c.key, c.value)}</span></button>
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         {/* what matches + columns */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-h-9 flex-wrap items-center gap-2.5">
@@ -227,6 +277,7 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
             {(filtersOn || quick !== "all") && <button type="button" onClick={clearAll} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-xs font-semibold text-ink-soft hover:text-primary"><X size={13} aria-hidden="true" /> Clear filters</button>}
           </div>
           <div className="flex items-center gap-2">
+            <button type="button" onClick={exportCsv} disabled={filtered.length === 0} title="Download the papers listed below (or the ticked ones) as a spreadsheet" className="flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-bold text-ink-soft transition-colors hover:text-primary disabled:opacity-50"><Download size={13} aria-hidden="true" /> Export{selected.length ? ` (${selected.length})` : " CSV"}</button>
             <div className="relative">
               <button type="button" onClick={() => setShowColumns((v) => !v)} aria-expanded={showColumns} style={{ background: showColumns ? "var(--primary)" : "#FFFFFF", color: showColumns ? "#FFFFFF" : "var(--ink-soft)", border: `1px solid ${showColumns ? "var(--primary)" : "var(--border)"}` }} className="flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-colors">
                 <Layers size={13} aria-hidden="true" /> Columns

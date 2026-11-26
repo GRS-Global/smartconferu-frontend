@@ -112,6 +112,8 @@ export interface ChairService {
   removeReviewerFromPaper(paperDbId: string, reviewerUserId: string): Promise<void>;
   /** Flags a fixable problem to the paper's authors, due by `fixByISO` (migration 0044); the email is sent separately (`fix_requested`). */
   requestFix(paperDbId: string, issue: string, fixByISO: string): Promise<void>;
+  /** Records an accepted paper's payment, attendance, presenter (an author's email) and the chair's note. No email is sent; the own backend only. */
+  saveRegistration(paperDbId: string, registration: { payment: import("@/types/chair").PaymentStatus; attendance: import("@/types/chair").AttendanceMode | null; presenterEmail: string | null; note: string | null }): Promise<void>;
 }
 
 /** The service for the configured data source. `mock` is only used when NEXT_PUBLIC_DATA_SOURCE=mock (no network);
