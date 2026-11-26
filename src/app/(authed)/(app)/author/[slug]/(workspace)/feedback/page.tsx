@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { FeedbackPage } from "@/features/author/components/feedback-page";
+import { FEEDBACK_ENABLED } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Feedback" };
 
@@ -9,6 +11,8 @@ export function generateStaticParams() {
 }
 
 export default async function AuthorFeedback({ params }: PageProps<"/author/[slug]/feedback">) {
+  // Hidden until its backend exists (lib/config.ts FEEDBACK_ENABLED, GAP-REPORT.md "Module 1 — Feedback").
+  if (!FEEDBACK_ENABLED) notFound();
   const { slug } = await params;
   return <FeedbackPage slug={slug} />;
 }

@@ -1,3 +1,4 @@
+import { FEEDBACK_ENABLED } from "@/lib/config";
 import type { AuthorSubmission } from "@/types/author-submission";
 import type { Conference } from "@/types/conference";
 import { conferenceDest, type Dest } from "./links";
@@ -27,6 +28,6 @@ export function authorTodos({ conference, papers, hasPhoto, feedbackOpen }: Inpu
   papers.filter((p) => p.result === "registered" && !finished).forEach((p) => todos.push({ tone: "primary", title: "Book your presentation slot", sub: `${p.id} · "${p.title}"`, cta: "Book slot", dest: conferenceDest.programme(conference.id) }));
   if (!finished) papers.filter((p) => p.result === "draft" && !p.withdrawn).forEach((p) => todos.push({ tone: "warning", title: "Upload your paper and submit", sub: `${p.id} · saved, not sent yet`, cta: "Continue", dest: conferenceDest.paper(p.id, p.conferenceId) }));
   if (papers.some((p) => p.result === "registered") && !hasPhoto) todos.push({ tone: "primary", title: "Add your photo for your speaker flyer", sub: "Optional · takes 10 seconds", cta: "Add photo", dest: conferenceDest.profile() });
-  if (feedbackOpen && papers.length) todos.push({ tone: "primary", title: "Tell the organisers how it went", sub: "2-minute feedback form", cta: "Give feedback", dest: conferenceDest.feedback(conference.id) });
+  if (FEEDBACK_ENABLED && feedbackOpen && papers.length) todos.push({ tone: "primary", title: "Tell the organisers how it went", sub: "2-minute feedback form", cta: "Give feedback", dest: conferenceDest.feedback(conference.id) });
   return todos;
 }

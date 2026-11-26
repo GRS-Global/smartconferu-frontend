@@ -1,6 +1,7 @@
 import {
   Award, BarChart3, Bell, Building2, Calendar, CreditCard, FileCheck, FileText, History, House, Image as ImageIcon, Mail, MessageSquare, Send, Settings, ShieldCheck, Users, type LucideIcon,
 } from "lucide-react";
+import { FEEDBACK_ENABLED } from "@/lib/config";
 import { comingSoonHref } from "@/lib/navigation";
 import type { ConferenceRole } from "@/types/conference";
 
@@ -27,7 +28,7 @@ export const AUTHOR_MENU: MenuItem[] = [
   { key: "submissions", label: "My Submissions", icon: FileText, app: (s) => `/author/${e(s)}/submissions` },
   { key: "flyer", label: "My flyer", icon: ImageIcon, app: (s) => `/author/${e(s)}/flyer` },
   { key: "certificates", label: "Certificates", icon: Award, app: (s) => `/author/${e(s)}/certificates` },
-  { key: "feedback", label: "Feedback", icon: MessageSquare, app: (s) => `/author/${e(s)}/feedback` },
+  ...(FEEDBACK_ENABLED ? [{ key: "feedback", label: "Feedback", icon: MessageSquare, app: (s: string) => `/author/${e(s)}/feedback` }] : []),
   { key: "updates", label: "Updates", icon: Bell, app: (s) => `/author/${e(s)}/updates` },
   { key: "activity-log", label: "Activity Log", icon: History, app: (s) => `/author/${e(s)}/activity-logs` },
 ];

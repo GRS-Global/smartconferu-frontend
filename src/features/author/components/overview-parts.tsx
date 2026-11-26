@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Award, Check, ChevronRight, Image as ImageIcon, MessageSquare, Mic, Sparkles, type LucideIcon } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { FEEDBACK_ENABLED } from "@/lib/config";
 import type { Dest } from "../links";
 import type { Todo } from "../todos";
 
@@ -99,7 +100,7 @@ export function WrapUp({ acronym, flyerCount, presented, certificates = 0, feedb
     certificates > 0
       ? { key: "cert", icon: Award, tone: "var(--primary)", bg: "var(--primary-soft)", title: `${certificates} certificate${certificates === 1 ? "" : "s"} ready`, sub: "Download them any time. They were also sent to your email.", cta: `View certificate${certificates === 1 ? "" : "s"}`, primary: true, dest: certificatesDest }
       : { key: "cert", icon: Award, tone: "var(--ink-faint)", bg: "var(--muted)", title: "No certificate yet", sub: "The organisers haven't sent certificates yet.", cta: "Open certificates", dest: certificatesDest },
-    { key: "feedback", icon: MessageSquare, tone: "var(--warning)", bg: "var(--warning-soft)", title: "How was it?", sub: "Tell the organisers in 2 minutes.", cta: "Give feedback", primary: true, dest: feedbackDest },
+    ...(FEEDBACK_ENABLED ? [{ key: "feedback", icon: MessageSquare, tone: "var(--warning)", bg: "var(--warning-soft)", title: "How was it?", sub: "Tell the organisers in 2 minutes.", cta: "Give feedback", primary: true, dest: feedbackDest }] : []),
     {
       key: "flyer", icon: flyerCount ? ImageIcon : Mic, tone: "var(--cat-virtual)", bg: "var(--cat-virtual-soft)",
       title: presented ? `You presented ${presented} paper${presented === 1 ? "" : "s"}` : "Your flyer",
@@ -114,7 +115,7 @@ export function WrapUp({ acronym, flyerCount, presented, certificates = 0, feedb
         <h2 className="text-[15px] font-extrabold text-navy">{acronym} has finished</h2>
         <span className="text-[13px] font-semibold text-ink-muted">· here&apos;s everything you got from it</span>
       </div>
-      <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+      <div className={`grid grid-cols-1 gap-3.5 ${items.length > 2 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
         {items.map((it, i) => {
           const Icon = it.icon;
           return (

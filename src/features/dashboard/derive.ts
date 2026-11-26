@@ -1,3 +1,4 @@
+import { FEEDBACK_ENABLED } from "@/lib/config";
 import type {
   AuthorPaperResult, Conference, ConferenceRole, DashboardSource, SourceConference,
 } from "@/types/conference";
@@ -201,7 +202,7 @@ function authorNext(conf: Conference, counts: Record<AuthorPaperResult, number>,
   if (counts.not_registered > 0) return { key: "register", text: "Register now", action: true };
   if (counts.draft > 0 && conf.status === "active") return { key: "draft", text: "Upload & submit your paper", tone: "warning" };
   if (hint.tone === "live" && counts.registered > 0) return { key: "live", text: "Happening now" };
-  if (conf.status === "archived" && counts.registered > 0) return { key: "feedback", text: "Share feedback" };
+  if (FEEDBACK_ENABLED && conf.status === "archived" && counts.registered > 0) return { key: "feedback", text: "Share feedback" };
   if (counts.revise > 0) return { key: "revise", text: "Revision required", tone: "warning" };
   if (counts.waitlist > 0) return { key: "waitlist", text: "Waitlisted" };
   if (counts.no_result > 0) return { key: "wait", text: "No decision yet" };

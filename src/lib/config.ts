@@ -21,6 +21,10 @@ export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
 /** The public marketing website (home, Terms, Privacy), when it is hosted apart from this app: no trailing slash; empty = use this app's own pages. */
 export const WEBSITE_URL = (process.env.NEXT_PUBLIC_WEBSITE_URL ?? "").replace(/\/$/, "");
 
+/** Author › Feedback is hidden (menu, overview cards, to-dos, dashboard hint, the page itself) until its backend exists: see GAP-REPORT.md
+ *  "Module 1 — Feedback". Set to true to bring it back; nothing else has to change. */
+export const FEEDBACK_ENABLED = false;
+
 /** Sign-in goes through the own backend (NEXT_PUBLIC_DATA_SOURCE=api) instead of Supabase Auth. */
 export const AUTH_API = DATA_SOURCE === "api";
 /** Whether sign-in can work at all: the backend is the auth server in `api` mode, otherwise Supabase must be configured. */

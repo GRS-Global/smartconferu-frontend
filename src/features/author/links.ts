@@ -1,3 +1,4 @@
+import { FEEDBACK_ENABLED } from "@/lib/config";
 import { comingSoonHref } from "@/lib/navigation";
 
 /* Where the Author workspace sends people. Screens that are not built yet open the internal "Coming soon" page.
@@ -26,8 +27,8 @@ const soon = (key: "registration" | "programme"): Dest => ({ href: comingSoonHre
 export const conferenceDest = {
   registration: (slug: string): Dest | null => (slugOk(slug) ? soon("registration") : null),
   programme: (slug: string): Dest | null => (slugOk(slug) ? soon("programme") : null),
-  /** Feedback: a page of this app. */
-  feedback: (slug: string): Dest | null => (slugOk(slug) ? { href: `/author/${encodeURIComponent(slug)}/feedback`, external: false } : null),
+  /** Feedback: a page of this app (none while the feature is hidden). */
+  feedback: (slug: string): Dest | null => (FEEDBACK_ENABLED && slugOk(slug) ? { href: `/author/${encodeURIComponent(slug)}/feedback`, external: false } : null),
   /** Certificates: a page of this app. */
   certificates: (slug: string): Dest | null => (slugOk(slug) ? { href: `/author/${encodeURIComponent(slug)}/certificates`, external: false } : null),
   /** My flyer: a page of this app. */
