@@ -9,6 +9,7 @@ import { workspaceGate } from "@/features/workspace/components/workspace-gate";
 import { frameEmailHtml } from "@/lib/email-frame";
 import type { ChairEmailLog } from "@/types/chair";
 import { useEmailLogs } from "../use-email-logs";
+import { localTime, localZoneName } from "@/lib/local-time";
 
 /* Conference Settings › Email Logs (the prototype's EmailLogsPage): the history and delivery status of the emails this conference sent
    (`email_log`, written by the email server; chairs can only read it). Filters on status, recipient type, template and dates, a
@@ -18,7 +19,7 @@ import { useEmailLogs } from "../use-email-logs";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const PAGE = 8;
 const CSP = "default-src 'none'; img-src 'self' https: data:; style-src 'unsafe-inline'";
-const utc = (iso: string) => { const d = new Date(iso); return { date: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }), time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" }) }; };
+
 const SELECT = "cursor-pointer rounded-lg border border-line bg-canvas px-3 py-2 text-xs font-semibold text-ink outline-none";
 const DATE_BOX = "rounded-lg border border-line bg-canvas px-2.5 py-2 text-xs outline-none";
 /** A recipient list as one cell: the first person and "+n" for the rest, "—" when there is none (the prototype's EmailRecipientCell). */
@@ -45,7 +46,7 @@ function LogDialog({ log, acronym, onClose }: { log: ChairEmailLog | null; acron
   }, [log, acronym]);
   const fit = () => { const fr = frame.current; const h = fr?.contentDocument?.documentElement?.scrollHeight; if (fr && h) fr.style.height = `${h + 2}px`; };
   if (!log) return null;
-  const when = `${utc(log.createdAt).date} · ${utc(log.createdAt).time} UTC`;
+  const when = localTime(log.createdAt).full;
   const to = log.toName ? `${log.toName} <${log.toEmail}>` : log.toEmail;
   return (
     <Modal title={log.subject} subtitle={`${log.template} · ${when}`} icon={Mail} onClose={onClose} maxWidth="max-w-lg">
@@ -115,13 +116,13 @@ export function EmailLogsPage({ slug }: { slug: string }) {
             <>
               <div className="overflow-x-auto">
                 <table className="ui-table w-full text-sm">
-                  <thead><tr className="border-b border-line bg-canvas"><th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold text-ink-muted">Date UTC</th><th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">Subject</th><th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">To</th><th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">Bcc</th><th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold text-ink-muted">Status</th><th className="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold text-ink-muted">Details</th></tr></thead>
+                  <thead><tr className="border-b border-line bg-canvas"><th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold text-ink-muted" title="Times are in your device's time zone; hover a time for UTC">Date ({localZoneName()})</th><th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">Subject</th><th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">To</th><th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">Bcc</th><th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold text-ink-muted">Status</th><th className="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold text-ink-muted">Details</th></tr></thead>
                   <tbody>
                     {shown.map((l, i) => {
-                      const t = utc(l.createdAt);
+                      const t = localTime(l.createdAt);
                       return (
                         <tr key={l.id} style={{ borderBottom: i < shown.length - 1 ? "1px solid var(--muted)" : "none" }} className="transition-colors">
-                          <td className="whitespace-nowrap px-4 py-3.5"><div className="text-xs font-semibold text-ink">{t.date}</div><div className="text-xs text-ink-faint">{t.time}</div></td>
+                          <td className="whitespace-nowrap px-4 py-3.5" title={t.utc}><div className="text-xs font-semibold text-ink">{t.date}</div><div className="text-xs text-ink-faint">{t.time} {t.zone}</div></td>
                           <td className="max-w-[210px] truncate px-4 py-3.5 text-ink" title={l.subject}>{l.subject}</td>
                           <td className="px-4 py-3.5"><Recipients list={[{ name: l.toName, email: l.toEmail }]} /></td>
                           <td className="px-4 py-3.5"><Recipients list={l.bcc ?? []} /></td>

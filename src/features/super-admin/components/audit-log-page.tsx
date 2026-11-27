@@ -6,12 +6,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, ScrollText, Search } from "lucide-react";
 import { loadActivity, type ActivityEntry } from "../services";
 import { activityText } from "./activity";
-import { Avatar, Button, Card, errorText, fmtDate, Loading, PageTitle, SortTh, useSort } from "./ui";
+import { Avatar, Button, Card, errorText, Loading, PageTitle, SortTh, useSort } from "./ui";
+import { localTime, localZoneName } from "@/lib/local-time";
 
 const BOM = String.fromCharCode(0xfeff); // so Excel reads the CSV as UTF-8
 const csvCell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 const PAGE = 100;
 const EXPORT_MAX = 5000;
+/** Date and time in the viewer's zone (both from the same zone; the table used to show the UTC date beside the local time). */
 const dateOf = (iso: string) => {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -97,7 +99,7 @@ export function AuditLogPage() {
       }
       const order = sort.key ? sorted.map((a) => a.id) : [];
       const ordered = order.length === all.length ? sorted : all;
-      const lines = [["Date", "Time", "Who", "What", "Action"], ...ordered.map((a) => [dateOf(a.occurredAt).date, dateOf(a.occurredAt).time, a.actor?.name ?? "System", activityText(a), a.action])].map((r) => r.map(csvCell).join(","));
+      const lines = [["Date", "Time", "Time zone", "UTC", "Who", "What", "Action"], ...ordered.map((a) => [dateOf(a.occurredAt).date, dateOf(a.occurredAt).time, localTime(a.occurredAt).zone, a.occurredAt, a.actor?.name ?? "System", activityText(a), a.action])].map((r) => r.map(csvCell).join(","));
       const url = URL.createObjectURL(new Blob([`${BOM}${lines.join("\r\n")}`], { type: "text/csv;charset=utf-8" }));
       const link = Object.assign(document.createElement("a"), { href: url, download: `smartconferu-audit-log-${new Date().toISOString().slice(0, 10)}.csv` });
       link.click();
@@ -166,7 +168,7 @@ export function AuditLogPage() {
             <table className="sa-table">
               <thead>
                 <tr>
-                  {th("When", "when", "!pl-6")}
+                  {th(`When (${localZoneName()})`, "when", "!pl-6")}
                   {th("Who", "who")}
                   {th("What", "what")}
                 </tr>
@@ -174,8 +176,8 @@ export function AuditLogPage() {
               <tbody>
                 {sorted.map((a) => (
                   <tr key={a.id}>
-                    <td className="!pl-6 whitespace-nowrap">
-                      {fmtDate(a.occurredAt)} · {dateOf(a.occurredAt).time}
+                    <td className="!pl-6 whitespace-nowrap" title={localTime(a.occurredAt).utc}>
+                      {localTime(a.occurredAt).full}
                     </td>
                     <td>
                       <div className="flex items-center gap-2.5">

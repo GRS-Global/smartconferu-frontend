@@ -10,6 +10,7 @@ import { useConferenceFrame } from "@/features/workspace/use-conference-frame";
 import { loadMyActivityLogs } from "@/services/activity";
 import type { ChairActivityLog } from "@/types/chair";
 import { useActivityLogs } from "../use-activity-logs";
+import { localTime, localZoneName } from "@/lib/local-time";
 
 /* Conference Settings › Activity Logs (the prototype's ActivityLogsPage, chair view): what was done in the conference, newest first, with filters on module,
    action, person and dates, a search on the activity or the person, 8 a page and a detail window (the previous and new value, and the reviewer, which only
@@ -27,8 +28,8 @@ const TONE: Record<string, { color: string; bg: string }> = {
   Unassigned: { color: "var(--warning-ink)", bg: "var(--warning-soft)" }, Published: { color: "var(--success-ink)", bg: "var(--success-soft)" }, Submitted: { color: "var(--primary)", bg: "var(--primary-soft)" },
   Sent: { color: "var(--primary)", bg: "var(--primary-soft)" }, Approved: { color: "var(--success-ink)", bg: "var(--success-soft)" }, Rejected: { color: "var(--danger-ink)", bg: "var(--danger-soft)" }, Changed: { color: "var(--primary)", bg: "var(--primary-soft)" },
 };
-const parts = (iso: string) => { const d = new Date(iso); return { date: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) }; };
-const whenUtc = (iso: string) => { const p = parts(iso); return `${p.date} · ${p.time} UTC`; };
+// Shown in the viewer's time zone (it was already local, but labelled "UTC").
+const parts = (iso: string) => localTime(iso);
 
 function ActionBadge({ action }: { action: string }) {
   const t = TONE[action] ?? TONE.Updated;
@@ -57,7 +58,7 @@ function Detail({ log, onClose, chair }: { log: ChairActivityLog | null; onClose
           <p className="pb-1 text-sm font-semibold leading-snug text-navy">{log.description}</p>
           <Row label="Performed By" value={log.actorName} />
           <Row label="Role" value={ROLE[log.actorRole]} />
-          <Row label="Date & Time" value={whenUtc(log.datetime)} />
+          <Row label="Date & Time" value={localTime(log.datetime).full} />
           <Row label="Action" value={<ActionBadge action={log.action} />} />
           {chair && <Row label="Reviewer" value={log.reviewerName} />}
           {(log.previousValue || log.newValue) && (
@@ -129,7 +130,7 @@ function LogsView({ logs, chair, crumbs }: { logs: ChairActivityLog[]; chair: bo
                 <table className="ui-table w-full text-sm">
                   <thead>
                     <tr style={{ borderBottom: "1px solid var(--border)" }} className="bg-canvas">
-                      <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold text-ink-muted">Date &amp; Time (UTC)</th>
+                      <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold text-ink-muted" title="Times are in your device's time zone; hover a time for UTC">Date &amp; Time ({localZoneName()})</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">Performed By</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">Action</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-ink-muted">Module</th>
@@ -143,7 +144,7 @@ function LogsView({ logs, chair, crumbs }: { logs: ChairActivityLog[]; chair: bo
                       const t = parts(l.datetime);
                       return (
                         <tr key={l.id} style={{ borderBottom: i < shown.length - 1 ? "1px solid var(--muted)" : "none" }} className="transition-colors">
-                          <td className="whitespace-nowrap px-4 py-3.5"><div className="text-xs font-semibold text-ink">{t.date}</div><div className="text-xs text-ink-faint">{t.time}</div></td>
+                          <td className="whitespace-nowrap px-4 py-3.5" title={t.utc}><div className="text-xs font-semibold text-ink">{t.date}</div><div className="text-xs text-ink-faint">{t.time} {t.zone}</div></td>
                           <td className="px-4 py-3.5"><div className="font-semibold text-navy">{l.actorName}</div><div className="text-xs text-ink-faint">{ROLE[l.actorRole]}</div></td>
                           <td className="px-4 py-3.5"><ActionBadge action={l.action} /></td>
                           <td className="px-4 py-3.5 text-ink-muted">{l.module}</td>
