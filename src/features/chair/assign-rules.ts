@@ -5,20 +5,51 @@ import type { PrRow } from "./peer-review";
    (src/author-journey.jsx: reviewerConflicts / reviewerPaperConflict, rankReviewersFor, reviewerLoad, newAssignmentDueISO and AutoAssignModal's plan).
    Only what the data supports: there is no reviewer expertise and no declared-institution list in the database, so nothing here matches keywords. */
 
-/** Who the conflict checks compare: a reviewer is blocked from a paper they authored, and from one by an author at the same institution
- *  (same email domain, ignoring webmail). */
+/** Who the conflict checks compare: a reviewer is blocked from a paper they authored, and from one by an author at the same institution.
+ *  The same rule as the API (Backend/src/core/rbac/access-rules.ts institutionConflict): when the reviewer and an author both gave an
+ *  institution, only those are compared — different institutions never clash, even on a shared email domain (a company or organiser
+ *  domain is not an institution). Only when one of them gave none does the email domain decide (webmail ignored). */
 const WEBMAIL = new Set(["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "proton.me", "protonmail.com", "live.com", "aol.com", "rediffmail.com"]);
-const domainOf = (e: string) => (e.toLowerCase().split("@")[1] ?? "");
+const domainOf = (e: string) => {
+  const d = e.trim().toLowerCase().split("@")[1] ?? "";
+  return d && !WEBMAIL.has(d) ? d : "";
+};
+/** An institution name for comparing: case, accents, punctuation, "&" / "and" and a leading "The" do not matter. */
+export const normalizeInstitution = (v: string | null | undefined) =>
+  (v ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/&/g, " and ").replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/^the /, "");
 
-/** "" when there is no conflict, else the reason shown under the reviewer ("Author of this paper", "Same institution as <author>"). */
-export function reviewerConflict(rev: Pick<PoolReviewer, "name" | "email">, paper: ChairPaper): string {
+/** Whether two typed institutions are the same one (the API's sameInstitution): besides the whole text, the name before the first comma
+ *  counts ("Delhi University" = "Delhi University, Delhi, India"), and the same name with the same last part (country) matches;
+ *  "University of California, Berkeley" and "…, Los Angeles" do not. */
+export function sameInstitution(a: string | null | undefined, b: string | null | undefined): boolean {
+  const parts = (v: string | null | undefined) => (v ?? "").split(",").map(normalizeInstitution).filter(Boolean);
+  const pa = parts(a);
+  const pb = parts(b);
+  if (!pa.length || !pb.length) return false;
+  const fa = pa.join(" ");
+  const fb = pb.join(" ");
+  if (fa === fb || fa === pb[0] || fb === pa[0]) return true;
+  return pa.length > 1 && pb.length > 1 && pa[0] === pb[0] && pa[pa.length - 1] === pb[pb.length - 1];
+}
+
+/** "" when there is no conflict, else the reason shown under the reviewer ("Author of this paper", "Same institution as <author>",
+ *  "Same email domain as <author>"). */
+export function reviewerConflict(rev: Pick<PoolReviewer, "name" | "email" | "affiliation">, paper: ChairPaper): string {
   const name = rev.name.trim().toLowerCase();
   const email = rev.email.trim().toLowerCase();
   const authors = paper.authors;
   if (authors.some((a) => (email && a.email.toLowerCase() === email) || a.name.trim().toLowerCase() === name)) return "Author of this paper";
-  const domain = domainOf(email);
-  const same = domain && !WEBMAIL.has(domain) ? authors.find((a) => domainOf(a.email) === domain) : undefined;
-  return same ? `Same institution as ${same.name}` : "";
+  const mine = normalizeInstitution(rev.affiliation);
+  const myDomain = domainOf(email);
+  for (const a of authors) {
+    const theirs = normalizeInstitution(a.affiliation);
+    if (mine && theirs) {
+      if (sameInstitution(rev.affiliation, a.affiliation)) return `Same institution as ${a.name}`;
+      continue;
+    }
+    if (myDomain && domainOf(a.email) === myDomain) return `Same email domain as ${a.name}`;
+  }
+  return "";
 }
 
 /** Whether the reviewer is already on this paper (an assignment, or a queued one waiting on their committee invitation). */

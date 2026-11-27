@@ -173,6 +173,8 @@ export interface PoolReviewer {
   userId: string | null;
   name: string;
   email: string;
+  /** The institution on their profile ("" when unknown, e.g. invited without an account): the conflict check compares it with the authors'. */
+  affiliation?: string;
   /** The tracks the chair scoped them to (empty: all tracks). */
   tracks: string[];
   /** "invited": has not accepted the committee invitation yet. */

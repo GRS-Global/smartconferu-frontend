@@ -39,7 +39,7 @@ interface ConferenceResponse {
   submissionDeadline: string | null; reviewDeadline: string | null; reviewMode: string; details: Record<string, unknown> | null; status: string; logoPath: string | null; createdAt: string;
   settings: Record<string, unknown> | null; deletionRequest: { status: string; reason: string; adminNote: string | null } | null; cfpStatus: string;
 }
-interface MemberResponse { id: string; role: string; status: string; userId: string | null; name: string; email: string | null; expertise: string[]; invitedAt: string }
+interface MemberResponse { id: string; role: string; status: string; userId: string | null; name: string; email: string | null; affiliation?: string | null; expertise: string[]; invitedAt: string }
 interface OverviewPaper {
   id: string; paperId: string; title: string; track: string | null; presentationType: string | null; keywords: string[]; status: string; outcome: string; decisionTypeId: string | null;
   notifiedOutcome: string | null; screening: Record<string, unknown> | null; files: Array<{ id: string; kind: string; version: number; fileName: string; uploadedAt: string; autoCheck: Record<string, unknown> | null }>; withdrawnAt: string | null; withdrawnBy: string | null; submittedAt: string; updatedAt: string;
@@ -351,7 +351,7 @@ const implemented: Partial<ChairService> = {
   async loadReviewerPool(slug): Promise<ReviewerPool> {
     const [members, conf] = await Promise.all([api<MemberResponse[]>(`/conferences/${slug}/members`, { query: { role: "reviewer" } }), getConference(slug)]);
     const reviewers: PoolReviewer[] = members.filter((m) => m.status !== "removed").map((m) => ({
-      memberId: m.id, userId: m.userId, name: m.name || m.email || "Reviewer", email: m.email ?? "", tracks: m.expertise ?? [],
+      memberId: m.id, userId: m.userId, name: m.name || m.email || "Reviewer", email: m.email ?? "", affiliation: m.affiliation ?? "", tracks: m.expertise ?? [],
       status: m.status === "active" ? "active" : m.status === "declined" ? "declined" : "invited", invitedAt: label(m.invitedAt),
     }));
     return { reviewers, tracks: toSettings(conf).tracks.map((t) => t.name) };
