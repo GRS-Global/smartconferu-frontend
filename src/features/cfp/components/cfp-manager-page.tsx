@@ -203,7 +203,7 @@ export function CfpManagerPage({ slug }: { slug: string }) {
       <CfpNavBar navItems={navItems} editMenuItems={editItems} editMenuActive={tab === "content" || tab === "details" || tab === "theme" || tab === "logo"} />
       {tab === "publish" && (draft || review) && (
         setup.ready
-          ? <PublishPanel slug={slug} acronym={conference.acronym} chosen={cfp.publicSlug} missing={missing} preview={preview} onCancel={() => setTab("overview")} onPublished={() => { setTab("overview"); reload(); setup.reload(); }} onSessionEnded={retry} awaiting={review} />
+          ? <PublishPanel slug={slug} acronym={conference.acronym} chosen={cfp.publicSlug} missing={missing} preview={preview} onCancel={() => setTab("overview")} onPublished={() => { setTab("overview"); reload(); setup.reload(); }} onSentForApproval={reload} onSessionEnded={retry} awaiting={review} />
           : <div role="status" aria-label="Checking what is still missing" className="h-48 animate-pulse rounded-2xl border border-line bg-white" />
       )}
       {tab === "content" && !frozen && <ContentPanel slug={slug} acronym={conference.acronym} initialHtml={html} preview={{ ...preview, submissionLink }} onDone={() => setTab("overview")} onSaved={reload} onSessionEnded={retry} />}

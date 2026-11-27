@@ -27,12 +27,15 @@ interface Props {
   onCancel: () => void;
   /** Called once the CFP is published (the manager reloads it). */
   onPublished: () => void;
+  /** Called as soon as the CFP has gone to the Super Admin, so the manager reloads its status at once: the Publish tab then keeps showing
+   *  "sent for approval" however the chair comes back to it (another tab and back, a reload, the dashboard's "Publish CFP"). */
+  onSentForApproval?: () => void;
   onSessionEnded: () => void;
-  /** Already sent to the Super Admin: everything is shown read-only and it can't be sent again. */
+  /** Already sent to the Super Admin (the CFP's status): the "sent for approval" message is shown instead of the form. */
   awaiting?: boolean;
 }
 
-export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel, onPublished, onSessionEnded, awaiting = false }: Props) {
+export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel, onPublished, onSentForApproval, onSessionEnded, awaiting = false }: Props) {
   const suggestedBase = acronym.trim().split(/\s+/).filter(Boolean);
   const suggestions = [...new Set([suggestedBase.join(""), suggestedBase.join("").toLowerCase(), suggestedBase.join("-"), suggestedBase.join("-").toLowerCase(), suggestedBase.join("_"), suggestedBase.join("_").toLowerCase()])].filter(Boolean);
   const [page, setPage] = useState(chosen || suggestions[0] || "");
@@ -64,19 +67,27 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
     const err = locked ? "" : validate(page);
     if (err) { setError(err); return; }
     setBusy(true); setError("");
-    try { const result = await (await getCfpService()).publish(slug, locked ? chosen : page); setDone(result === "review" ? "review" : "live"); } catch (e) {
+    try {
+      const result = await (await getCfpService()).publish(slug, locked ? chosen : page);
+      setDone(result === "review" ? "review" : "live");
+      if (result === "review") onSentForApproval?.();
+    } catch (e) {
       if (e instanceof AuthRequiredError) onSessionEnded(); else setError(e instanceof Error ? e.message : "Couldn't publish the Call for Papers.");
     } finally { setBusy(false); }
   };
 
-  if (done === "review") {
+  // Sent to the Super Admin — just now (done) or earlier (awaiting, from the CFP's status): always the same message, so coming back to
+  // this tab any way never shows the form again.
+  if (done === "review" || awaiting) {
+    const pageAddress = (chosen || page) && typeof window !== "undefined" ? `${window.location.origin}/cfp/${encodeURIComponent(chosen || page)}` : "";
     return (
-      <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
+      <div role="status" className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
         <div className="max-w-md text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning-soft"><ShieldCheck size={28} aria-hidden="true" className="text-warning-ink" /></div>
           <h2 className="mb-2 text-lg font-bold text-navy">Call for Papers sent for approval</h2>
-          <p className="mb-6 text-sm text-ink-muted">A Super Admin will review it. Submissions open as soon as it is approved — you will get a notification and an email. If it is not approved, you will see why and can send it again.</p>
-          <Button variant="outline" onClick={onPublished}>Go to CFP Manager</Button>
+          <p className="mb-4 text-sm text-ink-muted">A Super Admin will review it. Submissions open as soon as it is approved — you will get a notification and an email. If it is not approved, you will see why and can send it again.</p>
+          {pageAddress && <p className="mb-6 text-xs text-ink-soft">CFP page once approved: <span className="break-all font-semibold text-ink">{pageAddress}</span></p>}
+          <Button variant="outline" onClick={done === "review" ? onPublished : onCancel}>Go to CFP Manager</Button>
         </div>
       </div>
     );
@@ -103,15 +114,6 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
   );
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {awaiting && (
-        <div role="status" className="flex flex-wrap items-start gap-3 rounded-xl border border-primary-soft-border bg-primary-soft px-4 py-3.5">
-          <Clock size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-primary" />
-          <div className="min-w-[16rem] flex-1">
-            <p className="text-sm font-bold text-navy">Sent for approval: waiting for the Super Admin</p>
-            <p className="mt-0.5 text-xs text-ink-soft">Your request is already in. You can read everything here, but it can&apos;t be sent again. Submissions open as soon as it is approved, and you will get a notification and an email.</p>
-          </div>
-        </div>
-      )}
       {!awaiting && missing.length > 0 && notice("danger", (
         <>
           <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger-ink" />
