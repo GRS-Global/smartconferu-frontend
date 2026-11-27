@@ -16,6 +16,7 @@ import { LIST_TITLES, ListEditor } from "./list-editor";
 import { PhotoEditor } from "./photo-editor";
 import { SecuritySettingsModal } from "@/features/settings/components/settings-modal";
 import { ShareDialog } from "./share-dialog";
+import { SMS_ALERTS_ENABLED } from "@/lib/config";
 
 type Modal = "intro" | "photo" | "about" | "affiliation" | "experience" | "education" | "memberships" | "links" | "emails" | "phone" | "address";
 
@@ -27,7 +28,7 @@ const SUBTITLES: Record<Modal, string> = {
   intro: "Your name, role and how people can reach you.", photo: "A clear headshot helps organizers recognize you.", about: "Tell organizers and reviewers what you work on.",
   affiliation: "Institutions you currently work or research at. One is your primary.", experience: "Roles you have held — use ↑ ↓ to set the order.", education: "Degrees and qualifications — use ↑ ↓ to set the order.",
   memberships: "Societies and professional bodies — use ↑ ↓ to set the order.", links: "Where people can find your published work and connect with you online.",
-  emails: "Private — organizers use these to reach you about your submissions.", phone: "Optional — used for SMS or WhatsApp alerts.", address: "Private — never shown on your public profile.",
+  emails: "Private — organizers use these to reach you about your submissions.", phone: SMS_ALERTS_ENABLED ? "Optional — used for SMS or WhatsApp alerts." : "Optional — so organizers can reach you.", address: "Private — never shown on your public profile.",
 };
 const ICONS: Record<Modal, LucideIcon> = {
   intro: User, photo: Camera, about: FileText, affiliation: Building2, experience: Briefcase, education: GraduationCap, memberships: Award, links: Link2, emails: Mail, phone: Smartphone, address: MapPin,

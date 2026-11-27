@@ -16,6 +16,7 @@ import { useNotifications } from "../use-notifications";
 import type { AppNotification } from "@/types/notification";
 import { EmailViewer } from "./email-viewer";
 import { NotificationCard } from "./notification-card";
+import { SMS_ALERTS_ENABLED } from "@/lib/config";
 
 /** Notifications: one inbox for everything addressed to the signed-in user — the prototype's NotificationsPage
  *  (src/author-module/NotificationsPage.jsx) on the global page: the four tabs (All, Paper updates, Announcements, Emails), the
@@ -233,7 +234,7 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
               {([
                 ["email", "Email me as well", false],
                 ["whatsapp", "WhatsApp / SMS for urgent ones", true],
-              ] as const).map(([key, label, soon]) => (
+              ] as const).filter(([key]) => SMS_ALERTS_ENABLED || key !== "whatsapp").map(([key, label, soon]) => (
                 <label key={key} className={`flex items-center justify-between gap-2 text-[13.5px] font-semibold ${soon ? "cursor-not-allowed text-ink-faint" : "cursor-pointer text-ink"}`}>
                   <span className="flex items-center gap-2">{label}{soon && <span className="rounded-full bg-muted px-2 py-0.5 text-[10.5px] font-bold text-ink-muted">Coming soon</span>}</span>
                   <input type="checkbox" checked={prefs[key]} disabled={soon} onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))} className="h-[18px] w-[18px] cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-50" />

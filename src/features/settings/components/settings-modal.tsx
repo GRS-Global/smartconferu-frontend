@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { NOTIFY_CHANNELS } from "@/features/profile/fields";
 import { profileSlug } from "@/features/profile/components/share-dialog";
-import { AUTH_API } from "@/lib/config";
+import { AUTH_API, SMS_ALERTS_ENABLED } from "@/lib/config";
 import type { Profile, ProfilePatch } from "@/types/profile";
 import { DeleteAccountModal, LinkedSignInModal, MergeAccountsModal } from "./account-modals";
 import { ChangePasswordModal } from "./change-password-card";
@@ -80,7 +80,7 @@ export function SecuritySettingsModal({ profile, save, onClose, onAddPhone }: { 
             <select id="notify-frequency" value={profile.notifyFrequency} onChange={(e) => void write({ notifyFrequency: e.target.value })} className="w-full max-w-xs cursor-pointer rounded-lg border-[1.5px] border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-primary">
               {NOTIFY_FREQUENCIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
             </select>
-            <div className="mt-5 border-t border-muted pt-4">
+            {SMS_ALERTS_ENABLED && <div className="mt-5 border-t border-muted pt-4">
               <div className="text-sm font-semibold text-ink">Text &amp; WhatsApp alerts</div>
               {profile.phone ? (
                 <>
@@ -98,7 +98,7 @@ export function SecuritySettingsModal({ profile, save, onClose, onAddPhone }: { 
                   <button type="button" onClick={() => { onClose(); onAddPhone(); }} className="shrink-0 cursor-pointer text-xs font-semibold text-primary hover:underline">Add mobile number</button>
                 </div>
               )}
-            </div>
+            </div>}
           </Card>
 
           <Card>

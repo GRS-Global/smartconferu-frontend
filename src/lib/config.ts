@@ -29,6 +29,12 @@ export const FEEDBACK_ENABLED = false;
  *  (author) show "Coming soon" in the sidebar and on their pages while these are false; the public /verify/<id> page too (CERTIFICATES_ENABLED).
  *  Set to true to bring them back. Details: GAP-REPORT.md "Switched off: Certificates and Speaker Flyer". */
 export const CERTIFICATES_ENABLED = false;
+
+/** No SMS / WhatsApp gateway yet (GAP-REPORT.md "Mobile number: no SMS gateway yet"). While false, every SMS / WhatsApp choice is hidden
+ *  (mobile number dialog, sign-up and Complete Profile, Settings, the profile contact card, Notifications, Help) and nothing is sent by them. */
+export const SMS_ALERTS_ENABLED = false;
+/** No way to send a verification code yet: while false, a mobile number is saved and shown as verified. */
+export const PHONE_VERIFICATION_ENABLED = false;
 export const FLYER_ENABLED = false;
 
 /** Sign-in goes through the own backend (NEXT_PUBLIC_DATA_SOURCE=api) instead of Supabase Auth. */

@@ -7,6 +7,7 @@ import { INPUT_CLASS } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { NOTIFY_CHANNELS } from "../fields";
 import { joinPhone, parsePhoneValue } from "../phone";
+import { SMS_ALERTS_ENABLED } from "@/lib/config";
 
 interface PhoneFieldProps {
   id: string;
@@ -58,7 +59,7 @@ export function PhoneField({ id, ariaLabel, phone, onPhoneChange, onBlur, channe
           />
         </div>
       </div>
-      {onChannelsChange && phone.trim() && (
+      {SMS_ALERTS_ENABLED && onChannelsChange && phone.trim() && (
         <div className="rounded-lg border border-line bg-canvas px-3.5 py-2.5">
           <div className="mb-2 text-xs font-semibold text-ink-soft">Also send me notifications by</div>
           <div className="flex flex-wrap gap-2">

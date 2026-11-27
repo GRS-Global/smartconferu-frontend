@@ -1,6 +1,7 @@
 import { Bell, ChevronRight, CreditCard, FileText, LifeBuoy, Ticket, UserCog, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
+import { SMS_ALERTS_ENABLED } from "@/lib/config";
 
 /* Help (the prototype's HelpPage): quick answers for the most common tasks,each with a link where there is a page for it. */
 
@@ -10,7 +11,7 @@ const TOPICS: Array<{ icon: LucideIcon; title: string; body: string; link?: { la
   { icon: Users, title: "Reviewing papers", body: "Papers assigned to you appear under the Reviewer role for that conference, together with the review form." },
   { icon: Ticket, title: "Registering for a conference", body: "Open the conference's registration form, pick Physical or Virtual, then fill in that type's form." },
   { icon: UserCog, title: "Your profile", body: "Update your photo, personal details, scholar and professional profile links from My Profile.", link: { label: "My Profile", href: "/profile" } },
-  { icon: Bell, title: "Notifications", body: "Email notifications are always on. Add a mobile number in My Profile to also get SMS or WhatsApp alerts.", link: { label: "Notification preferences", href: "/settings" } },
+  { icon: Bell, title: "Notifications", body: SMS_ALERTS_ENABLED ? "Email notifications are always on. Add a mobile number in My Profile to also get SMS or WhatsApp alerts." : "Notifications come to your email and the bell, and are always on.", link: { label: "Notification preferences", href: "/settings" } },
   { icon: CreditCard, title: "Receipts", body: "Your payment receipts are under Account › My Receipts.", link: { label: "My Receipts", href: "/receipts" } },
 ];
 

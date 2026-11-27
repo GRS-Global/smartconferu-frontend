@@ -6,6 +6,7 @@ import type { Profile } from "@/types/profile";
 import { NOTIFY_CHANNELS } from "../fields";
 import { profileEmails } from "./helpers";
 import { EditIconButton, VerifyStatus } from "./parts";
+import { PHONE_VERIFICATION_ENABLED, SMS_ALERTS_ENABLED } from "@/lib/config";
 
 const EMAIL_TYPES = [
   { key: "personal" as const, label: "Personal" },
@@ -61,10 +62,12 @@ export function ContactCard({ profile, onEditEmails, onEditPhone, onEditAddress,
         {profile.phone ? (
           <>
             <div className="mt-1.5 text-sm font-semibold text-ink">{profile.phone}</div>
-            {profile.phoneStatus && <div className="mt-1.5"><VerifyStatus status={profile.phoneStatus} /></div>}
-            <div className="mt-2.5 text-[13px] text-ink-muted">
-              {channels.length ? `Alerts by ${channels.map(channelLabel).join(" & ")} are set.` : "SMS and WhatsApp alerts are off."}
-            </div>
+            {(profile.phoneStatus || !PHONE_VERIFICATION_ENABLED) && <div className="mt-1.5"><VerifyStatus status={PHONE_VERIFICATION_ENABLED ? profile.phoneStatus : "verified"} /></div>}
+            {SMS_ALERTS_ENABLED && (
+              <div className="mt-2.5 text-[13px] text-ink-muted">
+                {channels.length ? `Alerts by ${channels.map(channelLabel).join(" & ")} are set.` : "SMS and WhatsApp alerts are off."}
+              </div>
+            )}
           </>
         ) : (
           <button type="button" onClick={onEditPhone} className="mt-3 text-sm font-semibold text-primary hover:underline">+ Add mobile number</button>

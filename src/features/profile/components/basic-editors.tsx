@@ -15,6 +15,7 @@ import { ListMatch, OtherBox, PendingNote } from "./editor-parts";
 import type { EditorProps } from "./editor-types";
 import { PhoneField } from "./phone-field";
 import { SectionCard } from "./section-card";
+import { PHONE_VERIFICATION_ENABLED, SMS_ALERTS_ENABLED } from "@/lib/config";
 
 const ALL_AREAS = RESEARCH_AREA_GROUPS.flatMap((g) => g.areas);
 
@@ -233,29 +234,30 @@ export function PhoneEditor({ profile, save, onDone, onCancel }: EditorProps) {
   const national = phone.replace(/^\+\d+\s*/, "").replace(/\D/g, "");
   const problem = national && (national.length < 6 || national.length > 14) ? "Enter a valid mobile number." : "";
   const changed = phone.trim() !== profile.phone;
-  const dirty = changed || JSON.stringify([...channels].sort()) !== JSON.stringify([...profile.notifyChannels].sort());
+  const dirty = changed || (SMS_ALERTS_ENABLED && JSON.stringify([...channels].sort()) !== JSON.stringify([...profile.notifyChannels].sort()));
   const cleared = !national;
   return (
     <SectionCard
-      inDialog id="phone" title="Mobile number" description="Optional — used for SMS or WhatsApp alerts." save={state} canSave={dirty && !problem} onCancel={onCancel}
+      inDialog id="phone" title="Mobile number" description={SMS_ALERTS_ENABLED ? "Optional — used for SMS or WhatsApp alerts." : "Optional — so organizers can reach you."} save={state} canSave={dirty && !problem} onCancel={onCancel}
       onSave={() => void state.run(() => save(cleared
         ? { phone: "", phoneStatus: "", notifyChannels: [] }
-        // A changed number is saved as not verified: nothing sends a verification code yet.
-        : { phone: phone.trim(), phoneStatus: changed ? "pending" : profile.phoneStatus, notifyChannels: channels })).then((ok) => ok && onDone(cleared && profile.phone ? "Mobile number removed" : "Mobile number updated"))}
+        // No verification code can be sent yet (PHONE_VERIFICATION_ENABLED), so a number is saved as verified; with it on, a changed number waits
+        // for its code. SMS / WhatsApp alerts stay off while there is no gateway (SMS_ALERTS_ENABLED).
+        : { phone: phone.trim(), phoneStatus: !PHONE_VERIFICATION_ENABLED ? "verified" : changed ? "pending" : profile.phoneStatus, notifyChannels: SMS_ALERTS_ENABLED ? channels : [] })).then((ok) => ok && onDone(cleared && profile.phone ? "Mobile number removed" : "Mobile number updated"))}
     >
       <div className="flex flex-col gap-[18px]">
         <div>
           <div className="flex items-center justify-between gap-3">
             <label htmlFor="phone-number" className="text-[13px] font-semibold text-ink-soft">Mobile number</label>
-            {!cleared && <VerifyStatus status={changed ? "new" : profile.phoneStatus || "new"} />}
+            {!cleared && <VerifyStatus status={!PHONE_VERIFICATION_ENABLED ? "verified" : changed ? "new" : profile.phoneStatus || "new"} />}
           </div>
           <div className="mt-1.5">
             <PhoneField bare id="phone-number" phone={phone} onPhoneChange={setPhone} onBlur={() => setTouched(true)} invalid={touched && Boolean(problem)} describedBy={touched && problem ? "phone-number-error" : undefined} inputClassName="h-[42px] w-full rounded-lg border border-line bg-white px-3 text-sm font-medium text-ink outline-none transition-shadow placeholder:text-slate-400 focus:border-primary focus:ring-[3px] focus:ring-primary-soft" />
           </div>
           {touched && problem && <p id="phone-number-error" role="alert" className="mt-1.5 text-xs font-medium text-danger-ink">{problem}</p>}
-          <p className="mt-1.5 text-xs text-ink-faint">Verifying a number by code isn&apos;t available yet, so a new number is saved as not verified.</p>
+          {PHONE_VERIFICATION_ENABLED && <p className="mt-1.5 text-xs text-ink-faint">Verifying a number by code isn&apos;t available yet, so a new number is saved as not verified.</p>}
         </div>
-        <div>
+        {SMS_ALERTS_ENABLED && <div>
           <div className="text-[13px] font-semibold text-ink-soft">Alerts on this number</div>
           <div className="mt-1 text-[13px] text-ink-muted">Email alerts are always on.</div>
           <div className="mt-2.5 flex flex-wrap gap-2.5">
@@ -269,7 +271,7 @@ export function PhoneEditor({ profile, save, onDone, onCancel }: EditorProps) {
               );
             })}
           </div>
-        </div>
+        </div>}
       </div>
     </SectionCard>
   );
