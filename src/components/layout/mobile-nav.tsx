@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { isActive, NAV_GROUPS, resolveHref } from "@/lib/navigation";
+import { SoonBadge } from "@/components/ui/soon-badge";
 
 /** Below lg the four menus collapse behind this button. */
 export function MobileNav() {
@@ -44,6 +45,14 @@ export function MobileNav() {
             <div key={group.label} className="py-2">
               <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-wide text-ink-faint">{group.label}</p>
               {group.items.map((item) => {
+                if (item.soon) {
+                  return (
+                    <div key={item.label} aria-disabled="true" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-[#A39AC0]">
+                      <span className="flex-1">{item.label}</span>
+                      <SoonBadge />
+                    </div>
+                  );
+                }
                 const { href, external } = resolveHref(item);
                 const active = isActive(item, pathname);
                 const className = cn("block rounded-lg px-3 py-2.5 text-sm font-semibold hover:bg-canvas", active ? "bg-primary-soft text-primary" : "text-ink-soft");

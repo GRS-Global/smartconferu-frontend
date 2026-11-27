@@ -17,15 +17,16 @@ export interface MenuLeaf {
   /** Shown only while the conference runs this screening step (Conference Settings › Submissions). */
   screening?: "initialCheck" | "plagiarism";
 }
-/** A top-level entry: a page of its own, or a group of `children` (then it has no page itself). */
-export interface MenuItem extends Omit<MenuLeaf, "app"> { app?: MenuLeaf["app"]; children?: MenuLeaf[] }
+/** A top-level entry: a page of its own, or a group of `children` (then it has no page itself). `soon`: shown in its place, greyed out with
+ *  a "Soon" tag and no link (a screen switched off in lib/config.ts). */
+export interface MenuItem extends Omit<MenuLeaf, "app"> { app?: MenuLeaf["app"]; children?: MenuLeaf[]; soon?: boolean }
 
 const e = encodeURIComponent;
 const soon = (key: "registration" | "programme") => ({ app: () => comingSoonHref(key) });
 
-/** Drops the entries that are switched off (lib/config.ts); they are listed under "Coming soon" instead (SOON below). */
+/** The entries switched off in lib/config.ts keep their place in the menu but become "Soon" (no link, no sub-items). */
 const OFF = new Set([...(CERTIFICATES_ENABLED ? [] : ["certificates"]), ...(FLYER_ENABLED ? [] : ["flyer"])]);
-const live = (items: MenuItem[]): MenuItem[] => items.filter((i) => !OFF.has(i.key));
+const live = (items: MenuItem[]): MenuItem[] => items.map((i) => (OFF.has(i.key) ? { key: i.key, label: i.label, icon: i.icon, soon: true } : i));
 
 export const AUTHOR_MENU: MenuItem[] = live([
   { key: "overview", label: "Dashboard", icon: House, app: (s) => `/author/${e(s)}/dashboard` },
@@ -103,14 +104,11 @@ export const CHAIR_MENU: MenuItem[] = live([
   },
 ]);
 
-type Soon = { label: string; icon: LucideIcon };
-const certSoon: Soon[] = CERTIFICATES_ENABLED ? [] : [{ label: "Certificates", icon: Award }];
-
-/** Each role's "Coming soon" sidebar entries: screens not built yet, plus the ones switched off in lib/config.ts. */
-export const SOON: Record<"author" | "reviewer" | "chair", Soon[]> = {
-  author: [...(FLYER_ENABLED ? [] : [{ label: "My flyer", icon: ImageIcon }]), ...certSoon],
-  reviewer: certSoon,
-  chair: [...certSoon, ...(FLYER_ENABLED ? [] : [{ label: "Speaker Flyer", icon: ImageIcon }]), { label: "Payment", icon: CreditCard }, { label: "Communications", icon: Mail }],
+/** The "Coming soon" block under the menu: the chair's items that are announced but not built in the prototype either. */
+export const SOON: Record<"author" | "reviewer" | "chair", Array<{ label: string; icon: LucideIcon }>> = {
+  author: [],
+  reviewer: [],
+  chair: [{ label: "Payment", icon: CreditCard }, { label: "Communications", icon: Mail }],
 };
 
 export const MENUS: Record<"author" | "reviewer" | "chair", MenuItem[]> = { author: AUTHOR_MENU, reviewer: REVIEWER_MENU, chair: CHAIR_MENU };

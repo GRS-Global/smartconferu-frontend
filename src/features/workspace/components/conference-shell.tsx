@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { openSetupGuide, SETUP_OPEN_EVENT, START_EVENT, startConferenceTour } from "@/features/tour/tour-events";
+import { SoonBadge, SoonDot } from "@/components/ui/soon-badge";
 
 // The guided tour is a large module and only a chair needs it: it loads after the page is shown.
 const ConferenceTour = dynamic(() => import("@/features/tour/conference-tour").then((m) => m.ConferenceTour), { ssr: false });
@@ -260,6 +261,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
               const on = item.children ? groupOn(active, item) : isOn(active, item.key);
               const cls = `flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${on ? "" : "hover:bg-primary-soft"}`;
               const style = on ? ACTIVE : TILE_OFF;
+              if (item.soon) return <span key={item.key} role="img" aria-label={`${item.label} — coming soon`} title={`${item.label} — coming soon`} data-tour={`nav-${item.key}`} className="relative flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-white/60 text-[#A39AC0]"><Icon size={18} aria-hidden="true" /><SoonDot /></span>;
               if (off(item.key)) return <button key={item.key} type="button" disabled aria-label={item.label} title={LOCK_TITLE} style={{ ...TILE_OFF, opacity: 0.5 }} className="flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl"><Icon size={18} aria-hidden="true" /></button>;
               // A group's icon opens the full menu with that group expanded.
               if (item.children) {
@@ -270,7 +272,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
             {SOON[role].length > 0 && (
               <>
                 <div className="my-1.5 w-8 border-t border-[#E7E2F5]" />
-                {SOON[role].map((s) => <span key={s.label} title={`${s.label} — coming soon`} className="flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-white/60 text-[#A39AC0]"><s.icon size={18} aria-hidden="true" /></span>)}
+                {SOON[role].map((s) => <span key={s.label} role="img" aria-label={`${s.label} — coming soon`} title={`${s.label} — coming soon`} className="relative flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-white/60 text-[#A39AC0]"><s.icon size={18} aria-hidden="true" /><SoonDot /></span>)}
               </>
             )}
           </nav>
@@ -311,6 +313,15 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
           <nav aria-label="Conference menu" className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
             {items.map((item) => {
               const Icon = item.icon as LucideIcon;
+              if (item.soon) {
+                return (
+                  <div key={item.key} data-tour={`nav-${item.key}`} title={`${item.label} — coming soon`} aria-disabled="true" className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><Icon size={16} aria-hidden="true" /></span>
+                    <span className="flex-1">{item.label}</span>
+                    <SoonBadge />
+                  </div>
+                );
+              }
               if (item.children) {
                 const lockedGroup = off(item.key);
                 const open = groupOpen(item) && !lockedGroup;
@@ -363,7 +374,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
                   <div key={s.label} title={`${s.label} — coming soon`} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><s.icon size={16} aria-hidden="true" /></span>
                     <span className="flex-1">{s.label}</span>
-                    <span className="rounded-full bg-[#EFEAF8] px-2 py-0.5 text-[10.5px] font-bold text-[#5F5896]">Soon</span>
+                    <SoonBadge />
                   </div>
                 ))}
               </>

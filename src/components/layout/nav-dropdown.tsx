@@ -7,6 +7,7 @@ import { useCallback, useId, useRef, useState } from "react";
 import { useDismiss } from "@/hooks/use-dismiss";
 import { cn } from "@/lib/cn";
 import { isActive, resolveHref, type NavGroup } from "@/lib/navigation";
+import { SoonBadge } from "@/components/ui/soon-badge";
 
 export function NavDropdown({ group }: { group: NavGroup }) {
   const pathname = usePathname();
@@ -20,7 +21,7 @@ export function NavDropdown({ group }: { group: NavGroup }) {
   const hasActive = group.items.some((i) => isActive(i, pathname));
 
   const onMenuKeyDown = (e: React.KeyboardEvent) => {
-    const links = Array.from(ref.current?.querySelectorAll<HTMLElement>("[role=menuitem]") ?? []);
+    const links = Array.from(ref.current?.querySelectorAll<HTMLElement>("[role=menuitem]:not([aria-disabled=true])") ?? []);
     const i = links.indexOf(document.activeElement as HTMLElement);
     if (e.key === "ArrowDown") { e.preventDefault(); links[(i + 1) % links.length]?.focus(); }
     if (e.key === "ArrowUp") { e.preventDefault(); links[(i - 1 + links.length) % links.length]?.focus(); }
@@ -51,6 +52,14 @@ export function NavDropdown({ group }: { group: NavGroup }) {
         <div className="absolute left-0 top-full z-30 pt-2">
           <div id={menuId} role="menu" aria-label={group.label} className="w-56 rounded-xl border border-line bg-white p-1.5 shadow-pop">
             {group.items.map((item) => {
+              if (item.soon) {
+                return (
+                  <div key={item.label} role="menuitem" aria-disabled="true" title={`${item.label} — coming soon`} className="flex w-full cursor-not-allowed items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-[#A39AC0]">
+                    <span className="flex-1">{item.label}</span>
+                    <SoonBadge />
+                  </div>
+                );
+              }
               const { href, external } = resolveHref(item);
               const active = isActive(item, pathname);
               const className = cn(

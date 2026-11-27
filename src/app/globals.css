@@ -144,6 +144,17 @@ summary {
 .hd-chip { background: rgba(255, 255, 255, 0.78); border: 1px solid rgba(124, 58, 237, 0.1); backdrop-filter: blur(4px); }
 .hd-lift { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
 .hd-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08); border-color: var(--primary-soft-border); }
+/* "Coming soon" badge on a menu item that is not open yet (conference sidebar): a gradient pill with a light that sweeps across it and a
+   breathing glow, like a shop's "Coming soon" ribbon; on the icon-only sidebar a small pulsing gradient dot. */
+@keyframes soon-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); } 50% { box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 2px 8px rgba(236, 72, 153, 0.28); } }
+@keyframes soon-sweep { 0% { transform: translateX(-130%) skewX(-20deg); } 55%, 100% { transform: translateX(260%) skewX(-20deg); } }
+.soon-badge { position: relative; overflow: hidden; isolation: isolate; background: linear-gradient(100deg, #7C3AED 0%, #A855F7 45%, #EC4899 100%); color: #FFFFFF; animation: soon-glow 2.6s ease-in-out infinite; }
+.soon-badge::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 45%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent); animation: soon-sweep 2.6s ease-in-out infinite; pointer-events: none; z-index: 1; }
+.soon-dot { background: linear-gradient(135deg, #A855F7, #EC4899); }
+.soon-dot::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: hd-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .soon-badge, .soon-badge::after, .soon-dot::before { animation: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .hd-fill, .hd-drawer, .hd-fade, .hd-float, .hd-orb, .hd-shine::after { animation: none; }
   .hd-lift { transition: none; }

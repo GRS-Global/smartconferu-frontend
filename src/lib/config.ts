@@ -36,6 +36,9 @@ export const SMS_ALERTS_ENABLED = false;
 /** No way to send a verification code yet: while false, a mobile number is saved and shown as verified. */
 export const PHONE_VERIFICATION_ENABLED = false;
 export const FLYER_ENABLED = false;
+/** Publish with Us, My Preprints, My Slides and My Receipts (the account extras still on Supabase, GAP-REPORT.md "STEP 3 PLAN › Module 3"):
+ *  "Soon" in the top menu and a "Coming soon" page while false. */
+export const ACCOUNT_EXTRAS_ENABLED = false;
 
 /** Sign-in goes through the own backend (NEXT_PUBLIC_DATA_SOURCE=api) instead of Supabase Auth. */
 export const AUTH_API = DATA_SOURCE === "api";
