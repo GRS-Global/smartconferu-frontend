@@ -5,13 +5,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { AddPick } from "../add-reviewers";
 import type { AssignCandidate } from "./assign-reviewer-popover";
+import { isValidEmail } from "@/lib/email";
 
 /* Peer Review › "Add reviewer" on a paper (the prototype's AddReviewersModal): pick one or more people from the conference's reviewer pool
    (search, lightest load first, conflicts marked) or add someone new by name and email — they join the pool and get this paper. The page does the
    assigning (and the invitation / assignment emails). Not ported: the keyword-match badges and sort (the database keeps no reviewer expertise). */
 
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FIELD = "w-full rounded-xl border-[1.5px] border-line bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary-soft";
 
 export function AddReviewersModal({ paperLabel, candidates, poolEmails, acronym, maxLoad, deadline, busy, error, onAdd, onClose }: {
@@ -34,12 +34,12 @@ export function AddReviewersModal({ paperLabel, candidates, poolEmails, acronym,
     pickedRows.some((c) => c.full) && "Someone you picked is already at the papers-per-reviewer limit.",
     pickedRows.some((c) => c.rev.status === "invited") && "Someone you picked hasn't accepted the committee invitation — their paper waits until they do.",
   ].filter((w): w is string => Boolean(w));
-  const inviteError = !invite.name.trim() ? "Enter the reviewer's name." : !EMAIL.test(invite.email.trim()) ? "Enter a valid email address."
+  const inviteError = !invite.name.trim() ? "Enter the reviewer's name." : !isValidEmail(invite.email.trim()) ? "Enter a valid email address."
     : poolEmails.some((e) => e.toLowerCase() === invite.email.trim().toLowerCase()) ? "This person is already in your reviewer pool — pick them from the list." : "";
   const chosen = tab === "pool" ? pickedRows.length : inviteError ? 0 : 1;
   const fromSearch = () => {
     const t = query.trim();
-    const isEmail = EMAIL.test(t);
+    const isEmail = isValidEmail(t);
     setInvite({ name: isEmail ? "" : t, email: isEmail ? t : "", touched: false });
     setTab("invite");
   };

@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, CircleAlert, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, ShieldCheck, type LucideIcon } from "lucide-react";
+import { emailProblem } from "@/lib/email";
 import { ApiError } from "../api";
 import { checkAdminAccess, resendCode, resumeAdminSession, signInWithPassword, signOut, verifyCode } from "../services";
 import { fmtTrustDate, queueWelcome, rememberTrust, TRUST_DAYS, trustedUntil } from "../trusted-device";
@@ -275,7 +276,7 @@ function PasswordStep(props: {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (busy) return;
-    const empty = { email: email.trim() ? undefined : "Enter your work email.", password: password ? undefined : "Enter your password." };
+    const empty = { email: !email.trim() ? "Enter your work email." : emailProblem(email) || undefined, password: password ? undefined : "Enter your password." };
     if (empty.email || empty.password) {
       setMissing(empty);
       document.getElementById(empty.email ? "sa-email" : "sa-password")?.focus();
@@ -342,6 +343,7 @@ function PasswordStep(props: {
               clearError();
               setMissing((m) => ({ ...m, email: undefined }));
             }}
+            onBlur={() => email.trim() && setMissing((m) => ({ ...m, email: emailProblem(email) || undefined }))}
             placeholder="you@smartconferu.com"
             aria-invalid={missing.email || error ? "true" : "false"}
             aria-describedby={missing.email ? "sa-email-msg" : undefined}

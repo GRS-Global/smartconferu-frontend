@@ -21,9 +21,10 @@ import {
 } from "../data";
 import type { CertificateActions } from "../use-certificates";
 import type { Go } from "../routes";
+import { isValidEmail } from "@/lib/email";
 
 /* A single sanity check: enough to catch the "two dots" typo an import step lets straight through, without pretending to validate deliverability. */
-const looksLikeEmail = (e: string | undefined) => /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(e || "");
+const looksLikeEmail = (e: string | undefined) => isValidEmail(e);
 
 /* ---------------------------------------------------------------------------
    Certificates > Distribute > one send.

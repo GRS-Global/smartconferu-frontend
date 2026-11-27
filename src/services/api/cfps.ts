@@ -2,6 +2,7 @@ import { api, ApiError } from "@/lib/api-client";
 import { DEFAULT_CFP_PERMISSIONS, type CfpDetail, type CfpManager, type CfpRow, type PublicCfp } from "@/types/cfp";
 import type { CfpService } from "../cfps";
 import { ServiceError } from "../errors";
+import { isValidEmail } from "@/lib/email";
 
 /* Calls for Papers through the own backend (Backend/src/modules/conferences: conferences.controller.ts, cfps.service.ts).
    What is kept where: the page's text is HTML in `content.doc`, the page address authors visit in `content.publicSlug`, the look in `theme.id` — the
@@ -126,7 +127,7 @@ export const apiCfpService: CfpService = {
   async addManager(slug, who) {
     const email = who.email.trim().toLowerCase();
     const name = `${who.firstName.trim()} ${who.lastName.trim()}`.trim();
-    if (!who.firstName.trim() || !who.lastName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ServiceError("Please fill in first name, last name and a valid email.");
+    if (!who.firstName.trim() || !who.lastName.trim() || !isValidEmail(email)) throw new ServiceError("Please fill in first name, last name and a valid email.");
     const r = await api<{ created: boolean; member: { id: string } }>(`/conferences/${slug}/members`, { method: "POST", body: { email, role: "cfp_manager", displayName: name } });
     if (!r.created) throw new ServiceError("That person is already a manager of this CFP.");
     return r.member.id;

@@ -16,6 +16,7 @@ import { newAssignmentDue, reviewerConflict } from "../assign-rules";
 import { prRowOf, REVIEWER_STATE, type PrRow, type ReviewerState } from "../peer-review";
 import { useChairConference } from "../use-chair-conference";
 import { chairPaperHref } from "@/lib/routes";
+import { isValidEmail } from "@/lib/email";
 
 /* The chair's reviewer committee (the prototype's PeerReviewReviewersPane): everyone invited, with the papers each one has (and
    where each review stands), the workload, the review status, and the actions: add a reviewer (an invitation email goes out),
@@ -85,7 +86,7 @@ function ReviewerForm({ mode, initial, tracks, onClose, onSave, busy, error, can
   const [name, setName] = useState(initial.name);
   const [email, setEmail] = useState(initial.email);
   const [picked, setPicked] = useState(initial.tracks);
-  const ok = name.trim().length > 0 && /.+@.+\..+/.test(email.trim());
+  const ok = name.trim().length > 0 && isValidEmail(email.trim());
   const v = { name: name.trim(), email: email.trim(), tracks: picked };
   const changed = v.name !== initial.name.trim() || JSON.stringify([...picked].sort()) !== JSON.stringify([...initial.tracks].sort());
   return (

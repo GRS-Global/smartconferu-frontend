@@ -28,6 +28,7 @@ import { ConferenceStatusField } from "./conference-status-field";
 import { licenseEndOf, LicenseExpiryField } from "./license-expiry-field";
 import { HelpLabel } from "./setting-label";
 import { setupChanged } from "@/features/tour/use-setup";
+import { isValidEmail } from "@/lib/email";
 
 /* Conference Settings › Conference Details (the prototype's ChairSettingsPage): a "Profile completeness" bar, the tabs Basic Details / Format &
    Venue / Branding, and a Sections rail. Everything is a column of `conferences`, except the time zone, abstract deadline, summary, language,
@@ -62,7 +63,7 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
   const problems = {
     name: !f.name.trim() ? "Give the conference a name." : "",
     web: f.webPage.trim() && !/^https?:\/\/\S+$/i.test(f.webPage.trim()) ? "Start the address with http:// or https://." : "",
-    email: f.contactEmail.trim() && !/^\S+@\S+\.\S+$/.test(f.contactEmail.trim()) ? "Enter a valid email address." : "",
+    email: f.contactEmail.trim() && !isValidEmail(f.contactEmail.trim()) ? "Enter a valid email address." : "",
     dates: f.startDate && f.endDate && f.endDate < f.startDate ? "The conference can't end before it starts." : "",
     review: f.submissionDeadline && f.reviewDeadline && f.reviewDeadline < f.submissionDeadline ? "Reviews can't be due before the submission deadline." : "",
     about: words(f.about) > 1200 ? "Shorten it to 1,200 words." : "",

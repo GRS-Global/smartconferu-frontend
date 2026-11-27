@@ -8,11 +8,11 @@ import { ArrowLeft, ArrowRight, Check, CircleAlert, Eye, EyeOff, KeyRound, Lock,
 import { ApiError } from "../api";
 import { resetAdminPassword, sendAdminPasswordReset } from "../services";
 import { AccessBadge, AdminAuthShell, FieldError, Heading, Notice, SubmitButton } from "./login-page";
+import { emailProblem, isValidEmail } from "@/lib/email";
 
 // Match the API (core/auth/password.service.ts).
 const MIN_LENGTH = 8;
 const MAX_LENGTH = 128;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function BackToSignIn() {
   return (
@@ -36,8 +36,8 @@ export function AdminForgotPasswordPage() {
     e.preventDefault();
     if (busy) return;
     const to = email.trim();
-    if (!to || !EMAIL.test(to)) {
-      setFieldError(to ? "Enter a valid email address." : "Enter your work email.");
+    if (!to || !isValidEmail(to)) {
+      setFieldError(to ? emailProblem(to) : "Enter your work email.");
       document.getElementById("sa-forgot-email")?.focus();
       return;
     }

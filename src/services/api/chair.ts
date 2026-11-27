@@ -9,6 +9,7 @@ import {
 } from "@/types/chair";
 import type { ChairService } from "../chair";
 import { ServiceError } from "../errors";
+import { isValidEmail } from "@/lib/email";
 
 /* The Chair workspace through the own backend: the conference (details, settings, reviewer pool, logo, archive and deletion, the overview the workspace frame reads)
    and its papers (the paper page, reviewers and reviews, screening, decisions, "Ask author to fix", tracks, deleting). Still answering "not available yet": the license requests. Every `:conferenceId` in a path may be the conference's slug. Backend/src/modules/conferences + reviews + submissions. */
@@ -195,7 +196,7 @@ const implemented: Partial<ChairService> = {
 
   async saveInfo(slug, i) {
     const url = (v: string) => !v.trim() || /^https?:\/\/\S+$/i.test(v.trim());
-    if (!i.name.trim() || i.name.length > 300 || i.about.length > 20000 || !url(i.webPage) || (i.contactEmail.trim() && !/^\S+@\S+\.\S+$/.test(i.contactEmail.trim())) || (i.startDate && i.endDate && i.endDate < i.startDate)) {
+    if (!i.name.trim() || i.name.length > 300 || i.about.length > 20000 || !url(i.webPage) || (i.contactEmail.trim() && !isValidEmail(i.contactEmail.trim())) || (i.startDate && i.endDate && i.endDate < i.startDate)) {
       throw new ServiceError("Couldn't save that. Please check the conference details and try again.");
     }
     // Only the keys this form owns: the server merges `details` into the stored ones, so the conference is not read first.
@@ -358,7 +359,7 @@ const implemented: Partial<ChairService> = {
 
   async inviteReviewer(slug, person): Promise<InviteResult> {
     const email = person.email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !person.name.trim()) throw new ServiceError("Enter the reviewer's name and a valid email address.");
+    if (!isValidEmail(email) || !person.name.trim()) throw new ServiceError("Enter the reviewer's name and a valid email address.");
     const r = await api<{ created: boolean; member: { id: string; userId: string | null } }>(`/conferences/${slug}/members`, { method: "POST", body: { email, role: "reviewer", displayName: person.name.trim(), expertise: person.tracks } });
     return { memberId: r.member.id, userId: r.member.userId, created: r.created };
   },

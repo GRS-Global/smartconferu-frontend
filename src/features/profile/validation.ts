@@ -1,13 +1,12 @@
 import { getProfileCompleteness } from "./completeness";
+import { isValidEmail } from "@/lib/email";
 
 /* Validation rules and messages, taken from the prototype: the required-field list of Complete Profile
    (getProfileCompleteness) and the Register form's per-field messages for the same fields. */
 
-const EMAIL_RX = /^\S+@\S+\.\S+$/;
-const EMAIL_STRICT_RX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const WEB_RX = /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/i;
 
-export const isEmail = (v: string) => EMAIL_RX.test(v.trim());
+export const isEmail = (v: string) => isValidEmail(v);
 
 export interface FormValues {
   firstName: string;
@@ -29,7 +28,7 @@ export function validateProfileForm(v: FormValues): FieldProblems {
   const problems: FieldProblems = {
     firstName: !v.firstName.trim() ? "Enter your first name." : undefined,
     lastName: !v.lastName.trim() ? "Enter your last name." : undefined,
-    mainEmail: !v.mainEmail.trim() ? "Enter your email." : !EMAIL_STRICT_RX.test(v.mainEmail.trim()) ? "Enter a valid email, e.g. name@university.edu." : undefined,
+    mainEmail: !v.mainEmail.trim() ? "Enter your email." : !isValidEmail(v.mainEmail) ? "Enter a valid email, e.g. name@university.edu." : undefined,
     affiliation: !v.affiliation.trim() ? "Search for your institution, or type its name." : undefined,
     designation: !v.designation.trim() ? "Enter your designation, e.g. Professor." : undefined,
     country: !v.country ? "Choose your country / region." : undefined,
@@ -44,5 +43,5 @@ export function validateProfileForm(v: FormValues): FieldProblems {
 export function remainingRequired(values: Record<string, unknown>): { missing: string[]; emailInvalid: boolean } {
   const missing = getProfileCompleteness(values).missingRequired.map((f) => f.label);
   const email = String(values.mainEmail ?? "").trim();
-  return { missing, emailInvalid: email !== "" && !EMAIL_RX.test(email) };
+  return { missing, emailInvalid: email !== "" && !isValidEmail(email) };
 }

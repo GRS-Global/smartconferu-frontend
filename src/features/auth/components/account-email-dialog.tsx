@@ -7,6 +7,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { AUTH_API } from "@/lib/config";
 import { MfaRequiredError } from "@/services/errors";
 import { authService } from "../auth-service";
+import { cn } from "@/lib/cn";
+import { emailProblem, isValidEmail } from "@/lib/email";
 
 /** The own backend's login code has exactly 6 digits (Supabase's can be up to 10). */
 const CODE_MAX = AUTH_API ? 6 : 10;
@@ -46,7 +48,8 @@ function Inner({ kind, initialEmail, onClose, onSignedIn, onMfaRequired }: Props
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [cooldown, setCooldown] = useState(0);
-  const valid = /^\S+@\S+\.\S+$/.test(email.trim());
+  const valid = isValidEmail(email.trim());
+  const [emailError, setEmailError] = useState("");
   const codeOk = code.trim().length >= 6 && code.trim().length <= CODE_MAX && /^[0-9]+$/.test(code.trim());
 
   useEffect(() => {
@@ -122,12 +125,17 @@ function Inner({ kind, initialEmail, onClose, onSignedIn, onMfaRequired }: Props
       )}
 
       {step === "email" && (
-        <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy && cooldown <= 0) send(); }}>
+        <form noValidate onSubmit={(e) => { e.preventDefault(); if (!valid) { setEmailError(emailProblem(email)); return; } if (!busy && cooldown <= 0) send(); }}>
           <p className="mb-3 text-sm text-ink-muted">{flow.desc}</p>
           {error && <AuthMessage tone="error">{error}</AuthMessage>}
           <label htmlFor="account-email" className="sr-only">Email address</label>
-          <input id="account-email" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} placeholder="Email address" type="email" autoComplete="email" autoFocus className={INPUT} />
-          <button type="submit" disabled={!valid || busy || cooldown > 0} className="mt-4 w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-45">
+          <input
+            id="account-email" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); setEmailError(""); }} onBlur={() => { if (email.trim()) setEmailError(emailProblem(email)); }}
+            placeholder="Email address" type="email" inputMode="email" autoComplete="email" autoFocus
+            aria-invalid={emailError ? true : undefined} aria-describedby={emailError ? "account-email-error" : undefined} className={cn(INPUT, "aria-[invalid=true]:border-danger")}
+          />
+          {emailError && <p id="account-email-error" role="alert" className="mt-1.5 text-xs font-medium text-danger-ink">{emailError}</p>}
+          <button type="submit" disabled={!email.trim() || busy || cooldown > 0} className="mt-4 w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-45">
             {busy ? flow.busy : cooldown > 0 ? `Wait ${cooldown}s` : flow.button}
           </button>
         </form>

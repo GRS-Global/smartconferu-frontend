@@ -11,6 +11,7 @@ import { getAccountExtrasService } from "@/services/account-extras";
 import type { ProposalConference } from "@/types/account";
 import { CardHeader, FormStepper, ResearchAreaOptions } from "./form-parts";
 import { PageLoading, PageProblem } from "./page-states";
+import { emailProblem, isValidEmail } from "@/lib/email";
 
 /* Publish with Us (the prototype's PublishWithUsPage): the open-access publishing programme, how it works, the conferences the person chairs to
    propose a volume for (held in the last two years or later), and the three-step proposal form. Sending saves the proposal (publishing_proposals,
@@ -192,6 +193,7 @@ export function PublishPage() {
   }, [tick]);
 
   const send = async () => {
+    if (form.customerEmail.trim() && !isValidEmail(form.customerEmail)) { setSendProblem(`Billing email: ${emailProblem(form.customerEmail)}`); return; }
     setSending(true);
     setSendProblem("");
     try {
@@ -553,7 +555,8 @@ export function PublishPage() {
                   </div>
                   <div>
                     <label style={labelStyle} className={labelClass}>Email *</label>
-                    <input type="email" value={form.customerEmail} onChange={(e) => update("customerEmail", e.target.value)} style={inputStyle} className={inputClass} />
+                    <input type="email" inputMode="email" value={form.customerEmail} onChange={(e) => update("customerEmail", e.target.value)} aria-invalid={form.customerEmail.trim() && !isValidEmail(form.customerEmail) ? true : undefined} style={inputStyle} className={inputClass} />
+                    {form.customerEmail.trim() && !isValidEmail(form.customerEmail) && <p role="alert" className="mt-1 text-xs font-medium text-danger-ink">{emailProblem(form.customerEmail)}</p>}
                   </div>
                 </div>
                 <div>

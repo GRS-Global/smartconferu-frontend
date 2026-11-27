@@ -12,6 +12,7 @@ import {
   signOutDevice, signOutEverywhere, type MfaStatus, type SessionInfo, type TotpSetup,
 } from "@/services/api/security";
 import { AuthRequiredError, MfaRequiredError } from "@/services/errors";
+import { isValidEmail } from "@/lib/email";
 
 /* Security & Settings › Account & Security, own-backend screens: two-step verification, signed-in devices, the sign-in email address and
    connecting a new provider-only sign-in to an existing account. Each talks to Backend/src/modules/auth/account.controller.ts through
@@ -254,7 +255,7 @@ export function ChangeEmailModal({ currentEmail, hasPassword, onClose }: { curre
   const [sent, setSent] = useState("");
   const ended = useCallback(() => router.replace(LOGIN_PATH), [router]);
   const { busy, error, setError, run } = useAction(ended);
-  const valid = /^\S+@\S+\.\S+$/.test(email.trim()) && (!hasPassword || Boolean(password));
+  const valid = isValidEmail(email.trim()) && (!hasPassword || Boolean(password));
 
   const submit = async () => {
     if (!valid || busy) return;
@@ -327,12 +328,12 @@ export function ConnectAccountModal({ mainEmail, onClose }: { mainEmail: string;
   return (
     <Modal title="Connect to your existing account" subtitle="This sign-in has no email address yet." onClose={onClose} maxWidth="max-w-md">
       {step === "email" ? (
-        <form noValidate onSubmit={(e) => { e.preventDefault(); if (/^\S+@\S+\.\S+$/.test(email.trim()) && !busy) void send(); }}>
+        <form noValidate onSubmit={(e) => { e.preventDefault(); if (isValidEmail(email.trim()) && !busy) void send(); }}>
           <p className="mb-3 text-sm leading-relaxed text-ink-muted">Already have a Smartconferu account? Enter its email address. We&apos;ll send a code to it; entering the code moves this sign-in to that account.</p>
           {error && <AuthMessage tone="error">{error}</AuthMessage>}
           <label htmlFor="merge-email" className={LABEL}>Email address of your existing account</label>
           <input id="merge-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} className={INPUT} />
-          <button type="submit" disabled={!/^\S+@\S+\.\S+$/.test(email.trim()) || busy} className={`${PRIMARY} mt-4`}>{busy ? "Sending…" : "Send code"}</button>
+          <button type="submit" disabled={!isValidEmail(email.trim()) || busy} className={`${PRIMARY} mt-4`}>{busy ? "Sending…" : "Send code"}</button>
         </form>
       ) : (
         <form noValidate onSubmit={(e) => { e.preventDefault(); if (/^[0-9]{6}$/.test(code) && !busy) void verify(); }}>

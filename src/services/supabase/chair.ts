@@ -9,6 +9,7 @@ import type { ChairService } from "../chair";
 import { ServiceError } from "../errors";
 import { readInstructions } from "./instructions";
 import { currentUser, fail, paperPrefix } from "./shared";
+import { isValidEmail } from "@/lib/email";
 
 /* A conference's papers as its chair sees them, read as the prototype does (src/data/workspace.js › loadWorkspace, chair view) with the
    anon key and the user's session. Row Level Security returns a conference's papers, authors, files, assignments and reviews to its
@@ -344,7 +345,7 @@ export const supabaseChairService: ChairService = {
     const db: SupabaseClient = getSupabase();
     await currentUser(db);
     const email = person.email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !person.name.trim()) throw new ServiceError("Enter the reviewer's name and a valid email address.");
+    if (!isValidEmail(email) || !person.name.trim()) throw new ServiceError("Enter the reviewer's name and a valid email address.");
     const conf = await rows<{ id: string }>(db.from("conferences").select("id").eq("slug", conferenceSlug).limit(1), "read this conference");
     if (!conf[0]) throw new ServiceError("That conference doesn't exist.");
     const existing = await rows<{ id: string; status: string; user_id: string | null }>(db.from("conference_members").select("id, status, user_id").eq("conference_id", conf[0].id).eq("role", "reviewer").eq("invited_email", email).limit(1), "invite reviewers");
@@ -460,7 +461,7 @@ export const supabaseChairService: ChairService = {
 
   async saveInfo(conferenceSlug, i) {
     const url = (v: string) => !v.trim() || /^https?:\/\/\S+$/i.test(v.trim());
-    if (!i.name.trim() || i.name.length > 300 || i.about.length > 20000 || !url(i.webPage) || (i.contactEmail.trim() && !/^\S+@\S+\.\S+$/.test(i.contactEmail.trim())) || (i.startDate && i.endDate && i.endDate < i.startDate)) throw new ServiceError("Couldn't save that. Please check the details and try again.");
+    if (!i.name.trim() || i.name.length > 300 || i.about.length > 20000 || !url(i.webPage) || (i.contactEmail.trim() && !isValidEmail(i.contactEmail.trim())) || (i.startDate && i.endDate && i.endDate < i.startDate)) throw new ServiceError("Couldn't save that. Please check the details and try again.");
     const db: SupabaseClient = getSupabase();
     await currentUser(db);
     const nul = (v: string) => (v.trim() === "" ? null : v.trim());

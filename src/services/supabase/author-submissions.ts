@@ -5,6 +5,7 @@ import { extrasFromStored } from "@/types/author-submission";
 import type { AuthorPaper, AuthorSubmission, ConferenceDetails, PaperAuthor, PaperFile, PaperResult, PaperScreeningNotice, PaperStatus, ScreeningRequest } from "@/types/author-submission";
 import type { AuthorSubmissionService } from "../author-submissions";
 import { currentUser, fail, paperPrefix } from "./shared";
+import { isValidEmail } from "@/lib/email";
 
 /* The signed-in author's papers in one conference, read as the prototype does (src/data/workspace.js › loadWorkspace and
    submissionRow, author view) with the anon key and the user's session. Row Level Security decides which rows come back;
@@ -135,7 +136,6 @@ function noticeOf(s: PaperRow, versions: number): PaperScreeningNotice | null {
 export const MAX_FILE_BYTES = 26214400;
 const FILE_TYPES: Record<string, string> = { pdf: "application/pdf", doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const EMAIL = /^\S+@\S+\.\S+$/;
 const bad = () => new ServiceError("Couldn't save that. Please check the details and try again.");
 
 export const supabaseAuthorSubmissionService: AuthorSubmissionService = {
@@ -179,7 +179,7 @@ export const supabaseAuthorSubmissionService: AuthorSubmissionService = {
   async submitPaper(conferenceSlug, paper) {
     const title = paper.title.trim(); const abstract = paper.abstract.trim();
     const authors = paper.authors.filter((a) => a.email.trim());
-    if (!title || !abstract || title.length > 500 || abstract.length > 20000 || !authors.length || authors.some((a) => !a.name.trim() || !EMAIL.test(a.email.trim()))) throw bad();
+    if (!title || !abstract || title.length > 500 || abstract.length > 20000 || !authors.length || authors.some((a) => !a.name.trim() || !isValidEmail(a.email.trim()))) throw bad();
     const ext = (paper.file.name.split(".").pop() || "").toLowerCase();
     if (!FILE_TYPES[ext]) throw new ServiceError("Only PDF or Word files can be uploaded.");
     if (paper.file.size === 0) throw new ServiceError("That file is empty.");
@@ -251,7 +251,7 @@ export const supabaseAuthorSubmissionService: AuthorSubmissionService = {
   async saveAuthors(paperDbId, authors) {
     const list = authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim(), country: a.country.trim(), corresponding: Boolean(a.corresponding) }));
     if (!UUID.test(paperDbId) || !list.length || list.length > 50 || !list.some((a) => a.corresponding)
-      || list.some((a) => !a.name || a.name.length > 200 || !EMAIL.test(a.email) || a.email.length > 254 || a.affiliation.length > 300 || a.country.length > 100)) throw bad();
+      || list.some((a) => !a.name || a.name.length > 200 || !isValidEmail(a.email) || a.email.length > 254 || a.affiliation.length > 300 || a.country.length > 100)) throw bad();
     const db: SupabaseClient = getSupabase();
     await currentUser(db);
     // save_paper_authors (0022): the submitter replaces the list; authors whose email stays are kept as they are.

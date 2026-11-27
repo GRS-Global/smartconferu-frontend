@@ -1,4 +1,5 @@
 import type { ManualPerson } from "../data";
+import { isValidEmail } from "@/lib/email";
 
 /* Turning the columns of an uploaded sheet into people: which column is which field (matched by the header's name, the chair fixes the rest),
    then a check of every row. Only the fields a certificate knows about can be filled: nothing is invented. */
@@ -36,7 +37,7 @@ export function autoMap(headers: string[]): Record<ImportFieldKey, number> {
   return result;
 }
 
-const looksLikeEmail = (e: string) => /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(e);
+const looksLikeEmail = (e: string | undefined) => isValidEmail(e);
 
 export type RowProblem = "no-name" | "bad-email" | "no-email" | "duplicate-in-file" | "duplicate-in-list";
 export interface ImportRow { line: number; person: Omit<ManualPerson, "key">; problems: RowProblem[] }

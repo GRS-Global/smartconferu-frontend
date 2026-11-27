@@ -18,6 +18,7 @@ import { DEMO_ACCOUNTS, DEMO_ROLE_TONE } from "../demo-accounts";
 import { SsoButtons } from "./sso-buttons";
 import { SAMPLE_UI } from "@/lib/sample-mode";
 import { cn } from "@/lib/cn";
+import { emailProblem } from "@/lib/email";
 
 // As in the prototype the border does not change on focus (there its inline border style overrides the focus class) and there is no outline.
 const INPUT = "field-no-outline w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-slate-400";
@@ -44,6 +45,8 @@ export function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Shown under the email box: after leaving it with a wrong address, or on Sign in.
+  const [emailError, setEmailError] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -86,7 +89,9 @@ export function LoginForm() {
 
   const submit = async () => {
     if (submitting.current || busy || done) return;
-    if (!email.trim() || !password) { setError("Enter your email and password."); return; }
+    const badEmail = emailProblem(email);
+    if (badEmail) { setEmailError(badEmail); document.getElementById("login-email")?.focus(); return; }
+    if (!password) { setError("Enter your password."); return; }
     submitting.current = true;
     setBusy(true);
     setError("");
@@ -151,7 +156,14 @@ export function LoginForm() {
         <form noValidate onSubmit={(e) => { e.preventDefault(); void submit(); }} className="space-y-3">
           <div>
             <label htmlFor="login-email" className="sr-only">Email address</label>
-            <input id="login-email" name="email" type="text" autoComplete="username" placeholder="Email address" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} disabled={mock || !configured} className={INPUT} />
+            <input
+              id="login-email" name="email" type="email" inputMode="email" autoComplete="username" placeholder="Email address" value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(""); setEmailError(""); }}
+              onBlur={() => { if (email.trim()) setEmailError(emailProblem(email)); }}
+              aria-invalid={emailError ? true : undefined} aria-describedby={emailError ? "login-email-error" : undefined}
+              disabled={mock || !configured} className={cn(INPUT, "aria-[invalid=true]:border-danger")}
+            />
+            {emailError && <p id="login-email-error" role="alert" className="mt-1.5 text-xs font-medium text-danger-ink">{emailError}</p>}
           </div>
           <div>
             <label htmlFor="login-password" className="sr-only">Password</label>

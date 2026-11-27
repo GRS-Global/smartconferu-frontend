@@ -4,6 +4,7 @@ import { DEFAULT_CFP_PERMISSIONS, type CfpDetail, type CfpManager, type CfpPermi
 import type { CfpService } from "../cfps";
 import { ServiceError } from "../errors";
 import { currentUser, fail } from "./shared";
+import { isValidEmail } from "@/lib/email";
 
 /* The Calls for Papers of the conferences the signed-in user chairs (or manages the CFP of): each conference's own `cfps` row (status, content,
    theme), the number of papers and the CFP managers. Row Level Security shows a chair their own conferences' rows and lets the conference's team
@@ -171,7 +172,7 @@ export const supabaseCfpService: CfpService = {
     const id = await conferenceId(db, slug);
     const email = who.email.trim().toLowerCase();
     const name = `${who.firstName.trim()} ${who.lastName.trim()}`.trim();
-    if (!who.firstName.trim() || !who.lastName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ServiceError("Please fill in first name, last name and a valid email.");
+    if (!who.firstName.trim() || !who.lastName.trim() || !isValidEmail(email)) throw new ServiceError("Please fill in first name, last name and a valid email.");
     const existing = await rows<{ id: string; status: string }>(db.from("conference_members").select("id, status").eq("conference_id", id).eq("role", "cfp_manager").eq("invited_email", email).limit(1), "read the CFP managers");
     if (existing[0] && existing[0].status !== "removed" && existing[0].status !== "declined") throw new ServiceError("That person is already a manager of this CFP.");
     if (existing[0]) { const { error } = await db.from("conference_members").delete().eq("id", existing[0].id); if (error) fail(error, "add a CFP manager"); }

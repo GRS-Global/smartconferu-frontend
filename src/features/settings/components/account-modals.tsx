@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { PasswordField } from "@/components/ui/password-field";
 import { AccountBlockedError, deleteMyAccount, linkedProviders } from "@/services/account";
+import { emailProblem, isValidEmail } from "@/lib/email";
 
 /* Security & Settings › Account & Security: the prototype's two account popups, made real. */
 
@@ -53,6 +54,7 @@ export function MergeAccountsModal({ onClose }: { onClose: () => void }) {
   const [note, setNote] = useState("");
   const submit = () => {
     if (!mine || !email.trim() || !theirs) { setNote("Fill in all three boxes."); return; }
+    if (!isValidEmail(email)) { setNote(emailProblem(email)); return; }
     setNote("Merging accounts isn't switched on yet — nothing was changed.");
   };
   return (

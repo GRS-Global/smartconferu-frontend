@@ -10,6 +10,7 @@ import { AuthRequiredError } from "@/services/errors";
 import { DEFAULT_CFP_PERMISSIONS, type CfpManager, type CfpPermissions } from "@/types/cfp";
 import type { PoolReviewer } from "@/types/chair";
 import { ScheduledEmailsPanel } from "./scheduled-emails-panel";
+import { isValidEmail } from "@/lib/email";
 
 /* CFP Managers and Add a CFP Manager (the prototype's CFPManagersPage and AddCFPManagerPage): who helps run this Call for Papers and what each may do.
    A manager is a member of the conference with the role CFP manager (`conference_members`); the three permissions (Edit, Publish, Update managers)
@@ -172,7 +173,7 @@ export function AddManagerPanel({ slug, acronym, confName, managers, onDone, onA
     } catch (e) { if (e instanceof AuthRequiredError) onSessionEnded(); else setError(e instanceof Error ? e.message : "Couldn't add the manager."); } finally { setBusy(false); }
   };
   const addOne = () => {
-    if (!form.firstName.trim() || !form.lastName.trim() || !/^\S+@\S+\.\S+$/.test(form.email.trim())) { setError("Please fill in first name, last name and a valid email."); return; }
+    if (!form.firstName.trim() || !form.lastName.trim() || !isValidEmail(form.email.trim())) { setError("Please fill in first name, last name and a valid email."); return; }
     void run([{ firstName: form.firstName, lastName: form.lastName, email: form.email, permissions: perms }]);
   };
   const addFromPc = () => {

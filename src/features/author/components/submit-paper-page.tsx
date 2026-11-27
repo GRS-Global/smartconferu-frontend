@@ -23,6 +23,7 @@ import { requestPaperIngest } from "@/services/paper-ai";
 import { getAuthorSubmissionService } from "@/services/author-submissions";
 import { AuthRequiredError, ServiceConfigError } from "@/services/errors";
 import type { AuthorInput, SubmissionExtra, SubmitFormInfo } from "@/types/author-submission";
+import { isValidEmail } from "@/lib/email";
 
 /* New Submission (the prototype's SubmitPaperPage with its default submission form): the paper file, title, abstract, keywords,
    submission type and track, the authors (the signed-in author is Author 1 and must stay on the paper), and the two declarations.
@@ -36,7 +37,6 @@ type Stage = (typeof STEPS)[number]["key"];
 const nameKey = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
-const EMAIL = /^\S+@\S+\.\S+$/;
 const MAX_BYTES = 26214400;
 const LABEL = "mb-1 block text-xs font-bold text-ink-soft";
 // The prototype's New Submission form label (EnhancedSchemaForm): 14 px / 600, 6 px below, --text; it turns danger-red when a required field is still empty after a submit attempt.
@@ -147,7 +147,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const duplicate = dup.key === tk && tk ? dup : { found: false, mine: false };
 
   if (behalf && !onBehalf) {
-    const ok = ask.name.trim() && EMAIL.test(ask.email.trim());
+    const ok = ask.name.trim() && isValidEmail(ask.email.trim());
     return (
       <>
         <PageHeader title={title} breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: info.acronym, href: `/chair/${encodeURIComponent(info.slug)}` }, { label: title }]} />
@@ -235,7 +235,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
 
   const emails = rows.map((a) => a.email.trim().toLowerCase()).filter(Boolean);
   const dupEmail = new Set(emails).size !== emails.length;
-  const authorsOk = rows.length > 0 && rows.every((a) => a.name.trim() && EMAIL.test(a.email.trim()));
+  const authorsOk = rows.length > 0 && rows.every((a) => a.name.trim() && isValidEmail(a.email.trim()));
   // The person submitting must be on the paper (a chair submitting for an author is exempt).
   const listed = behalf || emails.includes(info.me.email.trim().toLowerCase());
   const answered = (f: SubmissionExtra) => (f.type === "consent" ? answers[f.id] === true : String(answers[f.id] ?? "").trim() !== "");
@@ -362,7 +362,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div><label htmlFor={`a-name-${a.key}`} className={LABEL}>Full name <span className="text-danger-ink">*</span></label><input id={`a-name-${a.key}`} value={a.name} maxLength={200} onChange={(e) => update(a.key, { name: e.target.value })} className={`${INPUT_CLASS} ${tried && !a.name.trim() ? "border-danger" : ""}`} /></div>
-                  <div><label htmlFor={`a-email-${a.key}`} className={LABEL}>Email <span className="text-danger-ink">*</span></label><input id={`a-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} ${tried && !EMAIL.test(a.email.trim()) ? "border-danger" : ""}`} /></div>
+                  <div><label htmlFor={`a-email-${a.key}`} className={LABEL}>Email <span className="text-danger-ink">*</span></label><input id={`a-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} ${tried && !isValidEmail(a.email.trim()) ? "border-danger" : ""}`} /></div>
                   <div><label htmlFor={`a-aff-${a.key}`} className={LABEL}>Affiliation</label><input id={`a-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="University / organisation" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={INPUT_CLASS} /></div>
                   <div><label htmlFor={`a-country-${a.key}`} className={LABEL}>Country</label><select id={`a-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={INPUT_CLASS}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>{hints[a.key] && a.country && <p className="mt-1 text-[11px] font-medium text-warning-ink">{hints[a.key]} — please check</p>}</div>
                 </div>

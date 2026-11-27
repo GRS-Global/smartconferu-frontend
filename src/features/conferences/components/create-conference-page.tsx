@@ -22,6 +22,7 @@ import { VenueMapPicker } from "@/components/ui/venue-map-picker";
 import { VenueSearchInput } from "@/components/ui/venue-search-input";
 import { EMPTY_NEW_CONFERENCE, type NewConferenceInput } from "@/types/conference-request";
 import { BLANK_DRAFT_FORM, clearDraft, draftAge, readDraft, writeDraft, type DraftForm, type SavedDraft } from "../create-conference-draft";
+import { isValidEmail } from "@/lib/email";
 /* Create New Conference (the prototype's CreateConferencePage): the request goes to the Super Admin, who approves or declines it; the chair is
    told by email. The "Required to create" checklist, the live preview and the policy tick are the prototype's. Smart Fill (reading the website with AI
    to fill the form) works with the own backend (services/smart-fill.ts); without it the button is not shown. Not ported: the saved-draft offer and "Clear form". The venue box suggests places (Google Places) and the venue
@@ -29,7 +30,6 @@ import { BLANK_DRAFT_FORM, clearDraft, draftAge, readDraft, writeDraft, type Dra
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const URL_RE = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // About the conference is limited in words (how chairs and authors think about length); the character cap is only a storage backstop.
 const ABOUT_MAX_WORDS = 1200;
 const ABOUT_MAX_CHARS = 12000;
@@ -192,7 +192,7 @@ export function CreateConferencePage() {
     { key: "eventType", label: "Event format", ok: Boolean(form.eventType), msg: "Choose how attendees will join." },
     { key: "city", label: "City", ok: Boolean(form.city.trim()), msg: "Add a city." },
     { key: "country", label: "Country", ok: Boolean(form.country), msg: "Select a country." },
-    { key: "contactEmail", label: "Contact email", ok: EMAIL_RE.test(form.contactEmail.trim()), msg: form.contactEmail.trim() ? "That doesn't look like a valid email address." : "Add a contact email." },
+    { key: "contactEmail", label: "Contact email", ok: isValidEmail(form.contactEmail.trim()), msg: form.contactEmail.trim() ? "That doesn't look like a valid email address." : "Add a contact email." },
     ...(words(form.about) > ABOUT_MAX_WORDS ? [{ key: "about", label: "About the conference", ok: false, msg: `Shorten it to ${ABOUT_MAX_WORDS.toLocaleString()} words — it's ${words(form.about).toLocaleString()}.` }] : []),
   ];
   const missing = checks.filter((c) => !c.ok);

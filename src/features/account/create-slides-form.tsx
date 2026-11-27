@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { getAccountExtrasService } from "@/services/account-extras";
 import type { PaperCandidate, PublicationAuthor } from "@/types/account";
 import { CardHeader, FormStepper, ResearchAreaOptions } from "./form-parts";
+import { emailProblem, isValidEmail } from "@/lib/email";
 
 /* New Slides (the prototype's CreateSlidesPage): the step form, started from one of the person's own papers (its authors, title, abstract and keywords) or from scratch.
    Creating it saves a user_publications row (migration 0050) and returns to the list. */
@@ -69,6 +70,9 @@ export function CreateSlidesForm({ prefill }: { prefill: PaperCandidate | null }
   const authorNames = authors.filter((a) => a.firstName || a.lastName).map((a) => `${a.firstName} ${a.lastName}`.trim()).join(", ");
 
   const handleCreate = async () => {
+    // Every author row that is filled in needs a real address (the field is marked required).
+    const badAuthor = authors.findIndex((a) => (a.firstName.trim() || a.lastName.trim() || a.email.trim()) && !isValidEmail(a.email));
+    if (badAuthor >= 0) { setProblem(`Author ${badAuthor + 1}: ${emailProblem(authors[badAuthor].email)}`); return; }
     setBusy(true);
     setProblem("");
     try {

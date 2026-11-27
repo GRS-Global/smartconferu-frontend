@@ -10,6 +10,7 @@ import { getAuthorSubmissionService } from "@/services/author-submissions";
 import { autoCheckOf } from "@/lib/auto-check";
 import { requestPaperIngest } from "@/services/paper-ai";
 import type { AuthorInput, AuthorPaper, PaperFile } from "@/types/author-submission";
+import { isValidEmail } from "@/lib/email";
 
 /* The ways an author changes their paper (the prototype's EditPaperDetailsModal, EditAuthorsModal and the withdraw
    confirmation, src/author-journey.jsx). Each saves through the service (the database checks who may change the paper and
@@ -136,7 +137,6 @@ export function EditDetailsDialog(props: CommonProps) {
 
 interface Row extends AuthorInput { key: number }
 let rowKey = 0;
-const EMAIL = /\S+@\S+\.\S+/;
 
 function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded }: Omit<CommonProps, "open">) {
   const [rows, setRows] = useState<Row[]>(() => paper.authors.map((a) => ({ name: a.name, email: a.email, affiliation: a.affiliation, country: a.country, corresponding: a.corresponding, key: ++rowKey })));
@@ -157,7 +157,7 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
   const correspondingCount = rows.filter((a) => a.corresponding).length;
   // The author editing their paper must stay on it.
   const meListed = asChair || rows.some((a) => mine.has(a.email.trim().toLowerCase()));
-  const valid = rows.length > 0 && meListed && rows.every((a) => a.name.trim() && EMAIL.test(a.email.trim()));
+  const valid = rows.length > 0 && meListed && rows.every((a) => a.name.trim() && isValidEmail(a.email.trim()));
   const iconBtn = "flex h-7 w-7 items-center justify-center rounded-lg text-ink-muted hover:bg-white disabled:opacity-30";
 
   const save = () => run(async () => {

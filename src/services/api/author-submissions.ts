@@ -3,6 +3,7 @@ import { extrasFromStored } from "@/types/author-submission";
 import type { AuthorPaper, AuthorSubmission, ConferenceDetails, PaperFile, PaperResult, PaperScreeningNotice, PaperStatus, ScreeningRequest } from "@/types/author-submission";
 import type { AuthorSubmissionService } from "../author-submissions";
 import { ServiceError } from "../errors";
+import { isValidEmail } from "@/lib/email";
 
 /* The author side through the own backend: Backend/src/modules/submissions (the paper, its authors and files), `GET /submissions/:id/reviews`
    (the comments the chair shared) and `GET /public/conferences/:slug[/submission-form]` (what the New Submission page shows). What an author
@@ -38,7 +39,6 @@ const notFound = (e: unknown) => e instanceof ApiError && (e.status === 403 || e
 /** The most a paper file may weigh in this app (the backend's own limit, MAX_UPLOAD_MB, is checked again there) and the kinds it accepts. */
 const MAX_FILE_BYTES = 26214400;
 const FILE_EXT = new Set(["pdf", "doc", "docx"]);
-const EMAIL = /^\S+@\S+\.\S+$/;
 const bad = () => new ServiceError("Couldn't save that. Please check the details and try again.");
 
 function checkFile(file: File): void {
@@ -185,7 +185,7 @@ const implemented: AuthorSubmissionService = {
   async submitPaper(slug, paper) {
     const title = paper.title.trim(); const abstract = paper.abstract.trim();
     const authors = paper.authors.filter((a) => a.email.trim());
-    if (!title || !abstract || title.length > 500 || !authors.length || authors.some((a) => !a.name.trim() || !EMAIL.test(a.email.trim()))) throw bad();
+    if (!title || !abstract || title.length > 500 || !authors.length || authors.some((a) => !a.name.trim() || !isValidEmail(a.email.trim()))) throw bad();
     checkFile(paper.file);
     const created = await api<SubmissionDto>(`/conferences/${encodeURIComponent(slug)}/submissions`, {
       method: "POST",
@@ -220,7 +220,7 @@ const implemented: AuthorSubmissionService = {
 
   async saveAuthors(paperDbId, authors) {
     const list = authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, country: a.country.trim() || null, corresponding: Boolean(a.corresponding) }));
-    if (!list.length || list.length > 50 || !list.some((a) => a.corresponding) || list.some((a) => !a.name || !EMAIL.test(a.email))) throw bad();
+    if (!list.length || list.length > 50 || !list.some((a) => a.corresponding) || list.some((a) => !a.name || !isValidEmail(a.email))) throw bad();
     await api(`/submissions/${paperDbId}/authors`, { method: "PUT", body: { authors: list } });
   },
 
