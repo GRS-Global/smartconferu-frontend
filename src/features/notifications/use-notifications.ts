@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getConferenceService } from "@/services/conferences";
+import { DATA_SOURCE } from "@/lib/config";
 import { getNotificationService } from "@/services/notifications";
 import { AuthRequiredError, ServiceConfigError, ServiceError } from "@/services/errors";
 import type { AppNotification } from "@/types/notification";
@@ -14,6 +15,8 @@ export type NotificationsState =
   | { status: "auth" }
   | { status: "error"; message: string; config: boolean };
 
+/** An email row whose read / unread lives only on this page for the visit: everywhere but the own backend, which saves it and counts it on the bell. */
+const localOnly = (n: AppNotification) => Boolean(n.email) && DATA_SOURCE !== "api";
 const failure = (e: unknown) => (e instanceof Error && e.message ? e.message : "Something went wrong — please try again.");
 // A ServiceError already says what failed ("Couldn't mark this notification as read. …"); anything else gets the sentence in front.
 const updateFailure = (e: unknown, what: string) => (e instanceof ServiceError ? e.message : `Couldn't ${what}. ${failure(e)}`);
@@ -85,7 +88,7 @@ export function useNotifications() {
   // When the header's count query failed, the rows loaded here give the bell a number.
   const { fillIfCountFailed } = unread;
   useEffect(() => {
-    if (state.status === "ready") fillIfCountFailed(state.items.filter((n) => !n.read && !n.email).length);
+    if (state.status === "ready") fillIfCountFailed(state.items.filter((n) => !n.read && !localOnly(n)).length);
   }, [state, fillIfCountFailed]);
 
   const retry = useCallback(() => { setState({ status: "loading" }); setDismissed(new Set()); setTick((t) => t + 1); }, []);
@@ -105,7 +108,7 @@ export function useNotifications() {
     const row = state.status === "ready" ? state.items.find((n) => n.id === id) : undefined;
     if (!row) return false;
     if (row.read) return true;
-    if (row.email) { setEmailRead(id, true); return true; } // an email copy: kept by this page for the visit, nothing to save
+    if (localOnly(row)) { setEmailRead(id, true); return true; } // an email copy without the own backend: kept by this page for the visit
     if (busy.current.all || busy.current.ids.has(id)) return false;
     busy.current.ids.add(id);
     setPending(new Set(busy.current.ids));
@@ -131,7 +134,7 @@ export function useNotifications() {
     const row = state.status === "ready" ? state.items.find((n) => n.id === id) : undefined;
     if (!row) return false;
     if (!row.read) return true;
-    if (row.email) { setEmailRead(id, false); return true; }
+    if (localOnly(row)) { setEmailRead(id, false); return true; }
     if (busy.current.all || busy.current.ids.has(id)) return false;
     busy.current.ids.add(id);
     setPending(new Set(busy.current.ids));
@@ -139,7 +142,8 @@ export function useNotifications() {
     try {
       await (await getNotificationService()).markUnread(id);
       setState((s) => (s.status === "ready" ? { status: "ready", items: s.items.map((n) => (n.id === id ? { ...n, read: false } : n)) } : s));
-      unread.increase(1, { id, kind: row.kind, slug: row.conference?.slug ?? null });
+      // An email counts on the main bell only (the per-conference bell counts notifications), so it adds no row there.
+      unread.increase(1, row.email ? undefined : { id, kind: row.kind, slug: row.conference?.slug ?? null });
       setAnnouncement("Marked as unread.");
       return true;
     } catch (e) {
@@ -158,7 +162,7 @@ export function useNotifications() {
     const row = state.status === "ready" ? state.items.find((n) => n.id === id) : undefined;
     if (!row || dismissed.has(id)) return;
     setDismissed((d) => new Set(d).add(id));
-    if (!row.read && !row.email) void markRead(id); // also takes it off the bell
+    if (!row.read && !localOnly(row)) void markRead(id); // also takes it off the bell
     setAnnouncement("Notification dismissed.");
   }, [state, dismissed, markRead]);
 

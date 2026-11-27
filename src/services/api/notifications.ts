@@ -4,7 +4,8 @@ import type { NotificationService, UnreadRow } from "../notifications";
 import { ServiceError } from "../errors";
 
 /* The bell and the Notifications page through the own backend (Backend/src/modules/notifications): GET /me/notifications (the backend names the
-   conference and the paper), POST /me/notifications/read and /unread, and GET /me/emails for the Emails tab. */
+   conference and the paper), POST /me/notifications/read and /unread, and GET /me/emails (+ POST /me/emails/read and /unread) for the Emails
+   tab. The backend's unread number counts both, so the bell includes unread emails. */
 
 interface NotificationRow {
   id: string; kind: string; title: string; body: string | null; readAt: string | null; createdAt: string;
@@ -14,6 +15,8 @@ interface NotificationPage { data: NotificationRow[]; nextCursor: string | null;
 interface EmailRow {
   id: string; createdAt: string; subject: string; body: string; templateLabel: string | null; recipientType: string | null;
   conferenceSlug: string | null; conferenceAcronym: string | null; conferenceContact: string | null; paperLabel: string | null;
+  /** When I read it (null = unread). Absent from an older backend. */
+  readAt?: string | null;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,6 +37,14 @@ async function me(): Promise<string> {
   return p.email ?? "";
 }
 
+/** A row of the page is a notification (its id) or an email ("email-<id>", see listEmails): each has its own read / unread routes. */
+function target(id: string): { path: string; raw: string } {
+  const email = id.startsWith("email-");
+  const raw = email ? id.slice("email-".length) : id;
+  if (!UUID.test(raw)) throw new ServiceError("Couldn't update this notification.");
+  return { path: email ? "/me/emails" : "/me/notifications", raw };
+}
+
 export const apiNotificationService: NotificationService = {
   async list() {
     // The newest 500 (the page shows them 20 at a time), 100 per request.
@@ -52,8 +63,9 @@ export const apiNotificationService: NotificationService = {
     const [rows, to] = await Promise.all([api<EmailRow[]>("/me/emails", { query: { limit: 100 } }), me()]);
     return rows.map((r): AppNotification => ({
       id: `email-${r.id}`, kind: "email", title: r.subject, body: preview(r.body),
-      // An email is not a notification row: like the prototype, one older than two days starts as read; the page keeps what the person toggles.
-      read: Date.now() - new Date(r.createdAt).getTime() > EMAIL_READ_AFTER_MS,
+      // Read / unread is kept by the backend (email_log.recipient_read_at). An older backend sends no readAt: then, like the prototype, one older
+      // than two days counts as read.
+      read: r.readAt !== undefined ? r.readAt !== null : Date.now() - new Date(r.createdAt).getTime() > EMAIL_READ_AFTER_MS,
       createdAt: r.createdAt, paperLabel: r.paperLabel,
       conference: r.conferenceSlug && r.conferenceAcronym ? { slug: r.conferenceSlug, acronym: r.conferenceAcronym } : null,
       email: {
@@ -82,13 +94,13 @@ export const apiNotificationService: NotificationService = {
   },
 
   async markRead(id) {
-    if (!UUID.test(id)) throw new ServiceError("Couldn't update this notification.");
-    await api("/me/notifications/read", { method: "POST", body: { ids: [id] } });
+    const { path, raw } = target(id);
+    await api(`${path}/read`, { method: "POST", body: { ids: [raw] } });
   },
 
   async markUnread(id) {
-    if (!UUID.test(id)) throw new ServiceError("Couldn't update this notification.");
-    await api("/me/notifications/unread", { method: "POST", body: { ids: [id] } });
+    const { path, raw } = target(id);
+    await api(`${path}/unread`, { method: "POST", body: { ids: [raw] } });
   },
 
   async markAllRead() { await api("/me/notifications/read", { method: "POST" }); },
