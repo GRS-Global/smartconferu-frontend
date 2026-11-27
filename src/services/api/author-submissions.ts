@@ -178,19 +178,20 @@ async function toPaper(s: SubmissionDto): Promise<AuthorPaper> {
 }
 
 const implemented: AuthorSubmissionService = {
-  async loadSubmitForm(slug) {
+  async loadSubmitForm(slug, behalf = false) {
     let conf: PublicConference;
     try { conf = await api<PublicConference>(`/public/conferences/${encodeURIComponent(slug)}`, { auth: false }); } catch (e) { if (notFound(e)) return null; throw e; }
     const me = await api<MeDto>("/me");
     const base = { slug, acronym: conf.acronym, name: conf.title, me: { name: [me.firstName, me.lastName].filter(Boolean).join(" "), email: me.email ?? "", affiliation: me.affiliation ?? "", country: me.country ?? "" } };
-    // An archived conference answers with a short notice only: the page says it is closed.
-    if (conf.status === "archived") return { ...base, closed: true, deadline: "", guidelines: "", tracks: ["General Track"], presentationTypes: ["Paper Presentation"], extras: [] };
+    // An archived conference answers with a short notice only: the author's page says it is closed (a chair on an author's behalf still gets the form).
+    if (conf.status === "archived" && !behalf) return { ...base, closed: true, deadline: "", guidelines: "", tracks: ["General Track"], presentationTypes: ["Paper Presentation"], extras: [] };
     const form = await api<FormDto>(`/public/conferences/${encodeURIComponent(slug)}/submission-form`, { auth: false });
     return {
       ...base,
       extras: extrasFromStored({ extras: form.extras }),
       // Closed while the CFP is not live, and once the deadline is over (the backend refuses a paper then too: better say so before the form is filled in).
-      closed: conf.cfpStatus !== "published" || (Boolean(conf.submissionDeadline) && new Date(conf.submissionDeadline as string).getTime() < Date.now()), deadline: (conf.submissionDeadline ?? "").slice(0, 10), guidelines: form.guidelines,
+      // A chair on an author's behalf is never held by the CFP or its deadline (the backend lets them through too).
+      closed: !behalf && (conf.cfpStatus !== "published" || (Boolean(conf.submissionDeadline) && new Date(conf.submissionDeadline as string).getTime() < Date.now())), deadline: (conf.submissionDeadline ?? "").slice(0, 10), guidelines: form.guidelines,
       tracks: form.tracks.length ? form.tracks : ["General Track"],
       presentationTypes: form.presentationTypes.length ? form.presentationTypes : ["Paper Presentation", "Poster Presentation", "Workshop"],
     };

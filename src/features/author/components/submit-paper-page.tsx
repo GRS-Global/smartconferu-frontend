@@ -72,7 +72,7 @@ export function SubmitPaperPage({ slug, behalf = false }: { slug: string; behalf
   const [tick, setTick] = useState(0);
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getAuthorSubmissionService().then((s) => s.loadSubmitForm(slug)), getConferenceService().then((s) => s.loadDashboard()).then((d) => d.source.conferences).catch(() => null)]).then(([info, mine]): FormState => {
+    Promise.all([getAuthorSubmissionService().then((s) => s.loadSubmitForm(slug, behalf)), getConferenceService().then((s) => s.loadDashboard()).then((d) => d.source.conferences).catch(() => null)]).then(([info, mine]): FormState => {
         if (!info) return { status: "missing" };
         const m = mine?.find((c) => c.conference.id === slug);
         return { status: "ready", info, shell: m && mine ? { conference: m.conference, roles: m.roles, others: mine.filter((c) => c.conference.id !== slug).map((c) => c.conference) } : null };
@@ -84,7 +84,7 @@ export function SubmitPaperPage({ slug, behalf = false }: { slug: string; behalf
         else setForm({ status: "error", message: e instanceof Error ? e.message : "Something went wrong.", config: e instanceof ServiceConfigError });
       });
     return () => { cancelled = true; };
-  }, [slug, tick]);
+  }, [slug, behalf, tick]);
   const retry = useCallback(() => { setForm({ status: "loading" }); setTick((t) => t + 1); }, []);
 
   const title = behalf ? "Submit on behalf of an author" : "New Submission";

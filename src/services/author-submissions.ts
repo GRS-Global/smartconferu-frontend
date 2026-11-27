@@ -7,7 +7,8 @@ import { apiAuthorSubmissionService } from "./api/author-submissions";
  *  not configured) or ServiceError (a request failed, with a message ready to show). */
 export interface AuthorSubmissionService {
   /** The conference's submission form (its tracks and submission types) and the signed-in user's own details; null when the conference does not exist or is not visible to the user. */
-  loadSubmitForm(conferenceSlug: string): Promise<SubmitFormInfo | null>;
+  /** `behalf`: a chair submitting for an author, which is never closed (archived conference, CFP not open or deadline passed). */
+  loadSubmitForm(conferenceSlug: string, behalf?: boolean): Promise<SubmitFormInfo | null>;
   /** Whether a paper with this title was already sent to the conference, and whether the signed-in user is one of its authors. */
   checkDuplicate(conferenceSlug: string, title: string): Promise<{ found: boolean; mine: boolean }>;
   /** Sends a new paper: the paper, its authors in order, then the file. Returns the paper's database id and its label ("ISBM-680"). The database refuses it when submissions are closed. */

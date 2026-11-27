@@ -216,7 +216,7 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
             title={conference.acronym}
             badge={<ConferenceStatusPill conference={conference} />}
             subtitle={conference.name}
-            actions={conference.status !== "archived" ? <Link href={`/chair/${encodeURIComponent(conference.id)}/submit-behalf`} className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-5 text-[14px] font-bold text-white transition-shadow hover:shadow-[0_0_24px_rgba(124,58,237,0.35)]"><PlusCircle size={15} aria-hidden="true" /> Submit on behalf of an author</Link> : undefined}
+            actions={<Link href={`/chair/${encodeURIComponent(conference.id)}/submit-behalf`} className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-5 text-[14px] font-bold text-white transition-shadow hover:shadow-[0_0_24px_rgba(124,58,237,0.35)]"><PlusCircle size={15} aria-hidden="true" /> Submit on behalf of an author</Link>}
           />
         </div>
 
