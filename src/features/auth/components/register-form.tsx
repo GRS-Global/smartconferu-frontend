@@ -219,7 +219,9 @@ function Fields({ form }: { form: Form }) {
         </div>
       </div>
       <div>
-        <input type="email" autoComplete="email" aria-label="Email" aria-required="true" placeholder="Email *" value={values.mainEmail} onChange={(e) => set("mainEmail", e.target.value)} onBlur={touch("mainEmail")} aria-invalid={invalid("mainEmail")} className={REG_INPUT} />
+        {/* autocomplete "username" (not "email"): the email is the account's sign-in name, so a password manager pairs it with the new password
+            below, offers to save both after sign-up and fills them on the sign-in page (whose box is "username" too). */}
+        <input id="register-email" name="email" type="email" inputMode="email" autoComplete="username" aria-label="Email" aria-required="true" placeholder="Email *" value={values.mainEmail} onChange={(e) => set("mainEmail", e.target.value)} onBlur={touch("mainEmail")} aria-invalid={invalid("mainEmail")} className={REG_INPUT} />
         {err("mainEmail")}
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -256,11 +258,11 @@ function Fields({ form }: { form: Form }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <PasswordField maxLength={128} aria-label="Password" name="new-password" label="password" aria-required="true" autoComplete="new-password" placeholder="Password * (min. 8 characters)" value={form.password} onChange={(e) => form.setPassword(e.target.value)} onBlur={touch("password")} aria-invalid={invalid("password")} className={REG_INPUT} />
+          <PasswordField id="register-password" maxLength={128} aria-label="Password" name="password" label="password" aria-required="true" autoComplete="new-password" placeholder="Password * (min. 8 characters)" value={form.password} onChange={(e) => form.setPassword(e.target.value)} onBlur={touch("password")} aria-invalid={invalid("password")} className={REG_INPUT} />
           {err("password")}
         </div>
         <div>
-          <PasswordField maxLength={128} aria-label="Retype password" name="new-password-confirm" label="retyped password" aria-required="true" autoComplete="new-password" placeholder="Retype password *" value={form.password2} onChange={(e) => form.setPassword2(e.target.value)} onBlur={touch("password2")} aria-invalid={invalid("password2")} className={REG_INPUT} />
+          <PasswordField id="register-password2" maxLength={128} aria-label="Retype password" name="password-confirm" label="retyped password" aria-required="true" autoComplete="new-password" placeholder="Retype password *" value={form.password2} onChange={(e) => form.setPassword2(e.target.value)} onBlur={touch("password2")} aria-invalid={invalid("password2")} className={REG_INPUT} />
           {err("password2")}
         </div>
       </div>
