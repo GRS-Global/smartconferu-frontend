@@ -5,11 +5,12 @@
    authenticator-app code when they set one up). Only a super admin in a verified session gets in.
    In development the API can send the code back (DEV_SHOW_EMAIL_CODES) and this page fills it in. */
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Check, CircleAlert, Eye, EyeOff, Info, KeyRound, Loader2, Lock, Mail, ShieldCheck, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CircleAlert, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, ShieldCheck, type LucideIcon } from "lucide-react";
 import { ApiError } from "../api";
-import { checkAdminAccess, resendCode, resumeAdminSession, sendPasswordReset, signInWithPassword, signOut, verifyCode } from "../services";
+import { checkAdminAccess, resendCode, resumeAdminSession, signInWithPassword, signOut, verifyCode } from "../services";
 import { fmtTrustDate, queueWelcome, rememberTrust, TRUST_DAYS, trustedUntil } from "../trusted-device";
 import { ModuleStrip, PlatformScene } from "./login-visual";
 
@@ -65,13 +66,7 @@ export function AdminLoginPage() {
   };
 
   return (
-    <div className="sa-root min-h-screen flex flex-col lg:flex-row" style={{ background: "#FFFFFF" }}>
-      <BrandPanel />
-      <MobileHeader />
-
-      <main className="flex-1 min-w-0 flex flex-col">
-        <div className="flex-1 flex items-center justify-center px-5 sm:px-10 py-10 lg:py-16 [@media(max-height:820px)]:lg:py-8">
-          <div className="w-full max-w-[400px]">
+    <AdminAuthShell>
             {step === 1 ? (
               <PasswordStep
                 email={email}
@@ -110,6 +105,23 @@ export function AdminLoginPage() {
                 }}
               />
             )}
+    </AdminAuthShell>
+  );
+}
+
+/* ---------- the console's sign-in layout (sign-in, forgot password, reset password) ---------- */
+
+/** Brand panel (desktop) or header (phone), the form column, the "Author, reviewer or chair?" link and the restricted-area footer. */
+export function AdminAuthShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="sa-root min-h-screen flex flex-col lg:flex-row" style={{ background: "#FFFFFF" }}>
+      <BrandPanel />
+      <MobileHeader />
+
+      <main className="flex-1 min-w-0 flex flex-col">
+        <div className="flex-1 flex items-center justify-center px-5 sm:px-10 py-10 lg:py-16 [@media(max-height:820px)]:lg:py-8">
+          <div className="w-full max-w-[400px]">
+            {children}
 
             <p className="mt-8 pt-6 border-t text-[13.5px]" style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}>
               Author, reviewer or chair?{" "}
@@ -179,7 +191,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
   );
 }
 
-function AccessBadge() {
+export function AccessBadge() {
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-semibold uppercase tracking-[0.08em]"
@@ -190,7 +202,7 @@ function AccessBadge() {
   );
 }
 
-function Heading({ title, children }: { title: string; children: ReactNode }) {
+export function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <>
       <h1 className="text-[26px] sm:text-[28px] font-bold tracking-[-0.02em] leading-tight mt-4" style={{ color: "var(--text)" }}>
@@ -203,7 +215,7 @@ function Heading({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Notice({ tone, icon: Icon, role, children }: { tone: "danger" | "info"; icon: LucideIcon; role?: "alert" | "status"; children: ReactNode }) {
+export function Notice({ tone, icon: Icon, role, children }: { tone: "danger" | "info"; icon: LucideIcon; role?: "alert" | "status"; children: ReactNode }) {
   const colors = tone === "danger" ? { background: "var(--danger-soft)", color: "var(--danger-ink)" } : { background: "var(--muted)", color: "var(--text-soft)" };
   return (
     <div role={role} className="sa-pop flex gap-2.5 text-[13px] leading-snug rounded-[10px] px-3.5 py-3 mb-5" style={colors}>
@@ -213,7 +225,7 @@ function Notice({ tone, icon: Icon, role, children }: { tone: "danger" | "info";
   );
 }
 
-function FieldError({ id, children }: { id: string; children: ReactNode }) {
+export function FieldError({ id, children }: { id: string; children: ReactNode }) {
   return (
     <p id={id} className="flex items-center gap-1.5 text-[12.5px] font-medium mt-2" style={{ color: "var(--danger-ink)" }}>
       <CircleAlert size={14} aria-hidden="true" />
@@ -222,7 +234,7 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
-function SubmitButton({ busy, disabled, busyLabel, children }: { busy: boolean; disabled?: boolean; busyLabel: string; children: ReactNode }) {
+export function SubmitButton({ busy, disabled, busyLabel, children }: { busy: boolean; disabled?: boolean; busyLabel: string; children: ReactNode }) {
   return (
     <button type="submit" className="sa-auth-btn cursor-pointer" disabled={disabled || busy} aria-busy={busy}>
       {busy ? (
@@ -234,57 +246,6 @@ function SubmitButton({ busy, disabled, busyLabel, children }: { busy: boolean; 
         children
       )}
     </button>
-  );
-}
-
-/* ---------- forgot password ---------- */
-
-/* Sends the reset link from the console itself (the admin password is the Smartconferu password). The work email typed above is used;
-   the same answer shows whether or not the address has an account. Not a <form>: it sits inside the sign-in form. */
-function ForgotPassword({ email }: { email: string }) {
-  const [state, setState] = useState<{ kind: "idle" } | { kind: "busy" } | { kind: "sent"; to: string } | { kind: "error"; message: string }>({ kind: "idle" });
-  const to = email.trim();
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to);
-  const send = async () => {
-    if (!valid || state.kind === "busy") return;
-    setState({ kind: "busy" });
-    try {
-      await sendPasswordReset(to);
-      setState({ kind: "sent", to });
-    } catch (e) {
-      setState({ kind: "error", message: e instanceof Error ? e.message : "Couldn't send the link. Please try again." });
-    }
-  };
-  if (state.kind === "sent") {
-    return (
-      <div id="sa-forgot">
-        <Notice tone="info" icon={Check} role="status">
-          If an account exists for <b>{state.to}</b>, we&apos;ve sent it a link to choose a new password. The link works once and expires after an
-          hour. Your admin console uses the same password, so sign in here with the new one. Don&apos;t see it? Check your spam folder.
-        </Notice>
-      </div>
-    );
-  }
-  return (
-    <div id="sa-forgot">
-      <Notice tone={state.kind === "error" ? "danger" : "info"} icon={state.kind === "error" ? CircleAlert : Info} role={state.kind === "error" ? "alert" : undefined}>
-        {state.kind === "error" ? (
-          <p>{state.message}</p>
-        ) : (
-          <p>Your admin console uses your Smartconferu password. {valid ? <>We&apos;ll email a reset link to <b>{to}</b>.</> : "Enter your work email above, then send the reset link."}</p>
-        )}
-        <button
-          type="button"
-          onClick={send}
-          disabled={!valid || state.kind === "busy"}
-          className="sa-focus mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-          style={{ color: "var(--primary)" }}
-        >
-          {state.kind === "busy" ? <Loader2 size={14} className="sa-spin" aria-hidden="true" /> : <Mail size={14} aria-hidden="true" />}
-          {state.kind === "busy" ? "Sending…" : "Send reset link"}
-        </button>
-      </Notice>
-    </div>
   );
 }
 
@@ -308,7 +269,6 @@ function PasswordStep(props: {
   const trusted = trustedUntil(email); // re-read as the email changes
   const [showPw, setShowPw] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
-  const [forgot, setForgot] = useState(false);
   const [busy, setBusy] = useState(false);
   const [missing, setMissing] = useState<{ email?: string; password?: string }>({});
 
@@ -396,16 +356,13 @@ function PasswordStep(props: {
           <label htmlFor="sa-password" className="text-[13.5px] font-medium" style={{ color: "var(--text)" }}>
             Password
           </label>
-          <button
-            type="button"
-            onClick={() => setForgot((f) => !f)}
-            aria-expanded={forgot}
-            aria-controls="sa-forgot"
+          <Link
+            href={email.trim() ? `/super-admin/forgot-password?email=${encodeURIComponent(email.trim())}` : "/super-admin/forgot-password"}
             className="sa-focus text-[13px] font-medium hover:underline underline-offset-2 cursor-pointer"
             style={{ color: "var(--primary)" }}
           >
             Forgot password?
-          </button>
+          </Link>
         </div>
         <div className="relative">
           <Lock size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-faint)" }} aria-hidden="true" />
@@ -447,8 +404,6 @@ function PasswordStep(props: {
           )
         )}
       </div>
-
-      {forgot && <ForgotPassword email={email} />}
 
       <label className="inline-flex items-center gap-2.5 text-[13.5px] mb-6 select-none" style={{ color: "var(--text-soft)" }}>
         <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="w-4 h-4 rounded accent-[var(--primary)] cursor-pointer" />
