@@ -5,7 +5,7 @@ import {
   Mail, MessageSquare, Paperclip, Pencil, Plus, Tag, Ticket, User, UserPlus, Users, X, XCircle, type LucideIcon,
 } from "lucide-react";
 import { Fragment } from "react";
-import type { AuthorPaper, AuthorRegistration, PaperFile, PaperPageAuthor, PaperScreeningNotice, SharedComment } from "@/types/author-submission";
+import type { AuthorPaper, AuthorRegistration, PaperFile, PaperPageAuthor, PaperScreeningNotice, PlagiarismReport, SharedComment } from "@/types/author-submission";
 import { conferenceDest, newSubmissionHref, type Dest } from "../links";
 import { DestLink } from "./overview-parts";
 
@@ -245,6 +245,55 @@ export function ScreeningNotice({ notice, onUpload }: { notice: PaperScreeningNo
         </div>
       </div>
     </div>
+  );
+}
+
+/* ---------------- plagiarism reports ---------------- */
+
+const REPORT_DECISION: Record<PlagiarismReport["decision"], { label: string; color: string; bg: string }> = {
+  clear: { label: "Plagiarism cleared", color: "var(--success-ink)", bg: "var(--success-soft)" },
+  revision: { label: "Revision required", color: "var(--warning-ink)", bg: "var(--warning-soft)" },
+  reject: { label: "Rejected", color: "var(--danger-ink)", bg: "var(--danger-soft)" },
+};
+
+/** The iThenticate report(s) the chair added to each version, with that version's Plagiarism Check decision and similarity score. */
+export function PlagiarismReports({ reports, onView, onDownload }: { reports: PlagiarismReport[]; onView: (f: PaperFile) => void; onDownload: (f: PaperFile) => void }) {
+  if (!reports.length) return null;
+  return (
+    <section aria-labelledby="plag-reports" style={CARD} className="rounded-2xl bg-white">
+      <div className="flex items-center gap-2 border-b border-muted px-6 py-4">
+        <FileCheck size={16} aria-hidden="true" className="text-primary" />
+        <h3 id="plag-reports" className="text-sm font-bold text-navy">Plagiarism report</h3>
+      </div>
+      <ul className="divide-y divide-muted">
+        {reports.map((r) => {
+          const d = REPORT_DECISION[r.decision];
+          return (
+            <li key={r.version} className="flex flex-wrap items-start gap-x-4 gap-y-2 px-6 py-4">
+              <div className="min-w-[10rem] flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[13px] font-bold text-ink">Version {r.version}</span>
+                  <span style={{ color: d.color, background: d.bg }} className="rounded-full px-2.5 py-0.5 text-[11px] font-bold">{d.label}</span>
+                  {r.similarity !== null && <span className="text-xs text-ink-soft">Similarity <b className="tabular-nums text-ink">{r.similarity}%</b></span>}
+                </div>
+                <ul className="mt-2 space-y-1.5">
+                  {r.files.map((f) => (
+                    <li key={f.storagePath ?? f.name} className="flex flex-wrap items-center gap-2 text-[13px]">
+                      <FileText size={14} aria-hidden="true" className="shrink-0 text-ink-muted" />
+                      <span className="min-w-0 break-all font-medium text-ink">{f.name}</span>
+                      <span className="ml-auto flex shrink-0 gap-1.5">
+                        <button type="button" onClick={() => onView(f)} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1 text-xs font-semibold text-ink-soft hover:bg-canvas"><Eye size={12} aria-hidden="true" /> View</button>
+                        <button type="button" onClick={() => onDownload(f)} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1 text-xs font-semibold text-ink-soft hover:bg-canvas"><Download size={12} aria-hidden="true" /> Download</button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

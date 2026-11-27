@@ -1,6 +1,6 @@
 import { api, apiBlob, ApiError } from "@/lib/api-client";
 import { extrasFromStored } from "@/types/author-submission";
-import type { AuthorPaper, AuthorSubmission, ConferenceDetails, PaperFile, PaperResult, PaperScreeningNotice, PaperStatus, ScreeningRequest } from "@/types/author-submission";
+import type { AuthorPaper, AuthorSubmission, ConferenceDetails, PaperFile, PaperResult, PaperScreeningNotice, PaperStatus, ScreeningRequest, PlagiarismReport } from "@/types/author-submission";
 import type { AuthorSubmissionService } from "../author-submissions";
 import { ServiceError } from "../errors";
 import { isValidEmail } from "@/lib/email";
@@ -23,7 +23,8 @@ interface FullScreening {
   check?: { decision?: string; passed?: boolean };
   correction?: { reasons?: unknown; note?: unknown; by?: unknown; deadline?: unknown };
   outcome?: { kind?: string; emailedAt?: unknown; reasons?: unknown; note?: unknown; by?: unknown; deadline?: unknown; shareReport?: unknown };
-  report?: { similarity?: unknown; file?: unknown; files?: unknown };
+  report?: { similarity?: unknown; file?: unknown; files?: unknown; at?: unknown };
+  paths?: Record<string, unknown>;
 }
 interface PublicConference { id?: string; status?: string; acronym: string; title: string; submissionDeadline?: string | null; cfpStatus?: string }
 interface ConferenceDto { acronym: string; title: string; status: string; startDate: string | null; endDate: string | null; city: string | null; state: string | null; country: string | null; webPage: string | null; contactEmail: string | null }
@@ -91,12 +92,35 @@ function noticeOf(s: SubmissionDto, versions: number): PaperScreeningNotice | nu
   }
   if (r.outcome?.kind === "revision" && r.outcome.emailedAt !== null && r.outcome.emailedAt !== undefined) {
     const files = Array.isArray(r.report?.files) ? r.report.files : [r.report?.file];
-    const shared = Boolean(r.outcome.shareReport) && files.some(Boolean) && typeof r.report?.similarity === "number";
+    // The report always goes to the author now (attached to the email and on this page), so its score does too.
+    const shared = files.some(Boolean) && typeof r.report?.similarity === "number";
     // Only the similarity reason is the author's to read — the AI-writing reason keeps its wording but never quotes the score.
     const reasons = strings(r.outcome.reasons).map((x) => x.replace(/\s*\(\d+(\.\d+)?%, limit \d+%\)/, ""));
     return { kind: "revision", version: versions, deadline: text(r.outcome.deadline), reasons, note: text(r.outcome.note), by: text(r.outcome.by) || "Conference Chair", similarity: shared ? (r.report!.similarity as number) : null };
   }
   return null;
+}
+
+/** The plagiarism report of every version whose Plagiarism Check decision the author was told: cleared, or a revision / rejection that was
+ *  emailed (the same rule the API uses to let the author open the file). Newest version first. */
+function reportsOf(s: SubmissionDto): PlagiarismReport[] {
+  const out: PlagiarismReport[] = [];
+  for (const [key, r] of Object.entries(s.screening ?? {})) {
+    const version = Number(key);
+    if (!Number.isInteger(version) || !r) continue;
+    const kind = r.outcome?.kind;
+    const told = kind === "clear" || ((kind === "revision" || kind === "reject") && Boolean(r.outcome?.emailedAt));
+    if (!told) continue;
+    const names = Array.isArray(r.report?.files) ? r.report.files : [r.report?.file];
+    const files: PaperFile[] = [];
+    for (const name of names) {
+      const path = typeof name === "string" ? r.paths?.[name] : undefined;
+      if (typeof name === "string" && name && typeof path === "string" && path) files.push({ name, uploadedAt: text(r.report?.at), storagePath: path, type: "Plagiarism report" });
+    }
+    if (!files.length) continue;
+    out.push({ version, decision: kind, similarity: typeof r.report?.similarity === "number" ? r.report.similarity : null, files });
+  }
+  return out.sort((a, b) => b.version - a.version);
 }
 
 const paperVersions = (s: SubmissionDto) => s.files.filter((f) => f.kind !== "supplementary").sort((a, b) => a.version - b.version);
@@ -148,6 +172,7 @@ async function toPaper(s: SubmissionDto): Promise<AuthorPaper> {
     withdrawnAt: label(s.withdrawnAt || s.updatedAt),
     withdrawnBy: s.withdrawnBy === "chair" ? "chair" : "author",
     screeningNotice: noticeOf(s, versions.length),
+    plagiarismReports: s.status === "withdrawn" ? [] : reportsOf(s),
     conference: { id: s.conferenceSlug, acronym: conf.acronym, name: conf.title, status: conf.status === "archived" || end < today ? "archived" : "active", startDate: (conf.startDate ?? "").slice(0, 10) || end, endDate: end },
   };
 }
@@ -231,11 +256,17 @@ const implemented: AuthorSubmissionService = {
     try { return await toPaper(await api<SubmissionDto>(`/submissions/by-label/${encodeURIComponent(labelText)}`)); } catch (e) { if (notFound(e)) return null; throw e; }
   },
 
-  /** `storagePath` is "<paperId>/<fileId>". The route needs the Bearer header, so the bytes are fetched and handed over as a temporary address. */
+  /** `storagePath` is "<paperId>/<fileId>" for a paper file, or a plagiarism report's stored path ("conferences/…/plagiarism/report-….pdf").
+   *  The routes need the Bearer header, so the bytes are fetched and handed over as a temporary address. */
   async fileUrl(storagePath, downloadAs) {
-    const [paperId, fileId] = storagePath.split("/");
-    if (!paperId || !fileId) throw new ServiceError("We couldn't open this file.");
-    const blob = await apiBlob(`/submissions/${paperId}/files/${fileId}`);
+    let blob: Blob;
+    if (storagePath.startsWith("conferences/")) {
+      blob = await apiBlob("/files", { query: { path: storagePath } });
+    } else {
+      const [paperId, fileId] = storagePath.split("/");
+      if (!paperId || !fileId) throw new ServiceError("We couldn't open this file.");
+      blob = await apiBlob(`/submissions/${paperId}/files/${fileId}`);
+    }
     // A download is typed as plain bytes so that the browser saves it instead of showing it.
     const url = URL.createObjectURL(downloadAs ? new Blob([blob], { type: "application/octet-stream" }) : blob);
     setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);

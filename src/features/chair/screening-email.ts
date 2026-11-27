@@ -65,7 +65,7 @@ export function composeScreeningDraft(i: DraftInput): { subject: string; body: s
     intro,
     "",
     ...(i.problems.length ? i.problems.map((p) => `• ${p}`) : ["• "]),
-    ...(k === "main" && !i.reject && i.reportFiles.length ? ["", "A report with the details is linked at the end of this email and is available on your submission page."] : []),
+    ...(k === "main" && i.reportFiles.length ? ["", "The plagiarism report is attached to this email and is also available on your submission page."] : []),
     "",
     closing,
     "",

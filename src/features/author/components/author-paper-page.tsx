@@ -18,7 +18,7 @@ import { authorStatusOf } from "../status";
 import { useAuthorPaper } from "../use-author-paper";
 import { useConferenceCertificates } from "@/features/certificates/use-conference-certificates";
 import { CERTIFICATES_ENABLED } from "@/lib/config";
-import { DecisionCard, FilesTable, ManageCard, PaperBody, PaperTimeline, PresentationPanel, ScreeningNotice, certificateTitleOf, lockReasonOf } from "./paper-parts";
+import { DecisionCard, FilesTable, ManageCard, PaperBody, PlagiarismReports, PaperTimeline, PresentationPanel, ScreeningNotice, certificateTitleOf, lockReasonOf } from "./paper-parts";
 import { StatusPill } from "./submission-parts";
 import { authorPaperHref } from "@/lib/routes";
 import { useCanonicalPath } from "@/lib/use-canonical-path";
@@ -159,6 +159,7 @@ export function AuthorPaperPage({ label }: { label: string }) {
         <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
           <div className="space-y-5 lg:col-span-2">
             {!paper.withdrawn && paper.screeningNotice && <ScreeningNotice notice={paper.screeningNotice} onUpload={() => setDialog("files-paper")} />}
+            {!paper.withdrawn && <PlagiarismReports reports={paper.plagiarismReports ?? []} onView={(f) => { void open(f, false); }} onDownload={(f) => { void open(f, true); }} />}
             <PaperBody paper={paper} />
             <FilesTable paper={paper} onView={(f) => { void open(f, false); }} onDownload={(f) => { void open(f, true); }} onAddSupporting={paper.withdrawn || paper.status === "rejected" ? null : () => setDialog("files-supporting")} />
             <DecisionCard paper={paper} onUpload={() => setDialog("files-paper")} />

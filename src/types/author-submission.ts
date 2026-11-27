@@ -83,6 +83,16 @@ export interface PaperFile { name: string; uploadedAt: string; storagePath: stri
 /** A reviewer's comment the chair chose to share, without the reviewer's name or scores. */
 export interface SharedComment { n: number; text: string; submittedAt: string }
 
+/** One version's plagiarism report as the author sees it. */
+export interface PlagiarismReport {
+  version: number;
+  decision: "clear" | "revision" | "reject";
+  /** The similarity score, when the chair entered one. */
+  similarity: number | null;
+  /** The report PDFs (`storagePath` opens through the author service's fileUrl). */
+  files: PaperFile[];
+}
+
 /** What the author is told about where the paper stands. Authors never see where a paper is inside review. */
 export type PaperStatus = "draft" | "submitted" | "under_review" | "accepted" | "rejected";
 
@@ -116,6 +126,9 @@ export interface AuthorPaper extends Omit<AuthorSubmission, "authors" | "screeni
   withdrawnAt: string;
   withdrawnBy: "author" | "chair";
   screeningNotice: PaperScreeningNotice | null;
+  /** The plagiarism reports the chair added, per version, once the author was told the Plagiarism Check decision (cleared, or an emailed
+   *  revision / rejection). Newest version first. Absent where the data source has none. */
+  plagiarismReports?: PlagiarismReport[];
   conference: { id: string; acronym: string; name: string; status: "active" | "archived"; startDate: string; endDate: string };
 }
 

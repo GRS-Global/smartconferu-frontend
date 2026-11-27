@@ -110,7 +110,8 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
   const greet = firstOf(to[0]?.name ?? "");
   const [kind, setKind] = useState<EmailKind>("main");
   const [due, setDue] = useState(toIsoDay(p.defaultDue));
-  const [share, setShare] = useState(p.hasReport);
+  // The report always goes with a Plagiarism Check email when one was added (attached, and shown on the author's page).
+  const share = p.hasReport;
   const [co, setCo] = useState(false);
   const [edited, setEdited] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -126,7 +127,6 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
   // The draft follows the due date and the report until the chair edits the words; after that their words stay.
   const redo = (k: EmailKind, dueIso: string, shareReport: boolean) => { const c = compose(k, dueIso, shareReport); setSubject(c.subject); setBody(c.body); };
   const changeDue = (iso: string) => { setDue(iso); if (!edited) redo(kind, iso, share); };
-  const changeShare = (v: boolean) => { setShare(v); if (!edited) redo(kind, due, v); };
   const changeKind = (k: EmailKind) => {
     if (k === kind) return;
     if (edited && !window.confirm("Switching the email type rewrites the message and drops your edits. Continue?")) return;
@@ -150,7 +150,7 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
   const send = () => {
     const mine = `Dear ${greet},`;
     const text = body.startsWith(mine) ? `Dear {{first_name}},${body.slice(mine.length)}` : body;
-    p.onSend({ note: p.note, deadline: p.reject ? "" : fromIsoDay(due), share: !p.reject && p.stage === "plag" && share && p.hasReport, co: co && !p.reject, kind: k, subject: subject.trim(), body: text });
+    p.onSend({ note: p.note, deadline: p.reject ? "" : fromIsoDay(due), share: p.stage === "plag" && p.hasReport, co: co && !p.reject, kind: k, subject: subject.trim(), body: text });
   };
   return (
     <>
@@ -190,13 +190,12 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
         {p.stage === "plag" ? (
           <div>
             <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink-soft"><Paperclip size={13} aria-hidden="true" /> Attachments</div>
-            {!p.reject && (
-              <label className={`mb-1.5 flex items-center gap-2 text-xs font-semibold ${p.hasReport ? "text-ink-soft" : "text-ink-faint"}`}>
-                <input type="checkbox" disabled={!p.hasReport} checked={share && p.hasReport} onChange={(e) => changeShare(e.target.checked)} /> Share the report with the author
-              </label>
-            )}
             {p.reportFiles.length ? (
-              <div className="flex flex-wrap gap-2">{p.reportFiles.map((name) => <span key={name} className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary-soft-border bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary"><FileText size={13} aria-hidden="true" className="shrink-0" /> <span className="truncate">{name}</span></span>)}</div>
+              <>
+                {/* Always sent now: the report goes with every revision / rejection email and is shown on the author's paper page. */}
+                <p className="mb-1.5 text-xs text-ink-soft">The report is attached to this email and shown on the author&apos;s paper page.</p>
+                <div className="flex flex-wrap gap-2">{p.reportFiles.map((name) => <span key={name} className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary-soft-border bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary"><FileText size={13} aria-hidden="true" className="shrink-0" /> <span className="truncate">{name}</span></span>)}</div>
+              </>
             ) : (
               <p className="inline-flex items-center gap-1.5 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-ink"><AlertTriangle size={13} aria-hidden="true" /> No plagiarism report is uploaded for V{p.n} — upload it in the table first so the author can see it.</p>
             )}
