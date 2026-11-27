@@ -78,6 +78,19 @@ export function CreateConferencePage() {
   const [tzAuto, setTzAuto] = useState(false);
   // Smart Fill: reading the website takes a while (the backend opens several pages and asks the AI), so it has its own busy state and message.
   const [fill, setFill] = useState<{ status: "idle" | "loading" | "done" | "error"; message: string }>({ status: "idle", message: "" });
+  // Clicking the Website field opens a popup for the link; once given, it goes into the field and Smart Fill starts.
+  const [askSite, setAskSite] = useState(false);
+  const [siteUrl, setSiteUrl] = useState("");
+  const [siteError, setSiteError] = useState("");
+  // When the popup closed: focus returns to the Website field then, and that focus must not open it again.
+  const siteClosedAt = useRef(0);
+  const openSite = () => {
+    if (!SMART_FILL_AVAILABLE || fill.status === "loading" || Date.now() - siteClosedAt.current < 600) return;
+    setSiteUrl(formRef.current.webPage);
+    setSiteError("");
+    setAskSite(true);
+  };
+  const closeSite = () => { siteClosedAt.current = Date.now(); setAskSite(false); };
   const formRef = useRef(form);
   useEffect(() => { formRef.current = form; }, [form]);
   const set = <K extends keyof NewConferenceInput>(k: K, v: NewConferenceInput[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -145,9 +158,10 @@ export function CreateConferencePage() {
     if (next.country !== form.country) setCountry(next.country);
     setForm((f) => ({ ...f, ...next }));
   };
-  /** Reads the website and fills what is still empty (what has been typed is never overwritten). */
-  const smartFill = async () => {
-    const url = formRef.current.webPage.trim();
+  /** Reads the website and fills what is still empty (what has been typed is never overwritten). `from`: the address given in the
+   *  website popup (the Website field may not have caught up yet); otherwise the Website field. */
+  const smartFill = async (from?: string) => {
+    const url = (from ?? formRef.current.webPage).trim();
     if (!URL_RE.test(url)) { setFill({ status: "error", message: "Enter your conference website first, e.g. https://yourconference.org" }); return; }
     setFill({ status: "loading", message: "Reading the website — this can take up to a minute…" });
     try {
@@ -172,6 +186,16 @@ export function CreateConferencePage() {
     } catch (e) {
       setFill({ status: "error", message: e instanceof AuthRequiredError ? "Your session ended — please sign in again." : e instanceof Error ? e.message : "Couldn't read that website. Please fill the form by hand." });
     }
+  };
+
+  /** The website popup's "Fill from website": the address goes into the Website field and Smart Fill starts at once. */
+  const startFromSite = () => {
+    const raw = siteUrl.trim();
+    const url = raw && !/^https?:\/\//i.test(raw) ? `https://${raw}` : raw;
+    if (!url || !URL_RE.test(url)) { setSiteError(raw ? "That doesn't look like a web address, e.g. https://yourconference.org" : "Enter your conference website."); return; }
+    closeSite();
+    set("webPage", url);
+    void smartFill(url);
   };
 
   // In the prototype a real account's request is saved and sent for approval; the sample build creates the conference straight away.
@@ -324,18 +348,14 @@ export function CreateConferencePage() {
                 <div>
                   {label("Website", "webPage", true)}
                   <div className="relative">
-                    <input id="cc-webPage" type="url" value={form.webPage} onChange={(e) => set("webPage", e.target.value)} placeholder="https://yourconference.org" className={cn(cls("webPage"), "pr-10")} />
+                    <input id="cc-webPage" type="url" value={form.webPage} onChange={(e) => set("webPage", e.target.value)}
+                      // With Smart Fill, clicking the field or reaching it with Tab asks for the link in a popup and fills the form from it.
+                      onClick={openSite} onFocus={openSite} placeholder="https://yourconference.org" className={cn(cls("webPage"), "pr-10")} />
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" aria-hidden="true"><Sparkles size={16} className={SMART_FILL_AVAILABLE ? "text-primary" : "text-line-strong"} /></span>
                   </div>
                   {msg("webPage") || hint("Your conference's own website.")}
-                  {SMART_FILL_AVAILABLE && (
-                    <div className="mt-2">
-                      <button type="button" onClick={() => void smartFill()} disabled={fill.status === "loading"} className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary transition-opacity hover:opacity-80 disabled:cursor-wait disabled:opacity-60">
-                        {fill.status === "loading" ? <Spinner size={13} tone="current" /> : <Sparkles size={13} aria-hidden="true" />} {fill.status === "loading" ? "Reading the website…" : "Fill the form from this website"}
-                      </button>
-                      {fill.message && <p role={fill.status === "error" ? "alert" : "status"} className={cn("mt-1.5 text-xs", fill.status === "error" ? "font-semibold text-danger-ink" : "text-ink-muted")}>{fill.message}</p>}
-                    </div>
-                  )}
+                  {/* What Smart Fill did (filled N fields, or why it couldn't): started from the Website popup. */}
+                  {fill.message && <p role={fill.status === "error" ? "alert" : "status"} className={cn("mt-1.5 text-xs", fill.status === "error" ? "font-semibold text-danger-ink" : "text-ink-muted")}>{fill.message}</p>}
                 </div>
                 <div>{label("Conference title", "title", true)}<input id="cc-title" value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. International Conference on Information Systems for Business Management" className={cls("title")} />{msg("title")}</div>
                 <div className="grid items-start gap-4 sm:grid-cols-[240px_minmax(0,1fr)]">
@@ -530,6 +550,34 @@ export function CreateConferencePage() {
           onConfirm={clearForm}
           onClose={() => setConfirmClear(false)}
         />
+      )}
+
+      {askSite && (
+        <Modal
+          title="Your conference website" subtitle="Add the link and we'll fill in the details from it." icon={Sparkles} onClose={closeSite} maxWidth="max-w-md"
+          actions={(
+            <>
+              <button type="button" onClick={closeSite} className="h-10 cursor-pointer rounded-xl border-[1.5px] border-line px-4 text-sm font-semibold text-ink-soft transition-colors hover:bg-canvas">Cancel</button>
+              <button type="submit" form="cc-site-form" className={cn("inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-bold text-white", BTN_FX)}><Sparkles size={15} aria-hidden="true" /> Fill from website</button>
+            </>
+          )}
+        >
+          <form id="cc-site-form" noValidate onSubmit={(e) => { e.preventDefault(); startFromSite(); }}>
+            <label htmlFor="cc-site-url" className="mb-1.5 block text-xs font-bold text-ink-soft">Conference website</label>
+            <div className="relative">
+              <Globe2 size={16} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+              <input
+                id="cc-site-url" type="url" inputMode="url" autoComplete="url" autoFocus value={siteUrl} placeholder="https://yourconference.org"
+                onChange={(e) => { setSiteUrl(e.target.value); setSiteError(""); }}
+                aria-invalid={siteError ? true : undefined} aria-describedby={siteError ? "cc-site-url-error" : "cc-site-url-hint"}
+                className="h-11 w-full rounded-xl border-[1.5px] border-line bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-slate-400 focus:border-primary aria-[invalid=true]:border-danger"
+              />
+            </div>
+            {siteError
+              ? <p id="cc-site-url-error" role="alert" className="mt-1.5 text-xs font-semibold text-danger-ink">{siteError}</p>
+              : <p id="cc-site-url-hint" className="mt-1.5 text-xs text-ink-muted">Title, acronym, dates, venue, topics and more are read from the site (up to a minute). You check everything before creating; nothing you type is overwritten.</p>}
+          </form>
+        </Modal>
       )}
 
       {confirmLeave && (
