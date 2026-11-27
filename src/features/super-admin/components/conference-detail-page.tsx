@@ -16,6 +16,7 @@ import { useData } from "../use-data";
 import { statusBadge } from "./conferences-page";
 import { ConferenceReviewCard } from "./review-card";
 import { Avatar, Badge, Button, Card, CardTitle, errorText, Failed, fmtDate, fmtDateTime, Loading, PageTitle, Toast, TONES, type Icon, type Tone } from "./ui";
+import { cfpAddress } from "../site-address";
 
 function Stat({ icon: IconC, label, value, sub, tone = "primary" }: { icon: Icon; label: string; value: string | number; sub?: string; tone?: Tone }) {
   return (
@@ -421,7 +422,7 @@ export function ConferenceDetailPage({ id }: { id: string }) {
           ) : (
             <div className="flex items-center justify-between gap-3 py-2.5">
               <div className="text-[13.5px]">
-                <p style={{ color: "var(--text)" }}>smartconferu.com/cfp/{c.slug}</p>
+                <p style={{ color: "var(--text)" }}>{cfpAddress(c.slug)}</p>
                 <p className="text-[12.5px]" style={{ color: "var(--text-muted)" }}>
                   Deadline {fmtDate(c.submissionDeadline)}
                 </p>

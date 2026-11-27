@@ -7,6 +7,7 @@ import { useData } from "../use-data";
 import { CfpReviewDetail } from "./cfp-review-detail";
 import { QueuePage, type QueueConfig } from "./queue-page";
 import { Avatar, Badge, daysSince, Failed, Fields, fmtDate, Loading, Section } from "./ui";
+import { cfpAddress } from "../site-address";
 
 const today = () => new Date().toISOString().slice(0, 10);
 export const daysUntil = (isoDay: string) => Math.round((new Date(isoDay).getTime() - new Date(today()).getTime()) / 86_400_000);
@@ -197,7 +198,7 @@ export function CfpReviewPage() {
       since: (c) => c.cfpSubmittedAt ?? c.createdAt ?? "",
       search: (c) => `${c.title} ${c.acronym} ${c.slug} ${c.cfpPage ?? ""}`,
       columns: [
-        { label: "CFP page", sort: (c) => c.acronym, render: (c) => <TitleCell title={c.acronym} sub={c.cfpPage ? `smartconferu.com/cfp/${c.cfpPage}` : "No CFP page chosen yet"} /> },
+        { label: "CFP page", sort: (c) => c.acronym, render: (c) => <TitleCell title={c.acronym} sub={c.cfpPage ? cfpAddress(c.cfpPage) : "No CFP page chosen yet"} /> },
         { label: "Chair", sort: (c) => c.requester?.name ?? "", render: (c) => <Person name={c.requester?.name ?? "—"} /> },
         { label: "Deadline", sort: (c) => c.submissionDeadline ?? "", render: (c) => <span className="whitespace-nowrap">{fmtDate(c.submissionDeadline)}</span> },
         {
@@ -261,7 +262,7 @@ export function CfpReviewPage() {
           icon: Check,
           tone: "success",
           status: "published",
-          confirm: (c) => `${c.cfpPage ? `smartconferu.com/cfp/${c.cfpPage}` : `The CFP of ${c.acronym}`} goes live and ${c.requester?.name ?? "the chair"} is notified.`,
+          confirm: (c) => `${c.cfpPage ? cfpAddress(c.cfpPage) : `The CFP of ${c.acronym}`} goes live and ${c.requester?.name ?? "the chair"} is notified.`,
           email: (c) => ({ to: c.requester?.email ?? "the chairs", subject: `The Call for Papers of ${c.acronym} is live`, body: `Dear ${c.requester?.name.split(" ")[0] ?? "chair"},\n\nThe Call for Papers of ${c.acronym} has been approved. Submissions are open now.` }),
           run: (c) => decideCfp(c.id, true),
           toast: (c) => `CFP for ${c.acronym} is live`,

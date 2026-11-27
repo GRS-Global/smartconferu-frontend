@@ -10,6 +10,7 @@ import { themeOf } from "@/features/cfp/themes";
 import { get } from "../api";
 import type { AdminConference } from "../services";
 import { errorText, ExtLink, Fields, fmtDate, Modal, Section } from "./ui";
+import { cfpAddress } from "../site-address";
 
 interface CfpDetail { status: string; content: Record<string, unknown>; theme: Record<string, unknown>; submittedAt?: string | null }
 const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -41,7 +42,7 @@ export function CfpReviewDetail({ c }: { c: AdminConference }) {
         <Fields
           rows={[
             ["Sent for approval", cfp?.submittedAt ? fmtDate(cfp.submittedAt) : cfp ? "—" : "…"],
-            ["CFP page", page ? `smartconferu.com/cfp/${page}` : cfp ? "Not chosen" : "…"],
+            ["CFP page", page ? cfpAddress(page) : cfp ? "Not chosen" : "…"],
             ["Chair", c.requester ? `${c.requester.name}${c.requester.email ? ` · ${c.requester.email}` : ""}` : "—"],
             ["Organization", c.requester?.affiliation || "—"],
           ]}
@@ -93,7 +94,7 @@ export function CfpReviewDetail({ c }: { c: AdminConference }) {
       </Section>
 
       {full && cfp && (
-        <Modal wide title={`Call for Papers — ${c.acronym}`} subtitle={page ? `smartconferu.com/cfp/${page} · not live until approved` : "Not live until approved"} onClose={() => setFull(false)}>
+        <Modal wide title={`Call for Papers — ${c.acronym}`} subtitle={page ? `${cfpAddress(page)} · not live until approved` : "Not live until approved"} onClose={() => setFull(false)}>
           <CfpPublicPreview {...preview} submissionLink="" heading="Exactly as authors will see it" />
         </Modal>
       )}
