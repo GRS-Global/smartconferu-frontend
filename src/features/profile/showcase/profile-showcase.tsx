@@ -295,6 +295,14 @@ export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: 
                 {moreMems > 0 && (
                   <li className="min-w-0"><a href="#sec-memberships" onClick={jumpTo("sec-memberships")} className="inline-flex h-8 items-center whitespace-nowrap rounded-lg border border-line bg-white px-3 text-[12.5px] font-bold text-primary transition-colors hover:border-primary-soft-border hover:bg-primary-soft">+{moreMems} more</a></li>
                 )}
+                {/* Any other society (not one of the featured chips): opens Memberships on its Add form, as the section's own "+" does. */}
+                {!readOnly && (
+                  <li className="min-w-0">
+                    <button type="button" onClick={() => edit.add("membership")} title="Add a membership of another society" aria-label="Add another membership" className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-dashed border-line-strong bg-transparent px-3 text-[12.5px] font-bold text-ink-muted transition-all hover:border-primary-soft-border hover:text-primary">
+                      <Plus size={12} strokeWidth={2.5} className="shrink-0" aria-hidden="true" /> Other
+                    </button>
+                  </li>
+                )}
               </ul>
             </div>
           )}
