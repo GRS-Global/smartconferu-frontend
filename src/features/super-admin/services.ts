@@ -19,6 +19,12 @@ export async function signInWithPassword(email: string, password: string, rememb
   return { kind: "signed-in" };
 }
 
+/** "Forgot password?": emails a reset link to the address (the admin account's password is the Smartconferu password). The API
+    answers the same whether or not the address has an account, so this never tells which addresses exist. */
+export async function sendPasswordReset(email: string): Promise<void> {
+  await post("/auth/password/forgot", { email: email.trim() });
+}
+
 /** Step 2: the emailed code (or a code from the authenticator app). `trustDevice`: skip the emailed
     code on this browser for 14 days. */
 export async function verifyCode(code: string, trustDevice = false): Promise<void> {

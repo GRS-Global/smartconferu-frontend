@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, CircleAlert, Eye, EyeOff, Info, KeyRound, Loader2, Lock, Mail, ShieldCheck, type LucideIcon } from "lucide-react";
 import { ApiError } from "../api";
-import { checkAdminAccess, resendCode, resumeAdminSession, signInWithPassword, signOut, verifyCode } from "../services";
+import { checkAdminAccess, resendCode, resumeAdminSession, sendPasswordReset, signInWithPassword, signOut, verifyCode } from "../services";
 import { fmtTrustDate, queueWelcome, rememberTrust, TRUST_DAYS, trustedUntil } from "../trusted-device";
 import { ModuleStrip, PlatformScene } from "./login-visual";
 
@@ -237,6 +237,57 @@ function SubmitButton({ busy, disabled, busyLabel, children }: { busy: boolean; 
   );
 }
 
+/* ---------- forgot password ---------- */
+
+/* Sends the reset link from the console itself (the admin password is the Smartconferu password). The work email typed above is used;
+   the same answer shows whether or not the address has an account. Not a <form>: it sits inside the sign-in form. */
+function ForgotPassword({ email }: { email: string }) {
+  const [state, setState] = useState<{ kind: "idle" } | { kind: "busy" } | { kind: "sent"; to: string } | { kind: "error"; message: string }>({ kind: "idle" });
+  const to = email.trim();
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to);
+  const send = async () => {
+    if (!valid || state.kind === "busy") return;
+    setState({ kind: "busy" });
+    try {
+      await sendPasswordReset(to);
+      setState({ kind: "sent", to });
+    } catch (e) {
+      setState({ kind: "error", message: e instanceof Error ? e.message : "Couldn't send the link. Please try again." });
+    }
+  };
+  if (state.kind === "sent") {
+    return (
+      <div id="sa-forgot">
+        <Notice tone="info" icon={Check} role="status">
+          If an account exists for <b>{state.to}</b>, we&apos;ve sent it a link to choose a new password. The link works once and expires after an
+          hour. Your admin console uses the same password, so sign in here with the new one. Don&apos;t see it? Check your spam folder.
+        </Notice>
+      </div>
+    );
+  }
+  return (
+    <div id="sa-forgot">
+      <Notice tone={state.kind === "error" ? "danger" : "info"} icon={state.kind === "error" ? CircleAlert : Info} role={state.kind === "error" ? "alert" : undefined}>
+        {state.kind === "error" ? (
+          <p>{state.message}</p>
+        ) : (
+          <p>Your admin console uses your Smartconferu password. {valid ? <>We&apos;ll email a reset link to <b>{to}</b>.</> : "Enter your work email above, then send the reset link."}</p>
+        )}
+        <button
+          type="button"
+          onClick={send}
+          disabled={!valid || state.kind === "busy"}
+          className="sa-focus mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+          style={{ color: "var(--primary)" }}
+        >
+          {state.kind === "busy" ? <Loader2 size={14} className="sa-spin" aria-hidden="true" /> : <Mail size={14} aria-hidden="true" />}
+          {state.kind === "busy" ? "Sending…" : "Send reset link"}
+        </button>
+      </Notice>
+    </div>
+  );
+}
+
 /* ---------- step 1: email + password ---------- */
 
 function PasswordStep(props: {
@@ -397,17 +448,7 @@ function PasswordStep(props: {
         )}
       </div>
 
-      {forgot && (
-        <div id="sa-forgot">
-          <Notice tone="info" icon={Info}>
-            Your admin account uses the same password as your Smartconferu account. Reset it with{" "}
-            <a href="/login" className="font-semibold underline underline-offset-2">
-              Forgot password?
-            </a>{" "}
-            on the Smartconferu sign-in page, then come back here.
-          </Notice>
-        </div>
-      )}
+      {forgot && <ForgotPassword email={email} />}
 
       <label className="inline-flex items-center gap-2.5 text-[13.5px] mb-6 select-none" style={{ color: "var(--text-soft)" }}>
         <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="w-4 h-4 rounded accent-[var(--primary)] cursor-pointer" />
