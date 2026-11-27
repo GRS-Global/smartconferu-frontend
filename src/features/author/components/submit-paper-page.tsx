@@ -24,6 +24,7 @@ import { getAuthorSubmissionService } from "@/services/author-submissions";
 import { AuthRequiredError, ServiceConfigError } from "@/services/errors";
 import type { AuthorInput, SubmissionExtra, SubmitFormInfo } from "@/types/author-submission";
 import { isValidEmail } from "@/lib/email";
+import { KeywordTags } from "@/components/ui/keyword-tags";
 
 /* New Submission (the prototype's SubmitPaperPage with its default submission form): the paper file, title, abstract, keywords,
    submission type and track, the authors (the signed-in author is Author 1 and must stay on the paper), and the two declarations.
@@ -100,7 +101,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const router = useRouter();
   const [paperTitle, setPaperTitle] = useState("");
   const [abstract, setAbstract] = useState("");
-  const [keywords, setKeywords] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
   // The first track and the first submission type are already picked; the author changes them with one click.
   const [track, setTrack] = useState(info.tracks[0] ?? "");
   const [type, setType] = useState(info.presentationTypes[0] ?? "");
@@ -169,7 +170,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const applyFilled = (r: FilledPaper) => {
     if (r.title.trim()) setPaperTitle(r.title.trim());
     if (r.abstract.trim()) setAbstract(r.abstract.trim());
-    if (r.keywords.length) setKeywords(r.keywords.join(", "));
+    if (r.keywords.length) setKeywords([...new Map(r.keywords.map((k) => [k.trim().toLowerCase(), k.trim()])).values()].filter(Boolean).slice(0, 20));
     if (!r.authors.length) return;
     const anyCorresponding = r.authors.some((a) => a.corresponding);
     const source = new Map<string, FilledAuthor>();
@@ -234,7 +235,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
     try {
       const svc = await getAuthorSubmissionService();
       const autoCheck = await autoCheckOf(file);
-      const made = await svc.submitPaper(info.slug, { onBehalf: behalf, autoCheck, title: paperTitle, abstract, keywords: keywords.split(/[,;]/).map((k) => k.trim()).filter(Boolean), authors: rows.map(({ key, ...a }) => { void key; return a; }), track, presentationType: type, file, responses: Object.fromEntries(info.extras.filter((f) => answers[f.id] !== undefined && answers[f.id] !== "").map((f) => [f.id, answers[f.id]])) });
+      const made = await svc.submitPaper(info.slug, { onBehalf: behalf, autoCheck, title: paperTitle, abstract, keywords, authors: rows.map(({ key, ...a }) => { void key; return a; }), track, presentationType: type, file, responses: Object.fromEntries(info.extras.filter((f) => answers[f.id] !== undefined && answers[f.id] !== "").map((f) => [f.id, answers[f.id]])) });
       void requestPaperIngest(made.dbId); // the AI features are prepared in the background
       const mail = await sendActionEmails(behalf ? "submission_on_behalf" : "submission_received", { submissionId: made.dbId });
       setToast({ title: "Submission received", text: mail ?? `${made.label} was sent to ${info.acronym}.` });
@@ -322,7 +323,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
               {duplicate.found && <p role="alert" className="mt-1 text-xs font-semibold text-danger-ink">{duplicate.mine ? "You already sent a paper with this title to this conference." : "A paper with this title has already been sent to this conference."}</p>}
             </div>
             <div><label htmlFor="p-abstract" className={fieldLabel(tried && !abstract.trim())}>Abstract <span className="text-danger-ink">*</span></label><textarea id="p-abstract" rows={7} maxLength={20000} value={abstract} onChange={(e) => setAbstract(e.target.value)} className={`${INPUT_CLASS} resize-y ${bad(Boolean(abstract.trim()))}`} /></div>
-            <div><label htmlFor="p-keywords" className={fieldLabel()}>Keywords</label><input id="p-keywords" value={keywords} maxLength={600} placeholder="Separate with commas" onChange={(e) => setKeywords(e.target.value)} className={INPUT_CLASS} /></div>
+            <div><label htmlFor="p-keywords" className={fieldLabel()}>Keywords</label><KeywordTags id="p-keywords" value={keywords} onChange={setKeywords} disabled={filling} placeholder="e.g. Machine Learning — press Enter to add" /></div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2"><div id="p-type" className={fieldLabel(tried && !type)}>Please choose your submission type <span className="text-danger-ink">*</span></div><div role="group" aria-labelledby="p-type" className="grid gap-2 sm:grid-cols-3">{info.presentationTypes.map((t) => <button key={t} type="button" aria-pressed={type === t} onClick={() => setType(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", type === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(type)) && type !== t && "border-danger")}>{t}</button>)}</div></div>
               <div className="sm:col-span-2"><div id="p-track" className={fieldLabel(tried && !track)}>Please choose your track <span className="text-danger-ink">*</span></div><div role="group" aria-labelledby="p-track" className="grid gap-2 sm:grid-cols-3">{info.tracks.map((t) => <button key={t} type="button" aria-pressed={track === t} onClick={() => setTrack(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", track === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(track)) && track !== t && "border-danger")}>{t}</button>)}</div></div>
