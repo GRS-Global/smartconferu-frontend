@@ -200,7 +200,7 @@ function EmailModal({ dist, cert, conference, recipients, onClose, onSend, onPat
                 <div style={{ color: "var(--ink)" }} className="text-[12.5px] leading-relaxed whitespace-pre-line">{applyMerge(dist.email.body, values)}</div>
                 {dist.email.attachPdf && (
                   <div style={{ border: "1px solid var(--border)" }} className="rounded-lg px-3 py-2.5 mt-3.5 flex items-center gap-3">
-                    <div style={{ background: "var(--danger-soft)", border: "1px solid var(--danger-300)", color: "var(--danger)" }} className="w-8 h-9 rounded flex items-center justify-center shrink-0">
+                    <div style={{ background: "var(--danger-soft)", border: "1px solid var(--danger-300)", color: "var(--danger-ink)" }} className="w-8 h-9 rounded flex items-center justify-center shrink-0">
                       <FileText size={14} />
                     </div>
                     <div className="min-w-0">
@@ -488,7 +488,7 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
           <Notice
             tone={sent ? "danger" : "warning"} icon={AlertTriangle}
             action={
-              <button onClick={() => setFilter(sent ? "bounced" : "issues")} style={{ border: `1px solid ${sent ? "var(--danger-border)" : "var(--warning-border)"}`, color: sent ? "var(--danger)" : "var(--warning)" }} className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold bg-white transition-colors cursor-pointer">
+              <button onClick={() => setFilter(sent ? "bounced" : "issues")} style={{ border: `1px solid ${sent ? "var(--danger-border)" : "var(--warning-border)"}`, color: sent ? "var(--danger-ink)" : "var(--warning-ink)" }} className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold bg-white transition-colors cursor-pointer">
                 Show {sent ? "them" : `these ${issueCount}`}
               </button>
             }
@@ -511,7 +511,7 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
         {!sent && warnSummary.rows > 0 && (
           <Notice
             tone="warning" icon={AlertTriangle}
-            action={<button onClick={() => setFilter("warnings")} style={{ border: "1px solid var(--warning-border)", color: "var(--warning)" }} className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold bg-white transition-colors cursor-pointer">Show these {warnSummary.rows}</button>}
+            action={<button onClick={() => setFilter("warnings")} style={{ border: "1px solid var(--warning-border)", color: "var(--warning-ink)" }} className="shrink-0 px-3 py-1.5 rounded-lg text-[11.5px] font-bold bg-white transition-colors cursor-pointer">Show these {warnSummary.rows}</button>}
           >
             <strong>Check {warnSummary.rows} {warnSummary.rows === 1 ? "certificate" : "certificates"} before sending.</strong>{" "}
             {[warnSummary.missing && `${warnSummary.missing} with data the certificate prints missing`, warnSummary.longNames && `${warnSummary.longNames} with a long name`, warnSummary.duplicates && `${warnSummary.duplicates} repeated`].filter(Boolean).join(" · ")}. They can still be sent.
@@ -603,7 +603,7 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
                       </td>
                       <td style={{ color: "var(--ink)" }} className="px-3 py-3 font-medium whitespace-nowrap">
                         {r.name}
-                        {(warnings.get(rowId(r)) ?? []).map((w) => <span key={w.text} title={w.text} style={{ background: "var(--warning-soft)", color: "var(--warning)" }} className="block mt-1 w-fit max-w-[260px] truncate px-2 py-0.5 rounded-full text-[10.5px] font-semibold">{w.text}</span>)}
+                        {(warnings.get(rowId(r)) ?? []).map((w) => <span key={w.text} title={w.text} style={{ background: "var(--warning-soft)", color: "var(--warning-ink)" }} className="block mt-1 w-fit max-w-[260px] truncate px-2 py-0.5 rounded-full text-[10.5px] font-semibold">{w.text}</span>)}
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
                         {!sent && r.issue && r.issue !== "Already has this certificate" ? (
@@ -618,7 +618,7 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
                             />
                           </>
                         ) : (
-                          <span style={{ color: bounced ? "var(--danger)" : "var(--ink-muted)" }}>{r.email || "—"}</span>
+                          <span style={{ color: bounced ? "var(--danger-ink)" : "var(--ink-muted)" }}>{r.email || "—"}</span>
                         )}
                       </td>
                       <td style={{ color: "var(--ink-muted)" }} className="px-3 py-3 text-xs whitespace-nowrap">{r.roleLabel || "—"}</td>
@@ -638,7 +638,7 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
                           <>
                             <button type="button" disabled={!r.email} onClick={() => void actions.resend(r.serial!).then((ok) => { if (ok) setNotice({ title: "Email sent again", text: `${r.name} gets the same certificate (${r.serial}) again.` }); })} aria-label={`Send the email to ${r.name} again`} title={r.email ? "Send the email again (same ID)" : "No email address: reissue it with one"} style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"><Mail size={13} /></button>
                             <button type="button" onClick={() => setManage({ kind: "reissue", row: r as IssuedCertificate })} aria-label={`Correct and reissue the certificate for ${r.name}`} title="Correct the details and reissue (new ID; the old one is withdrawn)" style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--canvas)] transition-colors cursor-pointer"><Pencil size={13} /></button>
-                            <button type="button" onClick={() => setManage({ kind: "withdraw", row: r as IssuedCertificate })} aria-label={`Withdraw the certificate of ${r.name}`} title="Withdraw this certificate" style={{ border: "1px solid var(--border)", color: "var(--danger)" }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--danger-soft)] transition-colors cursor-pointer"><Ban size={13} /></button>
+                            <button type="button" onClick={() => setManage({ kind: "withdraw", row: r as IssuedCertificate })} aria-label={`Withdraw the certificate of ${r.name}`} title="Withdraw this certificate" style={{ border: "1px solid var(--border)", color: "var(--danger-ink)" }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--danger-soft)] transition-colors cursor-pointer"><Ban size={13} /></button>
                           </>
                         )}
                         </div>
@@ -683,8 +683,8 @@ export function RecipientsBody({ conference, dist, cert, audience, serialBase, a
           <div className="mt-4 text-xs space-y-1" role="status">
             <div style={{ color: "var(--ink-muted)" }}>{[preview.email, preview.roleLabel, preview.paperTitle].filter(Boolean).join(" · ") || "No other details"}</div>
             {(warnings.get(rowId(preview)) ?? []).length === 0
-              ? !sent && <div style={{ color: "var(--success)" }} className="font-semibold">No problems found for this certificate.</div>
-              : (warnings.get(rowId(preview)) ?? []).map((w) => <div key={w.text} style={{ color: "var(--warning)" }} className="font-semibold flex items-center gap-1.5"><AlertTriangle size={12} /> {w.text}</div>)}
+              ? !sent && <div style={{ color: "var(--success-ink)" }} className="font-semibold">No problems found for this certificate.</div>
+              : (warnings.get(rowId(preview)) ?? []).map((w) => <div key={w.text} style={{ color: "var(--warning-ink)" }} className="font-semibold flex items-center gap-1.5"><AlertTriangle size={12} /> {w.text}</div>)}
           </div>
         </CertModal>
       )}

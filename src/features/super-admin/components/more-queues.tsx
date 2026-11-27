@@ -37,7 +37,7 @@ function Person({ name }: { name: string }) {
 function CheckRow({ ok, label, detail }: { ok: boolean; label: string; detail?: string | null }) {
   return (
     <li className="flex items-start gap-2.5 py-2 text-[13.5px]">
-      <span className="w-5 h-5 rounded-full inline-flex items-center justify-center shrink-0 mt-px" style={{ background: ok ? "var(--success-soft)" : "var(--warning-soft)", color: ok ? "var(--success)" : "var(--warning)" }}>
+      <span className="w-5 h-5 rounded-full inline-flex items-center justify-center shrink-0 mt-px" style={{ background: ok ? "var(--success-soft)" : "var(--warning-soft)", color: ok ? "var(--success-ink)" : "var(--warning-ink)" }}>
         {ok ? <Check size={12} strokeWidth={3} /> : <AlertTriangle size={12} />}
       </span>
       <span>

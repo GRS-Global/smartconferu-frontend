@@ -15,7 +15,7 @@ export function FlowToast({ toast, onClose }: { toast: FlowToastData | null; onC
   if (!toast) return null;
   return (
     <div role="status" aria-live="polite" className="fixed bottom-6 right-6 z-[60] flex w-[22rem] max-w-[calc(100vw-2rem)] items-start gap-3 rounded-2xl border border-line bg-white p-4 shadow-2xl">
-      <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success"><Check size={18} strokeWidth={2.5} /></span>
+      <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success-ink"><Check size={18} strokeWidth={2.5} /></span>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-bold text-navy">{toast.title}</div>
         <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">{toast.text}</p>

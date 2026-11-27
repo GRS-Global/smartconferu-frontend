@@ -36,7 +36,7 @@ export function ViewAsPanel({ who, userId, next, onCancel, onStarted }: { who: s
     <div className="mt-5 rounded-xl p-4 sa-pop" style={{ background: "var(--primary-soft)" }}>
       <label className="block">
         <span className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--text)" }}>
-          Why are you viewing the app as {who}? <span style={{ color: "var(--danger)" }}>*</span>
+          Why are you viewing the app as {who}? <span style={{ color: "var(--danger-ink)" }}>*</span>
         </span>
         <textarea rows={2} className="sa-input resize-none !h-auto py-2.5" value={reason} onChange={(e) => setReason(e.target.value)} autoFocus maxLength={500} placeholder="e.g. ticket #4182 — chair can't see the Notify authors button" />
       </label>
@@ -51,7 +51,7 @@ export function ViewAsPanel({ who, userId, next, onCancel, onStarted }: { who: s
         <Eye size={13} className="shrink-0 mt-px" /> Opens the user app in a new tab, <b>read-only</b> — nothing can be saved or sent — for 30 minutes. Recorded in the audit log with this reason.
       </p>
       {error && (
-        <p role="alert" className="text-[13px] mt-2" style={{ color: "var(--danger)" }}>
+        <p role="alert" className="text-[13px] mt-2" style={{ color: "var(--danger-ink)" }}>
           {error}
         </p>
       )}

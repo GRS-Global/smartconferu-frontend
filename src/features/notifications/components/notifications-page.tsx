@@ -176,13 +176,13 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
         </div>
 
         {n.emailsError && (
-          <div role="alert" className="rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">
+          <div role="alert" className="rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger-ink">
             Couldn&apos;t load your emails. {n.emailsError} <button type="button" onClick={n.retry} className="font-bold underline">Try again</button>
           </div>
         )}
 
         {n.actionError && (
-          <div role="alert" className="flex items-start justify-between gap-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">
+          <div role="alert" className="flex items-start justify-between gap-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger-ink">
             <span>{n.actionError}</span>
             <button type="button" onClick={n.clearError} className="shrink-0 text-xs font-bold underline">Dismiss</button>
           </div>

@@ -24,7 +24,7 @@ function ReviewForm({ form, initial, confirm, onClose, onSave, busy, error }: { 
           </section>
         ))}
       </div>
-      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
         {missing.length > 0 && <span className="mr-auto text-xs text-ink-muted">Still to fill in: {missing.map((f) => f.label).join(", ")}</span>}
         <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
@@ -63,7 +63,7 @@ export function DeskRejectDialog({ open, paperLabel, onClose, onConfirm, busy, e
           </fieldset>
           <textarea aria-label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={2000} className="mt-3 w-full rounded-xl border-[1.5px] border-line p-2.5 text-[13px] outline-none focus:border-primary" />
           <p className="mt-2 text-xs text-ink-faint">This records a Reject decision with the reason as the note. The authors are told when you press Notify authors.</p>
-          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
           <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button><Button className="bg-danger hover:bg-danger" disabled={busy || !reason.trim()} onClick={() => onConfirm(reason.trim())}>{busy ? "Saving…" : "Desk reject paper"}</Button></div>
         </>
       )}

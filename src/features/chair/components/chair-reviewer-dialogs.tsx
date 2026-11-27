@@ -41,18 +41,18 @@ function ActionForm({ action, paperLabel, onClose, onConfirm, busy, error }: { a
         )}
         {"text" in cfg && (
           <label className="block">
-            <span className={LABEL}>{cfg.text}{needsText && <span className="text-danger"> *</span>}</span>
+            <span className={LABEL}>{cfg.text}{needsText && <span className="text-danger-ink"> *</span>}</span>
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} maxLength={2000} placeholder={cfg.placeholder} className={AREA} />
           </label>
         )}
         {"date" in cfg && (
           <label className="block">
-            <span className={LABEL}>{cfg.date} <span className="text-danger">*</span></span>
+            <span className={LABEL}>{cfg.date} <span className="text-danger-ink">*</span></span>
             <input type="date" min={min} value={date} onChange={(e) => setDate(e.target.value)} className={INPUT_CLASS} />
           </label>
         )}
       </div>
-      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
         <Button className={action.type === "remove" ? "bg-danger hover:bg-danger" : undefined} disabled={busy || !valid} onClick={() => onConfirm({ text: text.trim(), date })}>{busy ? "Saving…" : cfg.confirm}</Button>
@@ -82,15 +82,15 @@ export function FixRequestDialog({ open, paperLabel, onClose, onConfirm, busy, e
         <>
           <div className="space-y-4">
             <label className="block">
-              <span className={LABEL}>What needs fixing <span className="text-danger">*</span></span>
+              <span className={LABEL}>What needs fixing <span className="text-danger-ink">*</span></span>
               <textarea value={issue} onChange={(e) => setIssue(e.target.value)} rows={3} maxLength={2000} placeholder="e.g. The PDF is missing author affiliations on the first page." className={AREA} />
             </label>
             <label className="block">
-              <span className={LABEL}>Fix by <span className="text-danger">*</span></span>
+              <span className={LABEL}>Fix by <span className="text-danger-ink">*</span></span>
               <input type="date" min={min} value={fixBy} onChange={(e) => setFixBy(e.target.value)} className={INPUT_CLASS} />
             </label>
           </div>
-          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
             <Button disabled={busy || !issue.trim() || !fixBy || fixBy < min} onClick={() => onConfirm({ issue: issue.trim(), fixBy })}>{busy ? "Saving…" : "Send request"}</Button>

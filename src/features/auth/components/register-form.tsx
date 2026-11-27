@@ -99,7 +99,7 @@ export function RegisterForm() {
     <>
       <Link href="/" className="relative z-10 mb-6 flex shrink-0 flex-col items-center justify-center gap-3 text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-lg">
-          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
+          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={24} height={36} priority className="h-9 w-6" />
         </span>
         <span className="text-xs text-white/60">Create an account to submit and review papers</span>
       </Link>
@@ -160,7 +160,7 @@ export function RegisterForm() {
                 <input id="register-tos" type="checkbox" autoComplete="off" checked={form.agreeTos} onChange={(e) => form.setAgreeTos(e.target.checked)} disabled={disabled || busy} aria-invalid={(form.tosAttempted && !form.agreeTos) || undefined} aria-describedby={form.tosAttempted && !form.agreeTos ? "register-tos-error" : undefined} className="h-4 w-4 cursor-pointer rounded accent-[var(--primary)] outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" />
                 I agree to the Smartconferu <a href={TERMS_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">Terms of Service</a>
               </label>
-              {form.tosAttempted && !form.agreeTos && <p id="register-tos-error" role="alert" className="-mt-2 mb-3 text-[11.5px] text-danger">Tick the Terms of Service to create your account.</p>}
+              {form.tosAttempted && !form.agreeTos && <p id="register-tos-error" role="alert" className="-mt-2 mb-3 text-[11.5px] text-danger-ink">Tick the Terms of Service to create your account.</p>}
 
               {error && <div className="mb-3"><AuthMessage tone="error">{error}</AuthMessage></div>}
               {done && <div className="mb-3"><AuthMessage>Account created — taking you to Smartconferu…</AuthMessage></div>}
@@ -205,7 +205,7 @@ export function RegisterForm() {
 function Fields({ form }: { form: Form }) {
   const { values, set, errorOf, touch } = form;
   const invalid = (key: Parameters<typeof errorOf>[0]) => Boolean(errorOf(key)) || undefined;
-  const err = (key: Parameters<typeof errorOf>[0]) => (errorOf(key) ? <p role="alert" className="mt-1 text-[11.5px] text-danger">{errorOf(key)}</p> : null);
+  const err = (key: Parameters<typeof errorOf>[0]) => (errorOf(key) ? <p role="alert" className="mt-1 text-[11.5px] text-danger-ink">{errorOf(key)}</p> : null);
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
@@ -224,10 +224,10 @@ function Fields({ form }: { form: Form }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div onBlur={touch("affiliation")}>
-          <InstitutionPicker id="register-institution" value={form.inst} onChange={form.setInst} placeholder="Affiliation * (search your institution)" invalid={Boolean(errorOf("affiliation"))} inputClassName={REG_INPUT} />
+          <InstitutionPicker id="register-institution" ariaLabel="Affiliation" value={form.inst} onChange={form.setInst} placeholder="Affiliation * (search your institution)" invalid={Boolean(errorOf("affiliation"))} inputClassName={REG_INPUT} />
           {err("affiliation")}
         </div>
-        <DepartmentPicker id="register-department" institution={form.inst} value={form.department} onChange={form.setDepartment} placeholder="Department (optional)" inputClassName={REG_INPUT} />
+        <DepartmentPicker id="register-department" ariaLabel="Department" institution={form.inst} value={form.department} onChange={form.setDepartment} placeholder="Department (optional)" inputClassName={REG_INPUT} />
       </div>
       <div>
         <input autoComplete="organization-title" aria-label="Designation" aria-required="true" placeholder="Designation * (e.g. Professor)" value={values.designation} onChange={(e) => set("designation", e.target.value)} onBlur={touch("designation")} aria-invalid={invalid("designation")} className={REG_INPUT} />
@@ -251,16 +251,16 @@ function Fields({ form }: { form: Form }) {
         {err("webPage")}
       </div>
       <div>
-        <PhoneField id="register-phone" phone={values.phone} onPhoneChange={(v) => set("phone", v)} onBlur={touch("phone")} channels={values.notifyChannels} onChannelsChange={(v) => set("notifyChannels", v)} invalid={Boolean(errorOf("phone"))} inputClassName={REG_INPUT} />
+        <PhoneField id="register-phone" ariaLabel="Mobile number" phone={values.phone} onPhoneChange={(v) => set("phone", v)} onBlur={touch("phone")} channels={values.notifyChannels} onChannelsChange={(v) => set("notifyChannels", v)} invalid={Boolean(errorOf("phone"))} inputClassName={REG_INPUT} />
         {err("phone")}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <PasswordField name="new-password" label="password" aria-required="true" autoComplete="new-password" placeholder="Password * (min. 8 characters)" value={form.password} onChange={(e) => form.setPassword(e.target.value)} onBlur={touch("password")} aria-invalid={invalid("password")} className={REG_INPUT} />
+          <PasswordField maxLength={128} aria-label="Password" name="new-password" label="password" aria-required="true" autoComplete="new-password" placeholder="Password * (min. 8 characters)" value={form.password} onChange={(e) => form.setPassword(e.target.value)} onBlur={touch("password")} aria-invalid={invalid("password")} className={REG_INPUT} />
           {err("password")}
         </div>
         <div>
-          <PasswordField name="new-password-confirm" label="retyped password" aria-required="true" autoComplete="new-password" placeholder="Retype password *" value={form.password2} onChange={(e) => form.setPassword2(e.target.value)} onBlur={touch("password2")} aria-invalid={invalid("password2")} className={REG_INPUT} />
+          <PasswordField maxLength={128} aria-label="Retype password" name="new-password-confirm" label="retyped password" aria-required="true" autoComplete="new-password" placeholder="Retype password *" value={form.password2} onChange={(e) => form.setPassword2(e.target.value)} onBlur={touch("password2")} aria-invalid={invalid("password2")} className={REG_INPUT} />
           {err("password2")}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { api, apiBlob, ApiError, publicFileUrl } from "@/lib/api-client";
+import { api, apiBlob, ApiError, publicFileUrl, writeVersion } from "@/lib/api-client";
 import type { ReviewValues } from "@/types/reviewer";
 import { PEER_REVIEW_FORM, PROTECTED_FIELD_IDS, sectionsFromStored } from "@/features/reviewer/form-schema";
 import { extrasFromStored } from "@/types/author-submission";
@@ -63,18 +63,23 @@ interface Overview {
   screening: { settings: { initialCheck?: boolean; plagiarism?: boolean }; criteria: Partial<ScreeningCriteria> };
 }
 
-// Reads that start together (loadInfo + loadSettings) share one request; the entry is dropped when it settles and on every write, so nothing is ever served stale.
-const inflight = new Map<string, Promise<ConferenceResponse>>();
-const getConference = (slug: string) => {
-  const hit = inflight.get(slug);
-  if (hit) return hit;
-  const p = api<ConferenceResponse>(`/conferences/${slug}`).finally(() => { if (inflight.get(slug) === p) inflight.delete(slug); });
-  inflight.set(slug, p);
+// Reads of the same conference that start within a moment of each other (the shell, the page and the tour all ask for it when a page opens) share one request.
+// An entry is kept for 1.5 s and only while nothing was written since (writeVersion), so a read after a change is never served stale.
+const RECENT_MS = 1500;
+const recent = new Map<string, { p: Promise<unknown>; at: number; v: number }>();
+function shared<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = recent.get(key);
+  if (hit && hit.v === writeVersion() && Date.now() - hit.at < RECENT_MS) return hit.p as Promise<T>;
+  const p = load();
+  recent.set(key, { p, at: Date.now(), v: writeVersion() });
+  p.catch(() => { if (recent.get(key)?.p === p) recent.delete(key); });
   return p;
-};
-const patchConference = (slug: string, body: Record<string, unknown>) => { inflight.delete(slug); return api<ConferenceResponse>(`/conferences/${slug}`, { method: "PATCH", body }); };
+}
+const getConference = (slug: string) => shared(`conference:${slug}`, () => api<ConferenceResponse>(`/conferences/${slug}`));
+const getOverview = (slug: string) => shared(`overview:${slug}`, () => api<Overview>(`/conferences/${slug}/chair-overview`));
+const patchConference = (slug: string, body: Record<string, unknown>) => { return api<ConferenceResponse>(`/conferences/${slug}`, { method: "PATCH", body }); };
 /** The backend merges these top-level keys into the conference's `settings` (null removes one). */
-const mergeSetting = (slug: string, key: string, value: unknown) => { inflight.delete(slug); return api<ConferenceResponse>(`/conferences/${slug}/settings`, { method: "PATCH", body: { settings: { [key]: value } } }); };
+const mergeSetting = (slug: string, key: string, value: unknown) => { return api<ConferenceResponse>(`/conferences/${slug}/settings`, { method: "PATCH", body: { settings: { [key]: value } } }); };
 const notAvailable = (what: string) => new ServiceError(`${what} isn't available with the own backend yet.`);
 
 /* ---------------------------------------------------------------- mappers */
@@ -171,7 +176,7 @@ const needUuid = (...ids: string[]) => { if (ids.some((id) => !UUID.test(id))) t
 
 const implemented: Partial<ChairService> = {
   async loadConference(slug) {
-    const o = await api<Overview>(`/conferences/${slug}/chair-overview`);
+    const o = await getOverview(slug);
     const decisionTypes: DecisionType[] = o.decisionTypes.map((t) => ({ id: t.id, label: t.label, color: t.color, outcome: t.outcome, description: t.description ?? "" }));
     const criteria: ScreeningCriteria = { ...DEFAULT_CRITERIA, ...o.screening.criteria };
     return {
@@ -193,9 +198,9 @@ const implemented: Partial<ChairService> = {
     if (!i.name.trim() || i.name.length > 300 || i.about.length > 20000 || !url(i.webPage) || (i.contactEmail.trim() && !/^\S+@\S+\.\S+$/.test(i.contactEmail.trim())) || (i.startDate && i.endDate && i.endDate < i.startDate)) {
       throw new ServiceError("Couldn't save that. Please check the conference details and try again.");
     }
-    const cur = await getConference(slug);
+    // Only the keys this form owns: the server merges `details` into the stored ones, so the conference is not read first.
     const details = {
-      ...rec(cur.details), timezone: i.timezone, abstractDeadline: i.abstractDeadline, summary: i.summary, language: i.language, replyForwardingEmail: i.replyEmail, smartConfEmail: i.smartConfEmail,
+      timezone: i.timezone, abstractDeadline: i.abstractDeadline, summary: i.summary, language: i.language, replyForwardingEmail: i.replyEmail, smartConfEmail: i.smartConfEmail,
       topics: i.topics, address: i.address, postalCode: i.postalCode, lat: i.lat, lng: i.lng,
     };
     await patchConference(slug, {
@@ -324,7 +329,7 @@ const implemented: Partial<ChairService> = {
 
   /** The versions of every paper (supporting material left out), from the same read as the overview. `storagePath` carries "<paper>/<file>" for the file routes. */
   async loadScreeningFiles(slug) {
-    const o = await api<Overview>(`/conferences/${slug}/chair-overview`);
+    const o = await getOverview(slug);
     const out: Record<string, ScreeningFile[]> = {};
     for (const p of o.papers) {
       if (p.status === "draft") continue;

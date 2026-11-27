@@ -121,7 +121,7 @@ export function FlyerDesignerBody({ conference, webPage, papers, saved, onSave }
       <p style={{ color: "var(--ink-muted)" }} className="px-8 mt-1 text-sm flex items-center gap-2 flex-wrap">
         Design once. Every presenter gets their own copy automatically.
         <span style={saved.published ? { color: "#15803D", background: "var(--success-soft)" } : { color: "var(--ink-soft)", background: "var(--muted)" }} className="text-xs font-bold px-2 py-0.5 rounded-full">{saved.published ? "Live for authors" : "Not published"}</span>
-        {dirty && <span style={{ color: "var(--warning)" }} className="text-xs font-bold">Unpublished changes</span>}
+        {dirty && <span style={{ color: "var(--warning-ink)" }} className="text-xs font-bold">Unpublished changes</span>}
       </p>
 
       <div className="p-8 pt-5 flex gap-5 items-start flex-col 2xl:flex-row">
@@ -146,9 +146,9 @@ export function FlyerDesignerBody({ conference, webPage, papers, saved, onSave }
             <button type="button" onClick={() => fileRef.current?.click()} style={{ border: "1px dashed var(--border-strong)", color: "var(--ink-soft)", background: "var(--canvas)" }} className="rounded-xl p-3 text-[12.5px] font-bold inline-flex flex-col items-center gap-1 cursor-pointer">
               <ImagePlus size={16} /> {draft.bgImage ? "Change background" : "Upload your own background"}
             </button>
-            {bgProblem && <p role="alert" style={{ color: "var(--danger)" }} className="text-xs font-semibold">{bgProblem}</p>}
+            {bgProblem && <p role="alert" style={{ color: "var(--danger-ink)" }} className="text-xs font-semibold">{bgProblem}</p>}
             {draft.bgImage && (
-              <button type="button" onClick={() => { set({ bgImage: null }); setBgProblem(""); }} style={{ color: "var(--danger)" }} className="text-xs font-bold inline-flex items-center gap-1 justify-center cursor-pointer"><Trash2 size={12} /> Remove background</button>
+              <button type="button" onClick={() => { set({ bgImage: null }); setBgProblem(""); }} style={{ color: "var(--danger-ink)" }} className="text-xs font-bold inline-flex items-center gap-1 justify-center cursor-pointer"><Trash2 size={12} /> Remove background</button>
             )}
           </section>
 

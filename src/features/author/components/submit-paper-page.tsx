@@ -41,7 +41,7 @@ const MAX_BYTES = 26214400;
 const LABEL = "mb-1 block text-xs font-bold text-ink-soft";
 // The prototype's New Submission form label (EnhancedSchemaForm): 14 px / 600, 6 px below, --text; it turns danger-red when a required field is still empty after a submit attempt.
 const FIELD_LABEL = "mb-1.5 block text-sm font-semibold";
-const fieldLabel = (missing = false) => `${FIELD_LABEL} ${missing ? "text-danger" : "text-ink"}`;
+const fieldLabel = (missing = false) => `${FIELD_LABEL} ${missing ? "text-danger-ink" : "text-ink"}`;
 /** Keys for the author rows. The counter lives on `globalThis`, not in this module, so a hot reload (which re-runs the module but keeps the rows on screen) can never hand out a key a row already has. */
 const nextRowKey = (): number => { const g = globalThis as { __authorRowKey?: number }; g.__authorRowKey = (g.__authorRowKey ?? 0) + 1; return g.__authorRowKey; };
 interface Row extends AuthorInput { key: number }
@@ -156,8 +156,8 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
             <h2 className="text-base font-extrabold text-navy">Who are you submitting for?</h2>
             <p className="mb-4 mt-1 text-sm text-ink-muted">The author becomes Author 1 (the corresponding author) and gets the confirmation email. The paper is linked to their account when they register with this email.</p>
             <div className="space-y-3">
-              <div><label htmlFor="b-name" className={LABEL}>Author&apos;s full name <span className="text-danger">*</span></label><input id="b-name" value={ask.name} maxLength={200} onChange={(e) => setAsk({ ...ask, name: e.target.value })} className={INPUT_CLASS} /></div>
-              <div><label htmlFor="b-email" className={LABEL}>Author&apos;s email <span className="text-danger">*</span></label><input id="b-email" type="email" value={ask.email} maxLength={254} onChange={(e) => setAsk({ ...ask, email: e.target.value })} className={INPUT_CLASS} /></div>
+              <div><label htmlFor="b-name" className={LABEL}>Author&apos;s full name <span className="text-danger-ink">*</span></label><input id="b-name" value={ask.name} maxLength={200} onChange={(e) => setAsk({ ...ask, name: e.target.value })} className={INPUT_CLASS} /></div>
+              <div><label htmlFor="b-email" className={LABEL}>Author&apos;s email <span className="text-danger-ink">*</span></label><input id="b-email" type="email" value={ask.email} maxLength={254} onChange={(e) => setAsk({ ...ask, email: e.target.value })} className={INPUT_CLASS} /></div>
             </div>
             <div className="mt-5 flex justify-end"><Button disabled={!ok} onClick={() => { setOnBehalf({ name: ask.name.trim(), email: ask.email.trim() }); setRows([blankRow({ name: ask.name.trim(), email: ask.email.trim(), corresponding: true })]); }}>Continue</Button></div>
           </div>
@@ -274,10 +274,10 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2.5"><h2 className="text-2xl font-extrabold tracking-tight text-navy">{info.acronym}</h2><span className="rounded-full bg-white/80 px-2.5 py-0.5 text-[11px] font-bold text-primary">{behalf ? "On behalf of an author" : "New Submission"}</span></div>
             <p className="mt-1 text-sm text-ink-soft">{info.name}</p>
-            {info.deadline && <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning"><Clock size={12} aria-hidden="true" /> Submissions close {new Date(`${info.deadline}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>}
+            {info.deadline && <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning-ink"><Clock size={12} aria-hidden="true" /> Submissions close {new Date(`${info.deadline}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>}
           </div>
         </div>
-        {info.closed && <div role="alert" className="flex items-start gap-2 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm text-danger"><TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" /> Submissions to {info.acronym} are closed (or it isn&apos;t open yet).</div>}
+        {info.closed && <div role="alert" className="flex items-start gap-2 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm text-danger-ink"><TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" /> Submissions to {info.acronym} are closed (or it isn&apos;t open yet).</div>}
         {behalf && onBehalf && <div className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-ink-soft">Submitting for <b className="text-navy">{onBehalf.name}</b> ({onBehalf.email}).</div>}
 
         <section style={{ border: "1.5px solid var(--primary)" }} className="rounded-2xl bg-white p-5 sm:p-6">
@@ -299,7 +299,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
                   return (
                     <li key={s.key} className="flex items-center gap-2">
                       {i > 0 && <span aria-hidden="true" className={cn("h-0.5 w-6 rounded-full", state === "todo" ? "bg-line" : "bg-primary")} />}
-                      <span className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-[12.5px] font-bold", state === "done" && "bg-success-soft text-success", state === "on" && "bg-primary text-white", state === "todo" && "border border-line bg-white text-ink-faint")}>
+                      <span className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-[12.5px] font-bold", state === "done" && "bg-success-soft text-success-ink", state === "on" && "bg-primary text-white", state === "todo" && "border border-line bg-white text-ink-faint")}>
                         <span className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[10px]", state === "done" && "bg-success text-white", state === "on" && "bg-white/25 text-white", state === "todo" && "bg-muted text-ink-faint")}>{state === "done" ? <Check size={12} strokeWidth={3} aria-hidden="true" /> : state === "on" ? <RefreshCw size={11} strokeWidth={2.6} style={{ animation: "pu-spin 1.2s linear infinite" }} className="pu-anim" aria-hidden="true" /> : i + 1}</span>
                         {s.label}
                       </span>
@@ -314,7 +314,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
             </div>
           ) : file ? (
             <div className={`mt-4 flex items-center gap-3 rounded-xl border-[1.5px] bg-white p-3.5 ${over ? "border-dashed border-primary bg-primary-soft" : "border-line"} ${bad(Boolean(file))}`} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={(e) => { e.preventDefault(); setOver(false); pick(e.dataTransfer.files[0] ?? null); }}>
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-success-soft text-success"><FileCheck size={18} aria-hidden="true" /></span>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-success-soft text-success-ink"><FileCheck size={18} aria-hidden="true" /></span>
               <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">{file.name}</div><div className="text-xs text-ink-faint">{(file.size / 1048576).toFixed(1)} MB · drop another file here to replace it</div></div>
               <label htmlFor="paper-file" className="shrink-0 cursor-pointer rounded-lg border-[1.5px] border-primary px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary-soft">Replace</label>
             </div>
@@ -327,23 +327,23 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </label>
           )}
           <input id="paper-file" type="file" accept=".pdf,.doc,.docx" disabled={filling} className="sr-only" onChange={(e) => { pick(e.target.files?.[0] ?? null); e.target.value = ""; }} />
-          {fileProblem && <p role="alert" className="mt-2 text-xs font-semibold text-danger">{fileProblem}</p>}
-          {fillNote && !filling && <p role="status" className={cn("mt-3 text-xs font-medium", fillNote.tone === "ok" ? "text-success" : "text-warning")}>{fillNote.text}</p>}
+          {fileProblem && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">{fileProblem}</p>}
+          {fillNote && !filling && <p role="status" className={cn("mt-3 text-xs font-medium", fillNote.tone === "ok" ? "text-success-ink" : "text-warning-ink")}>{fillNote.text}</p>}
         </section>
 
         <div inert={filling} aria-busy={filling} className="space-y-5">
         <Section n={1} title="Basic Information" busy={filling}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="p-title" className={fieldLabel(tried && !paperTitle.trim())}>Title <span className="text-danger">*</span></label>
+              <label htmlFor="p-title" className={fieldLabel(tried && !paperTitle.trim())}>Title <span className="text-danger-ink">*</span></label>
               <input id="p-title" value={paperTitle} maxLength={500} onChange={(e) => setPaperTitle(e.target.value)} className={`${INPUT_CLASS} ${bad(Boolean(paperTitle.trim()))}`} />
-              {duplicate.found && <p role="alert" className="mt-1 text-xs font-semibold text-danger">{duplicate.mine ? "You already sent a paper with this title to this conference." : "A paper with this title has already been sent to this conference."}</p>}
+              {duplicate.found && <p role="alert" className="mt-1 text-xs font-semibold text-danger-ink">{duplicate.mine ? "You already sent a paper with this title to this conference." : "A paper with this title has already been sent to this conference."}</p>}
             </div>
-            <div><label htmlFor="p-abstract" className={fieldLabel(tried && !abstract.trim())}>Abstract <span className="text-danger">*</span></label><textarea id="p-abstract" rows={7} maxLength={20000} value={abstract} onChange={(e) => setAbstract(e.target.value)} className={`${INPUT_CLASS} resize-y ${bad(Boolean(abstract.trim()))}`} /></div>
+            <div><label htmlFor="p-abstract" className={fieldLabel(tried && !abstract.trim())}>Abstract <span className="text-danger-ink">*</span></label><textarea id="p-abstract" rows={7} maxLength={20000} value={abstract} onChange={(e) => setAbstract(e.target.value)} className={`${INPUT_CLASS} resize-y ${bad(Boolean(abstract.trim()))}`} /></div>
             <div><label htmlFor="p-keywords" className={fieldLabel()}>Keywords</label><input id="p-keywords" value={keywords} maxLength={600} placeholder="Separate with commas" onChange={(e) => setKeywords(e.target.value)} className={INPUT_CLASS} /></div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2"><div id="p-type" className={fieldLabel(tried && !type)}>Please choose your submission type <span className="text-danger">*</span></div><div role="group" aria-labelledby="p-type" className="grid gap-2 sm:grid-cols-3">{info.presentationTypes.map((t) => <button key={t} type="button" aria-pressed={type === t} onClick={() => setType(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", type === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(type)) && type !== t && "border-danger")}>{t}</button>)}</div></div>
-              <div className="sm:col-span-2"><div id="p-track" className={fieldLabel(tried && !track)}>Please choose your track <span className="text-danger">*</span></div><div role="group" aria-labelledby="p-track" className="grid gap-2 sm:grid-cols-3">{info.tracks.map((t) => <button key={t} type="button" aria-pressed={track === t} onClick={() => setTrack(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", track === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(track)) && track !== t && "border-danger")}>{t}</button>)}</div></div>
+              <div className="sm:col-span-2"><div id="p-type" className={fieldLabel(tried && !type)}>Please choose your submission type <span className="text-danger-ink">*</span></div><div role="group" aria-labelledby="p-type" className="grid gap-2 sm:grid-cols-3">{info.presentationTypes.map((t) => <button key={t} type="button" aria-pressed={type === t} onClick={() => setType(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", type === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(type)) && type !== t && "border-danger")}>{t}</button>)}</div></div>
+              <div className="sm:col-span-2"><div id="p-track" className={fieldLabel(tried && !track)}>Please choose your track <span className="text-danger-ink">*</span></div><div role="group" aria-labelledby="p-track" className="grid gap-2 sm:grid-cols-3">{info.tracks.map((t) => <button key={t} type="button" aria-pressed={track === t} onClick={() => setTrack(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", track === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(track)) && track !== t && "border-danger")}>{t}</button>)}</div></div>
             </div>
           </div>
         </Section>
@@ -357,22 +357,22 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
                   <span className="flex items-center gap-1">
                     <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up" className={iconBtn}><ArrowUp size={14} aria-hidden="true" /></button>
                     <button type="button" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move down" className={iconBtn}><ArrowDown size={14} aria-hidden="true" /></button>
-                    <button type="button" onClick={() => remove(a.key)} disabled={rows.length === 1} aria-label="Remove author" className={`${iconBtn} hover:text-danger`}><Trash2 size={14} aria-hidden="true" /></button>
+                    <button type="button" onClick={() => remove(a.key)} disabled={rows.length === 1} aria-label="Remove author" className={`${iconBtn} hover:text-danger-ink`}><Trash2 size={14} aria-hidden="true" /></button>
                   </span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div><label htmlFor={`a-name-${a.key}`} className={LABEL}>Full name <span className="text-danger">*</span></label><input id={`a-name-${a.key}`} value={a.name} maxLength={200} onChange={(e) => update(a.key, { name: e.target.value })} className={`${INPUT_CLASS} ${tried && !a.name.trim() ? "border-danger" : ""}`} /></div>
-                  <div><label htmlFor={`a-email-${a.key}`} className={LABEL}>Email <span className="text-danger">*</span></label><input id={`a-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} ${tried && !EMAIL.test(a.email.trim()) ? "border-danger" : ""}`} /></div>
+                  <div><label htmlFor={`a-name-${a.key}`} className={LABEL}>Full name <span className="text-danger-ink">*</span></label><input id={`a-name-${a.key}`} value={a.name} maxLength={200} onChange={(e) => update(a.key, { name: e.target.value })} className={`${INPUT_CLASS} ${tried && !a.name.trim() ? "border-danger" : ""}`} /></div>
+                  <div><label htmlFor={`a-email-${a.key}`} className={LABEL}>Email <span className="text-danger-ink">*</span></label><input id={`a-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} ${tried && !EMAIL.test(a.email.trim()) ? "border-danger" : ""}`} /></div>
                   <div><label htmlFor={`a-aff-${a.key}`} className={LABEL}>Affiliation</label><input id={`a-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="University / organisation" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={INPUT_CLASS} /></div>
-                  <div><label htmlFor={`a-country-${a.key}`} className={LABEL}>Country</label><select id={`a-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={INPUT_CLASS}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>{hints[a.key] && a.country && <p className="mt-1 text-[11px] font-medium text-warning">{hints[a.key]} — please check</p>}</div>
+                  <div><label htmlFor={`a-country-${a.key}`} className={LABEL}>Country</label><select id={`a-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={INPUT_CLASS}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>{hints[a.key] && a.country && <p className="mt-1 text-[11px] font-medium text-warning-ink">{hints[a.key]} — please check</p>}</div>
                 </div>
                 <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-ink-soft"><input type="checkbox" checked={a.corresponding} onChange={() => toggleCorresponding(a.key)} disabled={a.corresponding && rows.filter((x) => x.corresponding).length === 1} /> Corresponding author</label>
               </div>
             ))}
           </div>
           <button type="button" onClick={() => setRows((l) => (l.length < 50 ? [...l, blankRow()] : l))} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"><UserPlus size={15} aria-hidden="true" /> Add co-author</button>
-          {dupEmail && <p role="alert" className="mt-2 text-xs font-semibold text-danger">Each author needs their own email address.</p>}
-          {!listed && <p role="alert" className="mt-2 text-xs font-semibold text-danger">You have to be on the paper: add yourself ({info.me.email}) as an author.</p>}
+          {dupEmail && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">Each author needs their own email address.</p>}
+          {!listed && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">You have to be on the paper: add yourself ({info.me.email}) as an author.</p>}
         </Section>
 
         {info.extras.length > 0 && (
@@ -384,10 +384,10 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
                 return (
                   <div key={f.id}>
                     {f.type === "consent" ? (
-                      <label className={`flex items-start gap-2.5 text-[13px] ${bad ? "text-danger" : "text-ink-soft"}`}><input type="checkbox" checked={answers[f.id] === true} onChange={(e) => setAnswers((a) => ({ ...a, [f.id]: e.target.checked }))} className="mt-0.5" /> <span>{f.label}{f.required && <span className="text-danger" aria-hidden="true"> *</span>}</span></label>
+                      <label className={`flex items-start gap-2.5 text-[13px] ${bad ? "text-danger-ink" : "text-ink-soft"}`}><input type="checkbox" checked={answers[f.id] === true} onChange={(e) => setAnswers((a) => ({ ...a, [f.id]: e.target.checked }))} className="mt-0.5" /> <span>{f.label}{f.required && <span className="text-danger-ink" aria-hidden="true"> *</span>}</span></label>
                     ) : (
                       <>
-                        <label htmlFor={id} className={fieldLabel(bad)}>{f.label}{f.required && <span className="text-danger" aria-hidden="true"> *</span>}</label>
+                        <label htmlFor={id} className={fieldLabel(bad)}>{f.label}{f.required && <span className="text-danger-ink" aria-hidden="true"> *</span>}</label>
                         {f.description && <p className="mb-1.5 text-xs text-ink-muted">{f.description}</p>}
                         {f.type === "short_text" && <input id={id} value={String(answers[f.id] ?? "")} maxLength={500} onChange={(e) => setAnswers((a) => ({ ...a, [f.id]: e.target.value }))} className={`${INPUT_CLASS} ${bad ? "border-danger" : ""}`} />}
                         {f.type === "long_text" && <textarea id={id} rows={4} value={String(answers[f.id] ?? "")} maxLength={5000} onChange={(e) => setAnswers((a) => ({ ...a, [f.id]: e.target.value }))} className={`${INPUT_CLASS} resize-y ${bad ? "border-danger" : ""}`} />}
@@ -404,19 +404,19 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
         <Section n={info.extras.length ? 4 : 3} title="Declarations" busy={filling}>
           <div className="space-y-3">
             <div className={tried && !originality ? "rounded-xl border border-danger bg-danger-soft px-3.5 py-3" : undefined}>
-              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !originality ? "font-semibold text-danger" : "text-ink-soft")}><input type="checkbox" checked={originality} onChange={(e) => setOriginality(e.target.checked)} aria-invalid={tried && !originality} className={cn("mt-0.5", tried && !originality && "outline outline-2 outline-offset-1 outline-danger")} /> I confirm this submission is original work and has not been previously published or plagiarized. <span className="text-danger" aria-hidden="true">*</span></label>
-              {tried && !originality && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger">Please tick this box to submit your paper.</p>}
+              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !originality ? "font-semibold text-danger-ink" : "text-ink-soft")}><input type="checkbox" checked={originality} onChange={(e) => setOriginality(e.target.checked)} aria-invalid={tried && !originality} className={cn("mt-0.5", tried && !originality && "outline outline-2 outline-offset-1 outline-danger")} /> I confirm this submission is original work and has not been previously published or plagiarized. <span className="text-danger-ink" aria-hidden="true">*</span></label>
+              {tried && !originality && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger-ink">Please tick this box to submit your paper.</p>}
             </div>
             <div className={tried && !terms ? "rounded-xl border border-danger bg-danger-soft px-3.5 py-3" : undefined}>
-              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !terms ? "font-semibold text-danger" : "text-ink-soft")}><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} aria-invalid={tried && !terms} className={cn("mt-0.5", tried && !terms && "outline outline-2 outline-offset-1 outline-danger")} /> I agree to the conference&apos;s submission terms and conditions. <span className="text-danger" aria-hidden="true">*</span></label>
-              {tried && !terms && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger">Please tick this box to submit your paper.</p>}
+              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !terms ? "font-semibold text-danger-ink" : "text-ink-soft")}><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} aria-invalid={tried && !terms} className={cn("mt-0.5", tried && !terms && "outline outline-2 outline-offset-1 outline-danger")} /> I agree to the conference&apos;s submission terms and conditions. <span className="text-danger-ink" aria-hidden="true">*</span></label>
+              {tried && !terms && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger-ink">Please tick this box to submit your paper.</p>}
             </div>
           </div>
         </Section>
 
         </div>
 
-        {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
+        {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{error}</p>}
         {hasRichText(info.guidelines) && (
           <section style={CARD} className="overflow-hidden rounded-2xl bg-white">
             <div className="flex items-center gap-3 bg-primary-soft/60 px-5 py-3.5">

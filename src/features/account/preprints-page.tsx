@@ -69,7 +69,7 @@ export function PreprintsPage() {
                         {p.authors} · {p.source ? `from ${p.source}` : "created from scratch"}
                       </div>
                     </div>
-                    <span style={{ background: "var(--success-soft)", color: "var(--success)" }} className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0">Added</span>
+                    <span style={{ background: "var(--success-soft)", color: "var(--success-ink)" }} className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0">Added</span>
                   </div>
                 </div>
               ))}
@@ -123,7 +123,7 @@ export function PreprintsPage() {
                         disabled={added}
                         style={{
                           border: added ? "none" : "1.5px solid var(--border)",
-                          color: added ? "var(--success)" : "var(--primary)",
+                          color: added ? "var(--success-ink)" : "var(--primary)",
                           background: added ? "var(--success-soft)" : "transparent",
                         }}
                         className="w-7 h-7 rounded-lg inline-flex items-center justify-center transition-colors disabled:cursor-default cursor-pointer"

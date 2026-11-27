@@ -62,7 +62,7 @@ function ConfirmDecision({ detail, type, note, onClose, onConfirm, busy, error }
     <Dialog open={Boolean(type)} onClose={onClose} title={`Record "${type?.label ?? ""}"?`} description={`${detail.paper.id} · ${detail.paper.title}`} size="md">
       <p className="text-sm text-ink-soft">The decision is saved for you only. The authors are told when you press <b>Notify authors</b>.</p>
       {note.trim() && <p className="mt-3 rounded-lg bg-canvas p-3 text-[12.5px] text-ink-soft">{note.trim()}</p>}
-      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
         <Button onClick={onConfirm} disabled={busy}>{busy ? "Saving…" : "Record decision"}</Button>
@@ -303,12 +303,12 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
             <RegistrationCard key={`${paper.dbId}-${paper.registration?.updatedAt ?? "new"}`} paper={paper} busy={busy} onSave={saveRegistration} />
             <ManageCard detail={detail} onDetails={() => setManage("details")} onAuthors={() => setManage("authors")} onFiles={() => setManage("files-paper")} onWithdraw={() => setManage("withdraw")} />
             <Card title="Paper actions" icon={Pencil}>
-              {detail.fixRequest && <div className="mb-2 rounded-lg bg-warning-soft px-3 py-2 text-[11px] font-semibold leading-relaxed text-warning">Fix requested {detail.fixRequest.at}{detail.fixRequest.fixBy ? ` · due ${new Date(`${detail.fixRequest.fixBy}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}` : ""}</div>}
+              {detail.fixRequest && <div className="mb-2 rounded-lg bg-warning-soft px-3 py-2 text-[11px] font-semibold leading-relaxed text-warning-ink">Fix requested {detail.fixRequest.at}{detail.fixRequest.fixBy ? ` · due ${new Date(`${detail.fixRequest.fixBy}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}` : ""}</div>}
               <div className="space-y-1">
-                <button type="button" disabled={paper.withdrawn || notified} onClick={() => { setError(""); setFixOpen(true); }} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm font-semibold text-ink hover:bg-canvas disabled:opacity-50"><AlertTriangle size={15} aria-hidden="true" className="text-warning" /> Ask author to fix</button>
-                <button type="button" disabled={paper.withdrawn || notified} onClick={() => { setError(""); setDlg({ kind: "desk" }); }} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm font-semibold text-ink hover:bg-canvas disabled:opacity-50"><XCircle size={15} aria-hidden="true" className="text-danger" /> Desk reject</button>
+                <button type="button" disabled={paper.withdrawn || notified} onClick={() => { setError(""); setFixOpen(true); }} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm font-semibold text-ink hover:bg-canvas disabled:opacity-50"><AlertTriangle size={15} aria-hidden="true" className="text-warning-ink" /> Ask author to fix</button>
+                <button type="button" disabled={paper.withdrawn || notified} onClick={() => { setError(""); setDlg({ kind: "desk" }); }} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm font-semibold text-ink hover:bg-canvas disabled:opacity-50"><XCircle size={15} aria-hidden="true" className="text-danger-ink" /> Desk reject</button>
               </div>
-              {error && dlg === null && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+              {error && dlg === null && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
               <Link href={confBase} className="mt-4 inline-block text-[12px] font-bold text-primary hover:underline">Back to all submissions</Link>
             </Card>
             </div>

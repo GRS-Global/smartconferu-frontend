@@ -99,7 +99,7 @@ export function ClaimBar({ queue, itemId, since, waiting, claim: claimed, onChan
         </div>
       )}
       {error && (
-        <p role="alert" className="text-[13px] -mt-3 mb-4" style={{ color: "var(--danger)" }}>
+        <p role="alert" className="text-[13px] -mt-3 mb-4" style={{ color: "var(--danger-ink)" }}>
           {error}
         </p>
       )}
@@ -183,7 +183,7 @@ function InternalNotesBox({ queue, itemId, notes, onChanged }: { queue: QueueKey
         </Button>
       </div>
       {error && (
-        <p role="alert" className="text-[13px] mt-2" style={{ color: "var(--danger)" }}>
+        <p role="alert" className="text-[13px] mt-2" style={{ color: "var(--danger-ink)" }}>
           {error}
         </p>
       )}

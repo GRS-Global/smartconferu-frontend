@@ -186,7 +186,7 @@ export function AuthorOverviewPage({ slug }: { slug: string }) {
             <EmptySubmissions acronym={conference.acronym} finished={closed} newHref={newHref} />
           ) : attention.length === 0 ? (
             <div style={CARD} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-6 py-8 text-center">
-              <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-xl bg-success-soft"><Check size={18} className="text-success" /></span>
+              <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-xl bg-success-soft"><Check size={18} className="text-success-ink" /></span>
               <p className="text-sm font-bold text-navy">Nothing needs you here</p>
               <p className="text-[13px] text-ink-muted">All {rows.length} of your papers are finished. You&apos;ll find them in My Submissions.</p>
             </div>

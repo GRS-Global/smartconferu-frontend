@@ -96,7 +96,7 @@ export function LinksEditor({ profile, save, onDone, flash }: LinksEditorProps) 
             </span>
           </span>
         </label>
-        {optState.state.error && <p role="alert" className="text-[11.5px] text-danger">{optState.state.error}</p>}
+        {optState.state.error && <p role="alert" className="text-[11.5px] text-danger-ink">{optState.state.error}</p>}
         <div className={cn("space-y-1", optedOut && "opacity-45")} aria-disabled={optedOut}>
           {fields.map((f, i) => {
             const value = stored(f.key).trim();
@@ -124,14 +124,14 @@ export function LinksEditor({ profile, save, onDone, flash }: LinksEditorProps) 
                   {verified && !dirty ? (
                     <>
                       <span style={{ color: VERIFIED_GREEN }} className={`${CHIP} bg-success-soft`}><Check size={11} strokeWidth={3} aria-hidden="true" /> Verified</span>
-                      <button type="button" onClick={() => void remove(f)} className="text-xs font-semibold text-ink-muted hover:text-danger">{f.signIn ? "Disconnect" : "Remove"}</button>
+                      <button type="button" onClick={() => void remove(f)} className="text-xs font-semibold text-ink-muted hover:text-danger-ink">{f.signIn ? "Disconnect" : "Remove"}</button>
                     </>
                   ) : dirty ? (
                     <span className="text-xs font-medium text-ink-muted">{picked[f.key] ? "Picked from search · press Save" : "Unsaved"}</span>
                   ) : value && confirmed && request?.status === "pending" ? (
                     <>
                       <span title={`Requested ${request.requestedAt}`} style={{ color: PENDING_AMBER }} className={`${CHIP} bg-[#FFFBEB]`}><Clock size={11} strokeWidth={2.6} aria-hidden="true" /> Verification pending</span>
-                      <button type="button" onClick={() => void withdraw(f)} className="text-xs font-semibold text-ink-muted hover:text-danger">Withdraw</button>
+                      <button type="button" onClick={() => void withdraw(f)} className="text-xs font-semibold text-ink-muted hover:text-danger-ink">Withdraw</button>
                     </>
                   ) : value && confirmed ? (
                     <>
@@ -139,16 +139,16 @@ export function LinksEditor({ profile, save, onDone, flash }: LinksEditorProps) 
                       {f.signIn ? (
                         <button type="button" onClick={() => setConnectTarget(f)} className="text-xs font-semibold text-primary hover:underline">Sign in to verify</button>
                       ) : (
-                        <button type="button" onClick={() => setRequestTarget(f)} title={request?.status === "declined" ? `Last request declined: ${request.reason ?? ""}` : undefined} className={cn("text-xs font-semibold hover:underline", request?.status === "declined" ? "text-danger" : "text-primary")}>
+                        <button type="button" onClick={() => setRequestTarget(f)} title={request?.status === "declined" ? `Last request declined: ${request.reason ?? ""}` : undefined} className={cn("text-xs font-semibold hover:underline", request?.status === "declined" ? "text-danger-ink" : "text-primary")}>
                           {request?.status === "declined" ? "Declined · request again" : "Request verification"}
                         </button>
                       )}
-                      <button type="button" onClick={() => void remove(f)} className="text-xs font-semibold text-ink-muted hover:text-danger">Remove</button>
+                      <button type="button" onClick={() => void remove(f)} className="text-xs font-semibold text-ink-muted hover:text-danger-ink">Remove</button>
                     </>
                   ) : value ? (
                     <>
                       <button type="button" onClick={() => setConfirmTarget(f)} style={{ color: PENDING_AMBER, borderColor: PENDING_AMBER }} className={`${ACTION} hover:bg-[#FFFBEB]`}><UserCheck size={12} aria-hidden="true" /> Confirm it&apos;s you</button>
-                      <button type="button" onClick={() => void remove(f)} className="text-xs font-semibold text-ink-muted hover:text-danger">Remove</button>
+                      <button type="button" onClick={() => void remove(f)} className="text-xs font-semibold text-ink-muted hover:text-danger-ink">Remove</button>
                     </>
                   ) : (
                     <>
@@ -165,7 +165,7 @@ export function LinksEditor({ profile, save, onDone, flash }: LinksEditorProps) 
             );
           })}
         </div>
-        {savedFlash === kind && <p role="status" className="text-xs font-semibold text-success">Saved</p>}
+        {savedFlash === kind && <p role="status" className="text-xs font-semibold text-success-ink">Saved</p>}
       </SectionCard>
       </div>
     );
@@ -174,7 +174,7 @@ export function LinksEditor({ profile, save, onDone, flash }: LinksEditorProps) 
   return (
     <div>
       <div className="space-y-5">{card("scholar")}{card("professional")}</div>
-      {rowState.error && <p role="alert" className="mt-3 text-[11.5px] text-danger">{rowState.error}</p>}
+      {rowState.error && <p role="alert" className="mt-3 text-[11.5px] text-danger-ink">{rowState.error}</p>}
       <div className="mt-5 flex justify-end border-t border-muted pt-4"><button type="button" onClick={onDone} className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover">Done</button></div>
 
       {findTarget && (

@@ -7,6 +7,7 @@ import type { InstitutionValue } from "../affiliations";
 
 interface InstitutionPickerProps {
   id: string;
+  ariaLabel?: string;
   value: InstitutionValue;
   onChange: (v: InstitutionValue) => void;
   placeholder?: string;
@@ -16,7 +17,7 @@ interface InstitutionPickerProps {
 }
 
 /** Search the approved institution list; a name that isn't in it is used as typed and saved as "pending". */
-export function InstitutionPicker({ id, value, onChange, placeholder = "Search your institution, e.g. IIT", invalid, describedBy, inputClassName }: InstitutionPickerProps) {
+export function InstitutionPicker({ id, ariaLabel, value, onChange, placeholder = "Search your institution, e.g. IIT", invalid, describedBy, inputClassName }: InstitutionPickerProps) {
   useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
   const typed = value.name.trim();
   // Typed by a short form ("GTU"): the list shows the full name, with the short form that matched next to the country.
@@ -30,6 +31,7 @@ export function InstitutionPicker({ id, value, onChange, placeholder = "Search y
     <div>
       <Combobox
         id={id}
+        ariaLabel={ariaLabel}
         text={value.name}
         onTextChange={(name) => onChange({ name, institutionId: null, pending: false })}
         options={options}
@@ -47,6 +49,7 @@ export function InstitutionPicker({ id, value, onChange, placeholder = "Search y
 
 interface DepartmentPickerProps {
   id: string;
+  ariaLabel?: string;
   institution: InstitutionValue;
   value: string;
   onChange: (v: string) => void;
@@ -55,7 +58,7 @@ interface DepartmentPickerProps {
 }
 
 /** The institution's approved departments, or any department typed (marked pending when saved). */
-export function DepartmentPicker({ id, institution, value, onChange, placeholder = "Department (optional)", inputClassName }: DepartmentPickerProps) {
+export function DepartmentPicker({ id, ariaLabel, institution, value, onChange, placeholder = "Department (optional)", inputClassName }: DepartmentPickerProps) {
   useMasterDataVersion(); // render again when the Super Admin's lists arrive from the backend
   const inst = institution.institutionId ? institution : (() => { const f = findInstitution(institution.name); return f ? { ...institution, institutionId: f.id } : institution; })();
   const typed = value.trim();
@@ -66,7 +69,7 @@ export function DepartmentPicker({ id, institution, value, onChange, placeholder
   const exact = inst.institutionId ? findDepartment(inst.institutionId, typed) : null;
   return (
     <div>
-      <Combobox id={id} text={value} onTextChange={onChange} options={options} onSelect={(o) => onChange(o.value)} placeholder={placeholder} inputClassName={inputClassName} />
+      <Combobox id={id} ariaLabel={ariaLabel} text={value} onTextChange={onChange} options={options} onSelect={(o) => onChange(o.value)} placeholder={placeholder} inputClassName={inputClassName} />
       {typed !== "" && !exact && inst.institutionId && <p className="mt-1 text-[11px] text-ink-muted">Not one of this institution&apos;s listed departments — it will be used as typed and checked by our team.</p>}
     </div>
   );

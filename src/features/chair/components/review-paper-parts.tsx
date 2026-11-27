@@ -72,7 +72,7 @@ export function PaperHeader({ paper, acronym, keywords, compact, file, onFile }:
         </div>
         {!compact && file && (
           <div style={{ borderTop: "1px solid var(--banner-border)", background: "rgba(255,255,255,0.6)" }} className="flex flex-wrap items-center gap-3 px-6 py-3">
-            <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-[10px] font-extrabold tracking-wide text-danger">PDF</span>
+            <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-[10px] font-extrabold tracking-wide text-[#B91C1C]">PDF</span>
             <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-ink">{file.name}</span><span className="block text-[11px] text-ink-faint">Submitted paper{paper.submittedAt ? ` · ${paper.submittedAt}` : ""}</span></span>
             <span className="inline-flex shrink-0 items-center gap-1.5"><FileIconAction icon={Eye} label="View" onClick={() => onFile(false)} /><FileIconAction icon={Download} label="Download" onClick={() => onFile(true)} primary /></span>
           </div>
@@ -85,7 +85,7 @@ export function PaperHeader({ paper, acronym, keywords, compact, file, onFile }:
             {paper.authors.map((a, i) => (
               <li key={`${a.email || a.name}-${i}`} className="flex items-start gap-2.5 rounded-xl px-2.5 py-2 hover:bg-canvas">
                 <span style={i === 0 ? { background: "var(--primary)", color: "#FFFFFF" } : { background: "var(--primary-soft)", color: "var(--primary)" }} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold">{initials(a.name)}</span>
-                <span className="min-w-0 flex-1"><span className="flex flex-wrap items-center gap-1.5"><span className="text-sm font-semibold text-ink">{a.name}</span>{a.corresponding && <span className="rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-bold text-success">Corresponding</span>}</span>{a.affiliation && <span className="block truncate text-xs text-ink-muted">{a.affiliation}</span>}</span>
+                <span className="min-w-0 flex-1"><span className="flex flex-wrap items-center gap-1.5"><span className="text-sm font-semibold text-ink">{a.name}</span>{a.corresponding && <span className="rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-bold text-success-ink">Corresponding</span>}</span>{a.affiliation && <span className="block truncate text-xs text-ink-muted">{a.affiliation}</span>}</span>
                 <span className="mt-0.5 shrink-0 text-[11px] font-semibold text-ink-faint">#{i + 1}</span>
               </li>
             ))}

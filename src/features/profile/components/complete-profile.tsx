@@ -89,7 +89,7 @@ function CompleteProfileForm({ profile, next }: { profile: Profile; next: string
     <div className="relative z-10 w-full max-w-[800px]">
       <div className="mb-8 flex flex-col items-center justify-center gap-3 text-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg">
-          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
+          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={24} height={36} priority className="h-9 w-6" />
         </span>
         <p className="text-xs text-white/60">One last step before you get started</p>
       </div>
@@ -97,7 +97,7 @@ function CompleteProfileForm({ profile, next }: { profile: Profile; next: string
       <form noValidate onSubmit={(e) => { e.preventDefault(); void submit(); }} className="rounded-2xl bg-white p-8 shadow-2xl" aria-labelledby="complete-title">
         <h1 id="complete-title" className="mb-1 text-xl font-bold text-navy">Complete your profile</h1>
         <p className="mb-5 text-sm text-ink-muted">
-          A few details are missing from your profile. Organizers need a little more before you can submit, review or register — fields marked <span className="text-danger">*</span> are required.
+          A few details are missing from your profile. Organizers need a little more before you can submit, review or register — fields marked <span className="text-danger-ink">*</span> are required.
         </p>
         <div className="mb-5"><CompletenessMeter completeness={form.completeness} /></div>
 

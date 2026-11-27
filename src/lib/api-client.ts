@@ -1,4 +1,5 @@
 import { API_URL } from "@/lib/config";
+import { friendlyValidation } from "./validation-text";
 import { AuthRequiredError, ServiceError } from "@/services/errors";
 import { endSupportView, hadSupportView, readSupportView } from "@/lib/support-view";
 import { refreshWithRetry, UNREACHABLE_MESSAGE } from "@/lib/session-refresh";
@@ -96,7 +97,13 @@ function url(path: string, query?: ApiOptions["query"]): string {
   return `${BASE}${path}${s ? `?${s}` : ""}`;
 }
 
+/** Counts every call that may change data, so a short-lived shared read knows it is out of date once something was written. */
+let writes = 0;
+export const writeVersion = (): number => writes;
+
 async function send(path: string, o: ApiOptions): Promise<Response> {
+  // The live-updates ticket is a POST that changes no data.
+  if ((o.method ?? (o.body !== undefined ? "POST" : "GET")) !== "GET" && !path.startsWith("/me/events")) writes += 1;
   const headers: Record<string, string> = {};
   const isForm = typeof FormData !== "undefined" && o.body instanceof FormData;
   if (o.body !== undefined && !isForm) headers["content-type"] = "application/json";
@@ -119,7 +126,7 @@ async function toError(res: Response): Promise<Error> {
   const b = (await res.json().catch(() => null)) as { code?: string; message?: string; details?: unknown } | null;
   // Validation errors come with details: [{ field, errors[] }]; show the first message when there is one.
   const first = Array.isArray(b?.details) ? (b.details[0] as { errors?: string[] } | undefined)?.errors?.[0] : undefined;
-  return new ApiError(first ?? b?.message ?? "Something went wrong — please try again.", res.status, b?.code, b?.details);
+  return new ApiError((first ? friendlyValidation(first) : undefined) ?? b?.message ?? "Something went wrong — please try again.", res.status, b?.code, b?.details);
 }
 
 /** A 401 can mean "your session is over" (no / bad / expired token) or "that code or password is wrong" (AUTH_INVALID_CODE, ...): only the first

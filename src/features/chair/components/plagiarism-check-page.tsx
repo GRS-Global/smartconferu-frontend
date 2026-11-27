@@ -313,7 +313,7 @@ export function PlagiarismCheckPage({ slug }: { slug: string }) {
                 {v.reports.map((name) => (
                   <span key={name} style={{ border: "1px solid var(--border)" }} className="flex w-full items-center rounded-md bg-white">
                     <button type="button" onClick={() => void openReport(p, n, name)} title={`Download ${name}`} className="flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-1.5 pl-2.5 pr-1.5 text-xs font-semibold text-primary hover:underline"><FileText size={13} aria-hidden="true" className="shrink-0" /> <span className="flex-1 truncate text-left">{name}</span> <Download size={12} aria-hidden="true" className="shrink-0 opacity-70" /></button>
-                    {editable && v.decision === "pending" && <button type="button" onClick={() => removeReport(p, n, name)} aria-label={`Remove ${name}`} title="Remove this file" className="h-8 cursor-pointer px-1.5 text-ink-faint hover:text-danger"><X size={13} aria-hidden="true" /></button>}
+                    {editable && v.decision === "pending" && <button type="button" onClick={() => removeReport(p, n, name)} aria-label={`Remove ${name}`} title="Remove this file" className="h-8 cursor-pointer px-1.5 text-ink-faint hover:text-danger-ink"><X size={13} aria-hidden="true" /></button>}
                   </span>
                 ))}
                 {!editable && !v.reports.length && <span className="text-xs text-ink-faint">—</span>}

@@ -37,9 +37,9 @@ import { ThemePanel } from "./theme-panel";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const STATUS = {
   draft: { label: "Unpublished draft", color: "var(--ink-muted)", bg: "var(--muted)" },
-  review: { label: "Awaiting approval", color: "var(--warning)", bg: "var(--warning-soft)" },
+  review: { label: "Awaiting approval", color: "var(--warning-ink)", bg: "var(--warning-soft)" },
   published: { label: "Published", color: "var(--primary)", bg: "var(--primary-soft)" },
-  closed: { label: "Closed", color: "var(--danger)", bg: "var(--danger-soft)" },
+  closed: { label: "Closed", color: "var(--danger-ink)", bg: "var(--danger-soft)" },
 } as const;
 const showDate = (iso: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "");
 const initials = (n: string) => n.split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -49,7 +49,7 @@ function DeadlineChip({ iso }: { iso: string }) {
   if (!iso) return null;
   const days = daysToISO(iso);
   if (days === null) return null;
-  const tone = days < 0 ? { bg: "var(--danger-soft)", color: "var(--danger)" } : days === 0 ? { bg: "var(--danger-soft)", color: "var(--danger)" } : days <= 14 ? { bg: "var(--warning-soft)", color: "var(--warning)" } : { bg: "var(--primary-soft)", color: "var(--primary)" };
+  const tone = days < 0 ? { bg: "var(--danger-soft)", color: "var(--danger-ink)" } : days === 0 ? { bg: "var(--danger-soft)", color: "var(--danger-ink)" } : days <= 14 ? { bg: "var(--warning-soft)", color: "var(--warning-ink)" } : { bg: "var(--primary-soft)", color: "var(--primary)" };
   const text = days < 0 ? "Submission deadline has passed" : days === 0 ? "Submissions close today" : `Submissions close ${showDate(iso)} · ${days} day${days === 1 ? "" : "s"} left`;
   return <span style={{ background: tone.bg, color: tone.color }} className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"><Clock size={11} aria-hidden="true" /> {text}</span>;
 }
@@ -90,7 +90,7 @@ export function CfpManagerPage({ slug }: { slug: string }) {
     </ConferenceShell>
   );
   if (cfp === undefined) return shell(<div role="status" aria-label="Loading the Call for Papers" className="h-48 animate-pulse rounded-2xl border border-line bg-white" />);
-  if (cfp === null) return shell(<div role="alert" className="flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger"><span className="flex-1">{loadError || "We couldn't find this Call for Papers."}</span><button type="button" onClick={reload} className="cursor-pointer rounded-lg border border-danger px-3 py-1.5 text-xs font-bold">Try again</button></div>);
+  if (cfp === null) return shell(<div role="alert" className="flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger-ink"><span className="flex-1">{loadError || "We couldn't find this Call for Papers."}</span><button type="button" onClick={reload} className="cursor-pointer rounded-lg border border-danger px-3 py-1.5 text-xs font-bold">Try again</button></div>);
 
   const draft = cfp.status === "draft";
   const closed = cfp.status === "closed";
@@ -99,6 +99,7 @@ export function CfpManagerPage({ slug }: { slug: string }) {
   const theme = themeOf(cfp.themeId);
   const html = docOf(cfp.doc, info, conference.acronym);
   const link = typeof window === "undefined" ? "" : `${window.location.origin}/submit/${e}`;
+  const pageLink = typeof window === "undefined" || !cfp.publicSlug ? "" : `${window.location.origin}/cfp/${encodeURIComponent(cfp.publicSlug)}`;
   const submissionLink = cfp.status === "published" ? link : "";
   const where = [info.venue || [info.city, info.state].filter(Boolean).join(", "), info.country].filter(Boolean).join(" · ");
   const missing = setup.ready ? setup.tasks.filter((t) => !t.done).map((t) => t.label) : [];
@@ -138,6 +139,7 @@ export function CfpManagerPage({ slug }: { slug: string }) {
         <div style={CARD} className="overflow-hidden rounded-2xl bg-white">
           {row("Conference web page", info.webPage ? <><a href={info.webPage} target="_blank" rel="noreferrer" className="min-w-0 max-w-full flex-1 break-all text-sm font-medium text-primary hover:underline sm:truncate sm:break-normal">{info.webPage}</a><CopyButton text={info.webPage} label="Copy" /></> : <span className="text-sm text-ink-faint">Not set</span>, true)}
           {draft && row("Submission link", <span className="text-sm italic text-ink-faint">{SUBMISSION_LINK_PENDING}</span>)}
+          {cfp.status === "published" && cfp.publicSlug && row("CFP page", <><a href={pageLink} target="_blank" rel="noreferrer" className="min-w-0 max-w-full flex-1 break-all text-sm font-medium text-primary hover:underline sm:truncate sm:break-normal">{pageLink}</a><CopyButton text={pageLink} label="Copy" /></>)}
           {cfp.status === "published" && row("Submission link", <><a href={link} target="_blank" rel="noreferrer" className="min-w-0 max-w-full flex-1 break-all text-sm font-medium text-primary hover:underline sm:truncate sm:break-normal">{link}</a><CopyButton text={link} label="Copy" /></>)}
           {row("Venue", <span className="text-sm text-ink">{where || "Not set"}</span>)}
           {draft ? row("Contact", info.contactEmail ? <a href={`mailto:${info.contactEmail}`} className="truncate text-sm font-medium text-primary hover:underline">{info.contactEmail}</a> : <span className="text-sm text-ink-faint">Not set</span>) : row("Submission deadline", <span className="text-sm font-medium text-ink">{showDate(info.submissionDeadline) || "Not set"}</span>)}
@@ -150,20 +152,20 @@ export function CfpManagerPage({ slug }: { slug: string }) {
       <div className="space-y-6">
         {review && (
           <div style={{ border: "1.5px dashed var(--warning-border)" }} className="rounded-xl bg-warning-soft p-5">
-            <div className="mb-2 text-xs font-semibold text-warning">Waiting for approval</div>
-            <p className="text-xs leading-relaxed text-warning">This CFP was sent to the Super Admin. Submissions open as soon as it is approved — you will get a notification and an email.</p>
+            <div className="mb-2 text-xs font-semibold text-warning-ink">Waiting for approval</div>
+            <p className="text-xs leading-relaxed text-warning-ink">This CFP was sent to the Super Admin. Submissions open as soon as it is approved — you will get a notification and an email.</p>
           </div>
         )}
         {draft && cfp.rejection && (
           <div role="alert" className="rounded-xl border border-danger bg-danger-soft p-5">
-            <div className="mb-2 text-xs font-semibold text-danger">Not approved</div>
-            <p className="text-xs leading-relaxed text-danger">The Super Admin did not approve this CFP: “{cfp.rejection}”. Update it and send it for approval again.</p>
+            <div className="mb-2 text-xs font-semibold text-danger-ink">Not approved</div>
+            <p className="text-xs leading-relaxed text-danger-ink">The Super Admin did not approve this CFP: “{cfp.rejection}”. Update it and send it for approval again.</p>
           </div>
         )}
         {draft && (
           <div style={{ border: "1.5px dashed var(--warning-border)" }} className="rounded-xl bg-warning-soft p-5">
-            <div className="mb-2 text-xs font-semibold text-warning">Draft status</div>
-            <p className="text-xs leading-relaxed text-warning">This CFP hasn&apos;t been published yet. Finish the remaining sections and publish it from the CFP Manager to start accepting submissions.</p>
+            <div className="mb-2 text-xs font-semibold text-warning-ink">Draft status</div>
+            <p className="text-xs leading-relaxed text-warning-ink">This CFP hasn&apos;t been published yet. Finish the remaining sections and publish it from the CFP Manager to start accepting submissions.</p>
           </div>
         )}
         <div style={CARD} className="rounded-2xl bg-white p-5">
@@ -228,7 +230,7 @@ export function CfpManagerPage({ slug }: { slug: string }) {
             ? `${conference.acronym} hasn't been published yet, so closing it discards this draft entirely — its text and theme are cleared and ${conference.acronym} goes back to an empty draft. This can't be undone.`
             : `Closing ${conference.acronym} stops it from accepting further updates or submissions. You'll still be able to view it, but Edit Content, Edit Details, Change Theme and Change Logo will be locked. This can't be undone from here.`}
         </p>
-        {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{error}</p>}
+        {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{error}</p>}
         <div className="flex items-center justify-end gap-3">
           <Button variant="outline" onClick={() => setClosing(false)} disabled={busy}>Cancel</Button>
           <button type="button" onClick={() => void close()} disabled={busy} className="cursor-pointer rounded-lg bg-danger px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60">{busy ? "Closing…" : "Close This CFP"}</button>

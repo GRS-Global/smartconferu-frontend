@@ -138,7 +138,7 @@ export function AffiliationsEditor({ profile, save, onDone, onCancel }: EditorPr
                     <button type="button" onClick={() => endHere(a)} title="Moves this to your past affiliations, ending this month" className="h-8 rounded-lg px-2.5 text-xs font-semibold text-ink-muted hover:bg-canvas hover:text-navy">I no longer work here</button>
                   )}
                   {(multi || before.length > 0) && (
-                    <button type="button" onClick={() => drop(a.id)} aria-label={`Remove ${a.inst.name || "this affiliation"}`} title="Remove" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger"><Trash2 size={15} aria-hidden="true" /></button>
+                    <button type="button" onClick={() => drop(a.id)} aria-label={`Remove ${a.inst.name || "this affiliation"}`} title="Remove" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger-ink"><Trash2 size={15} aria-hidden="true" /></button>
                   )}
                 </div>
               </div>
@@ -186,7 +186,7 @@ export function AffiliationsEditor({ profile, save, onDone, onCancel }: EditorPr
                     <div className="truncate text-sm font-semibold text-navy">{a.institution}</div>
                     <div className="text-xs text-ink-muted">{[pastAffiliationPeriod(a), affiliationRelationshipLabel(a)].filter(Boolean).join(" · ")}</div>
                   </div>
-                  <button type="button" onClick={() => setPast((l) => l.filter((x) => x.id !== a.id))} aria-label={`Remove ${a.institution}`} title="Remove" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger"><Trash2 size={15} aria-hidden="true" /></button>
+                  <button type="button" onClick={() => setPast((l) => l.filter((x) => x.id !== a.id))} aria-label={`Remove ${a.institution}`} title="Remove" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger-ink"><Trash2 size={15} aria-hidden="true" /></button>
                 </li>
               ))}
             </ul>

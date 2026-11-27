@@ -14,7 +14,7 @@ import type { SubmissionExtra } from "@/types/author-submission";
    saved — with "Edit form" opening the editor. The rail counts the required fields answered and jumps to a section. */
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
-const Star = () => <span className="text-danger"> *</span>;
+const Star = () => <span className="text-danger-ink"> *</span>;
 const LABEL = "mb-1.5 block text-sm font-semibold text-ink";
 const AUTHOR_INPUT = "rounded-lg border-[1.5px] border-line bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-slate-400 focus:border-primary";
 
@@ -81,7 +81,7 @@ export function SubmissionFormPreview({ acronym, guidelines, types, tracks, extr
               <span className="min-w-0"><span className="block text-sm font-bold text-navy">Author&apos;s view</span><span className="block text-[11px] text-ink-faint">What authors see</span></span>
             </div>
             <div className="mt-3.5 px-1">
-              <div className="mb-1.5 flex items-center justify-between"><span className="text-xs font-semibold text-ink-muted">Required answered</span><span style={{ color: all ? "var(--success)" : "var(--navy)" }} className="text-xs font-bold">{done} of {required.length}</span></div>
+              <div className="mb-1.5 flex items-center justify-between"><span className="text-xs font-semibold text-ink-muted">Required answered</span><span style={{ color: all ? "var(--success-ink)" : "var(--navy)" }} className="text-xs font-bold">{done} of {required.length}</span></div>
               <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div style={{ width: `${required.length ? (done / required.length) * 100 : 100}%`, background: all ? "var(--success)" : "var(--primary)" }} className="h-full rounded-full transition-all duration-300" /></div>
               <p className="mt-2.5 text-[11px] leading-relaxed text-ink-faint">Exactly what authors see. Try filling it in — nothing is saved.</p>
               <div className="mt-3 flex items-center gap-2">
@@ -151,7 +151,7 @@ export function SubmissionFormPreview({ acronym, guidelines, types, tracks, extr
                     <div key={i} style={{ background: "var(--row-hover)", border: "1px solid var(--border)" }} className="rounded-xl p-4">
                       <div className="mb-3 flex items-center justify-between">
                         <span className="text-xs font-bold text-navy">Author {i + 1}</span>
-                        {authors.length > 1 && <button type="button" onClick={() => setAuthors(authors.filter((_, idx) => idx !== i))} className="flex items-center gap-1 text-xs font-medium text-danger hover:underline"><Trash2 size={12} aria-hidden="true" /> Remove</button>}
+                        {authors.length > 1 && <button type="button" onClick={() => setAuthors(authors.filter((_, idx) => idx !== i))} className="flex items-center gap-1 text-xs font-medium text-danger-ink hover:underline"><Trash2 size={12} aria-hidden="true" /> Remove</button>}
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <input value={a.firstName} onChange={(e) => setAuthor(i, { firstName: e.target.value })} placeholder="First name *" aria-label={`Author ${i + 1} first name`} className={AUTHOR_INPUT} />

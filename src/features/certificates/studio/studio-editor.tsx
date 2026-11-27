@@ -471,7 +471,7 @@ export function StudioEditor({ conference, cert, actions, go, error }: { confere
   const margin = marginOf(doc);
   const single = selEls.length === 1 && !selEls[0].locked && !selEls[0].groupId ? selEls[0] : null;
   const bounds = selEls.length ? boundsOf(selEls) : null;
-  const statusView = error ? { icon: CloudOff, text: "Couldn't save — retrying on your next change", color: "var(--danger)" }
+  const statusView = error ? { icon: CloudOff, text: "Couldn't save — retrying on your next change", color: "var(--danger-ink)" }
     : status === "saving" ? { icon: Loader2, text: "Saving…", color: "var(--ink-muted)" } : { icon: Check, text: "All changes saved", color: "var(--success, #047857)" };
   const StatusIcon = statusView.icon;
 
@@ -482,9 +482,9 @@ export function StudioEditor({ conference, cert, actions, go, error }: { confere
       <div style={{ background: "#fff", borderBottom: "1px solid var(--border)" }} className="relative flex items-center gap-2 px-3 py-2 flex-wrap">
         <button type="button" onClick={() => go("chair-certificates")} style={{ color: "var(--ink-muted)" }} className={tbtn}><ChevronLeft size={15} /> All designs</button>
         <input aria-label="Design name" value={name} onChange={(e) => { setName(e.target.value); actions.updateDesign(cert.id, { name: e.target.value }); }} style={{ ...inputStyle, maxWidth: 180 }} className="px-2.5 py-1.5 rounded-md text-sm font-bold" />
-        {unsigned && <button type="button" onClick={() => { setSel(new Set([unsigned.id])); setEditingId(unsigned.id); }} title="A signature still has no name: click to type it" style={{ color: "var(--warning)", border: "1px solid var(--warning-border)", background: "var(--warning-soft)" }} className="text-[11.5px] font-semibold px-2 py-1 rounded-md flex items-center gap-1 cursor-pointer"><AlertTriangle size={12} /> Name missing</button>}
+        {unsigned && <button type="button" onClick={() => { setSel(new Set([unsigned.id])); setEditingId(unsigned.id); }} title="A signature still has no name: click to type it" style={{ color: "var(--warning-ink)", border: "1px solid var(--warning-border)", background: "var(--warning-soft)" }} className="text-[11.5px] font-semibold px-2 py-1 rounded-md flex items-center gap-1 cursor-pointer"><AlertTriangle size={12} /> Name missing</button>}
         {note && <span role="status" style={{ color: "var(--ink-muted)" }} className="text-[11.5px] font-semibold">{note}</span>}
-        {exportError && <span role="alert" style={{ color: "var(--danger)" }} className="text-[11.5px] font-semibold">{exportError}</span>}
+        {exportError && <span role="alert" style={{ color: "var(--danger-ink)" }} className="text-[11.5px] font-semibold">{exportError}</span>}
         <span role="status" style={{ color: statusView.color }} className="text-[11.5px] font-semibold flex items-center gap-1"><StatusIcon size={13} className={status === "saving" && !error ? "animate-spin" : ""} /> {statusView.text}</span>
         <div className="flex-1" />
         <IconBtn icon={Undo2} title="Undo (Ctrl+Z)" onClick={h.undo} disabled={!h.canUndo} />

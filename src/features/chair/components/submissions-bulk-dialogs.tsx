@@ -42,7 +42,7 @@ export function ContactDialog({ open, papers, onClose }: { open: boolean; papers
     return (
       <Dialog open={open} onClose={close} title="Message Sent" size="sm">
         <div className="py-4 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success-soft"><Check size={24} strokeWidth={2.5} aria-hidden="true" className="text-success" /></div>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success-soft"><Check size={24} strokeWidth={2.5} aria-hidden="true" className="text-success-ink" /></div>
           <p className="mb-1 text-sm font-semibold text-navy">Sent to {state.count} recipient{plural(state.count)}</p>
           <p className="mb-5 text-xs text-ink-faint">Every email is listed in Email Logs.</p>
           <button type="button" onClick={close} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95">Close</button>
@@ -62,7 +62,7 @@ export function ContactDialog({ open, papers, onClose }: { open: boolean; papers
         <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" aria-label="Subject" className="w-full rounded-lg border border-line px-3 py-2.5 text-sm text-ink outline-none placeholder:text-slate-400 focus:border-primary" />
         <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Message…" aria-label="Message" rows={6} className="w-full resize-none rounded-lg border border-line px-3 py-2.5 text-sm text-ink outline-none placeholder:text-slate-400 focus:border-primary" />
       </div>
-      {state.error && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{state.error}</p>}
+      {state.error && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{state.error}</p>}
       <div className="flex items-center justify-end gap-3">
         <button type="button" onClick={close} className={BTN_GHOST}>Cancel</button>
         <button type="button" disabled={!ready || state.status === "sending"} onClick={() => { void send(); }} className={`flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-bold transition-colors disabled:cursor-not-allowed ${ready ? "bg-primary text-white" : "bg-muted text-ink-faint"}`}><Send size={14} aria-hidden="true" /> {state.status === "sending" ? "Sending…" : "Send"}</button>
@@ -92,7 +92,7 @@ export function AssignReviewersDialog({ open, count, reviewers, defaultDue, busy
           <input type="date" value={due} onChange={(e) => setDue(e.target.value || defaultDue)} aria-label="Review deadline" className="h-8 rounded-lg border border-line bg-white px-2 text-[12.5px] font-semibold outline-none focus:border-primary" />
         </label>
       </div>
-      {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <button type="button" disabled={picked.length === 0 || busy} onClick={() => onAssign(reviewers.filter((r) => picked.includes(r.memberId)), due)} className={`w-full rounded-lg py-2.5 text-sm font-bold transition-colors disabled:cursor-not-allowed ${picked.length ? "bg-primary text-white" : "bg-muted text-ink-faint"}`}>{busy ? "Assigning…" : "Assign"}</button>
     </Dialog>
   );
@@ -114,7 +114,7 @@ export function EditDecisionsDialog({ open, papers, types, busy, error, onApply,
           {already > 0 && <li>{already} already {already === 1 ? "has" : "have"} this decision.</li>}
         </ul>
         <p className="mt-3 max-h-24 overflow-y-auto text-xs text-ink-faint">{papers.map((p) => p.id).join(", ")}</p>
-        {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+        {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
         <div className="mt-5 flex items-center justify-end gap-3">
           <button type="button" disabled={busy} onClick={() => setConfirming(false)} className={BTN_GHOST}>Back</button>
           <button type="button" disabled={busy} onClick={() => onApply(picked)} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white hover:brightness-95 disabled:opacity-50">{busy ? "Saving…" : `Yes, change ${count} decision${plural(count)}`}</button>
@@ -147,7 +147,7 @@ export function EditTrackDialog({ open, count, tracks, busy, error, onApply, onC
       <select value={track} onChange={(e) => setTrack(e.target.value)} aria-label="Track" className="mb-6 w-full cursor-pointer rounded-lg border border-line px-3 py-2.5 text-sm text-ink outline-none">
         {tracks.map((t) => <option key={t} value={t}>{t}</option>)}
       </select>
-      {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <button type="button" disabled={!track || busy} onClick={() => onApply(track)} className="w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-white hover:brightness-95 disabled:opacity-50">{busy ? "Saving…" : "Apply"}</button>
     </Dialog>
   );

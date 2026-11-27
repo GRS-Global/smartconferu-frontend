@@ -1,3 +1,4 @@
+import { createElement } from "react";
 /* Recharts consumes literal colour values in SVG props (fill / stroke), so the chart colours are written out here, with the same values as the
    tokens in styles/tokens.css (the prototype's TOKENS in src/shared/theme.js). Only chart SVG props use these; card chrome and text use var(--*). */
 const T = {
@@ -43,9 +44,12 @@ export const AXIS_STYLE = {
 
 // var(--*) form (dot colour / soft badge background / badge text) for rows keyed to a decision state.
 export const STATUS_TONE = {
-  success: { dot: "var(--success)", bg: "var(--success-soft)", fg: "var(--success)" },
-  warning: { dot: "var(--warning)", bg: "var(--warning-soft)", fg: "var(--warning)" },
-  danger: { dot: "var(--danger)", bg: "var(--danger-soft)", fg: "var(--danger)" },
+  success: { dot: "var(--success)", bg: "var(--success-soft)", fg: "var(--success-ink)" },
+  warning: { dot: "var(--warning)", bg: "var(--warning-soft)", fg: "var(--warning-ink)" },
+  danger: { dot: "var(--danger)", bg: "var(--danger-soft)", fg: "var(--danger-ink)" },
   neutral: { dot: "var(--ink-faint)", bg: "var(--muted)", fg: "var(--ink-muted)" },
 };
 export type Tone = keyof typeof STATUS_TONE;
+
+/** A chart legend's labels in the text grey (by default they take the series colour, which is too light for small text, e.g. amber 3.2:1). */
+export const legendText = (value: string) => createElement("span", { style: { color: "var(--ink-soft)" } }, value);

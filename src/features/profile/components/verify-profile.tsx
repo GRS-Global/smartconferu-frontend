@@ -62,11 +62,11 @@ export function VerifyProfile({ profile }: { profile: Profile }) {
             <BadgeCheck size={15} strokeWidth={2.2} aria-hidden="true" /> {status.status === "rejected" ? "Ask for verification again" : "Verify my profile"}
           </button>
           {status.status === "rejected" && (
-            <span className="text-[13px] font-semibold text-danger">Not verified{status.reason ? `: ${status.reason}` : ""}</span>
+            <span className="text-[13px] font-semibold text-danger-ink">Not verified{status.reason ? `: ${status.reason}` : ""}</span>
           )}
         </>
       )}
-      {error && !asking && <span role="alert" className="text-[13px] text-danger">{error}</span>}
+      {error && !asking && <span role="alert" className="text-[13px] text-danger-ink">{error}</span>}
 
       <Dialog open={asking} onClose={() => setAsking(false)} size="md" icon={BadgeCheck} title="Verify my profile" description="Our team checks that this profile is genuine. Once it is, a green tick shows next to your name.">
         {missing.length > 0 ? (
@@ -83,7 +83,7 @@ export function VerifyProfile({ profile }: { profile: Profile }) {
             <label htmlFor="verify-note" className="mb-1.5 block text-[13px] font-semibold text-navy">Anything that helps us check? <span className="font-normal text-ink-muted">(optional)</span></label>
             <textarea id="verify-note" rows={3} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. my faculty page, or the conferences I chair" className={`${INPUT_CLASS} h-auto py-2`} />
             <p className="mt-2 text-xs text-ink-muted">Adding your ORCID iD, a verified institutional email or your faculty page makes it quicker.</p>
-            {error && <p role="alert" className="mt-3 text-[13px] text-danger">{error}</p>}
+            {error && <p role="alert" className="mt-3 text-[13px] text-danger-ink">{error}</p>}
             <div className="mt-5 flex justify-end gap-2.5">
               <button type="button" onClick={() => setAsking(false)} className={GHOST_BTN}>Cancel</button>
               <button type="submit" disabled={busy} className={PRIMARY_BTN}>{busy ? "Sending…" : "Send request"}</button>

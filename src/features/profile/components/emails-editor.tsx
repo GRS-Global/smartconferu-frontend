@@ -87,7 +87,7 @@ export function EmailsEditor({ profile, save, onDone, onCancel }: EditorProps) {
                   onChange={(ev) => { const v = ev.target.value; const s = saved.emails[t.key]; setEmails((m) => ({ ...m, [t.key]: { value: v, status: v === s.value ? s.status : "new" } })); }}
                   className={INPUT_CLASS}
                 />
-                {err && <p id={`pm-email-${t.key}-error`} role="alert" className="mt-1 text-[11.5px] text-danger">{err}</p>}
+                {err && <p id={`pm-email-${t.key}-error`} role="alert" className="mt-1 text-[11.5px] text-danger-ink">{err}</p>}
               </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <RadioChoice checked={primary === t.key} disabled={!verified} onSelect={() => setPrimary(t.key)}>Primary — sign-in &amp; notifications</RadioChoice>
@@ -101,7 +101,7 @@ export function EmailsEditor({ profile, save, onDone, onCancel }: EditorProps) {
                       <button type="button" disabled={link.slot === t.key && link.state === "sending"} onClick={() => void resend(t.key)} className="cursor-pointer font-semibold text-primary hover:underline disabled:cursor-default disabled:opacity-60">
                         {link.slot === t.key && link.state === "sending" ? "Sending…" : "Resend link"}
                       </button>
-                      {link.slot === t.key && link.state === "error" && <span role="alert" className="w-full text-[11.5px] text-danger">{link.message}</span>}
+                      {link.slot === t.key && link.state === "error" && <span role="alert" className="w-full text-[11.5px] text-danger-ink">{link.message}</span>}
                     </span>
                   )
                 )}

@@ -55,7 +55,7 @@ export function ColumnsPanel({ visible, onApply, onClose, onSaveView }: { visibl
                   <ChevronsUpDown size={12} aria-hidden="true" className={`shrink-0 ${c.pinned ? "text-line-strong" : "text-ink-faint"}`} />
                   <span className="flex-1 truncate text-xs font-semibold text-ink-soft">{c.label}</span>
                   {c.pinned ? <span className="rounded bg-muted px-1.5 py-0.5 text-[9.5px] font-bold text-ink-faint">PINNED</span> : (
-                    <button type="button" onClick={() => toggle(c.key)} aria-label={`Hide ${c.label}`} className="text-ink-faint transition-colors hover:text-danger"><X size={13} aria-hidden="true" /></button>
+                    <button type="button" onClick={() => toggle(c.key)} aria-label={`Hide ${c.label}`} className="text-ink-faint transition-colors hover:text-danger-ink"><X size={13} aria-hidden="true" /></button>
                   )}
                 </div>
               ))}

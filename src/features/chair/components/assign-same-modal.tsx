@@ -31,7 +31,7 @@ export function AssignSameModal({ reviewers, submissionCount, defaultDeadline, b
           <input type="date" value={deadline} min={plusDaysISO(1)} onChange={(e) => setDeadline(e.target.value || defaultDeadline)} aria-label="Review deadline" style={{ border: "1px solid var(--border)" }} className="h-8 rounded-lg bg-white px-2 text-[12.5px] font-semibold text-ink outline-none focus:border-primary" />
         </label>
       </div>
-      {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <button type="button" onClick={() => onAssign(ids, deadline)} disabled={!can} style={{ background: can ? "var(--primary)" : "var(--muted)", color: can ? "#FFFFFF" : "var(--ink-faint)" }} className="w-full cursor-pointer rounded-lg py-2.5 text-sm font-bold transition-colors disabled:cursor-not-allowed">{busy ? "Assigning…" : "Assign"}</button>
     </Modal>
   );

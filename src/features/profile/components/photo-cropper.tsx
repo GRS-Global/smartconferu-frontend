@@ -148,7 +148,7 @@ export function PhotoCropper({ src, onCancel, onApply, applyRef }: {
         <button type="button" onClick={rotate} disabled={!img} aria-label="Rotate 90 degrees" title="Rotate" className={iconBtn}><RotateCw size={16} aria-hidden="true" /></button>
       </div>
       <p className="-mt-1 text-[11px] text-ink-muted">Drag to position · scroll or use the slider to zoom</p>
-      {error && <p role="alert" className="text-[11.5px] text-danger">{error}</p>}
+      {error && <p role="alert" className="text-[11.5px] text-danger-ink">{error}</p>}
       <div className="flex w-full justify-end gap-2">
         <button type="button" onClick={onCancel} className="h-9 rounded-lg px-4 text-sm font-semibold text-ink-muted hover:bg-canvas">Cancel</button>
         <button type="button" onClick={() => void apply()} disabled={!img} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"><Crop size={14} aria-hidden="true" /> Apply</button>

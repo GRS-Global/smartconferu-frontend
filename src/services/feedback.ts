@@ -1,5 +1,5 @@
 import { DATA_SOURCE } from "@/lib/config";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 import { AuthRequiredError, ServiceError } from "./errors";
 
 /** An author's answer about a conference (Author › Feedback). `at` is when it was last sent (ISO). */
@@ -11,7 +11,7 @@ export interface ConferenceFeedback {
 const memory: Record<string, ConferenceFeedback> = {};
 
 async function conferenceId(slug: string): Promise<string> {
-  const db = getSupabase();
+  const db = (await supabase());
   const { data: auth } = await db.auth.getUser();
   if (!auth.user) throw new AuthRequiredError();
   const conf = await db.from("conferences").select("id").eq("slug", slug).limit(1);
@@ -24,7 +24,7 @@ async function conferenceId(slug: string): Promise<string> {
 export async function loadMyFeedback(slug: string): Promise<ConferenceFeedback | null> {
   if (DATA_SOURCE === "mock") return memory[slug] ?? null;
   const id = await conferenceId(slug);
-  const { data, error } = await getSupabase().from("conference_feedback").select("overall, kind, topics, comment, again, anonymous, updated_at").eq("conference_id", id).maybeSingle();
+  const { data, error } = await (await supabase()).from("conference_feedback").select("overall, kind, topics, comment, again, anonymous, updated_at").eq("conference_id", id).maybeSingle();
   if (error) {
     if (/does not exist|schema cache/i.test(error.message ?? "")) return null;
     throw new ServiceError("We couldn't read your feedback.");
@@ -40,7 +40,7 @@ export async function saveMyFeedback(slug: string, answers: Omit<ConferenceFeedb
   if (DATA_SOURCE === "mock") { memory[slug] = { ...answers, at: new Date().toISOString() }; return memory[slug]; }
   const id = await conferenceId(slug);
   const row = { conference_id: id, overall: answers.overall, kind: answers.kind, topics: answers.topics, comment: answers.comment, again: answers.again, anonymous: answers.anonymous, updated_at: new Date().toISOString() };
-  const { error } = await getSupabase().from("conference_feedback").upsert(row, { onConflict: "conference_id,user_id" });
+  const { error } = await (await supabase()).from("conference_feedback").upsert(row, { onConflict: "conference_id,user_id" });
   if (error) {
     if (/does not exist|schema cache/i.test(error.message ?? "")) throw new ServiceError("Run supabase/migrations/0042_conference_feedback.sql to send feedback.");
     if (/row-level security|policy/i.test(error.message ?? "")) throw new ServiceError("Feedback opens on the first day of the conference, and only for authors who have a paper in it.");

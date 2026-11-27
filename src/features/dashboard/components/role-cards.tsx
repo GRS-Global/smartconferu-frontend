@@ -72,21 +72,22 @@ export function RoleStatCard({ role, count, stats, active, onSelectRole }: RoleS
           <Icon size={20} aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span style={{ color: m.accent, border: `1px solid ${m.accent}` }} className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-white px-2.5 py-1.5 text-[12.5px] font-extrabold leading-none shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+          <span style={{ color: `color-mix(in srgb, ${m.accent} 72%, #000000)`, border: `1px solid ${m.accent}` }} className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-white px-2 py-1.5 text-[12.5px] font-extrabold leading-tight shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
             <span style={{ background: m.accent }} className="h-1.5 w-1.5 shrink-0 rounded-full" />
-            <span className="truncate">{m.label}</span>
+            <span className="min-w-0">{m.label}</span>
           </span>
-          <span className="mt-1.5 flex items-baseline gap-1.5">
+          <span className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
             {/* The rolling digits are 1.15em tall, taller than this line (28px); the negative margin keeps the line at 28px as in the prototype. */}
             <span className="text-[28px] font-extrabold leading-none tracking-[-0.03em] text-navy [&>.odo]:-my-[0.075em]"><AnimatedNumber value={count} /></span>
             <span className="text-xs font-semibold text-ink-muted">conference{count === 1 ? "" : "s"}</span>
+            {/* The tag sits on the count line, so the role label above keeps the whole width of the card. */}
+            {active ? (
+              <span style={{ color: m.accent, border: `1px solid ${m.accent}` }} className="ml-auto shrink-0 self-center rounded-full bg-white px-2 py-0.5 text-[10.5px] font-bold">Showing</span>
+            ) : role === "committee" ? (
+              <span className="ml-auto shrink-0 self-center rounded-full bg-cat-virtual-soft px-2 py-0.5 text-[10.5px] font-bold text-cat-virtual">New</span>
+            ) : null}
           </span>
         </span>
-        {active ? (
-          <span style={{ color: m.accent, border: `1px solid ${m.accent}` }} className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10.5px] font-bold">Showing</span>
-        ) : role === "committee" ? (
-          <span className="shrink-0 rounded-full bg-cat-virtual-soft px-2 py-0.5 text-[10.5px] font-bold text-cat-virtual">New</span>
-        ) : null}
       </button>
       {stats.length > 0 && (
         <ul className="flex flex-1 flex-col border-t border-muted py-1.5">
@@ -98,7 +99,7 @@ export function RoleStatCard({ role, count, stats, active, onSelectRole }: RoleS
                   <span style={{ background: st.color || "var(--border-strong)" }} className="h-1.5 w-1.5 shrink-0 rounded-full" />
                   <span className={cn("text-[12.5px] leading-snug", warn ? "font-bold text-[#92400E]" : "font-semibold text-ink-soft")}>{st.label}</span>
                 </span>
-                <b style={{ color: st.value === 0 ? "var(--border-strong)" : st.color || "var(--navy)" }} className="shrink-0 text-[15px] tabular-nums">{st.value}</b>
+                <b style={{ color: st.value === 0 ? "var(--ink-faint)" : st.color || "var(--navy)" }} className="shrink-0 text-[15px] tabular-nums">{st.value}</b>
               </>
             );
             const rowStyle = { background: st.on ? "var(--primary-soft)" : warn ? "var(--warning-soft)" : "transparent", boxShadow: st.on ? "inset 3px 0 0 var(--primary)" : "none" };

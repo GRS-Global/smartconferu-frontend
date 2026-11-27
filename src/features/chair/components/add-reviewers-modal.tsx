@@ -89,13 +89,13 @@ export function AddReviewersModal({ paperLabel, candidates, poolEmails, acronym,
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold text-ink">{c.rev.name}</span>
-                        {block && <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-[10px] font-bold text-danger">Author of this paper — can&apos;t review</span>}
-                        {!block && c.conflict && <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-[10px] font-bold text-danger">{c.conflict}</span>}
-                        {!block && c.rev.status === "invited" && <span className="rounded-full bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning">Invite not accepted yet</span>}
+                        {block && <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-[10px] font-bold text-danger-ink">Author of this paper — can&apos;t review</span>}
+                        {!block && c.conflict && <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-[10px] font-bold text-danger-ink">{c.conflict}</span>}
+                        {!block && c.rev.status === "invited" && <span className="rounded-full bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning-ink">Invite not accepted yet</span>}
                       </span>
                       <span className="block truncate text-xs text-ink-faint">{c.rev.email}</span>
                     </span>
-                    <span title={maxLoad ? `Maximum papers per reviewer: ${maxLoad}` : undefined} className={`shrink-0 whitespace-nowrap pt-0.5 text-right text-[11px] font-semibold ${c.full ? "text-warning" : "text-ink-muted"}`}>
+                    <span title={maxLoad ? `Maximum papers per reviewer: ${maxLoad}` : undefined} className={`shrink-0 whitespace-nowrap pt-0.5 text-right text-[11px] font-semibold ${c.full ? "text-warning-ink" : "text-ink-muted"}`}>
                       {c.load}{maxLoad ? ` / ${maxLoad}` : ""} paper{c.load === 1 && !maxLoad ? "" : "s"}
                       {c.full && <span className="block text-[10px]">At limit</span>}
                     </span>
@@ -114,25 +114,25 @@ export function AddReviewersModal({ paperLabel, candidates, poolEmails, acronym,
           <p className="text-xs leading-relaxed text-ink-muted">They&apos;re added to {acronym}&apos;s reviewer pool, and this paper is held for them. The invitation email asks them to accept and set up their account; once they have, the paper reaches their dashboard as a request they can accept or decline.</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="add-rev-name" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">Full name <span className="text-danger">*</span></label>
+              <label htmlFor="add-rev-name" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">Full name <span className="text-danger-ink">*</span></label>
               <input id="add-rev-name" autoFocus value={invite.name} onChange={(e) => setInvite((v) => ({ ...v, name: e.target.value }))} placeholder="Dr. Anika Rao" className={FIELD} />
             </div>
             <div>
-              <label htmlFor="add-rev-email" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">Email <span className="text-danger">*</span></label>
+              <label htmlFor="add-rev-email" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">Email <span className="text-danger-ink">*</span></label>
               <input id="add-rev-email" type="email" value={invite.email} onChange={(e) => setInvite((v) => ({ ...v, email: e.target.value }))} onKeyDown={(e) => { if (e.key === "Enter") submit(); }} placeholder="name@university.edu" className={FIELD} />
             </div>
           </div>
-          {invite.touched && inviteError && <p className="flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {inviteError}</p>}
+          {invite.touched && inviteError && <p className="flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {inviteError}</p>}
         </div>
       )}
 
       {tab === "pool" && warnings.length > 0 && (
         <div className="mt-3 space-y-1 rounded-xl border border-line bg-danger-soft px-3.5 py-2.5">
-          {warnings.map((w) => <p key={w} className="flex items-start gap-1.5 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" className="mt-0.5 shrink-0" /> {w}</p>)}
+          {warnings.map((w) => <p key={w} className="flex items-start gap-1.5 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" className="mt-0.5 shrink-0" /> {w}</p>)}
         </div>
       )}
       {tab === "invite" && <p className="mt-3 text-[11px] text-ink-faint">They must accept the committee invitation and then this paper before reviewing it.</p>}
-      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <div className="mr-auto flex min-w-0 flex-col gap-1">

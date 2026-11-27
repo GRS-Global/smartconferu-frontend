@@ -116,7 +116,7 @@ export function AdminNotificationsPage() {
             </button>
           ))}
         </div>
-        {actionError && <p role="alert" className="px-5 py-3 text-[13px]" style={{ color: "var(--danger)", background: "var(--danger-soft)" }}>{actionError}</p>}
+        {actionError && <p role="alert" className="px-5 py-3 text-[13px]" style={{ color: "var(--danger-ink)", background: "var(--danger-soft)" }}>{actionError}</p>}
         {groups.length === 0 ? (
           <div className="px-6 py-14 text-center">
             <Bell size={26} className="mx-auto mb-3" style={{ color: "var(--text-faint)" }} />

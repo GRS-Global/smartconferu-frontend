@@ -17,10 +17,10 @@ import { emailPreviewDoc } from "../email-preview";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const ROLE_TONE: Record<string, { color: string; bg: string; label: string }> = {
   author: { color: "var(--primary)", bg: "var(--primary-soft)", label: "Author" },
-  reviewer: { color: "var(--success)", bg: "var(--success-soft)", label: "Reviewer" },
+  reviewer: { color: "var(--success-ink)", bg: "var(--success-soft)", label: "Reviewer" },
   chair: { color: "var(--secondary)", bg: "var(--secondary-soft)", label: "Program Chair" },
   roles: { color: "var(--cat-virtual)", bg: "var(--cat-virtual-soft)", label: "Team & Roles" },
-  registration: { color: "var(--warning)", bg: "var(--warning-soft)", label: "Registration" },
+  registration: { color: "var(--warning-ink)", bg: "var(--warning-soft)", label: "Registration" },
   account: { color: "var(--navy)", bg: "var(--muted)", label: "Any user" },
   custom: { color: "var(--ink-muted)", bg: "var(--muted)", label: "Custom" },
 };
@@ -111,7 +111,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
           <label className="flex items-center gap-2 text-xs font-semibold text-ink-muted">{edit.enabled ? "Enabled" : "Disabled"}<Switch label="This email is sent" checked={edit.enabled} onChange={(v) => setEdit({ ...edit, enabled: v })} /></label>
           {/* Only an email that was changed has something to go back to (the prototype's isEdited). */}
           {!edit.custom && edited && <button type="button" disabled={busy} onClick={onReset} title="Put back the platform's subject and message for this email" className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink-muted hover:text-primary hover:underline disabled:opacity-50"><Undo2 size={13} aria-hidden="true" /> Reset to default</button>}
-          {edit.custom && !edit.isNew && <button type="button" disabled={busy} onClick={onDelete} className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-danger hover:underline disabled:opacity-50"><Trash2 size={13} aria-hidden="true" /> Delete</button>}
+          {edit.custom && !edit.isNew && <button type="button" disabled={busy} onClick={onDelete} className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-danger-ink hover:underline disabled:opacity-50"><Trash2 size={13} aria-hidden="true" /> Delete</button>}
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
               </div>
             </>
           ) : <iframe title="Email preview" sandbox="" srcDoc={preview} className="block h-[460px] w-full rounded-xl border border-line bg-canvas" />}
-          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
           <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
             <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
             <Button onClick={onSave} disabled={busy || !changed} title={changed ? undefined : "No changes to save"}>{busy ? "Saving…" : "Save"}</Button>
@@ -151,7 +151,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
           <div style={CARD} className="rounded-2xl bg-white p-4">
             <div className="text-xs font-bold text-navy">Email information</div>
             <div className="mt-3 flex items-center justify-between text-[11.5px]"><span className="text-ink-faint">Category</span><span style={{ background: tone.bg, color: tone.color }} className="rounded-full px-2 py-0.5 text-[10.5px] font-bold">{tone.label}</span></div>
-            <div className="mt-2.5 flex items-center justify-between border-t border-muted pt-2.5 text-[11.5px]"><span className="text-ink-faint">Status</span><b className="text-xs" style={{ color: edit.enabled ? "var(--success)" : "var(--ink-muted)" }}>{edit.enabled ? "Enabled" : "Turned off"}</b></div>
+            <div className="mt-2.5 flex items-center justify-between border-t border-muted pt-2.5 text-[11.5px]"><span className="text-ink-faint">Status</span><b className="text-xs" style={{ color: edit.enabled ? "var(--success-ink)" : "var(--ink-muted)" }}>{edit.enabled ? "Enabled" : "Turned off"}</b></div>
             <div className="mt-3 space-y-3">
               {!edit.custom && info("Module", moduleLabel)}
               {!edit.custom && info("Send type", sendLabel)}
@@ -166,7 +166,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
             <div className="text-xs font-bold text-navy">Header &amp; footer</div>
             <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">Every email is sent with a default header and footer, shown in the Preview tab.</p>
             <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-line px-3 py-2.5">
-              <div><div className="text-[13px] font-semibold text-ink">Remove Smartconferu branding</div><span className="mt-1 inline-flex items-center gap-1 rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning"><Lock size={9} aria-hidden="true" /> Paid option · coming soon</span></div>
+              <div><div className="text-[13px] font-semibold text-ink">Remove Smartconferu branding</div><span className="mt-1 inline-flex items-center gap-1 rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning-ink"><Lock size={9} aria-hidden="true" /> Paid option · coming soon</span></div>
               <Switch label="Remove Smartconferu branding" checked={false} onChange={() => undefined} disabled />
             </div>
           </div>

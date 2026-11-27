@@ -60,7 +60,7 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
     return (
       <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
         <div className="max-w-sm text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success" /></div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success-ink" /></div>
           <h2 className="mb-2 text-lg font-bold text-navy">Details saved</h2>
           <p className="mb-6 text-sm text-ink-muted">Your changes to the {info.acronym} CFP details have been saved.</p>
           <Button onClick={onDone}>Back to Overview</Button>
@@ -80,7 +80,7 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
             <div className="space-y-3">
               <div><span className={LABEL}>Type</span>{readOnly("Conference")}</div>
               <div><label htmlFor="cd-website" className={LABEL}>Website</label><input id="cd-website" value={form.webPage} onChange={(e) => set("webPage", e.target.value)} className={FIELD} /></div>
-              <div><label htmlFor="cd-title" className={LABEL}>Conference title <span className="text-danger">*</span></label><input id="cd-title" value={form.name} onChange={(e) => set("name", e.target.value)} maxLength={300} className={FIELD} /></div>
+              <div><label htmlFor="cd-title" className={LABEL}>Conference title <span className="text-danger-ink">*</span></label><input id="cd-title" value={form.name} onChange={(e) => set("name", e.target.value)} maxLength={300} className={FIELD} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><span className={LABEL}>Acronym</span>{readOnly(info.acronym)}</div>
                 <div><span className={LABEL}>Submission link</span>{readOnly(submissionLink || SUBMISSION_LINK_PENDING)}</div>
@@ -89,8 +89,8 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
           </Card>
           <Card icon={Calendar} title="Dates & Deadlines">
             <div className="grid grid-cols-2 gap-3">
-              <div><label htmlFor="cd-start" className={LABEL}>Start date <span className="text-danger">*</span></label><input id="cd-start" type="date" value={form.startDate} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: f.endDate && f.endDate < v ? v : f.endDate })); }} className={FIELD} /></div>
-              <div><label htmlFor="cd-end" className={LABEL}>End date <span className="text-danger">*</span></label><input id="cd-end" type="date" value={form.endDate} min={form.startDate || undefined} onChange={(e) => set("endDate", e.target.value)} className={FIELD} /></div>
+              <div><label htmlFor="cd-start" className={LABEL}>Start date <span className="text-danger-ink">*</span></label><input id="cd-start" type="date" value={form.startDate} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: f.endDate && f.endDate < v ? v : f.endDate })); }} className={FIELD} /></div>
+              <div><label htmlFor="cd-end" className={LABEL}>End date <span className="text-danger-ink">*</span></label><input id="cd-end" type="date" value={form.endDate} min={form.startDate || undefined} onChange={(e) => set("endDate", e.target.value)} className={FIELD} /></div>
               <div><label htmlFor="cd-abstract" className={LABEL}>Abstract deadline</label><input id="cd-abstract" type="date" value={form.abstractDeadline} onChange={(e) => set("abstractDeadline", e.target.value)} className={FIELD} /></div>
               <div><label htmlFor="cd-deadline" className={LABEL}>Submission deadline</label><input id="cd-deadline" type="date" value={form.submissionDeadline} onChange={(e) => set("submissionDeadline", e.target.value)} className={FIELD} /></div>
             </div>
@@ -130,7 +130,7 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
           </div>
         )}
       </Card>
-      {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
         <Button onClick={() => void save()} disabled={busy || !dirty} title={dirty ? undefined : "No changes to save"}>{busy ? "Saving…" : "Save Changes"}</Button>

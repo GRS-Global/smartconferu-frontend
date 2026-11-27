@@ -101,9 +101,9 @@ export function PaperChatPanel({ paper, onClose, onCount }: { paper: ChatPaper; 
           <div key={i} className="flex justify-end"><div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-[13.5px] leading-relaxed text-white shadow-sm">{m.content}</div></div>
         ) : (
           <div key={i} className="flex gap-2.5">
-            <span aria-hidden="true" className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${m.error ? "bg-danger-soft text-danger" : "bg-primary-soft text-primary"}`}><Sparkles size={13} /></span>
+            <span aria-hidden="true" className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${m.error ? "bg-danger-soft text-danger-ink" : "bg-primary-soft text-primary"}`}><Sparkles size={13} /></span>
             <div className="min-w-0 max-w-[88%]">
-              <div style={m.error ? undefined : { border: "1px solid var(--border)" }} className={`whitespace-pre-wrap rounded-2xl rounded-tl-md px-4 py-3 text-[13.5px] leading-relaxed shadow-sm ${m.error ? "bg-danger-soft text-danger" : "bg-white text-ink"}`}>{m.content}</div>
+              <div style={m.error ? undefined : { border: "1px solid var(--border)" }} className={`whitespace-pre-wrap rounded-2xl rounded-tl-md px-4 py-3 text-[13.5px] leading-relaxed shadow-sm ${m.error ? "bg-danger-soft text-danger-ink" : "bg-white text-ink"}`}>{m.content}</div>
               {sectionsOf(m).length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <span className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-faint">From</span>

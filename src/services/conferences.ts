@@ -1,5 +1,7 @@
 import { DATA_SOURCE } from "@/lib/config";
 import type { DashboardSource, ReviewInvitation } from "@/types/conference";
+// The own backend is the data source: loaded with the page, not as a separate request when first used (it sits on every page's first data read).
+import { apiConferenceService } from "./api/conferences";
 
 export interface DashboardData {
   source: DashboardSource;
@@ -17,6 +19,6 @@ export interface ConferenceService {
  *  there is no fallback from one source to the other. */
 export async function getConferenceService(): Promise<ConferenceService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/conferences")).mockConferenceService;
-  if (DATA_SOURCE === "api") return (await import("./api/conferences")).apiConferenceService;
+  if (DATA_SOURCE === "api") return apiConferenceService;
   return (await import("./supabase/conferences")).supabaseConferenceService;
 }

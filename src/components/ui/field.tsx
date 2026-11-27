@@ -22,11 +22,11 @@ export function Field({ label, htmlFor, required, error, hint, className, childr
   return (
     <div className={className}>
       <label htmlFor={htmlFor} className="mb-1 block text-xs font-bold text-ink-soft">
-        {label}{required && <span className="text-danger" aria-hidden="true"> *</span>}
+        {label}{required && <span className="text-danger-ink" aria-hidden="true"> *</span>}
       </label>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} role="alert" className="mt-1 text-[11.5px] text-danger">{error}</p>
+        <p id={`${htmlFor}-error`} role="alert" className="mt-1 text-[11.5px] text-danger-ink">{error}</p>
       ) : hint ? (
         <p id={`${htmlFor}-hint`} className="mt-1 text-[11px] text-ink-muted">{hint}</p>
       ) : null}

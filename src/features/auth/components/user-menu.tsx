@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 import { loginUrl } from "@/lib/auth-redirect";
 import { onSessionChange } from "@/lib/api-client";
 import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 import { getProfileCompleteness } from "@/features/profile/completeness";
 import { initialsOf, ProfileAvatar } from "@/features/profile/components/profile-avatar";
 import { useOptionalProfile } from "@/features/profile/profile-context";
@@ -21,7 +21,7 @@ export function ProfileProgress() {
   if (!ctx || ctx.state.status !== "ready") return null;
   const { percent } = getProfileCompleteness(ctx.state.profile);
   return percent === 100 ? (
-    <Link href="/profile" title="Your profile is complete" className="hidden items-center gap-1.5 text-xs font-semibold text-success hover:opacity-80 md:flex">
+    <Link href="/profile" title="Your profile is complete" className="hidden items-center gap-1.5 text-xs font-semibold text-success-ink hover:opacity-80 md:flex">
       <Check size={14} strokeWidth={2.5} aria-hidden="true" /> Profile complete
     </Link>
   ) : (
@@ -59,13 +59,18 @@ function SignedInMenu() {
       // The session ended on its own (it couldn't be refreshed): back to sign-in, unless the user just chose Sign out.
       return onSessionChange((event) => { if (event === "signed_out" && !manual.current) router.replace(loginUrl(pathname, "expired")); });
     }
-    const db = getSupabase();
-    db.auth.getSession().then(({ data }) => setSessionEmail(data.session?.user.email ?? ""));
-    const { data } = db.auth.onAuthStateChange((event, session) => {
-      setSessionEmail(session?.user.email ?? "");
-      if (event === "SIGNED_OUT" && !manual.current) router.replace(loginUrl(pathname, "expired"));
+    let live = true;
+    let off: () => void = () => undefined;
+    void supabase().then((db) => {
+      if (!live) return;
+      db.auth.getSession().then(({ data }) => { if (live) setSessionEmail(data.session?.user.email ?? ""); });
+      const { data } = db.auth.onAuthStateChange((event, session) => {
+        setSessionEmail(session?.user.email ?? "");
+        if (event === "SIGNED_OUT" && !manual.current) router.replace(loginUrl(pathname, "expired"));
+      });
+      off = () => data.subscription.unsubscribe();
     });
-    return () => data.subscription.unsubscribe();
+    return () => { live = false; off(); };
   }, [router, pathname]);
 
   const signOut = async () => {
@@ -118,7 +123,7 @@ function SignedInMenu() {
               <LifeBuoy size={17} aria-hidden="true" className="shrink-0 text-ink-muted" /> Help
             </Link>
           </div>
-          <button type="button" role="menuitem" onClick={signOut} disabled={busy} className="mt-2 flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm font-medium text-ink transition-colors hover:bg-danger-soft hover:text-danger disabled:opacity-60">
+          <button type="button" role="menuitem" onClick={signOut} disabled={busy} className="mt-2 flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm font-medium text-ink transition-colors hover:bg-danger-soft hover:text-danger-ink disabled:opacity-60">
             <Power size={17} aria-hidden="true" className="shrink-0" /> {busy ? "Logging out…" : "Log Out"}
           </button>
         </div>

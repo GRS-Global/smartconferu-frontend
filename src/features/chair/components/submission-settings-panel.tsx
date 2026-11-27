@@ -73,7 +73,7 @@ function OrderedNameTable({ items, onChange, noun, placeholder, muted = false }:
                 <span className="truncate text-sm font-semibold text-ink">{t}</span>
                 <span className="flex items-center justify-end gap-1">
                   <button type="button" onClick={() => { setEditor({ index: i, serial: i + 1, name: t }); setTouched(false); }} aria-label={`Edit ${t}`} title="Edit" className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-primary-soft hover:text-primary"><Pencil size={13} aria-hidden="true" /></button>
-                  <button type="button" onClick={() => setConfirmDelete(i)} aria-label={`Delete ${t}`} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger"><Trash2 size={13} aria-hidden="true" /></button>
+                  <button type="button" onClick={() => setConfirmDelete(i)} aria-label={`Delete ${t}`} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger-ink"><Trash2 size={13} aria-hidden="true" /></button>
                 </span>
               </div>
             );
@@ -87,16 +87,16 @@ function OrderedNameTable({ items, onChange, noun, placeholder, muted = false }:
           <>
             <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-4">
               <div>
-                <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft">S.No. <span className="text-danger">*</span></span>
+                <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft">S.No. <span className="text-danger-ink">*</span></span>
                 <input type="number" min={1} max={maxSerial} value={editor.serial} onChange={(e) => setEditor({ ...editor, serial: e.target.value })} onBlur={() => setEditor((d) => (d ? { ...d, serial: clampSerial(d.serial) } : d))} aria-label="S.No." className={`${inputCls(false)} tabular-nums`} />
               </div>
               <div>
-                <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft">{noun} name <span className="text-danger">*</span></span>
+                <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft">{noun} name <span className="text-danger-ink">*</span></span>
                 <input autoFocus value={editor.name} onChange={(e) => { setEditor({ ...editor, name: e.target.value }); setTouched(true); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); save(); } }} placeholder={placeholder} aria-label={`${noun} name`} className={inputCls(touched && Boolean(nameError))} />
               </div>
             </div>
             <p className="mt-1.5 text-xs text-ink-faint">Position 1–{maxSerial}{!isEdit && " · defaults to the end"}. Others shift to make room.</p>
-            {touched && nameError && <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {nameError}</p>}
+            {touched && nameError && <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {nameError}</p>}
             <div className="mt-7 flex items-center justify-end gap-3">
               <button type="button" onClick={() => setEditor(null)} className="h-10 rounded-xl px-3 text-sm font-semibold text-ink-muted transition-colors hover:bg-canvas">Cancel</button>
               <button type="button" onClick={save} disabled={Boolean(nameError)} className={`${PRIMARY_BTN} disabled:cursor-not-allowed disabled:opacity-50`}>{isEdit ? "Save changes" : `Add ${lower}`}</button>
@@ -119,10 +119,10 @@ const fmt = (v: number) => new Date(v).toLocaleString(undefined, { day: "numeric
 function windowStatus(p: SubmissionPolicy, now: number, deadlineIso: string) {
   const from = p.opensAt ? new Date(p.opensAt).getTime() : null;
   const to = deadlineIso ? new Date(`${deadlineIso}T23:59:59`).getTime() : null;
-  if (!p.accepting) return { label: "Closed", detail: "Closed manually — authors cannot submit", color: "var(--danger)", bg: "var(--danger-soft)" };
-  if (from && now < from) return { label: "Scheduled", detail: `Scheduled to open on ${fmt(from)}`, color: "var(--warning)", bg: "var(--warning-soft)" };
-  if (to && now > to) return { label: "Closed", detail: `Deadline passed on ${fmt(to)}`, color: "var(--danger)", bg: "var(--danger-soft)" };
-  return { label: "Open", detail: to ? `Closes automatically on ${fmt(to)}` : "Open — no deadline configured", color: "var(--success)", bg: "var(--success-soft)" };
+  if (!p.accepting) return { label: "Closed", detail: "Closed manually — authors cannot submit", color: "var(--danger-ink)", bg: "var(--danger-soft)" };
+  if (from && now < from) return { label: "Scheduled", detail: `Scheduled to open on ${fmt(from)}`, color: "var(--warning-ink)", bg: "var(--warning-soft)" };
+  if (to && now > to) return { label: "Closed", detail: `Deadline passed on ${fmt(to)}`, color: "var(--danger-ink)", bg: "var(--danger-soft)" };
+  return { label: "Open", detail: to ? `Closes automatically on ${fmt(to)}` : "Open — no deadline configured", color: "var(--success-ink)", bg: "var(--success-soft)" };
 }
 
 export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, settings, deadline, detailsHref, onOpenForm, before, after, below, leadSections = [], extraSections = [], links = [] }: {
@@ -192,10 +192,10 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
   );
   const fieldLabel = (text: string, help: string) => <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help={help}>{text}</HelpLabel></span>;
   const seg = (active: boolean) => ({ background: active ? "var(--navy)" : "#FFFFFF", color: active ? "#FFFFFF" : "var(--ink-muted)", border: "1px solid var(--border)" });
-  const onOff = (on: boolean) => ({ label: on ? "On" : "Off", bg: on ? "var(--success-soft)" : "var(--muted)", color: on ? "var(--success)" : "var(--ink-muted)" });
+  const onOff = (on: boolean) => ({ label: on ? "On" : "Off", bg: on ? "var(--success-soft)" : "var(--muted)", color: on ? "var(--success-ink)" : "var(--ink-muted)" });
   const enabledSwitch = (key: "tracksOn" | "typesOn", label: string) => (
     <label className="flex shrink-0 cursor-pointer items-center gap-2.5">
-      <span style={{ color: policy[key] ? "var(--success)" : "var(--ink-faint)" }} className="text-xs font-bold">{policy[key] ? "On" : "Off"}</span>
+      <span style={{ color: policy[key] ? "var(--success-ink)" : "var(--ink-faint)" }} className="text-xs font-bold">{policy[key] ? "On" : "Off"}</span>
       <Switch label={label} checked={policy[key]} onChange={(v) => update({ [key]: v })} />
     </label>
   );
@@ -204,7 +204,7 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
     <>
     <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
       <div className="min-w-0 space-y-5">
-        {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
+        {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{error}</p>}
         {before}
         {/* Live status strip — what authors see right now */}
         <div id="ss-status" style={{ background: status.bg, border: `1px solid ${status.color}33` }} className="flex scroll-mt-24 flex-wrap items-center gap-3 rounded-2xl px-5 py-4">
@@ -223,7 +223,7 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
                 {fieldLabel("Submission Opens On", "opensAt")}
                 <input type="datetime-local" value={policy.opensAt} onChange={(e) => update({ opensAt: e.target.value })} aria-label="Submission opens on" className={inputCls(false)} />
               </div>
-              {periodError && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {periodError}</p>}
+              {periodError && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {periodError}</p>}
               <p className="mt-2.5 text-xs text-ink-faint">{policy.accepting ? "Leave blank to open straight away. " : "Enable “Accept New Submissions” to use a schedule. "}Submissions close at the end of the deadline set in <a href={detailsHref} className="font-semibold text-primary hover:underline">Conference Details</a>.</p>
             </div>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -247,12 +247,12 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
               <div>
                 {fieldLabel("Starting Submission Number", "startNumber")}
                 <input type="number" min={last + 1} value={numDraft} aria-label="Starting submission number" onChange={(e) => { setNumDraft(e.target.value); const v = e.target.value.trim(); if (/^\d+$/.test(v) && Number(v) > last && Number(v) >= 1) update({ startNumber: Number(v) }); }} className={`${inputCls(Boolean(numError))} tabular-nums`} />
-                {numError ? <p className="mt-1.5 text-xs font-medium text-danger">{numError}</p> : <p className="mt-1.5 text-xs text-ink-faint">{last ? `Last assigned: #${last}. ` : "Defaults to 1. "}The next submission will be assigned <b>{nextLabel}</b>.</p>}
+                {numError ? <p className="mt-1.5 text-xs font-medium text-danger-ink">{numError}</p> : <p className="mt-1.5 text-xs text-ink-faint">{last ? `Last assigned: #${last}. ` : "Defaults to 1. "}The next submission will be assigned <b>{nextLabel}</b>.</p>}
               </div>
               <div>
                 {fieldLabel("Maximum Number of Submissions", "maxSubmissions")}
                 <input type="number" min={1} value={policy.maxSubmissions ?? ""} placeholder="No limit" aria-label="Maximum number of submissions" onChange={(e) => update({ maxSubmissions: e.target.value ? Number(e.target.value) : null })} className={inputCls(false)} />
-                <p style={{ color: policy.maxSubmissions && policy.maxSubmissions <= received ? "var(--warning)" : "var(--ink-faint)" }} className="mt-1.5 text-xs">{policy.maxSubmissions && policy.maxSubmissions <= received ? `Limit reached — ${received} submissions already received.` : `${received} received to date. Leave blank for no limit.`}</p>
+                <p style={{ color: policy.maxSubmissions && policy.maxSubmissions <= received ? "var(--warning-ink)" : "var(--ink-faint)" }} className="mt-1.5 text-xs">{policy.maxSubmissions && policy.maxSubmissions <= received ? `Limit reached — ${received} submissions already received.` : `${received} received to date. Leave blank for no limit.`}</p>
               </div>
               <div>
                 {fieldLabel("Maximum Submissions per Author", "maxPerAuthor")}
@@ -267,7 +267,7 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
           <>
             <RichTextEditor value={settings.submission.guidelines} onChange={setGuideDraft} placeholder="e.g. formatting requirements, page limits, anonymisation policy and templates…" label="Submission guidelines" maxHeight={360} />
             <div className="mt-3 flex items-center justify-end gap-3">
-              {guideSaved && <span className="flex items-center gap-1 text-xs font-semibold text-success"><Check size={13} aria-hidden="true" /> Saved</span>}
+              {guideSaved && <span className="flex items-center gap-1 text-xs font-semibold text-success-ink"><Check size={13} aria-hidden="true" /> Saved</span>}
               <button type="button" onClick={saveGuidelines} className={PRIMARY_BTN}>Save Guidelines</button>
             </div>
           </>
@@ -277,16 +277,16 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
           <>
             {/* Read by the setup tour (gateOpen): a track other than the default placeholder has been added. */}
             <span hidden data-track-ready={tracks.length > 0 && !(tracks.length === 1 && tracks[0].name === "General Track") ? "1" : "0"} />
-            {policy.tracksOn && tracks.length === 0 && <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning"><AlertTriangle size={13} aria-hidden="true" /> Tracks are enabled but none are defined. Add at least one track.</p>}
+            {policy.tracksOn && tracks.length === 0 && <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning-ink"><AlertTriangle size={13} aria-hidden="true" /> Tracks are enabled but none are defined. Add at least one track.</p>}
             <OrderedNameTable items={trackNames} onChange={commitTracks} noun="Track" placeholder="e.g. Business Analytics" muted={!policy.tracksOn} />
           </>
         ), enabledSwitch("tracksOn", "Tracks"))}
 
         {card("types", Ticket, "Presentation Types", "types", policy.typesOn ? "Authors select a presentation type when submitting." : "Disabled — the presentation type field is hidden from the submission form.", (
           <>
-            {policy.typesOn && types.length === 0 && <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning"><AlertTriangle size={13} aria-hidden="true" /> Presentation types are enabled but none are defined. Add at least one type.</p>}
+            {policy.typesOn && types.length === 0 && <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning-ink"><AlertTriangle size={13} aria-hidden="true" /> Presentation types are enabled but none are defined. Add at least one type.</p>}
             <OrderedNameTable items={types} onChange={commitTypes} noun="Presentation type" placeholder="e.g. Paper Presentation" muted={!policy.typesOn} />
-            {!settings.stored && <p className="mt-3 text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save the presentation types.</p>}
+            {!settings.stored && <p className="mt-3 text-xs font-semibold text-warning-ink">Run migration 0028_conference_settings.sql to save the presentation types.</p>}
           </>
         ), enabledSwitch("typesOn", "Presentation types"))}
         {after}

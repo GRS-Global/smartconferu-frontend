@@ -65,7 +65,7 @@ export function FindDialog({ field, profile, onPicked, onClose }: { field: LinkF
       </form>
       {!inApp && <p className="text-sm leading-relaxed text-ink-muted">{field.label} can&apos;t be searched from here. Search opens {field.label} in a new tab with your name filled in — open your profile there, copy its link and paste it below.</p>}
       {inApp && state.status === "loading" && <Loader label={`Searching ${field.label}…`} className="py-6" />}
-      {inApp && state.status === "error" && <p role="alert" className="flex items-start gap-1.5 text-sm text-danger"><AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> We couldn&apos;t reach {field.label} just now. {siteLink(`Search on ${field.label}`)} instead and paste the link below.</p>}
+      {inApp && state.status === "error" && <p role="alert" className="flex items-start gap-1.5 text-sm text-danger-ink"><AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> We couldn&apos;t reach {field.label} just now. {siteLink(`Search on ${field.label}`)} instead and paste the link below.</p>}
       {inApp && state.status === "done" && (state.results.length === 0 ? (
         <p className="text-sm text-ink-muted">No one called “{query.trim()}” on {field.label}. Try another spelling, or {siteLink(`search on ${field.label}`)}.</p>
       ) : (

@@ -138,7 +138,7 @@ function WizardForm({ slug, conference, info, retry, reload }: { slug: string; c
                 <h2 className="text-[15px] font-extrabold text-navy">Basics</h2>
                 <div><span className={LABEL}>Type</span><div className="rounded-lg border-[1.5px] border-line bg-canvas px-3.5 py-2.5 text-sm text-ink-faint">Conference</div></div>
                 <div><label htmlFor="nw-web" className={LABEL}>Website</label><input id="nw-web" value={form.webPage} onChange={(e) => set("webPage", e.target.value)} placeholder="https://" className={FIELD} /></div>
-                <div><label htmlFor="nw-title" className={LABEL}>Conference title <span className="text-danger">*</span></label><input id="nw-title" value={form.name} onChange={(e) => set("name", e.target.value)} maxLength={300} className={FIELD} /></div>
+                <div><label htmlFor="nw-title" className={LABEL}>Conference title <span className="text-danger-ink">*</span></label><input id="nw-title" value={form.name} onChange={(e) => set("name", e.target.value)} maxLength={300} className={FIELD} /></div>
                 <div><span className={LABEL}>Acronym</span><div className="rounded-lg border-[1.5px] border-line bg-canvas px-3.5 py-2.5 text-sm text-ink-faint">{conference.acronym}</div></div>
               </>
             )}
@@ -224,7 +224,7 @@ function WizardForm({ slug, conference, info, retry, reload }: { slug: string; c
                 )}
               </>
             )}
-            {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="text-sm font-semibold text-danger-ink">{error}</p>}
           </div>
 
           <div className="flex items-center justify-between pb-4">

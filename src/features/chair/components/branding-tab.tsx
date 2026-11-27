@@ -76,13 +76,13 @@ export function BrandingTab({ slug, acronym, name, logoUrl, onSaved, locked }: {
               <p className="mt-1 text-xs text-ink-faint">or <span className="font-semibold text-primary">browse files</span></p>
             </div>
           </div>
-          {error && <p role="alert" className="mt-3 flex items-center gap-1 text-xs font-semibold text-danger"><AlertTriangle size={12} aria-hidden="true" /> {error}</p>}
+          {error && <p role="alert" className="mt-3 flex items-center gap-1 text-xs font-semibold text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {error}</p>}
           {pending && (
             <div style={{ border: "1px solid var(--border)" }} className="mt-4 flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
               <FileText size={15} aria-hidden="true" className="shrink-0 text-ink-faint" />
               <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-ink">{pending.name}</div><div className="text-xs text-ink-faint">{pending.size != null ? size(pending.size) : "Saved logo"}</div></div>
               <button type="button" disabled={Boolean(locked)} onClick={open} style={{ border: "1.5px solid var(--border)" }} className="h-8 cursor-pointer rounded-lg px-3 text-xs font-semibold text-ink-soft transition-colors hover:border-primary hover:text-primary">Replace</button>
-              <button type="button" disabled={Boolean(locked)} onClick={() => setPending(null)} className="h-8 cursor-pointer rounded-lg px-3 text-xs font-semibold text-danger transition-colors hover:bg-danger-soft">Remove</button>
+              <button type="button" disabled={Boolean(locked)} onClick={() => setPending(null)} className="h-8 cursor-pointer rounded-lg px-3 text-xs font-semibold text-danger-ink transition-colors hover:bg-danger-soft">Remove</button>
             </div>
           )}
           <div className="mt-5 flex flex-wrap gap-2">
@@ -92,8 +92,8 @@ export function BrandingTab({ slug, acronym, name, logoUrl, onSaved, locked }: {
           </div>
         </div>
         <div style={{ borderTop: "1px solid var(--border)" }} className="flex flex-wrap items-center gap-3 bg-canvas px-6 py-4">
-          {done ? <span className="flex items-center gap-1.5 text-xs font-semibold text-success"><Check size={14} aria-hidden="true" /> Logo saved — it&apos;s live on your CFP.</span>
-            : dirty ? <span className="flex items-center gap-1.5 text-xs font-semibold text-warning"><span className="h-1.5 w-1.5 rounded-full bg-warning" /> Unsaved changes</span>
+          {done ? <span className="flex items-center gap-1.5 text-xs font-semibold text-success-ink"><Check size={14} aria-hidden="true" /> Logo saved — it&apos;s live on your CFP.</span>
+            : dirty ? <span className="flex items-center gap-1.5 text-xs font-semibold text-warning-ink"><span className="h-1.5 w-1.5 rounded-full bg-warning" /> Unsaved changes</span>
               : <span className="text-xs text-ink-faint">{saved ? "Your saved logo is shown." : "No logo saved yet — the monogram is used."}</span>}
           <span className="flex-1" />
           <button type="button" onClick={discard} disabled={!dirty || busy} className="h-10 cursor-pointer rounded-xl px-4 text-sm font-semibold text-ink-muted transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">Discard</button>

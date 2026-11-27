@@ -118,7 +118,7 @@ export function EmailAuthorsDialog({ open, paper, conferenceName, acronym, confe
         </div>
       </div>
       <div className="mt-6 flex items-center gap-3 border-t border-muted pt-4">
-        <span style={{ color: error ? "var(--danger)" : "var(--ink-muted)" }} className="min-w-0 truncate text-xs font-semibold">{error || (canSend ? `Goes to ${picked.length} author${picked.length === 1 ? "" : "s"} · each gets their own copy` : why)}</span>
+        <span style={{ color: error ? "var(--danger-ink)" : "var(--ink-muted)" }} className="min-w-0 truncate text-xs font-semibold">{error || (canSend ? `Goes to ${picked.length} author${picked.length === 1 ? "" : "s"} · each gets their own copy` : why)}</span>
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <button type="button" onClick={onClose} disabled={sending} className="h-10 cursor-pointer rounded-lg border border-line bg-white px-4 text-sm font-semibold text-ink-soft hover:bg-canvas disabled:opacity-50">Cancel</button>
           <button type="button" disabled={!canSend} onClick={() => void send()} title={why} className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"><Send size={14} aria-hidden="true" /> {sending ? "Sending…" : picked.length > 1 ? `Send to ${picked.length} authors` : "Send email"}</button>

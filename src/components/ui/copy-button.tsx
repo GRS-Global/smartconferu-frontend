@@ -23,7 +23,7 @@ export function CopyButton({ text, label = "Copy", iconOnly = false, className }
       onClick={() => void copy()}
       title={iconOnly ? text_ : undefined}
       aria-label={iconOnly ? `${label}: ${text}` : undefined}
-      style={{ border: `1.5px solid ${copied ? "var(--success)" : "var(--border)"}`, color: copied ? "var(--success)" : "var(--ink-muted)", background: copied ? "var(--success-soft)" : "#FFFFFF" }}
+      style={{ border: `1.5px solid ${copied ? "var(--success)" : "var(--border)"}`, color: copied ? "var(--success-ink)" : "var(--ink-muted)", background: copied ? "var(--success-soft)" : "#FFFFFF" }}
       className={cn("inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-colors hover:bg-canvas", iconOnly ? "h-8 w-8" : "px-3.5 py-2", className)}
     >
       {copied ? <Check size={14} strokeWidth={2.75} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}

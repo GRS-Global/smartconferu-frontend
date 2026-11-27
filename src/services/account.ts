@@ -1,6 +1,6 @@
 import { api, ApiError, setAccessToken } from "@/lib/api-client";
 import { DATA_SOURCE } from "@/lib/config";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 
 /** What stands in the way of deleting an account: the records (conferences, papers, reviews) that belong to the conferences. */
 export class AccountBlockedError extends Error {
@@ -39,7 +39,7 @@ async function ownLinkedProviders(): Promise<string[]> {
 export async function deleteMyAccount(confirm: string): Promise<void> {
   if (DATA_SOURCE === "mock") throw new Error("Mock mode has no accounts.");
   if (DATA_SOURCE === "api") return deleteOwnAccount(confirm);
-  const db = getSupabase();
+  const db = (await supabase());
   const { data: { session } } = await db.auth.getSession();
   if (!session) throw new Error("You're signed out — please sign in again.");
   const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ confirm }) });
@@ -53,7 +53,7 @@ export async function deleteMyAccount(confirm: string): Promise<void> {
 export async function linkedProviders(): Promise<string[]> {
   if (DATA_SOURCE === "mock") return [];
   if (DATA_SOURCE === "api") return ownLinkedProviders();
-  const { data, error } = await getSupabase().auth.getUserIdentities();
+  const { data, error } = await (await supabase()).auth.getUserIdentities();
   if (error) return [];
   return (data?.identities ?? []).map((i) => i.provider);
 }

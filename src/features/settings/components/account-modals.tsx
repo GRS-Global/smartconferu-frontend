@@ -30,7 +30,7 @@ export function LinkedSignInModal({ onClose }: { onClose: () => void }) {
           <div key={r.name} className="flex items-center justify-between rounded-lg border border-line px-3.5 py-2.5">
             <span className="text-sm font-medium text-ink-soft">{r.name}</span>
             {linked === null ? <span className="text-xs text-ink-faint">…</span>
-              : r.on ? <span className="flex items-center gap-1 text-xs font-semibold text-success"><Check size={13} aria-hidden="true" /> Connected</span>
+              : r.on ? <span className="flex items-center gap-1 text-xs font-semibold text-success-ink"><Check size={13} aria-hidden="true" /> Connected</span>
                 : r.name === "Email and password" ? null
                   : <button type="button" onClick={() => setNote(`${r.name} sign-in is coming soon — it can't be linked to your account yet.`)} className="cursor-pointer text-xs font-semibold text-primary hover:underline">Connect</button>}
           </div>
@@ -59,8 +59,8 @@ export function MergeAccountsModal({ onClose }: { onClose: () => void }) {
     <Modal title="Account Merge" onClose={onClose}>
       <p className="mb-3 text-sm leading-relaxed text-ink-muted">If you have more than one account, you can merge them into one. The email addresses on both accounts will be associated with the new merged account. As a result of a merge, the second account will disappear and all its data will be added to this account.</p>
       <div className="mb-5 flex items-start gap-2 rounded-lg border border-[var(--danger-border-soft,#FECACA)] bg-danger-soft p-3">
-        <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger" />
-        <p className="text-xs font-medium text-danger">Merging is irreversible: you will not be able to split the account back into two after the merge.</p>
+        <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger-ink" />
+        <p className="text-xs font-medium text-danger-ink">Merging is irreversible: you will not be able to split the account back into two after the merge.</p>
       </div>
       <div className="space-y-3">
         <div><label htmlFor="mg-mine" className={MERGE_LABEL}>Password for this account *</label><PasswordField id="mg-mine" label="password" autoComplete="current-password" value={mine} onChange={(e) => { setMine(e.target.value); setNote(""); }} className={MERGE_INPUT} /></div>
@@ -98,14 +98,14 @@ export function DeleteAccountModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="Delete Account" onClose={() => { if (!busy) onClose(); }}>
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-[var(--danger-border-soft,#FECACA)] bg-danger-soft p-3">
-        <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger" />
-        <p className="text-xs font-medium leading-relaxed text-danger">This permanently deletes your account and profile. This can&apos;t be undone.</p>
+        <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger-ink" />
+        <p className="text-xs font-medium leading-relaxed text-danger-ink">This permanently deletes your account and profile. This can&apos;t be undone.</p>
       </div>
       <p className="mb-3 text-sm leading-relaxed text-ink-muted">Type <span className="font-bold">DELETE</span> below to confirm.</p>
       <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void run(); } }} placeholder="DELETE" aria-label="Type DELETE to confirm" className="mb-5 w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-slate-400 focus:border-danger" />
       {error && (
         <div role="alert" className="mb-4 rounded-lg bg-canvas p-3 text-xs text-ink-soft">
-          <p className="font-semibold text-danger">{error}</p>
+          <p className="font-semibold text-danger-ink">{error}</p>
           {blockers.length > 0 && <ul className="mt-1.5 list-disc space-y-0.5 pl-5">{blockers.map((b) => <li key={b}>{b}</li>)}</ul>}
           {blockers.length > 0 && <p className="mt-1.5 text-ink-muted">These belong to the conferences&apos; own records, so deleting the account would not remove them. Ask the conference chair or Smartconferu to deal with them first.</p>}
         </div>

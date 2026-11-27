@@ -2,7 +2,7 @@
 
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, Check, CalendarClock, ChevronDown, ChevronRight, ClipboardCheck, Download, FileText, FilterX, Info, Lock, RefreshCw, Send, Settings2, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Spinner } from "@/components/ui/load-more";
 import { cn } from "@/lib/cn";
 import type { AutoCheck, ChairPaper, ScreeningCheck } from "@/types/chair";
@@ -15,7 +15,7 @@ export const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shado
 /** The prototype sets a cell control's border inline, so a focused control keeps it (no purple ring): kept the same here. */
 export const CELL_INPUT = "h-8 px-2 rounded-md text-xs bg-white outline-none disabled:bg-canvas disabled:text-ink-faint";
 export const CELL_INPUT_ST: CSSProperties = { border: "1.5px solid var(--border)", color: "var(--ink)" };
-export const RED_ST: CSSProperties = { borderColor: "var(--danger)", color: "var(--danger)" };
+export const RED_ST: CSSProperties = { borderColor: "var(--danger)", color: "var(--danger-ink)" };
 /** Clicks on a control inside a row must not toggle the row. */
 export const isControl = (el: EventTarget | null) => !!(el as HTMLElement | null)?.closest("button, input, select, label, a, textarea");
 
@@ -40,14 +40,14 @@ export { LoadingOverlay } from "@/components/ui/load-more";
 export function YesNoSwitch({ on, onChange, disabled, label, onText = "YES", offText = "NO" }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean; label: string; onText?: string; offText?: string }) {
   const width = Math.max(onText.length, offText.length) > 3 ? 84 : 58;
   return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} title={`${label}: ${on ? onText : offText}`} disabled={disabled} onClick={() => onChange(!on)} style={{ width, background: on ? "var(--success)" : "var(--danger)" }} className="relative h-7 shrink-0 cursor-pointer rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-45">
+    <button type="button" role="switch" aria-checked={on} aria-label={label} title={`${label}: ${on ? onText : offText}`} disabled={disabled} onClick={() => onChange(!on)} style={{ width, background: on ? "var(--success-ink)" : "var(--danger-ink)" }} className="relative h-7 shrink-0 cursor-pointer rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-45">
       <span className={`absolute inset-y-0 flex select-none items-center text-[10px] font-extrabold tracking-wide text-white ${on ? "left-2.5" : "right-2.5"}`}>{on ? onText : offText}</span>
       <span style={{ transform: `translateX(${on ? width - 25 : 3}px)` }} className="absolute left-0 top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition-transform" />
     </button>
   );
 }
 /** Earlier versions are history: plain values instead of disabled controls. */
-export const YesNoText = ({ on }: { on: boolean }) => <span style={{ color: on ? "var(--success)" : "var(--danger)" }} className="text-xs font-bold">{on ? "Yes" : "No"}</span>;
+export const YesNoText = ({ on }: { on: boolean }) => <span style={{ color: on ? "var(--success-ink)" : "var(--danger-ink)" }} className="text-xs font-bold">{on ? "Yes" : "No"}</span>;
 export const PlainText = ({ children }: { children: ReactNode }) => <span className="text-xs font-semibold text-ink-muted">{children}</span>;
 export function DecisionChip({ value, options }: { value: string; options: DecisionMeta[] }) {
   const o = options.find((x) => x.key === value) ?? options[0];
@@ -59,7 +59,7 @@ export const LockNote = () => (
 /** The row's decision changed and it no longer matches the active filter: it stays until the filter changes. */
 export const MovedNote = () => <div style={{ color: "#92400E" }} className="mt-1 text-[10.5px] font-semibold leading-tight">Moved out of this filter — stays here until you change the filter</div>;
 /** A small line under a cell: the allowed range, or what's wrong (red). */
-export const CellHint = ({ bad, children }: { bad?: boolean; children: ReactNode }) => <div style={{ color: bad ? "var(--danger)" : "var(--ink-faint)" }} className="mt-1 whitespace-nowrap text-[10.5px] font-semibold">{children}</div>;
+export const CellHint = ({ bad, children }: { bad?: boolean; children: ReactNode }) => <div style={{ color: bad ? "var(--danger-ink)" : "var(--ink-faint)" }} className="mt-1 whitespace-nowrap text-[10.5px] font-semibold">{children}</div>;
 
 /** Checks the decision against the row: Passed while something fails (or the length is missing), or a Revision / Reject with nothing failing. */
 export function DecisionWarning({ decision, failing, lengthBlank, noReport }: { decision: string; failing?: CheckItem[]; lengthBlank?: boolean; noReport?: boolean }) {
@@ -70,7 +70,7 @@ export function DecisionWarning({ decision, failing, lengthBlank, noReport }: { 
     else if (EMAILED.includes(decision) && !failing.length) { text = "No check failed — give the reason in the email"; bad = false; }
   } else if (noReport && ["clear", "revision", "reject"].includes(decision)) text = "No report uploaded";
   if (!text) return null;
-  return <div style={{ color: bad ? "var(--danger)" : "var(--ink-faint)" }} className="mt-1 flex items-start gap-1 text-[10.5px] font-semibold leading-tight">{bad && <AlertTriangle size={11} aria-hidden="true" className="mt-px shrink-0" />} <span>{text}</span></div>;
+  return <div style={{ color: bad ? "var(--danger-ink)" : "var(--ink-faint)" }} className="mt-1 flex items-start gap-1 text-[10.5px] font-semibold leading-tight">{bad && <AlertTriangle size={11} aria-hidden="true" className="mt-px shrink-0" />} <span>{text}</span></div>;
 }
 
 export function DecisionSelect({ value, options, onChange, disabled, title, label }: { value: string; options: DecisionMeta[]; onChange: (v: string) => void; disabled?: boolean; title?: string; label: string }) {
@@ -164,7 +164,7 @@ export function DueLine({ deadline }: { deadline: string | undefined }) {
   if (!deadline) return null;
   const late = isOverdue(deadline);
   return (
-    <span style={late ? { color: "var(--danger)", background: "var(--danger-soft)" } : { color: "var(--ink-muted)", background: "var(--canvas)" }} className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold">
+    <span style={late ? { color: "var(--danger-ink)", background: "var(--danger-soft)" } : { color: "var(--ink-muted)", background: "var(--canvas)" }} className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold">
       {late ? <AlertTriangle size={11} aria-hidden="true" /> : <CalendarClock size={11} aria-hidden="true" />} {late ? "Overdue · " : "Due "}{deadline}
     </span>
   );
@@ -174,9 +174,9 @@ export function EmailCell({ enabled, sentAt, deadline, onSend, disabledHint }: {
   if (sentAt) {
     return (
       <div className="flex flex-col items-center gap-1">
-        <span style={{ color: "var(--success)" }} className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold"><Check size={13} strokeWidth={3} aria-hidden="true" /> Sent · {sentAt}</span>
+        <span style={{ color: "var(--success-ink)" }} className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold"><Check size={13} strokeWidth={3} aria-hidden="true" /> Sent · {sentAt}</span>
         <DueLine deadline={deadline} />
-        {enabled && <button type="button" onClick={onSend} style={{ color: isOverdue(deadline) ? "var(--danger)" : "var(--primary)" }} className="cursor-pointer text-[11px] font-semibold hover:underline">Send again</button>}
+        {enabled && <button type="button" onClick={onSend} style={{ color: isOverdue(deadline) ? "var(--danger-ink)" : "var(--primary)" }} className="cursor-pointer text-[11px] font-semibold hover:underline">Send again</button>}
       </div>
     );
   }
@@ -236,13 +236,33 @@ export function IdSortLabel({ label, dir, onToggle }: { label: string; dir: "asc
 }
 
 export function TableFrame({ minWidth, children, empty }: { minWidth: number; children: ReactNode; empty: string | null }) {
+  // A table wider than its box scrolls sideways; while more columns are hidden on the right, a fade and a cue say so (the last column was cut with no sign).
+  const box = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState(false);
+  const measure = useCallback(() => {
+    const el = box.current;
+    if (el) setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 4);
+  }, []);
+  useEffect(() => {
+    measure();
+    const el = box.current;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [measure, children]);
   return (
-    <div style={CARD} className="overflow-hidden rounded-2xl bg-white">
-      <div style={{ maxHeight: "calc(100vh - 250px)", minHeight: 320 }} className="overflow-auto">
+    <div style={CARD} className="relative overflow-hidden rounded-2xl bg-white">
+      <div ref={box} onScroll={measure} style={{ maxHeight: "calc(100vh - 250px)", minHeight: 320 }} className="overflow-auto">
         {/* Fixed layout: every column keeps its set width; a long title wraps (taller row). */}
         <table style={{ minWidth, tableLayout: "fixed" }} className="w-full border-separate border-spacing-0 text-sm">{children}</table>
         {empty && <div className="py-16 text-center text-sm text-ink-faint">{empty}</div>}
       </div>
+      {more && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 flex w-14 items-center justify-end bg-gradient-to-l from-white via-white/80 to-transparent pr-2">
+          <ChevronRight size={18} className="text-ink-muted" />
+        </div>
+      )}
     </div>
   );
 }
@@ -337,9 +357,9 @@ export function DecisionLine({ decision, by, at, sent }: { decision: DecisionMet
 }
 export const ReportRow = ({ ok, icon, label, value }: { ok?: boolean; icon?: ReactNode; label: string; value: string }) => (
   <li className="flex items-center gap-3 px-3.5 py-2.5">
-    <span style={{ background: icon ? "var(--muted)" : ok ? "var(--success-soft)" : "var(--danger-soft)", color: icon ? "var(--ink-soft)" : ok ? "var(--success)" : "var(--danger)" }} className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full">{icon || (ok ? <Check size={12} strokeWidth={3} aria-hidden="true" /> : <X size={12} strokeWidth={3} aria-hidden="true" />)}</span>
+    <span style={{ background: icon ? "var(--muted)" : ok ? "var(--success-soft)" : "var(--danger-soft)", color: icon ? "var(--ink-soft)" : ok ? "var(--success-ink)" : "var(--danger-ink)" }} className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full">{icon || (ok ? <Check size={12} strokeWidth={3} aria-hidden="true" /> : <X size={12} strokeWidth={3} aria-hidden="true" />)}</span>
     <span className="flex-1 text-sm font-semibold text-ink">{label}</span>
-    <span style={{ color: ok || icon ? "var(--ink-muted)" : "var(--danger)" }} className="break-all text-right text-xs font-semibold">{value}</span>
+    <span style={{ color: ok || icon ? "var(--ink-muted)" : "var(--danger-ink)" }} className="break-all text-right text-xs font-semibold">{value}</span>
   </li>
 );
 export const SentNote = ({ title, reasons, note }: { title: string; reasons?: string[]; note?: string }) => (

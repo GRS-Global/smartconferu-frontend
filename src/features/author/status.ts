@@ -14,7 +14,7 @@ export interface NextStep { label: string; tone: string }
 export interface SubmissionRow { sub: AuthorSubmission; status: Status; step: NextStep }
 
 // Not sent yet: a solid amber, pulsing status so a paper that still needs its upload can't be missed.
-const DRAFT: Status = { key: "draft", label: "Paper Upload Pending", color: "#FFFFFF", bg: "#D97706", border: "#B45309", pulse: true };
+const DRAFT: Status = { key: "draft", label: "Paper Upload Pending", color: "#FFFFFF", bg: "#B45309", border: "#92400E", pulse: true };
 const REVISE: Status = { key: "revise", label: "Revision Required", color: "#B45309", bg: "#FFF4E5", border: "#FCD9A8" };
 
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -31,7 +31,7 @@ export function authorStatusOf(s: Pick<AuthorSubmission, "withdrawn" | "result" 
 }
 
 function baseStatusOf(s: Pick<AuthorSubmission, "withdrawn" | "result" | "uploadPending" | "decision"> & { screeningRequest?: unknown }, finished: boolean): Status {
-  if (s.withdrawn) return { key: "withdrawn", label: "Withdrawn", color: "var(--danger)", bg: "var(--danger-soft)", border: "#FECACA" };
+  if (s.withdrawn) return { key: "withdrawn", label: "Withdrawn", color: "var(--danger-ink)", bg: "var(--danger-soft)", border: "#FECACA" };
   if (s.result === "draft") return DRAFT;
   // The chair moved it back to "Paper Upload Pending".
   if (s.result === "no_result" && s.uploadPending) return DRAFT;
@@ -54,15 +54,15 @@ function baseStatusOf(s: Pick<AuthorSubmission, "withdrawn" | "result" | "upload
  *  database yet (no programme data), so a registered paper never reads "You're all set". */
 export function nextStepOf(status: Status, closed: boolean, over: boolean): NextStep {
   switch (status.key) {
-    case "withdrawn": return { label: "Withdrawn", tone: "var(--danger)" };
+    case "withdrawn": return { label: "Withdrawn", tone: "var(--danger-ink)" };
     case "draft": return closed ? { label: "Never sent", tone: "var(--ink-faint)" } : { label: "Upload your paper and submit", tone: "#B45309" };
-    case "revise": return { label: "Upload your revised paper", tone: "var(--warning)" };
+    case "revise": return { label: "Upload your revised paper", tone: "var(--warning-ink)" };
     case "waitlisted": return { label: "Final answer on the date given", tone: "var(--cat-virtual)" };
     case "waiting": return { label: "Awaiting decision", tone: "var(--ink-faint)" };
     case "pending": return { label: "Register to confirm your slot", tone: "var(--primary)" };
-    case "registered": return over ? { label: "Presented", tone: "var(--success)" } : { label: "Book your presentation slot", tone: "var(--primary)" };
+    case "registered": return over ? { label: "Presented", tone: "var(--success-ink)" } : { label: "Book your presentation slot", tone: "var(--primary)" };
     case "unregistered": return { label: "Not registered", tone: "var(--ink-faint)" };
-    default: return { label: "Decision released", tone: "var(--danger)" };
+    default: return { label: "Decision released", tone: "var(--danger-ink)" };
   }
 }
 

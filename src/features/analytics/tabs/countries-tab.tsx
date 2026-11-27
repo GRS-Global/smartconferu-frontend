@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AnalyticsData } from "../data";
 import { Globe2, LayoutList, Database } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { legendText } from "../chart-theme";
 import { AnalyticsCard, AnalyticsStatCard, AnalyticsEmptyState, CountryFlag, SectionLabel, StatChip, FilteredTable, MiniTile } from "../components";
 import { CHART_COLORS, TOOLTIP_STYLE, AXIS_STYLE } from "../chart-theme";
 
@@ -62,7 +63,7 @@ export default function CountriesTab({ data }: { data: AnalyticsData }) {
                 <XAxis dataKey="name" {...AXIS_STYLE} />
                 <YAxis {...AXIS_STYLE} width={40} />
                 <Tooltip {...TOOLTIP_STYLE} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Legend formatter={legendText} wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="Domestic" name={`Domestic (${s.domesticCountry})`} fill={CHART_COLORS.warning} radius={[6, 6, 0, 0]} />
                 <Bar dataKey="International" fill={CHART_COLORS.primary} radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -84,7 +85,7 @@ export default function CountriesTab({ data }: { data: AnalyticsData }) {
               </div>
             </div>
             <div className="text-right">
-              <div style={{ color: "var(--warning)" }} className="text-lg font-extrabold leading-none">{fmt(c.leadingCountry.papers)}</div>
+              <div style={{ color: "var(--warning-ink)" }} className="text-lg font-extrabold leading-none">{fmt(c.leadingCountry.papers)}</div>
               <div style={{ color: "var(--ink-faint)" }} className="text-[11px] mt-0.5">papers · {c.leadingCountry.sharePct}% of total</div>
             </div>
           </div>

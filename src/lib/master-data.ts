@@ -6,7 +6,7 @@
    are what shows until the backend answers, and what stays if it cannot be reached. When it answers, the lists are
    replaced IN PLACE (same arrays and objects), so every screen that imports them sees the new content on its next
    render; `useMasterDataVersion()` makes a screen render again once the lists arrive. Own-backend mode only. */
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { API_URL, DATA_SOURCE } from "./config";
 import { INSTITUTIONS, type Institution } from "./institutions";
 import { RESEARCH_AREA_GROUPS, RESEARCH_AREAS, RESEARCH_SUBAREAS } from "./research-areas";
@@ -23,6 +23,8 @@ const subscribe = (fn: () => void) => { listeners.add(fn); return () => { listen
 
 /** Changes when the lists were replaced by the backend's; use it to render a screen again. */
 export function useMasterDataVersion(): number {
+  // A screen that picks from the lists asks for them at once; the page-wide loader only asks after a pause (components/master-data-loader.tsx).
+  useEffect(() => { void loadMasterData(); }, []);
   return useSyncExternalStore(subscribe, () => version, () => 0);
 }
 

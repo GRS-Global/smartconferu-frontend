@@ -10,7 +10,7 @@ import { ATTENDANCE_LABELS, PAYMENT_LABELS, type AttendanceMode, type ChairPaper
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const PAYMENTS: PaymentStatus[] = ["not_paid", "paid", "waived"];
-const PAYMENT_TONE: Record<PaymentStatus, string> = { not_paid: "var(--warning)", paid: "var(--success)", waived: "#0369A1" };
+const PAYMENT_TONE: Record<PaymentStatus, string> = { not_paid: "var(--warning-ink)", paid: "var(--success-ink)", waived: "#0369A1" };
 const ATTENDANCE: Array<AttendanceMode | null> = ["physical", "virtual", null];
 const LABEL = "mb-1.5 block text-[11px] font-extrabold uppercase tracking-wider text-ink-faint";
 
@@ -54,7 +54,7 @@ export function RegistrationCard({ paper, busy, onSave }: { paper: ChairPaper; b
     <section style={CARD} className="rounded-2xl bg-white p-5" aria-labelledby="registration-title">
       <div className="mb-1 flex items-center justify-between gap-2">
         <h2 id="registration-title" className="flex items-center gap-2 text-[15px] font-extrabold text-navy"><Ticket size={16} aria-hidden="true" className="text-primary" /> Registration &amp; attendance</h2>
-        <span style={{ color: PAYMENT_TONE[saved.payment], background: `color-mix(in srgb, ${PAYMENT_TONE[saved.payment]} 12%, white)` }} className="rounded-full px-2.5 py-0.5 text-[11px] font-bold">{PAYMENT_LABELS[saved.payment]}</span>
+        <span style={{ color: PAYMENT_TONE[saved.payment], background: `color-mix(in srgb, ${PAYMENT_TONE[saved.payment]} 7%, white)` }} className="rounded-full px-2.5 py-0.5 text-[11px] font-bold">{PAYMENT_LABELS[saved.payment]}</span>
       </div>
       <p className="mb-4 text-[11.5px] leading-relaxed text-ink-muted">Recorded by you. Authors see the payment and attendance on their paper; the note stays private. No email is sent.</p>
 
@@ -74,7 +74,7 @@ export function RegistrationCard({ paper, busy, onSave }: { paper: ChairPaper; b
             {paper.authors.map((a) => <option key={a.email} value={a.email.toLowerCase()}>{a.name}{a.corresponding ? " (corresponding)" : ""}</option>)}
             {presenterGone && <option value={form.presenterEmail!.toLowerCase()}>{form.presenterEmail} (no longer an author)</option>}
           </select>
-          {presenterGone && <p className="mt-1 text-[11px] font-semibold text-warning">This person is no longer on the author list. Pick another presenter.</p>}
+          {presenterGone && <p className="mt-1 text-[11px] font-semibold text-warning-ink">This person is no longer on the author list. Pick another presenter.</p>}
         </div>
         <div>
           <label htmlFor={ids.note} className={LABEL}>Note <span className="font-semibold normal-case tracking-normal">(private)</span></label>

@@ -11,7 +11,7 @@ import type { EmailTemplates } from "@/types/chair";
    what each is, who gets it and when, whether it is switched on for this conference, and a way to change its wording in Settings › Email Templates. */
 
 const TONE: Record<string, { label: string; bg: string; color: string }> = {
-  scheduled: { label: "Scheduled", bg: "var(--warning-soft)", color: "var(--warning)" },
+  scheduled: { label: "Scheduled", bg: "var(--warning-soft)", color: "var(--warning-ink)" },
   auto: { label: "Automatic", bg: "var(--primary-soft)", color: "var(--primary)" },
   chair: { label: "Sent by you", bg: "var(--muted)", color: "var(--ink-soft)" },
 };
@@ -28,7 +28,7 @@ export function ScheduledEmailsPanel({ slug, title, desc, keys }: { slug: string
   return (
     <div style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }} className="rounded-2xl bg-white p-5">
       <div className="mb-3.5 flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning-soft text-warning"><Clock size={16} aria-hidden="true" /></span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning-soft text-warning-ink"><Clock size={16} aria-hidden="true" /></span>
         <div className="min-w-0"><h2 className="text-sm font-bold text-navy">{title}</h2><p className="mt-0.5 text-xs text-ink-faint">{desc}</p></div>
       </div>
       {!templates ? <div role="status" aria-label="Loading the emails" className="h-20 animate-pulse rounded-lg border border-line bg-canvas" /> : (

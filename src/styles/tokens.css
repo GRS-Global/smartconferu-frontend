@@ -26,13 +26,18 @@
   /* text */
   --ink: #1e293b;
   --ink-soft: #475569;
-  --ink-muted: #64748b;
-  --ink-faint: #94a3b8;
+  /* Both read on white and on the canvas at 4.5:1 or better (they were 4.8:1 and 2.6:1); the three greys stay apart: soft 7.6, muted 6.4, faint 5.1; faint also reads on the grey fills at 4.7. */
+  --ink-muted: #526077;
+  --ink-faint: #5f6f86;
 
   /* status / semantic */
   --success: #16a34a;
   --success-soft: #eaf7ee;
   --warning: #d97706;
+  /* the same hues for small text: 5:1 on white (the plain tokens are 3.3:1 and 3.2:1) */
+  --success-ink: #15803d;
+  --warning-ink: #b45309;
+  --danger-ink: #b91c1c; /* 6.5:1 on white, 5.9:1 on the light tints (the plain red is 4.8 and 4.3) */
   --warning-soft: #fef3e2;
   --warning-border: #fde68a; /* prototype token warning-border: dashed "not configured" panels */
   --danger: #dc2626;
@@ -87,10 +92,13 @@
   --color-ink-faint: var(--ink-faint);
 
   --color-success: var(--success);
+  --color-success-ink: var(--success-ink);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-ink: var(--warning-ink);
   --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
+  --color-danger-ink: var(--danger-ink);
   --color-danger-soft: var(--danger-soft);
   --color-cat-virtual: var(--cat-virtual);
   --color-cat-virtual-soft: var(--cat-virtual-soft);

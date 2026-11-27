@@ -4,11 +4,15 @@ import { ArrowLeftRight, Check, ChevronDown, ChevronLeft, ChevronRight, HelpCirc
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { ConferenceTour, openSetupGuide, startConferenceTour } from "@/features/tour/conference-tour";
+import dynamic from "next/dynamic";
+import { openSetupGuide, SETUP_OPEN_EVENT, START_EVENT, startConferenceTour } from "@/features/tour/tour-events";
+
+// The guided tour is a large module and only a chair needs it: it loads after the page is shown.
+const ConferenceTour = dynamic(() => import("@/features/tour/conference-tour").then((m) => m.ConferenceTour), { ssr: false });
 import { readTourState } from "@/features/tour/tour-state";
 import { setupLocked, useConferenceSetup } from "@/features/tour/use-setup";
 import type { Conference, ConferenceRole } from "@/types/conference";
-import { CHAIR_SOON, MENUS, hrefOf, roleLanding, type MenuItem } from "../menus";
+import { SOON, MENUS, hrefOf, roleLanding, type MenuItem } from "../menus";
 
 /* The frame of a conference workspace (the prototype's Sidebar + ConferenceShell): the conference's menu on the left, the page on
    the right. One component for the Author, Reviewer and Chair workspaces; each has its own menu (features/workspace/menus.ts).
@@ -22,7 +26,7 @@ const ROLE_LABEL: Record<ConferenceRole, string> = { chair: "Chair", author: "Au
 const ROLE_COLOR: Record<ConferenceRole, { color: string; bg: string }> = {
   chair: { color: "var(--secondary)", bg: "var(--secondary-soft)" },
   author: { color: "var(--primary)", bg: "var(--primary-soft)" },
-  reviewer: { color: "var(--success)", bg: "var(--success-soft)" },
+  reviewer: { color: "var(--success-ink)", bg: "var(--success-soft)" },
   committee: { color: "var(--cat-virtual)", bg: "var(--cat-virtual-soft)" },
 };
 const COLLAPSE_KEY = "smartconferu.sidebarCollapsed";
@@ -164,12 +168,24 @@ function ItemLink({ item, slug, on, className, style, onNavigate, children, labe
   const { href, external } = hrefOf(item, slug);
   return external
     ? <a href={href} aria-label={label} title={label} style={style} className={className} data-tour={tour}>{children}</a>
-    : <Link href={href} aria-label={label} title={label} aria-current={on || current ? "page" : undefined} style={style} className={className} onClick={onNavigate} data-tour={tour}>{children}</Link>;
+    // The charts page carries a ~110 KB (compressed) charts library: it is fetched when opened, not in the background of every other page.
+    : <Link href={href} prefetch={item.key === "analytics" ? false : undefined} aria-label={label} title={label} aria-current={on || current ? "page" : undefined} style={style} className={className} onClick={onNavigate} data-tour={tour}>{children}</Link>;
 }
 
 export function ConferenceShell({ role, conference, roles, others, active, screening = { initialCheck: true, plagiarism: true }, foldMenu = false, children }: ShellProps) {
   const [sideOpen, setSideOpen] = useState(false);
-  const collapsed = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
+  // The tour module is fetched once the page has had time to show (2.5 s), or at once when the chair asks for it; a press before it has
+  // loaded is played when it is ready (tour-events). On a slow phone this keeps it from competing with the page's own data.
+  const [tourOn, setTourOn] = useState(false);
+  useEffect(() => {
+    if (role !== "chair" || tourOn) return undefined;
+    const on = () => setTourOn(true);
+    const t = setTimeout(on, 2500);
+    window.addEventListener(START_EVENT, on);
+    window.addEventListener(SETUP_OPEN_EVENT, on);
+    return () => { clearTimeout(t); window.removeEventListener(START_EVENT, on); window.removeEventListener(SETUP_OPEN_EVENT, on); };
+  }, [role, tourOn]);
+  const collapsed =useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
   useEffect(() => {
     if (!foldMenu) return undefined;
     foldedByPage = true;
@@ -251,10 +267,10 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
               }
               return <ItemLink key={item.key} item={item} slug={slug} on={on} label={item.label} className={cls} style={style}><Icon size={18} aria-hidden="true" /></ItemLink>;
             })}
-            {role === "chair" && (
+            {SOON[role].length > 0 && (
               <>
                 <div className="my-1.5 w-8 border-t border-[#E7E2F5]" />
-                {CHAIR_SOON.map((s) => <span key={s.label} title={`${s.label} — coming soon`} className="flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-white/60 text-[#A39AC0]"><s.icon size={18} aria-hidden="true" /></span>)}
+                {SOON[role].map((s) => <span key={s.label} title={`${s.label} — coming soon`} className="flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-white/60 text-[#A39AC0]"><s.icon size={18} aria-hidden="true" /></span>)}
               </>
             )}
           </nav>
@@ -339,15 +355,15 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
                 </ItemLink>
               );
             })}
-            {role === "chair" && (
+            {SOON[role].length > 0 && (
               <>
                 <div className="mx-2 my-3 border-t border-[#E7E2F5]" />
                 <div className="mb-1 px-2.5 text-[10.5px] font-bold uppercase tracking-wider text-[#9389B2]">Coming soon</div>
-                {CHAIR_SOON.map((s) => (
-                  <div key={s.label} title="Not built yet — planned for a later pass" className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
+                {SOON[role].map((s) => (
+                  <div key={s.label} title={`${s.label} — coming soon`} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><s.icon size={16} aria-hidden="true" /></span>
                     <span className="flex-1">{s.label}</span>
-                    <span className="rounded-full bg-[#EFEAF8] px-2 py-0.5 text-[10.5px] font-bold text-[#847CA8]">Soon</span>
+                    <span className="rounded-full bg-[#EFEAF8] px-2 py-0.5 text-[10.5px] font-bold text-[#5F5896]">Soon</span>
                   </div>
                 ))}
               </>
@@ -361,7 +377,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
           </div>
         </div>
       )}
-      {role === "chair" && <ConferenceTour slug={slug} acronym={conference.acronym} setup={setup} />}
+      {role === "chair" && tourOn && <ConferenceTour slug={slug} acronym={conference.acronym} setup={setup} />}
       {sideOpen && <div aria-hidden="true" onClick={() => setSideOpen(false)} style={{ background: "rgba(15,23,42,0.35)" }} className="fixed inset-x-0 bottom-0 top-16 z-30 lg:hidden" />}
       <div className="min-w-0 flex-1">
         {/* Below lg: which conference and page you're on, and the button that opens its menu. */}

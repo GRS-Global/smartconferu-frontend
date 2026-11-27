@@ -29,7 +29,7 @@ export function ThemePanel({ slug, acronym, currentId, preview, onDone, onSaved,
     return (
       <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
         <div className="max-w-sm text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success" /></div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success-ink" /></div>
           <h2 className="mb-2 text-lg font-bold text-navy">Theme applied</h2>
           <p className="mb-6 text-sm text-ink-muted">{acronym} now uses the {theme.label} theme.</p>
           <Button onClick={onDone}>Back to Overview</Button>
@@ -60,7 +60,7 @@ export function ThemePanel({ slug, acronym, currentId, preview, onDone, onSaved,
         </div>
       </div>
       <CfpPublicPreview {...preview} accent={theme.accent} heading="Live preview — how authors will see this CFP" />
-      {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
         <button type="button" onClick={() => void apply()} disabled={busy || selected === currentId} title={selected === currentId ? "No changes to save" : undefined} style={{ background: theme.accent, transition: "background 160ms ease" }} className="cursor-pointer rounded-lg px-6 py-2.5 text-sm font-bold text-white disabled:opacity-60">{busy ? "Applying…" : "Apply Theme"}</button>

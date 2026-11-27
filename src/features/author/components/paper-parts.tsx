@@ -110,7 +110,7 @@ export function PresentationPanel({ paper }: { paper: AuthorPaper }) {
   if (paper.result === "not_registered") {
     return (
       <section style={{ border: "1px solid #FDE68A", background: "#FFFBEB" }} className="mb-5 flex flex-wrap items-center gap-4 rounded-2xl p-5">
-        <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning"><Ticket size={20} /></span>
+        <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning-ink"><Ticket size={20} /></span>
         <div className="min-w-[220px] flex-1">
           <div className="text-[15px] font-extrabold text-navy">Your paper was accepted. Register to present it</div>
           <div style={{ color: "#92400E" }} className="text-[13px]">Once you register you can book your presentation slot, and your speaker flyer is made for you.</div>
@@ -172,7 +172,7 @@ function RegistrationPanel({ paper, registration: r }: { paper: AuthorPaper; reg
     <div className="mb-5 grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
       <section aria-label="Registration and attendance" style={done ? CARD : { border: "1px solid #FDE68A", background: "#FFFBEB" }} className={`rounded-2xl p-5 ${done ? "bg-white" : ""} lg:col-span-2`}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="flex items-center gap-2 text-base font-extrabold text-navy"><Ticket size={17} aria-hidden="true" className={done ? "text-primary" : "text-warning"} /> Registration &amp; attendance</h3>
+          <h3 className="flex items-center gap-2 text-base font-extrabold text-navy"><Ticket size={17} aria-hidden="true" className={done ? "text-primary" : "text-warning-ink"} /> Registration &amp; attendance</h3>
           <span style={{ color: pay.color, background: pay.bg }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold">{done && <Check size={12} strokeWidth={3} aria-hidden="true" />}{pay.label}</span>
         </div>
         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -218,7 +218,7 @@ export function ScreeningNotice({ notice, onUpload }: { notice: PaperScreeningNo
           </p>
         </div>
         {notice.deadline && (
-          <span style={{ color: overdue ? "var(--danger)" : "#B45309", border: `1px solid ${overdue ? "#FECACA" : "#FCD9A8"}` }} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[11.5px] font-bold">
+          <span style={{ color: overdue ? "var(--danger-ink)" : "#B45309", border: `1px solid ${overdue ? "#FECACA" : "#FCD9A8"}` }} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[11.5px] font-bold">
             <CalendarClock size={12} aria-hidden="true" /> {overdue ? "Overdue · was due" : "Due"} {notice.deadline}
           </span>
         )}
@@ -236,7 +236,7 @@ export function ScreeningNotice({ notice, onUpload }: { notice: PaperScreeningNo
         {notice.similarity !== null && (
           <div className="rounded-xl border border-line px-4 py-3">
             <div className="text-xs font-semibold text-ink-soft">Similarity score</div>
-            <div className="text-xl font-extrabold leading-tight tabular-nums text-danger">{notice.similarity}%</div>
+            <div className="text-xl font-extrabold leading-tight tabular-nums text-danger-ink">{notice.similarity}%</div>
           </div>
         )}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-muted pt-4">
@@ -406,7 +406,7 @@ export function DecisionCard({ paper, onUpload }: { paper: AuthorPaper; onUpload
       <Comments comments={paper.comments} />
       {paper.decisionTold === "revise" && !paper.withdrawn && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-muted pt-4">
-          <p className="text-xs font-semibold text-warning">The organisers have asked for changes. Upload your revised paper.</p>
+          <p className="text-xs font-semibold text-warning-ink">The organisers have asked for changes. Upload your revised paper.</p>
           <button type="button" onClick={onUpload} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-primary-hover"><FileUp size={13} aria-hidden="true" /> Upload revised paper</button>
         </div>
       )}
@@ -473,7 +473,7 @@ export function ManageCard({ paper, onDetails, onAuthors, onFiles, onWithdraw }:
       </div>
       {canWithdraw && (
         <div className="border-t border-muted p-5">
-          <button type="button" onClick={onWithdraw} className="flex w-full items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-danger-soft bg-white py-2.5 text-sm font-bold text-danger transition-colors hover:bg-danger-soft"><XCircle size={15} aria-hidden="true" /> Withdraw submission</button>
+          <button type="button" onClick={onWithdraw} className="flex w-full items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-danger-soft bg-white py-2.5 text-sm font-bold text-danger-ink transition-colors hover:bg-danger-soft"><XCircle size={15} aria-hidden="true" /> Withdraw submission</button>
           <p className="mt-1.5 text-center text-[10.5px] text-ink-faint">Removes it from review. This can&apos;t be undone.</p>
         </div>
       )}

@@ -1,5 +1,7 @@
 import { DATA_SOURCE } from "@/lib/config";
 import type { AuthorInput, AuthorPaper, AuthorSubmission, ConferenceDetails, NewPaperInput, PaperDetailsPatch, SubmitFormInfo } from "@/types/author-submission";
+// The own backend is the data source: loaded with the page, not as a separate request when first used (it sits on every page's first data read).
+import { apiAuthorSubmissionService } from "./api/author-submissions";
 
 /** The contract My Submissions depends on. Failures throw: AuthRequiredError (no session), ServiceConfigError (Supabase
  *  not configured) or ServiceError (a request failed, with a message ready to show). */
@@ -34,6 +36,6 @@ export interface AuthorSubmissionService {
  *  there is no fallback from one source to the other. */
 export async function getAuthorSubmissionService(): Promise<AuthorSubmissionService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/author-submissions")).mockAuthorSubmissionService;
-  if (DATA_SOURCE === "api") return (await import("./api/author-submissions")).apiAuthorSubmissionService;
+  if (DATA_SOURCE === "api") return apiAuthorSubmissionService;
   return (await import("./supabase/author-submissions")).supabaseAuthorSubmissionService;
 }

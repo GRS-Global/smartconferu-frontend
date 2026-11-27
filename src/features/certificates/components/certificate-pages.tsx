@@ -38,7 +38,7 @@ function Frame({ c, active, children }: { c: Certs; active: string; children: Re
     <ConferenceShell role="chair" conference={conference} roles={roles} others={others} active={active} screening={data.screening}>
       {c.error && (
         <div className="px-4 pt-4 sm:px-8">
-          <Notice tone="danger" icon={AlertTriangle} action={<button type="button" onClick={c.clearError} style={{ border: "1px solid var(--danger-border)", color: "var(--danger)" }} className="shrink-0 cursor-pointer rounded-lg bg-white px-3 py-1.5 text-[11.5px] font-bold">Dismiss</button>}>{c.error}</Notice>
+          <Notice tone="danger" icon={AlertTriangle} action={<button type="button" onClick={c.clearError} style={{ border: "1px solid var(--danger-border)", color: "var(--danger-ink)" }} className="shrink-0 cursor-pointer rounded-lg bg-white px-3 py-1.5 text-[11.5px] font-bold">Dismiss</button>}>{c.error}</Notice>
         </div>
       )}
       {children}

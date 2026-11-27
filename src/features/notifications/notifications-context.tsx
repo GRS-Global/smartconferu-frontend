@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DATA_SOURCE } from "@/lib/config";
 import { getConferenceService } from "@/services/conferences";
 import { getNotificationService, type UnreadRow } from "@/services/notifications";
@@ -44,6 +44,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [unread, setUnreadState] = useState<number | null>(null);
   const [rows, setRows] = useState<UnreadRow[] | null>(null);
   const [countFailed, setCountFailed] = useState(false);
+  const rowsLoaded = useRef(false);
   // Conferences this account chairs: a withdrawal is the chair's copy there (the prototype's liveAlertOf). Asked for only when one is unread.
   const [chairOf, setChairOf] = useState<ReadonlySet<string>>(new Set());
   const hasWithdrawn = rows?.some((x) => x.kind === "withdrawn") ?? false;
@@ -60,7 +61,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     countUnread()
-      .then((r) => { if (!cancelled) { setUnreadState((current) => current ?? r.count); setRows((current) => current ?? r.rows); } })
+      .then((r) => { if (!cancelled) { setUnreadState((current) => current ?? r.count); setRows((current) => current ?? r.rows); if (r.rows) rowsLoaded.current = true; } })
       .catch(() => { if (!cancelled) setCountFailed(true); }); // no number on the bell; the Notifications page reports its own errors
     return () => { cancelled = true; };
   }, []);
@@ -71,8 +72,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (DATA_SOURCE !== "api") return undefined;
     let cancelled = false;
     const refreshRows = () => { getNotificationService().then((s) => s.unreadList()).then((r) => { if (!cancelled) setRows(r); }).catch(() => undefined); };
+    // The first "ready" comes right after the first read above, which already loaded the list: only a later one (the stream reconnected) reads it again.
+    let first = true;
     const close = openLiveNotifications({
-      onReady: (n) => { setUnreadState(n); refreshRows(); },
+      onReady: (n) => { setUnreadState(n); if (first) { first = false; void (counting ?? Promise.resolve()).catch(() => undefined).then(() => { if (!rowsLoaded.current) refreshRows(); }); } else refreshRows(); },
       onNotification: (n) => { setUnreadState(n); refreshRows(); announceLiveNotification(); },
     });
     return () => { cancelled = true; close(); };

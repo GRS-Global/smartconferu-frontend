@@ -30,7 +30,7 @@ const problemOf = (s: ReviewSection[]): string => {
 const clean = (s: ReviewSection[]): ReviewSection[] => s.map((x) => ({ ...x, name: x.name.trim(), fields: x.fields.map((f) => ({ ...f, label: f.label.trim(), options: f.type === "single_choice" ? (f.options ?? []).map((o) => o.trim()).filter(Boolean) : undefined, max: f.type === "score" ? (f.max ?? 5) : undefined })) }));
 
 function Hover({ label, onClick, disabled, danger, children }: { label: string; onClick: () => void; disabled?: boolean; danger?: boolean; children: React.ReactNode }) {
-  return <button type="button" aria-label={label} title={label} onClick={onClick} disabled={disabled} className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-ink-muted hover:bg-white disabled:cursor-not-allowed disabled:opacity-30 ${danger ? "hover:text-danger" : "hover:text-primary"}`}>{children}</button>;
+  return <button type="button" aria-label={label} title={label} onClick={onClick} disabled={disabled} className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-ink-muted hover:bg-white disabled:cursor-not-allowed disabled:opacity-30 ${danger ? "hover:text-danger-ink" : "hover:text-primary"}`}>{children}</button>;
 }
 
 /** What a field looks like to the reviewer (not interactive here). */
@@ -61,7 +61,7 @@ function FieldEditor({ f, onChange }: { f: ReviewField; onChange: (patch: Partia
             {(f.options ?? []).map((o, i) => (
               <li key={i} className="flex items-center gap-1.5">
                 <input aria-label={`Option ${i + 1}`} value={o} maxLength={100} onChange={(e) => onChange({ options: (f.options ?? []).map((x, j) => (j === i ? e.target.value : x)) })} className={INPUT_CLASS} />
-                <button type="button" aria-label={`Remove option ${i + 1}`} disabled={(f.options ?? []).length <= 2} onClick={() => onChange({ options: (f.options ?? []).filter((_, j) => j !== i) })} className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-white hover:text-danger disabled:opacity-30"><X size={14} aria-hidden="true" /></button>
+                <button type="button" aria-label={`Remove option ${i + 1}`} disabled={(f.options ?? []).length <= 2} onClick={() => onChange({ options: (f.options ?? []).filter((_, j) => j !== i) })} className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-white hover:text-danger-ink disabled:opacity-30"><X size={14} aria-hidden="true" /></button>
               </li>
             ))}
           </ul>
@@ -150,9 +150,9 @@ export function ReviewFormBuilder({ initial, acronym, instructions, hiddenFields
   const total = secs.flatMap((x) => x.fields).length;
   const required = secs.flatMap((x) => x.fields).filter((x) => x.required).length;
   const lockedCount = secs.flatMap((x) => x.fields).filter(locked).length;
-  const status = state === "failed" ? <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-1 text-[11px] font-bold text-danger">{failure || "Couldn't save"}</span>
+  const status = state === "failed" ? <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-1 text-[11px] font-bold text-danger-ink">{failure || "Couldn't save"}</span>
     : state === "saving" ? <span className="fe-pulse inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-ink-muted"><Spinner size={12} tone="current" /> Saving…</span>
-      : <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-bold text-success"><Check size={11} aria-hidden="true" /> All changes saved</span>;
+      : <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-bold text-success-ink"><Check size={11} aria-hidden="true" /> All changes saved</span>;
   return (
     <div className="mx-auto max-w-[1064px]">
       <div style={CARD} className="ui-accent-card mb-5 overflow-hidden rounded-2xl bg-gradient-to-r from-[#EEF2FF] via-[#F1ECFF] to-[#E6F6FB] px-6 py-5">
@@ -183,9 +183,9 @@ export function ReviewFormBuilder({ initial, acronym, instructions, hiddenFields
               <div key={f.id}>
                 <div draggable={!locked(f) && open !== f.id} onDragStart={() => { dragField.current = { sid: s.id, fid: f.id }; setDrag(f.id); }} onDragEnd={() => { setOver(null); setDrag(null); }} onDragOver={(e) => { if (dragField.current?.sid === s.id) { e.preventDefault(); setOver(f.id); } }} onDrop={() => dropField(s.id, f.id)} className={`group/f rounded-xl border border-transparent px-3 py-3 transition-colors hover:border-line hover:bg-canvas/60 ${open === f.id ? "border-[var(--primary-soft-border)] bg-canvas/60" : ""} ${over === f.id && drag !== f.id ? "!border-primary" : ""} ${hiddenFields.includes(f.id) ? "opacity-50" : ""}`}>
                   <div className="mb-1.5 flex items-start justify-between gap-2">
-                    <div className="min-w-0"><div className="text-sm font-semibold text-ink">{f.label || "Untitled field"}{f.required && <span className="text-danger"> *</span>}{locked(f) && <Lock size={11} aria-label="This field stays" className="ml-1.5 inline text-ink-faint" />}</div>{f.description && <div className="text-xs text-ink-faint">{f.description}</div>}</div>
+                    <div className="min-w-0"><div className="text-sm font-semibold text-ink">{f.label || "Untitled field"}{f.required && <span className="text-danger-ink"> *</span>}{locked(f) && <Lock size={11} aria-label="This field stays" className="ml-1.5 inline text-ink-faint" />}</div>{f.description && <div className="text-xs text-ink-faint">{f.description}</div>}</div>
                     <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover/f:opacity-100">
-                      <span title={locked(f) ? "Locked field — can’t be reordered" : "Drag to reorder"} aria-hidden="true" className={`px-1.5 ${locked(f) ? "cursor-not-allowed text-line-strong" : "cursor-grab text-ink-faint active:cursor-grabbing"}`}><GripVertical size={13} /></span>
+                      <span title={locked(f) ? "Locked field — can’t be reordered" : "Drag to reorder"} aria-hidden="true" className={`px-1.5 ${locked(f) ? "cursor-not-allowed text-ink-faint" : "cursor-grab text-ink-faint active:cursor-grabbing"}`}><GripVertical size={13} /></span>
                       <Hover label={`Edit ${f.label}`} onClick={() => setOpen(open === f.id ? null : f.id)}><Pencil size={13} aria-hidden="true" /></Hover>
                       <Hover label={`Duplicate ${f.label}`} disabled={locked(f)} onClick={() => duplicate(s.id, f)}><Copy size={13} aria-hidden="true" /></Hover>
                       <Hover label={`Move ${f.label} up`} disabled={fi === 0} onClick={() => commit(secs.map((x) => (x.id === s.id ? { ...x, fields: move(x.fields, fi, -1) } : x)))}><ArrowUp size={13} aria-hidden="true" /></Hover>

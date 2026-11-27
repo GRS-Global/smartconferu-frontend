@@ -73,12 +73,12 @@ export function SectionsRail({ title = "Sections", sub = "Jump to a part of this
             l.onClick || !l.href
               ? <button key={l.label} type="button" onClick={l.onClick} className={`flex w-full items-center gap-2 px-4 py-3.5 text-left transition-colors hover:bg-canvas ${i ? "border-t border-muted" : ""}`}>
                 <span className="min-w-0 flex-1"><span className="block text-xs font-semibold text-ink">{l.label}</span><span className="mt-0.5 block text-[11px] text-ink-faint">{l.desc}</span></span>
-                {l.status && <span className={`flex shrink-0 items-center gap-1 text-[11px] font-semibold ${l.status.done ? "text-success" : "text-ink-faint"}`}>{l.status.done && <Check size={12} strokeWidth={3} aria-hidden="true" />}{l.status.label}</span>}
+                {l.status && <span className={`flex shrink-0 items-center gap-1 text-[11px] font-semibold ${l.status.done ? "text-success-ink" : "text-ink-faint"}`}>{l.status.done && <Check size={12} strokeWidth={3} aria-hidden="true" />}{l.status.label}</span>}
                 <ChevronRight size={14} aria-hidden="true" className="shrink-0 text-line-strong" />
               </button>
               : <Link key={l.label} href={l.href} className={`flex items-center gap-2 px-4 py-3.5 transition-colors hover:bg-canvas ${i ? "border-t border-muted" : ""}`}>
                 <span className="min-w-0 flex-1"><span className="block text-xs font-semibold text-ink">{l.label}</span><span className="mt-0.5 block text-[11px] text-ink-faint">{l.desc}</span></span>
-                {l.status && <span className={`flex shrink-0 items-center gap-1 text-[11px] font-semibold ${l.status.done ? "text-success" : "text-ink-faint"}`}>{l.status.done && <Check size={12} strokeWidth={3} aria-hidden="true" />}{l.status.label}</span>}
+                {l.status && <span className={`flex shrink-0 items-center gap-1 text-[11px] font-semibold ${l.status.done ? "text-success-ink" : "text-ink-faint"}`}>{l.status.done && <Check size={12} strokeWidth={3} aria-hidden="true" />}{l.status.label}</span>}
                 <ChevronRight size={14} aria-hidden="true" className="shrink-0 text-line-strong" />
               </Link>
           ))}

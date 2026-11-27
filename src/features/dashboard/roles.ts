@@ -18,7 +18,7 @@ export const ROLE_META: Record<RoleFilter, RoleMeta> = {
   all: { label: "All conferences", chip: "All", icon: Building2, accent: "var(--navy)", soft: "var(--muted)" },
   author: { label: "As Author", chip: "Author", icon: FileText, accent: "var(--primary)", soft: "var(--primary-soft)" },
   chair: { label: "As Chair", chip: "Chair", icon: ShieldCheck, accent: "var(--secondary)", soft: "var(--secondary-soft)" },
-  reviewer: { label: "As Reviewer", chip: "Reviewer", icon: Eye, accent: "var(--success)", soft: "var(--success-soft)" },
+  reviewer: { label: "As Reviewer", chip: "Reviewer", icon: Eye, accent: "var(--success-ink)", soft: "var(--success-soft)" },
   committee: { label: "As Committee Member", chip: "Committee", icon: Users, accent: "var(--cat-virtual)", soft: "var(--cat-virtual-soft)" },
 };
 

@@ -204,7 +204,7 @@ function Heading({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Notice({ tone, icon: Icon, role, children }: { tone: "danger" | "info"; icon: LucideIcon; role?: "alert" | "status"; children: ReactNode }) {
-  const colors = tone === "danger" ? { background: "var(--danger-soft)", color: "var(--danger)" } : { background: "var(--muted)", color: "var(--text-soft)" };
+  const colors = tone === "danger" ? { background: "var(--danger-soft)", color: "var(--danger-ink)" } : { background: "var(--muted)", color: "var(--text-soft)" };
   return (
     <div role={role} className="sa-pop flex gap-2.5 text-[13px] leading-snug rounded-[10px] px-3.5 py-3 mb-5" style={colors}>
       <Icon size={16} className="shrink-0 mt-px" style={{ color: tone === "info" ? "var(--primary)" : undefined }} aria-hidden="true" />
@@ -215,7 +215,7 @@ function Notice({ tone, icon: Icon, role, children }: { tone: "danger" | "info";
 
 function FieldError({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <p id={id} className="flex items-center gap-1.5 text-[12.5px] font-medium mt-2" style={{ color: "var(--danger)" }}>
+    <p id={id} className="flex items-center gap-1.5 text-[12.5px] font-medium mt-2" style={{ color: "var(--danger-ink)" }}>
       <CircleAlert size={14} aria-hidden="true" />
       {children}
     </p>
@@ -390,7 +390,7 @@ function PasswordStep(props: {
           <FieldError id="sa-password-msg">{missing.password}</FieldError>
         ) : (
           capsLock && (
-            <p className="flex items-center gap-1.5 text-[12.5px] font-medium mt-2" style={{ color: "var(--warning)" }} role="status">
+            <p className="flex items-center gap-1.5 text-[12.5px] font-medium mt-2" style={{ color: "var(--warning-ink)" }} role="status">
               <CircleAlert size={14} aria-hidden="true" /> Caps Lock is on
             </p>
           )
@@ -420,7 +420,7 @@ function PasswordStep(props: {
       <p className="flex items-center justify-center gap-1.5 text-[12.5px] mt-3" style={{ color: "var(--text-muted)" }}>
         {trusted ? (
           <>
-            <ShieldCheck size={13} aria-hidden="true" style={{ color: "var(--success)" }} /> This device is trusted, so no code is needed
+            <ShieldCheck size={13} aria-hidden="true" style={{ color: "var(--success-ink)" }} /> This device is trusted, so no code is needed
           </>
         ) : (
           <>
@@ -650,7 +650,7 @@ function BrandPanel() {
       <BrandBackground />
       <div className="relative z-[1] flex flex-col w-full max-w-[760px] 2xl:max-w-[860px] mx-auto px-10 xl:px-14 py-8 [@media(min-height:900px)]:py-10">
         <span className="inline-flex self-start rounded-xl bg-white px-3.5 py-2" style={{ boxShadow: "0 6px 20px rgba(0,0,0,0.25)" }}>
-          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={111} height={28} priority className="h-7 w-auto" />
+          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={111} height={28} className="h-7 w-auto" />
         </span>
 
         <div className="mt-8 [@media(min-height:900px)]:mt-12">

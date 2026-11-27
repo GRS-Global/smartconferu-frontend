@@ -119,7 +119,7 @@ export function TwoStepModal({ onClose }: { onClose: () => void }) {
               <div className="text-sm font-semibold text-ink">Authenticator app</div>
               <div className="text-xs text-ink-faint">{view.status.enabled ? `On · ${view.status.recoveryCodesLeft} recovery code${view.status.recoveryCodesLeft === 1 ? "" : "s"} left` : "Off"}</div>
             </div>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${view.status.enabled ? "bg-success-soft text-success" : "bg-canvas text-ink-muted"}`}>{view.status.enabled ? "On" : "Off"}</span>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${view.status.enabled ? "bg-success-soft text-success-ink" : "bg-canvas text-ink-muted"}`}>{view.status.enabled ? "On" : "Off"}</span>
           </div>
           {view.status.required && !view.status.enabled && <AuthMessage tone="error">Your account is a Super Admin account: two-step verification has to be on to use the admin features.</AuthMessage>}
           {error && <AuthMessage tone="error">{error}</AuthMessage>}
@@ -131,7 +131,7 @@ export function TwoStepModal({ onClose }: { onClose: () => void }) {
           ) : (
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => { setCode(""); setError(""); setView({ kind: "ask", action: "codes", status: view.status }); }} className={GHOST}>Get new recovery codes</button>
-              <button type="button" onClick={() => { setCode(""); setError(""); setView({ kind: "ask", action: "disable", status: view.status }); }} className={`${GHOST} text-danger`}>Turn off</button>
+              <button type="button" onClick={() => { setCode(""); setError(""); setView({ kind: "ask", action: "disable", status: view.status }); }} className={`${GHOST} text-danger-ink`}>Turn off</button>
             </div>
           )}
         </div>
@@ -226,7 +226,7 @@ export function SessionsModal({ onClose }: { onClose: () => void }) {
           {sessions.map((s) => (
             <li key={s.id} className="flex items-start justify-between gap-3 rounded-xl border border-line px-4 py-3">
               <div className="min-w-0">
-                <div className="flex items-center gap-2 text-sm font-semibold text-ink">{describeDevice(s.userAgent)}{s.current && <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-bold text-success">This device</span>}</div>
+                <div className="flex items-center gap-2 text-sm font-semibold text-ink">{describeDevice(s.userAgent)}{s.current && <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-bold text-success-ink">This device</span>}</div>
                 <div className="mt-0.5 text-xs text-ink-faint">Last active {when(s.lastActiveAt)}{s.ipAddress ? ` · ${s.ipAddress}` : ""}</div>
                 <div className="text-xs text-ink-faint">Signed in {when(s.signedInAt)}</div>
               </div>
@@ -237,7 +237,7 @@ export function SessionsModal({ onClose }: { onClose: () => void }) {
       )}
       {sessions && (
         <div className="mt-5 border-t border-muted pt-4">
-          <button type="button" disabled={busy} onClick={() => void everywhere()} className={`${GHOST} flex w-full items-center justify-center gap-2 text-danger`}><LogOut size={13} aria-hidden="true" /> Sign out everywhere{others > 0 ? ` (${others + 1} devices)` : ""}</button>
+          <button type="button" disabled={busy} onClick={() => void everywhere()} className={`${GHOST} flex w-full items-center justify-center gap-2 text-danger-ink`}><LogOut size={13} aria-hidden="true" /> Sign out everywhere{others > 0 ? ` (${others + 1} devices)` : ""}</button>
           <p className="mt-2 text-center text-xs text-ink-faint">This also signs you out here.</p>
         </div>
       )}
@@ -265,7 +265,7 @@ export function ChangeEmailModal({ currentEmail, hasPassword, onClose }: { curre
     <Modal title="Change email address" subtitle="The address you sign in with." onClose={onClose} maxWidth="max-w-md">
       {sent ? (
         <div className="py-2 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft"><Check size={22} className="text-success" aria-hidden="true" /></div>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft"><Check size={22} className="text-success-ink" aria-hidden="true" /></div>
           <p className="text-sm font-semibold text-navy">Check your inbox</p>
           <p className="mb-5 mt-1 text-xs leading-relaxed text-ink-muted">We sent a confirmation link to <b>{sent}</b>. Your address changes when you open it. The link works once and expires after 24 hours. We also told {currentEmail || "your current address"} about the request.</p>
           <button type="button" onClick={onClose} className="cursor-pointer rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white">Close</button>
@@ -276,12 +276,12 @@ export function ChangeEmailModal({ currentEmail, hasPassword, onClose }: { curre
           {error && <AuthMessage tone="error">{error}</AuthMessage>}
           <div className="space-y-3">
             <div>
-              <label htmlFor="new-email" className={LABEL}>New email address <span className="text-danger">*</span></label>
+              <label htmlFor="new-email" className={LABEL}>New email address <span className="text-danger-ink">*</span></label>
               <input id="new-email" type="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} placeholder="name@university.edu" className={INPUT} />
             </div>
             {hasPassword && (
               <div>
-                <label htmlFor="email-current-password" className={LABEL}>Your current password <span className="text-danger">*</span></label>
+                <label htmlFor="email-current-password" className={LABEL}>Your current password <span className="text-danger-ink">*</span></label>
                 <PasswordField id="email-current-password" label="current password" autoComplete="current-password" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} className={INPUT} />
               </div>
             )}

@@ -32,7 +32,7 @@ export function DesignBody({ conference, certificates, distributions, actions, g
   return (
     <div>
       <div className="px-4 sm:px-8 pt-8 pb-0">
-        <PageHero
+        <PageHero level={1}
           label="Design"
           tile={<Award size={34} />}
           title="Design"
@@ -108,7 +108,7 @@ export function DesignBody({ conference, certificates, distributions, actions, g
                       <button
                         onClick={() => { void actions.deleteDesign(cert.id); }}
                         title="Delete" aria-label={`Delete ${cert.name}`}
-                        style={{ border: "1px solid var(--border)", color: "var(--danger)" }}
+                        style={{ border: "1px solid var(--border)", color: "var(--danger-ink)" }}
                         className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[var(--danger-soft)] transition-colors cursor-pointer"
                       >
                         <Trash2 size={14} />

@@ -18,7 +18,7 @@ export function Metric({ icon: IconC, label, value, sub, tone }: { icon: Icon; l
         <IconC size={14} style={{ color: tone ? TONES[tone].fg : "var(--primary)" }} />
         {label}
       </p>
-      <p className="text-[22px] font-bold mt-1 tabular-nums" style={{ color: tone === "danger" ? "var(--danger)" : "var(--text)" }}>
+      <p className="text-[22px] font-bold mt-1 tabular-nums" style={{ color: tone === "danger" ? "var(--danger-ink)" : "var(--text)" }}>
         {value}
       </p>
       {sub && (
@@ -162,7 +162,7 @@ export function ConferenceReviewCard({ conferenceId, papers: all }: { conference
                   <td>
                     <StageBadge stage={p.stage} />
                   </td>
-                  <td className="tabular-nums" style={{ color: assigned < p.reviewersWanted && p.stage !== "decided" ? "var(--warning)" : "var(--text-soft)" }}>
+                  <td className="tabular-nums" style={{ color: assigned < p.reviewersWanted && p.stage !== "decided" ? "var(--warning-ink)" : "var(--text-soft)" }}>
                     {assigned} of {p.reviewersWanted}
                   </td>
                   <td className="tabular-nums">

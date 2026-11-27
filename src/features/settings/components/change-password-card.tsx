@@ -66,7 +66,7 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     return (
       <Modal title="Change Password" onClose={onClose} maxWidth="max-w-lg">
         <div className="py-3 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft"><Check size={22} aria-hidden="true" className="text-success" /></div>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft"><Check size={22} aria-hidden="true" className="text-success-ink" /></div>
           <p className="text-sm font-semibold text-navy">Password updated</p>
           <p className="mb-5 mt-1 text-xs text-ink-faint">Use your new password the next time you sign in.</p>
           <button type="button" onClick={onClose} className="cursor-pointer rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white">Close</button>
@@ -81,17 +81,17 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
         {error && <AuthMessage tone="error">{error}</AuthMessage>}
         <div className="space-y-3">
           {needsCurrent ? <div>
-            <label htmlFor="pw-current" className={LABEL}>Current password <span className="text-danger">*</span></label>
+            <label htmlFor="pw-current" className={LABEL}>Current password <span className="text-danger-ink">*</span></label>
             <PasswordField id="pw-current" label="current password" autoComplete="current-password" value={current} onChange={(e) => { setCurrent(e.target.value); setError(""); }} className={INPUT} />
           </div> : <p className="rounded-lg bg-canvas px-3 py-2 text-xs text-ink-muted">You signed up with Google, Microsoft or ORCID, so there is no password yet. Choose one to also sign in with your email.</p>}
           <div>
-            <label htmlFor="pw-new" className={LABEL}>New password <span className="text-danger">*</span></label>
+            <label htmlFor="pw-new" className={LABEL}>New password <span className="text-danger-ink">*</span></label>
             <PasswordField id="pw-new" label="new password" autoComplete="new-password" value={next} placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`} onChange={(e) => { setNext(e.target.value); setError(""); }} className={INPUT} />
           </div>
           <div>
-            <label htmlFor="pw-again" className={LABEL}>Retype new password <span className="text-danger">*</span></label>
+            <label htmlFor="pw-again" className={LABEL}>Retype new password <span className="text-danger-ink">*</span></label>
             <PasswordField id="pw-again" label="retyped password" autoComplete="new-password" value={again} aria-invalid={Boolean(problems.again) || undefined} onChange={(e) => { setAgain(e.target.value); setError(""); }} className={INPUT} />
-            {problems.again && <p role="alert" className="mt-1 text-xs font-medium text-danger">{problems.again}</p>}
+            {problems.again && <p role="alert" className="mt-1 text-xs font-medium text-danger-ink">{problems.again}</p>}
           </div>
         </div>
         <TriggeredEmailNote className="mt-4" emails={[{ key: "passwordChanged", to: "Your login email" }]} />

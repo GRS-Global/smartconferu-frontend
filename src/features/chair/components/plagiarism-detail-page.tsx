@@ -197,15 +197,15 @@ export function PlagiarismDetailPage({ slug, paperLabel }: { slug: string; paper
                 <SectionCard
                   title="Scores" hint="From the iThenticate report. The limits are set in Paper Screening settings." pad={false}
                   action={overLimit
-                    ? <span style={{ color: "var(--danger)", background: "var(--danger-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><AlertTriangle size={12} aria-hidden="true" /> {overLimit} over the limit</span>
-                    : hasScores ? <span style={{ color: "var(--success)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><Check size={12} strokeWidth={3} aria-hidden="true" /> Within the limits</span> : null}
+                    ? <span style={{ color: "var(--danger-ink)", background: "var(--danger-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><AlertTriangle size={12} aria-hidden="true" /> {overLimit} over the limit</span>
+                    : hasScores ? <span style={{ color: "var(--success-ink)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><Check size={12} strokeWidth={3} aria-hidden="true" /> Within the limits</span> : null}
                 >
                   <ul style={{ borderTop: "1px solid var(--border)" }} className="divide-y divide-line">
                     {([["Similarity", "similarity", sim, "How much of the paper matches existing sources.", criteria.similarityLimit], ["AI-generated text", "ai", ai, "How much of the paper is likely AI-written.", criteria.aiLimit]] as const).filter(([, field]) => editable || typeof report[field] === "number").map(([label, field, s, need, limit]) => (
                       <CheckRow key={field} state={s.state} title={label} need={`${need} Limit ${limit}%.`}>
                         {editable
-                          ? <label className="flex items-center gap-1 text-xs font-semibold text-ink-muted">% <input type="number" min={0} max={100} aria-label={`${label} percent`} value={report[field] ?? ""} onChange={(ev) => setScore(field, ev.target.value)} style={{ border: "1.5px solid var(--border)", ...(s.state === "bad" ? { borderColor: "var(--danger)", color: "var(--danger)" } : {}) }} className="h-8 w-20 rounded-md bg-white px-2 text-center text-xs font-semibold tabular-nums outline-none" /></label>
-                          : <span style={{ color: s.state === "bad" ? "var(--danger)" : "var(--ink)" }} className="text-sm font-bold tabular-nums">{report[field]}%</span>}
+                          ? <label className="flex items-center gap-1 text-xs font-semibold text-ink-muted">% <input type="number" min={0} max={100} aria-label={`${label} percent`} value={report[field] ?? ""} onChange={(ev) => setScore(field, ev.target.value)} style={{ border: "1.5px solid var(--border)", ...(s.state === "bad" ? { borderColor: "var(--danger)", color: "var(--danger-ink)" } : {}) }} className="h-8 w-20 rounded-md bg-white px-2 text-center text-xs font-semibold tabular-nums outline-none" /></label>
+                          : <span style={{ color: s.state === "bad" ? "var(--danger-ink)" : "var(--ink)" }} className="text-sm font-bold tabular-nums">{report[field]}%</span>}
                       </CheckRow>
                     ))}
                   </ul>
@@ -219,7 +219,7 @@ export function PlagiarismDetailPage({ slug, paperLabel }: { slug: string; paper
                       <FileText size={15} aria-hidden="true" className="shrink-0 text-primary" />
                       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink" title={name}>{name}</span>
                       <VersionActions onView={() => void openReport(name)} onDownload={() => void openReport(name)} />
-                      {editable && v.decision === "pending" && <button type="button" onClick={() => removeReport(name)} aria-label={`Remove ${name}`} title="Remove this file" className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-ink-faint hover:bg-danger-soft hover:text-danger"><X size={15} aria-hidden="true" /></button>}
+                      {editable && v.decision === "pending" && <button type="button" onClick={() => removeReport(name)} aria-label={`Remove ${name}`} title="Remove this file" className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-ink-faint hover:bg-danger-soft hover:text-danger-ink"><X size={15} aria-hidden="true" /></button>}
                     </span>
                   ))}
                   {editable && v.files.length < MAX_REPORT_FILES && (

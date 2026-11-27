@@ -110,7 +110,7 @@ export function NotificationCard({ item, action, audience, busy, onAction, onVie
             disabled={busy}
             aria-label={`Dismiss: ${item.title}`}
             title="Dismiss"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-faint transition-colors hover:bg-canvas hover:text-danger disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-ink-faint transition-colors hover:bg-canvas hover:text-danger-ink disabled:cursor-not-allowed disabled:opacity-60"
           >
             <X size={14} aria-hidden="true" />
           </button>

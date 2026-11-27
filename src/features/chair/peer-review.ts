@@ -29,21 +29,21 @@ export interface PrRow {
 }
 
 export const PR_STAGES: Record<PrStage, { label: string; color: string; bg: string }> = {
-  upload: { label: "Upload pending", color: "#64748B", bg: "var(--muted)" },
+  upload: { label: "Upload pending", color: "var(--ink-faint)", bg: "var(--muted)" },
   plagiarism: { label: "Plagiarism Check", color: "#0369A1", bg: "#E0F2FE" },
   needs: { label: "Needs reviewers", color: "#B45309", bg: "var(--warning-soft)" },
   awaiting: { label: "Awaiting acceptance", color: "#7C3AED", bg: "#F3E8FF" },
   review: { label: "In review", color: "var(--primary)", bg: "var(--primary-soft)" },
-  overdue: { label: "Overdue", color: "var(--danger)", bg: "var(--danger-soft)" },
+  overdue: { label: "Overdue", color: "var(--danger-ink)", bg: "var(--danger-soft)" },
   ready: { label: "Ready to decide", color: "#15803D", bg: "var(--success-soft)" },
   decided: { label: "Decided", color: "var(--ink-soft)", bg: "var(--muted)" },
 };
 export const REVIEWER_STATE: Record<ReviewerState, { label: string; word: string; color: string }> = {
-  done: { label: "Review submitted", word: "Submitted", color: "var(--success)" },
+  done: { label: "Review submitted", word: "Submitted", color: "var(--success-ink)" },
   active: { label: "Accepted · reviewing", word: "In review", color: "var(--primary)" },
-  waiting: { label: "Hasn't accepted the paper yet", word: "Not accepted yet", color: "var(--warning)" },
-  invite: { label: "Hasn't accepted the committee invitation", word: "Invite pending", color: "var(--warning)" },
-  overdue: { label: "Overdue", word: "Overdue", color: "var(--danger)" },
+  waiting: { label: "Hasn't accepted the paper yet", word: "Not accepted yet", color: "var(--warning-ink)" },
+  invite: { label: "Hasn't accepted the committee invitation", word: "Invite pending", color: "var(--warning-ink)" },
+  overdue: { label: "Overdue", word: "Overdue", color: "var(--danger-ink)" },
 };
 
 /** Days to a date, as the prototype counts them (daysToISO): to the END of that day, rounded up. A review due today still has 1 day left, and a review is

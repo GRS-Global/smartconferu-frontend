@@ -9,5 +9,5 @@ export const DEMO_ACCOUNTS = [
 export const DEMO_ROLE_TONE = {
   chair: { label: "Chair", color: "var(--secondary)", bg: "var(--secondary-soft)" },
   author: { label: "Author", color: "var(--primary)", bg: "var(--primary-soft)" },
-  reviewer: { label: "Reviewer", color: "var(--success)", bg: "var(--success-soft)" },
+  reviewer: { label: "Reviewer", color: "var(--success-ink)", bg: "var(--success-soft)" },
 } as const;

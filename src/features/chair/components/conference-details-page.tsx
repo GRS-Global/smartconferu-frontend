@@ -27,6 +27,7 @@ import { BrandingTab } from "./branding-tab";
 import { ConferenceStatusField } from "./conference-status-field";
 import { licenseEndOf, LicenseExpiryField } from "./license-expiry-field";
 import { HelpLabel } from "./setting-label";
+import { setupChanged } from "@/features/tour/use-setup";
 
 /* Conference Settings › Conference Details (the prototype's ChairSettingsPage): a "Profile completeness" bar, the tabs Basic Details / Format &
    Venue / Branding, and a Sections rail. Everything is a column of `conferences`, except the time zone, abstract deadline, summary, language,
@@ -75,7 +76,7 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
   const venueMissing = [!f.mode && "event format", !f.city.trim() && "city", !f.country && "country"].filter(Boolean) as string[];
   const modeLabel = ({ in_person: "In-Person", virtual: "Virtual", hybrid: "Hybrid" } as const)[f.mode as "in_person"] ?? "";
   const bad = (m: string) => (m ? "border-danger" : "");
-  const err = (m: string) => m && <p role="alert" className="mt-1 text-xs font-medium text-danger">{m}</p>;
+  const err = (m: string) => m && <p role="alert" className="mt-1 text-xs font-medium text-danger-ink">{m}</p>;
   const addTopic = () => { const t = topic.trim(); if (t && !f.topics.some((x) => x.toLowerCase() === t.toLowerCase())) set("topics", [...f.topics, t]); setTopic(""); };
   const [ai, setAi] = useState<{ status: "idle" | "loading" | "done" | "error"; added?: number; message?: string }>({ status: "idle" });
   const suggest = async () => {
@@ -141,11 +142,11 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
                 <div><label htmlFor="cd-sc" className={LABEL}><HelpLabel help="smartConfEmail">SmartConf email</HelpLabel></label><input id="cd-sc" type="email" value={f.smartConfEmail} placeholder="notifications@smartconf.example" onChange={(ev) => set("smartConfEmail", ev.target.value)} className={INPUT_CLASS} /></div>
               </div>
               <div id="cd-topics" data-tour="cd-topics" className="scroll-mt-24 border-t border-muted pt-4">
-                <div className="mb-1.5 block text-xs font-semibold text-ink-muted"><HelpLabel help="topics">Topics &amp; research areas</HelpLabel> <span className="text-danger">*</span></div>
+                <div className="mb-1.5 block text-xs font-semibold text-ink-muted"><HelpLabel help="topics">Topics &amp; research areas</HelpLabel> <span className="text-danger-ink">*</span></div>
                 {f.topics.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{f.topics.map((t) => <span key={t} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--primary-soft-border)] bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{t}<button type="button" aria-label={`Remove ${t}`} onClick={() => set("topics", f.topics.filter((x) => x !== t))}><X size={11} aria-hidden="true" /></button></span>)}</div>}
                 <div className="flex flex-wrap items-center gap-2"><input aria-label="Add a topic" value={topic} onChange={(ev) => setTopic(ev.target.value)} onKeyDown={(ev) => { if (ev.key === "Enter") { ev.preventDefault(); addTopic(); } }} placeholder="Add a topic and press Enter…" className={cn(INPUT_CLASS, "min-w-[12rem] flex-1 !px-3 !py-2")} /><button type="button" onClick={addTopic} className="shrink-0 cursor-pointer rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-muted hover:bg-canvas">Add</button><button type="button" onClick={() => void suggest()} disabled={ai.status === "loading"} className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--primary-soft-border)] bg-primary-soft px-3 text-xs font-bold text-primary disabled:opacity-60"><Sparkles size={13} aria-hidden="true" /> {ai.status === "loading" ? "Suggesting…" : "Suggest with AI"}</button></div>
-                <p className={cn("mt-1.5 text-xs", f.topics.length >= MIN_TOPICS ? "text-success" : "text-ink-faint")}>{f.topics.length} topic{f.topics.length === 1 ? "" : "s"} · at least {MIN_TOPICS} required{ai.status === "done" && (ai.added ?? 0) > 0 && <span className="font-normal text-ink-muted"> — AI added {ai.added}; please check them.</span>}</p>
-                {ai.status === "error" && <p role="alert" className="mt-1 flex items-center gap-1 text-xs font-semibold text-danger"><AlertTriangle size={12} aria-hidden="true" /> {ai.message}</p>}
+                <p className={cn("mt-1.5 text-xs", f.topics.length >= MIN_TOPICS ? "text-success-ink" : "text-ink-faint")}>{f.topics.length} topic{f.topics.length === 1 ? "" : "s"} · at least {MIN_TOPICS} required{ai.status === "done" && (ai.added ?? 0) > 0 && <span className="font-normal text-ink-muted"> — AI added {ai.added}; please check them.</span>}</p>
+                {ai.status === "error" && <p role="alert" className="mt-1 flex items-center gap-1 text-xs font-semibold text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {ai.message}</p>}
                 <p className="mt-1 text-xs text-ink-faint">Looking for tracks? <a href={`/chair/${e}/settings/submissions`} className="font-semibold text-primary hover:underline">Manage them in Submission Settings</a></p>
               </div>
             </div>
@@ -182,8 +183,8 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
           )}
           <div className="mt-6 flex flex-wrap items-center justify-end gap-4 border-t border-muted pt-5">
             {tab === "venue"
-              ? <>{venueMissing.length > 0 && <span className="text-xs font-semibold text-danger">Still needed: {venueMissing.join(", ")}</span>}<Button className="disabled:!bg-slate-400 disabled:!opacity-100" disabled={!ok || busy || venueMissing.length > 0 || !dirty} title={dirty ? undefined : "No changes to save"} onClick={() => onSave(f)}>{busy ? "Saving…" : "Save Venue"}</Button></>
-              : tab === "basic" && <>{stillNeeded.length > 0 && <span className="text-xs font-semibold text-danger">Still needed: {stillNeeded.join(", ")}</span>}
+              ? <>{venueMissing.length > 0 && <span className="text-xs font-semibold text-danger-ink">Still needed: {venueMissing.join(", ")}</span>}<Button className="disabled:!bg-slate-400 disabled:!opacity-100" disabled={!ok || busy || venueMissing.length > 0 || !dirty} title={dirty ? undefined : "No changes to save"} onClick={() => onSave(f)}>{busy ? "Saving…" : "Save Venue"}</Button></>
+              : tab === "basic" && <>{stillNeeded.length > 0 && <span className="text-xs font-semibold text-danger-ink">Still needed: {stillNeeded.join(", ")}</span>}
             <span data-tour="cd-save" className="inline-flex"><Button className="disabled:!bg-slate-400 disabled:!opacity-100" disabled={!ok || stillNeeded.length > 0 || busy || !dirty} title={dirty ? undefined : "No changes to save"} onClick={() => onSave(f)}>{busy ? "Saving…" : "Update Conference"}</Button></span></>}
           </div>
         </section>
@@ -193,7 +194,7 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
             { id: "cd-identity", label: "Title & identity", meta: f.acronym },
             { id: "cd-dates", label: "Dates & deadlines", meta: f.startDate ? `${showDate(f.startDate)}${f.endDate ? ` - ${showDate(f.endDate)}` : ""}` : "Not set" },
             { id: "cd-about", label: "Website & description", meta: f.webPage.trim() ? "Website added" : "No website" },
-            { id: "cd-area", label: "Area, language & status", meta: f.primaryArea || "No area chosen", tone: f.status === "archived" ? { label: "Archived", bg: "var(--danger-soft)", color: "var(--danger)" } : { label: "Active", bg: "var(--success-soft)", color: "var(--success)" } },
+            { id: "cd-area", label: "Area, language & status", meta: f.primaryArea || "No area chosen", tone: f.status === "archived" ? { label: "Archived", bg: "var(--danger-soft)", color: "var(--danger-ink)" } : { label: "Active", bg: "var(--success-soft)", color: "var(--success-ink)" } },
             { id: "cd-contact", label: "License & contact", meta: licenseEnd ? `License until ${licenseEnd}` : f.contactEmail || "No contact email" },
             { id: "cd-topics", label: "Topics & research areas", meta: `${f.topics.length} topic${f.topics.length === 1 ? "" : "s"}` },
           ]}
@@ -221,13 +222,13 @@ export function ConferenceDetailsPage({ slug }: { slug: string }) {
   const { conference, roles, others, screening, info } = state;
   const save = async (next: ConferenceInfo) => {
     setBusy(true); setError("");
-    try { await (await getChairService()).saveInfo(slug, next); setToast({ title: "Details saved", text: `${next.name} was updated.` }); reload(); } catch (e) { setError(e instanceof AuthRequiredError ? "Your session ended — please sign in again." : e instanceof Error ? e.message : "Something went wrong."); } finally { setBusy(false); }
+    try { await (await getChairService()).saveInfo(slug, next); setupChanged(); setToast({ title: "Details saved", text: `${next.name} was updated.` }); reload(); } catch (e) { setError(e instanceof AuthRequiredError ? "Your session ended — please sign in again." : e instanceof Error ? e.message : "Something went wrong."); } finally { setBusy(false); }
   };
   return (
     <ConferenceShell role="chair" conference={conference} roles={roles} others={others} active="settings/details" screening={screening}>
       <PageHeader title="Conference Details" breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: conference.acronym }, { label: "Conference Settings" }, { label: "Conference Details" }, { strong: true, label: ({ basic: "Basic Details", venue: "Format & Venue", branding: "Branding" } as const)[tab] }]} />
       <div className="hd-page p-8">
-        {error && <p role="alert" className="mb-5 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
+        {error && <p role="alert" className="mb-5 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{error}</p>}
         <Form key={JSON.stringify(info)} initial={info} slug={slug} types={state.settings.presentationTypes} typesSet={state.settings.stored} cfp={cfp} onLogoSaved={reload} busy={busy} onSave={(i) => void save(i)} tab={tab} setTab={setTab} />
       </div>
       <FlowToast toast={toast} onClose={closeToast} />

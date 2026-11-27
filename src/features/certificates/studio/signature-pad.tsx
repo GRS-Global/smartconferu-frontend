@@ -147,7 +147,7 @@ export function SignaturePadDialog({ onClose, onUse }: { onClose: () => void; on
           style={{ touchAction: "none", cursor: "crosshair" }} className="absolute inset-0 w-full h-full"
         />
       </div>
-      {problem && <p role="alert" style={{ color: "var(--danger)" }} className="text-sm font-semibold mt-3">{problem}</p>}
+      {problem && <p role="alert" style={{ color: "var(--danger-ink)" }} className="text-sm font-semibold mt-3">{problem}</p>}
       <p style={{ color: "var(--ink-faint)" }} className="text-[11px] mt-3 leading-relaxed">A drawn signature is a picture of handwriting, not a digital signature. A trackpad, touch screen or pen gives the smoothest result. Prefer a scan? Close this and use Upload.</p>
     </CertModal>
   );

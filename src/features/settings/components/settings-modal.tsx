@@ -37,7 +37,7 @@ function CardHeader({ icon: Icon, title }: { icon: LucideIcon; title: string }) 
 function ActionItem({ icon: Icon, title, subtitle, onClick, danger = false }: { icon: LucideIcon; title: string; subtitle: string; onClick: () => void; danger?: boolean }) {
   return (
     <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-canvas">
-      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${danger ? "bg-danger-soft text-danger" : "bg-primary-soft text-primary"}`}><Icon size={16} aria-hidden="true" /></span>
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${danger ? "bg-danger-soft text-danger-ink" : "bg-primary-soft text-primary"}`}><Icon size={16} aria-hidden="true" /></span>
       <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-ink">{title}</span><span className="block truncate text-xs text-ink-faint">{subtitle}</span></span>
       <ChevronRight size={15} aria-hidden="true" className="shrink-0 text-line-strong" />
     </button>
@@ -130,7 +130,7 @@ export function SecuritySettingsModal({ profile, save, onClose, onAddPhone }: { 
               <Switch labelledBy="rev-title" checked={profile.showReviewerAchievements} onChange={(v) => void write({ showReviewerAchievements: v })} />
             </div>
           </Card>
-          {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
+          {error && <p role="alert" className="text-sm font-semibold text-danger-ink">{error}</p>}
         </div>
       </Modal>
       {dialog === "password" && <ChangePasswordModal onClose={() => setDialog(null)} />}

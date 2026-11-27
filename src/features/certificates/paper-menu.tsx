@@ -27,7 +27,7 @@ export function CustomSizeFields({ onUse, compact = false }: { onUse: () => void
         <div><label htmlFor="cs-u" className="sr-only">Unit</label><select id="cs-u" value={unit} onChange={(e) => { const u = e.target.value as "mm" | "in"; const k = u === "in" ? 1 / 25.4 : 25.4; const conv = (v: string) => { const n = Number(v.replace(",", ".")); return Number.isFinite(n) ? String(Math.round(n * k * 100) / 100) : v; }; setA(conv(a)); setB(conv(b)); setUnit(u); }} style={selectStyle} className={selectClass}><option value="mm">mm</option><option value="in">in</option></select></div>
       </div>
       <button type="button" onClick={use} style={{ background: "var(--primary)" }} className={`${compact ? "py-1.5" : "py-2"} w-full rounded-lg text-white text-xs font-bold hover:bg-[var(--primary-hover)] cursor-pointer`}>Use this size</button>
-      {error && <p role="alert" style={{ color: "var(--danger)" }} className="text-[11px] font-semibold leading-snug">{error}</p>}
+      {error && <p role="alert" style={{ color: "var(--danger-ink)" }} className="text-[11px] font-semibold leading-snug">{error}</p>}
       <p style={{ color: "var(--ink-faint)" }} className="text-[10.5px] leading-snug">Either order; the sheet is turned to suit the design. From {MIN_MM} mm to {MAX_MM / 10} cm on each side.</p>
     </div>
   );

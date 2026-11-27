@@ -46,7 +46,7 @@ export function EditDecisionsModal({ types, papers, currentTypeOf, settingsHref,
           {already > 0 && <li>{already} already {already === 1 ? "has" : "have"} this decision.</li>}
         </ul>
         <p className="mt-3 max-h-24 overflow-y-auto text-xs text-ink-faint">{papers.map((p) => p.id).join(", ")}</p>
-        {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+        {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
       </Modal>
     );
   }

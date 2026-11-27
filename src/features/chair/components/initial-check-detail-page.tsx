@@ -161,8 +161,8 @@ export function InitialCheckDetailPage({ slug, paperLabel }: { slug: string; pap
             hint={locked ? "Reviewers are assigned, so the initial check is final. Use Peer Review to change anything." : "Set each value from the PDF. The page range follows the paper's layout."}
             pad={false}
             action={failing.length
-              ? <span style={{ color: "var(--danger)", background: "var(--danger-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><AlertTriangle size={12} aria-hidden="true" /> {failing.length} need{failing.length === 1 ? "s" : ""} attention</span>
-              : <span style={{ color: "var(--success)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><Check size={12} strokeWidth={3} aria-hidden="true" /> All requirements met</span>}
+              ? <span style={{ color: "var(--danger-ink)", background: "var(--danger-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><AlertTriangle size={12} aria-hidden="true" /> {failing.length} need{failing.length === 1 ? "s" : ""} attention</span>
+              : <span style={{ color: "var(--success-ink)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><Check size={12} strokeWidth={3} aria-hidden="true" /> All requirements met</span>}
           >
             <ul style={{ borderTop: "1px solid var(--border)" }} className="divide-y divide-line">
               <CheckRow state={check.editable ? "ok" : "bad"} title="PDF editable" need="Text can be selected and copied — a scanned or image-only PDF can't be checked for plagiarism." tag={<AutoTag auto={auto} field="editable" check={check} />}>
@@ -186,7 +186,7 @@ export function InitialCheckDetailPage({ slug, paperLabel }: { slug: string; pap
                 )}
               </CheckRow>
               {(check.other ?? []).map((o, i) => (
-                <CheckRow key={o.key ?? i} state="bad" title={o.label} need={o.problem || "Marked as a problem by the chair"}><span className="text-xs font-bold text-danger">Missing</span></CheckRow>
+                <CheckRow key={o.key ?? i} state="bad" title={o.label} need={o.problem || "Marked as a problem by the chair"}><span className="text-xs font-bold text-danger-ink">Missing</span></CheckRow>
               ))}
             </ul>
           </SectionCard>
@@ -200,7 +200,7 @@ export function InitialCheckDetailPage({ slug, paperLabel }: { slug: string; pap
               <div style={{ background: "#FFF4E5", color: "#92400E" }} className="inline-flex items-start gap-2 rounded-lg px-3.5 py-2.5 text-sm"><AlertTriangle size={15} aria-hidden="true" className="mt-0.5 shrink-0" /> <span>The PDF couldn&apos;t be read{auto.error ? ` (${auto.error})` : ""}. Check its values by hand from the PDF.</span></div>
             ) : (
               <div className="space-y-3">
-                <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-success"><Check size={14} strokeWidth={3} aria-hidden="true" /> The PDF was read and the values above were filled in from it.</div>
+                <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-success-ink"><Check size={14} strokeWidth={3} aria-hidden="true" /> The PDF was read and the values above were filled in from it.</div>
                 {lowConfidence.length > 0 && (
                   <div style={{ background: "#FFF4E5", color: "#92400E" }} className="inline-flex w-full items-start gap-2 rounded-lg px-3.5 py-2.5 text-sm"><AlertTriangle size={15} aria-hidden="true" className="mt-0.5 shrink-0" /> <span>Not certain about {lowConfidence.map((f) => (f === "column" ? "the layout" : "the language")).join(" and ")} — please check {lowConfidence.length > 1 ? "them" : "it"} in the PDF.</span></div>
                 )}
@@ -210,7 +210,7 @@ export function InitialCheckDetailPage({ slug, paperLabel }: { slug: string; pap
                     {Object.entries(MISSING_LABEL).filter(([k]) => !(doubleBlind && (k === "author_names" || k === "affiliations"))).map(([k, label]) => {
                       const gone = missing.includes(label);
                       return (
-                        <span key={k} style={gone ? { color: "#B45309", background: "#FFF4E5" } : { color: "var(--success)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold">
+                        <span key={k} style={gone ? { color: "#B45309", background: "#FFF4E5" } : { color: "var(--success-ink)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold">
                           {gone ? <AlertTriangle size={11} aria-hidden="true" /> : <Check size={11} strokeWidth={3} aria-hidden="true" />} {label.charAt(0).toUpperCase() + label.slice(1)}{gone ? " — missing" : ""}
                         </span>
                       );

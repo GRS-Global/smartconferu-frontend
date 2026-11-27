@@ -41,7 +41,7 @@ export function SetupGuide({ stages, profilePct, profileHref }: { stages: SetupS
           const isDone = stageDone(s); const isCur = i === currentIndex;
           return (
             <li key={s.key} aria-current={isCur ? "step" : undefined} className={`rounded-xl border px-3.5 py-2.5 ${isDone ? "border-[#BBF7D0] bg-success-soft" : isCur ? "border-primary bg-white shadow-[0_0_0_3px_var(--primary-soft)]" : "border-line bg-white"}`}>
-              <div className={`flex items-center gap-1 text-xs font-bold ${isDone ? "text-success" : isCur ? "text-primary" : "text-ink-muted"}`}>{isDone && <Check size={12} strokeWidth={3} aria-hidden="true" />}{i + 1} · {s.name}</div>
+              <div className={`flex items-center gap-1 text-xs font-bold ${isDone ? "text-success-ink" : isCur ? "text-primary" : "text-ink-muted"}`}>{isDone && <Check size={12} strokeWidth={3} aria-hidden="true" />}{i + 1} · {s.name}</div>
               <div className="text-[11.5px] text-ink-faint">{isDone ? "Done" : isCur ? `${doneOf(s)}/${s.tasks.length} done` : "Later"}</div>
             </li>
           );

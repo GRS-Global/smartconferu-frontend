@@ -68,8 +68,8 @@ export function AutoAssignModal({ rows, all, scope, pool, maxLoad, defaultDeadli
                 <span aria-hidden="true" className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[10.5px] font-bold text-primary">{initials(r.name)}</span>
                 <span className="text-[13px] font-semibold text-ink">{r.name}</span>
                 {concerns(r).map((c) => <span key={c}>{tag(c)}</span>)}
-                <span style={{ color: maxLoad && after > maxLoad ? "var(--danger)" : "var(--ink-faint)" }} title="Papers they'll have after this" className="ml-auto whitespace-nowrap text-[11.5px]">{after} papers</span>
-                <button type="button" onClick={() => removePick(p.dbId, r.memberId)} aria-label={`Remove ${r.name}`} title="Remove — then pick someone else" className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger"><X size={14} aria-hidden="true" /></button>
+                <span style={{ color: maxLoad && after > maxLoad ? "var(--danger-ink)" : "var(--ink-faint)" }} title="Papers they'll have after this" className="ml-auto whitespace-nowrap text-[11.5px]">{after} papers</span>
+                <button type="button" onClick={() => removePick(p.dbId, r.memberId)} aria-label={`Remove ${r.name}`} title="Remove — then pick someone else" className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger-ink"><X size={14} aria-hidden="true" /></button>
               </li>
             );
           })}

@@ -111,10 +111,10 @@ function AddReview({ label, state }: { label: string; state: Extract<ReturnType<
               {detail.abstract && <AbstractCard text={detail.abstract} compact={open} />}
               <div className="space-y-5"><ReviewFormBody form={detail.form} values={values} onChange={change} disabled={busy} onPolish={() => setPolish(true)} /></div>
               <EnhanceReviewDialog open={polish} input={{ review: String(values["f-summary"] ?? ""), title: paper.title, abstract: detail.abstract, ratings: detail.form.flatMap((s) => s.fields).filter((f) => f.type === "score" && Number(values[f.id]) > 0).map((f) => ({ label: f.label, value: Number(values[f.id]) })), submissionId: paper.dbId || undefined }} onApply={(t) => { change("f-summary", t); setPolish(false); }} onClose={() => setPolish(false)} />
-              {error && <p role="alert" className="rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">{error}</p>}
+              {error && <p role="alert" className="rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger-ink">{error}</p>}
               <div style={{ border: "1px solid var(--border)", boxShadow: "0 4px 16px rgba(15,23,42,0.08)" }} className="sticky bottom-4 mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl bg-white px-4 py-3">
                 <span className="flex flex-col">
-                  <span style={{ color: complete ? "var(--success)" : "var(--ink-muted)" }} className="text-xs font-semibold">{complete ? "All required fields answered" : `${answered} of ${required.length} required fields answered`}</span>
+                  <span style={{ color: complete ? "var(--success-ink)" : "var(--ink-muted)" }} className="text-xs font-semibold">{complete ? "All required fields answered" : `${answered} of ${required.length} required fields answered`}</span>
                   {savedAt && <span className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-faint"><Check size={11} aria-hidden="true" /> Draft saved {age(savedAt)}</span>}
                 </span>
                 <div className="flex items-center gap-3">

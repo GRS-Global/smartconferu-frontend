@@ -1,6 +1,6 @@
 import { DATA_SOURCE } from "@/lib/config";
 import { api, ApiError } from "@/lib/api-client";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 
 /* The AI functions. With the own backend (`api` mode) they call Backend/src/modules/ai directly (`POST /ai/topics`, `/ai/review-enhance`, `/ai/screening`,
    `/ai/paper-metadata`, `/submissions/:id/ai/ingest|chat`); otherwise they go through this app's proxy (app/api/ai/[name]/route.ts → the prototype's
@@ -8,7 +8,7 @@ import { getSupabase } from "@/lib/supabase";
 
 async function post(name: "ingest-paper" | "paper-chat" | "enhance-review" | "suggest-topics" | "screen-paper" | "extract-paper", body: Record<string, unknown>, signal?: AbortSignal): Promise<Response | null> {
   if (DATA_SOURCE === "mock") return null;
-  const { data: { session } } = await getSupabase().auth.getSession();
+  const { data: { session } } = await (await supabase()).auth.getSession();
   if (!session) return null;
   return fetch(`/api/ai/${name}`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${session.access_token}` }, body: JSON.stringify(body), signal });
 }

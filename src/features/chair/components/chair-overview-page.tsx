@@ -117,7 +117,7 @@ function Stars({ value, size = 12 }: { value: number; size?: number }) {
           return (
             <span key={n} className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
               <Star size={size} strokeWidth={1.75} aria-hidden="true" style={{ color: "var(--border-strong)" }} className="absolute inset-0" />
-              {fillPct > 0 && <span className="absolute inset-0 overflow-hidden" style={{ width: `${fillPct}%` }}><Star size={size} strokeWidth={1.75} aria-hidden="true" fill="var(--warning)" style={{ color: "var(--warning)" }} /></span>}
+              {fillPct > 0 && <span className="absolute inset-0 overflow-hidden" style={{ width: `${fillPct}%` }}><Star size={size} strokeWidth={1.75} aria-hidden="true" fill="var(--warning)" style={{ color: "var(--warning-ink)" }} /></span>}
             </span>
           );
         })}
@@ -157,8 +157,8 @@ function ScoreDistribution({ buckets }: { buckets: number[] }) {
 }
 
 const ATTENTION_TONE = {
-  critical: { color: "var(--danger)", bg: "var(--danger-soft)", label: "Action needed" },
-  warning: { color: "var(--warning)", bg: "var(--warning-soft)", label: "Follow up" },
+  critical: { color: "var(--danger-ink)", bg: "var(--danger-soft)", label: "Action needed" },
+  warning: { color: "var(--warning-ink)", bg: "var(--warning-soft)", label: "Follow up" },
   suggestion: { color: "var(--primary)", bg: "var(--primary-soft)", label: "Suggestion" },
 } as const;
 
@@ -180,9 +180,9 @@ const Row = ({ tone, text, cta, href }: { tone: "critical" | "warning" | "sugges
 /** The status pill of a paper in lists (the prototype's StatusBadge). */
 const STATUS_PILL: Record<string, { label: string; color: string; bg: string; Icon: LucideIcon }> = {
   submitted: { label: "Submitted", color: "var(--primary)", bg: "var(--primary-soft)", Icon: FileCheck },
-  under_review: { label: "Under Review", color: "var(--warning)", bg: "var(--warning-soft)", Icon: Clock },
-  accepted: { label: "Accepted", color: "var(--success)", bg: "var(--success-soft)", Icon: Check },
-  rejected: { label: "Rejected", color: "var(--danger)", bg: "var(--danger-soft)", Icon: XCircle },
+  under_review: { label: "Under Review", color: "var(--warning-ink)", bg: "var(--warning-soft)", Icon: Clock },
+  accepted: { label: "Accepted", color: "var(--success-ink)", bg: "var(--success-soft)", Icon: Check },
+  rejected: { label: "Rejected", color: "var(--danger-ink)", bg: "var(--danger-soft)", Icon: XCircle },
   withdrawn: { label: "Withdrawn", color: "var(--ink-muted)", bg: "var(--muted)", Icon: XCircle },
 };
 /** The key a paper's pill shows (the prototype's statusKeyOf over the loader's status). */
@@ -320,7 +320,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
     },
     {
       key: "open", name: "Open submissions", sub: "your conference is ready for papers", tasks: [
-        { label: "Share the submission link", desc: "Send it to authors — they sign in (or register) and submit their paper here.", done: false, copy: submitUrl },
+        { label: "Share the submission link", desc: "Send it to authors — they sign in (or register) and submit their paper here.", done: data.papers.length > 0, copy: submitUrl },
         { label: "Invite at least 3 reviewers", desc: `${pool.reviewers.length} invited so far.`, done: pool.reviewers.length >= 3, href: reviewers },
         { label: "Check presentation types and guidelines", desc: "What authors can submit, and the rules they read first.", done: hasTracks && data.decisionTypes.length > 0, href: `/chair/${e}/settings/submissions` },
         { label: "Set the review deadline", desc: "The day reviewers' reviews are due.", done: reviewDue, href: `/chair/${e}/settings/review` },
@@ -364,7 +364,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
 
   return (
     <ConferenceShell role="chair" conference={conference} roles={roles} others={others} active="overview" screening={data.screening}>
-      <PageHeader title="Chair1 Dashboard" breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: conference.acronym }]} />
+      <PageHeader title="Dashboard" breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: conference.acronym }]} />
       <div className="hd-page space-y-6 p-8">
         <ConferenceHero conference={conference} details={details} onDetails={() => setDrawer(true)} extraChip={next && <DeadlineChip deadline={{ open: next.days != null && next.days >= 0, text: `${next.label} · ${rel(next.days)}` }} />}>
           <HeroLink href={`/chair/${e}/settings`} icon={Settings} primary>Settings</HeroLink>
@@ -373,16 +373,16 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
         {/* The link authors use to submit; it exists once the Call for Papers is published. */}
         {data.cfpStatus === "closed" && (
           <div style={{ border: "1px solid #FECACA", background: "var(--danger-soft)" }} className="flex flex-wrap items-center gap-4 rounded-2xl px-5 py-4">
-            <span style={{ background: "#FFFFFF", color: "var(--danger)" }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"><Link2 size={18} aria-hidden="true" /></span>
+            <span style={{ background: "#FFFFFF", color: "var(--danger-ink)" }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"><Link2 size={18} aria-hidden="true" /></span>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-danger">Call for Papers closed</div>
+              <div className="text-sm font-bold text-danger-ink">Call for Papers closed</div>
               <p className="text-xs text-ink-soft">The submission link no longer takes papers. Papers already sent are not affected.</p>
             </div>
           </div>
         )}
         {data.cfpStatus === "review" && (
           <div style={{ border: "1px dashed var(--warning-border)" }} className="flex flex-wrap items-center gap-4 rounded-2xl bg-warning-soft px-5 py-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-warning"><Link2 size={18} aria-hidden="true" /></span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-warning-ink"><Link2 size={18} aria-hidden="true" /></span>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-navy">Waiting for approval</div>
               <p className="text-xs text-ink-soft">Your Call for Papers was sent to the Super Admin. The submission link opens as soon as it is approved.</p>
@@ -417,7 +417,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
 
         <section style={CARD} className="overflow-hidden rounded-2xl bg-white">
           <div style={{ borderBottom: attention ? "1px solid var(--border)" : "none" }} className="flex items-center justify-between px-5 py-4"><h2 className="text-base font-bold tracking-tight text-navy">Needs your attention</h2>{attention > 0 && <span className="text-[12.5px] font-semibold text-ink-muted">{attention} item{plural(attention)}</span>}</div>
-          {attention === 0 ? <div className="flex items-center gap-3 px-5 py-6"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-soft"><Check size={16} aria-hidden="true" className="text-success" /></span><p className="text-sm text-ink-soft">All clear — nothing needs action right now.</p></div> : (
+          {attention === 0 ? <div className="flex items-center gap-3 px-5 py-6"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-soft"><Check size={16} aria-hidden="true" className="text-success-ink" /></span><p className="text-sm text-ink-soft">All clear — nothing needs action right now.</p></div> : (
             <div className="divide-y divide-muted">
               {critical.map((c) => <Row key={c.text} tone="critical" {...c} />)}
               {warnings.map((c) => <Row key={c.text} tone="warning" {...c} />)}
@@ -429,7 +429,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
         <div style={{ background: "var(--border)", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }} className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl lg:grid-cols-3 xl:grid-cols-6">
           <Stat icon={FileText} label="Submitted" value={subs.length} href={`/chair/${e}`} segments={CHAIR_STAGES.map((st) => ({ value: stageCounts[st.key] ?? 0, color: st.color, label: st.label }))} />
           <Stat icon={FileCheck} label="Review progress" value={`${pct}%`} sub={expected ? `${received}/${expected} reviewed` : "no reviews yet"} href={review("waiting")} segments={[{ value: received, color: "var(--primary)", label: "Received" }, { value: pending, color: "var(--muted)", label: "Pending" }]} />
-          <Stat icon={Check} label="Decisions" value={decided} sub={`of ${rows.length}`} href={review("decided")} legend={[{ label: "Acc", value: accepted, color: "var(--success)" }, { label: "Rej", value: rejected, color: "var(--danger)" }, { label: "Pending", value: Math.max(0, rows.length - decided), color: "var(--warning)" }]} />
+          <Stat icon={Check} label="Decisions" value={decided} sub={`of ${rows.length}`} href={review("decided")} legend={[{ label: "Acc", value: accepted, color: "var(--success-ink)" }, { label: "Rej", value: rejected, color: "var(--danger-ink)" }, { label: "Pending", value: Math.max(0, rows.length - decided), color: "var(--warning-ink)" }]} />
           <Stat icon={Star} label="Acceptance rate" value={rate == null ? "—" : `${rate}%`} sub={rate == null ? "no decisions" : `${accepted}/${decided}`} />
           <Stat icon={Users} label="Reviewers" value={pool.reviewers.length} sub={loads.length ? `${(loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1)} avg load` : "none active"} href={reviewers} />
           <Stat icon={Ticket} label="Registrations" value="—" sub="coming soon" href={registrations} />
@@ -448,7 +448,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
             </Panel>
 
             {queue.length > 0 && (
-              <Panel title={<span className="flex items-center gap-2"><AlertTriangle size={14} aria-hidden="true" className="text-warning" /> Papers waiting on you</span>} aside={<span className="rounded-full bg-warning-soft px-2.5 py-1 text-[11px] font-bold text-warning">{queue.length}</span>}>
+              <Panel title={<span className="flex items-center gap-2"><AlertTriangle size={14} aria-hidden="true" className="text-warning-ink" /> Papers waiting on you</span>} aside={<span className="rounded-full bg-warning-soft px-2.5 py-1 text-[11px] font-bold text-warning-ink">{queue.length}</span>}>
                 <div className="space-y-2">
                   {queue.slice(0, 6).map(({ r, decide }) => (
                     <div key={r.paper.dbId} className="flex items-center gap-3 py-1.5">
@@ -482,9 +482,9 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
               )}
               {borderline.length > 0 && (
                 <div className="mt-5 border-t border-muted pt-4">
-                  <div className="mb-1 flex items-center gap-2"><AlertTriangle size={13} aria-hidden="true" className="text-warning" /><span className="text-xs font-bold text-navy">Calls that need judgement</span><span className="rounded-full bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning">{borderline.length}</span></div>
+                  <div className="mb-1 flex items-center gap-2"><AlertTriangle size={13} aria-hidden="true" className="text-warning-ink" /><span className="text-xs font-bold text-navy">Calls that need judgement</span><span className="rounded-full bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning-ink">{borderline.length}</span></div>
                   <p className="mb-2.5 text-[11px] text-ink-faint">Undecided papers where reviewers disagree, or the average sits right on the accept line.</p>
-                  <div className="space-y-1.5">{borderline.slice(0, 5).map((r) => <Link key={r.paper.dbId} href={chairPaperHref(slug, r.paper.id, "review")} className="flex w-full items-center gap-2.5 rounded-lg border border-line px-3 py-2 text-left transition-colors hover:border-primary hover:bg-canvas"><span className="w-16 shrink-0 text-[11px] font-bold text-ink-faint">{r.paper.id}</span><span className="flex-1 truncate text-xs font-semibold text-ink">{r.paper.title}</span>{r.split && <span className="shrink-0 rounded bg-warning-soft px-1.5 py-0.5 text-[9px] font-bold text-warning">SPLIT VOTE</span>}{r.avg != null && <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-ink-muted"><Star size={10} aria-hidden="true" /> {r.avg}</span>}<ChevronRight size={13} aria-hidden="true" className="shrink-0 text-ink-faint" /></Link>)}</div>
+                  <div className="space-y-1.5">{borderline.slice(0, 5).map((r) => <Link key={r.paper.dbId} href={chairPaperHref(slug, r.paper.id, "review")} className="flex w-full items-center gap-2.5 rounded-lg border border-line px-3 py-2 text-left transition-colors hover:border-primary hover:bg-canvas"><span className="w-16 shrink-0 text-[11px] font-bold text-ink-faint">{r.paper.id}</span><span className="flex-1 truncate text-xs font-semibold text-ink">{r.paper.title}</span>{r.split && <span className="shrink-0 rounded bg-warning-soft px-1.5 py-0.5 text-[9px] font-bold text-warning-ink">SPLIT VOTE</span>}{r.avg != null && <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-ink-muted"><Star size={10} aria-hidden="true" /> {r.avg}</span>}<ChevronRight size={13} aria-hidden="true" className="shrink-0 text-ink-faint" /></Link>)}</div>
                 </div>
               )}
             </Panel>
@@ -533,7 +533,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
             <Panel title={<span className="flex items-center gap-2"><Calendar size={14} aria-hidden="true" /> Key dates</span>}>
               <div className="space-y-2.5">{milestones.map((m) => {
                 const past = m.days != null && m.days < 0; const soon = m.days != null && m.days >= 0 && m.days <= 14; return (
-                  <div key={m.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" style={{ background: past ? "var(--border-strong)" : soon ? "var(--warning)" : "var(--primary)" }} className="h-1.5 w-1.5 shrink-0 rounded-full" /><span className={`truncate text-xs font-semibold ${past ? "text-ink-faint" : "text-ink"}`}>{m.label}</span></div><div className="shrink-0 text-right"><div className={`text-[11px] font-semibold ${past ? "text-ink-faint" : "text-ink-soft"}`}>{m.end ? `${dayText(m.iso)} – ${dayText(m.end)}` : dayText(m.iso)}</div><div className={`text-xs font-bold ${past ? "text-ink-faint" : soon ? "text-warning" : "text-ink-muted"}`}>{rel(m.days)}</div></div></div>
+                  <div key={m.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" style={{ background: past ? "var(--border-strong)" : soon ? "var(--warning)" : "var(--primary)" }} className="h-1.5 w-1.5 shrink-0 rounded-full" /><span className={`truncate text-xs font-semibold ${past ? "text-ink-faint" : "text-ink"}`}>{m.label}</span></div><div className="shrink-0 text-right"><div className={`text-[11px] font-semibold ${past ? "text-ink-faint" : "text-ink-soft"}`}>{m.end ? `${dayText(m.iso)} – ${dayText(m.end)}` : dayText(m.iso)}</div><div className={`text-xs font-bold ${past ? "text-ink-faint" : soon ? "text-warning-ink" : "text-ink-muted"}`}>{rel(m.days)}</div></div></div>
                 );
               })}</div>
               {missingDates.length > 0 && <p className="mt-3 text-[10px] leading-snug text-ink-faint">Not set yet: {missingDates.join(", ")} deadline{missingDates.length > 1 ? "s" : ""}. <Link href={`/chair/${e}/settings`} className="font-semibold text-primary hover:underline">Set {missingDates.length > 1 ? "them" : "it"} in Conference Details</Link>.</p>}

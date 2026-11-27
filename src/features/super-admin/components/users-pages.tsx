@@ -4,7 +4,9 @@
    can't be suspended. The list is paged by the API (50 at a time, "Load more").
    "View as user", "Reset 2-step", "Merge accounts" and signed-in devices need backend work: shown,
    disabled, "Coming soon". */
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ApiError } from "../api";
 import { useEffect, useMemo, useState } from "react";
 import { Ban, Eye, GitMerge, KeyRound, LogOut, Monitor, RotateCcw, Smartphone, Users as UsersIcon } from "lucide-react";
 import { useAdmin } from "../session";
@@ -282,6 +284,15 @@ export function UserDetailPage({ id }: { id: string }) {
     (text) => setToast(text),
   );
   if (loading && !data) return <Loading />;
+  if (error instanceof ApiError && (error.status === 400 || error.status === 404)) {
+    return (
+      <Card className="text-center">
+        <p className="text-[14px] font-semibold" style={{ color: "var(--text)" }}>User not found</p>
+        <p className="text-[13px] mt-1 mb-4" style={{ color: "var(--text-muted)" }}>There is no user with this address. It may have been removed, or the link is wrong.</p>
+        <Link href="/super-admin/users" className="text-[13px] font-semibold hover:underline" style={{ color: "var(--primary)" }}>Back to users</Link>
+      </Card>
+    );
+  }
   if (error || !data) return <Failed error={error} onRetry={reload} />;
   const u = data.user;
   const chairs = u.conferences.filter((c) => c.roles.includes("chair"));
@@ -390,7 +401,7 @@ export function UserDetailPage({ id }: { id: string }) {
       </Card>
 
       {actionError && (
-        <p role="alert" className="text-[13px] -mt-3 mb-4" style={{ color: "var(--danger)" }}>
+        <p role="alert" className="text-[13px] -mt-3 mb-4" style={{ color: "var(--danger-ink)" }}>
           {actionError}
         </p>
       )}

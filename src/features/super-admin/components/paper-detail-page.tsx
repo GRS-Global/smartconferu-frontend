@@ -148,7 +148,7 @@ export function PaperDetailPage({ conferenceId, paperId }: { conferenceId: strin
                           <Badge tone={tone}>{label}</Badge>
                         </td>
                         <td className="whitespace-nowrap">{fmtDate(r.assignedAt)}</td>
-                        <td className="whitespace-nowrap" style={{ color: state === "overdue" ? "var(--danger)" : undefined, fontWeight: state === "overdue" ? 600 : undefined }}>
+                        <td className="whitespace-nowrap" style={{ color: state === "overdue" ? "var(--danger-ink)" : undefined, fontWeight: state === "overdue" ? 600 : undefined }}>
                           {r.submittedAt ? `Sent ${fmtDate(r.submittedAt)}` : fmtDate(r.dueAt)}
                         </td>
                         <td className="tabular-nums">{r.score != null ? `${r.score}/5` : "—"}</td>

@@ -200,7 +200,7 @@ export function EmailCommunicationPage({ slug }: { slug: string }) {
         </div>
         {tab === "templates" ? (
           <>
-            {tpl.state.status === "ready" ? <EmailTemplatesPane slug={slug} conferenceName={conference.name} conferenceAcronym={conference.acronym} templates={tpl.state.templates} reload={tpl.reload} authorOnly /> : tpl.state.status === "loading" ? <div role="status" aria-label="Loading the email templates" className="h-60 animate-pulse rounded-2xl border border-line bg-white" /> : <p role="alert" className="text-sm font-semibold text-danger">Couldn&apos;t load the email templates. <button type="button" onClick={tpl.retry} className="underline">Try again</button></p>}
+            {tpl.state.status === "ready" ? <EmailTemplatesPane slug={slug} conferenceName={conference.name} conferenceAcronym={conference.acronym} templates={tpl.state.templates} reload={tpl.reload} authorOnly /> : tpl.state.status === "loading" ? <div role="status" aria-label="Loading the email templates" className="h-60 animate-pulse rounded-2xl border border-line bg-white" /> : <p role="alert" className="text-sm font-semibold text-danger-ink">Couldn&apos;t load the email templates. <button type="button" onClick={tpl.retry} className="underline">Try again</button></p>}
           </>
         ) : (<>
         {/* what has already gone out from here */}
@@ -215,7 +215,7 @@ export function EmailCommunicationPage({ slug }: { slug: string }) {
             <>
               {sentGroups.length === 0 ? <p className="border-t border-muted px-5 py-4 text-sm text-ink-faint">You haven&apos;t sent an email from here yet.</p> : (
                 <ul className="divide-y divide-muted border-t border-muted">
-                  {sentGroups.map((g) => <li key={`${g.subject}-${g.at}`} className="flex flex-wrap items-center gap-3 px-5 py-3 text-[13px]"><span className="min-w-0 flex-1 truncate font-semibold text-navy" title={g.subject}>{g.subject}</span><span className="text-xs text-ink-muted">{new Date(g.at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</span><span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-bold text-ink-soft">{g.people} recipient{g.people === 1 ? "" : "s"}</span>{g.failed > 0 && <span className="rounded-full bg-danger-soft px-2.5 py-0.5 text-[11px] font-bold text-danger">{g.failed} failed</span>}</li>)}
+                  {sentGroups.map((g) => <li key={`${g.subject}-${g.at}`} className="flex flex-wrap items-center gap-3 px-5 py-3 text-[13px]"><span className="min-w-0 flex-1 truncate font-semibold text-navy" title={g.subject}>{g.subject}</span><span className="text-xs text-ink-muted">{new Date(g.at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</span><span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-bold text-ink-soft">{g.people} recipient{g.people === 1 ? "" : "s"}</span>{g.failed > 0 && <span className="rounded-full bg-danger-soft px-2.5 py-0.5 text-[11px] font-bold text-danger-ink">{g.failed} failed</span>}</li>)}
                 </ul>
               )}
               <p className="border-t border-muted px-5 py-2.5 text-[11px] text-ink-faint">Every email is also listed, with its text, in <Link href={`/chair/${encodeURIComponent(conference.id)}/settings/email-logs`} className="font-bold text-primary hover:underline">Email Logs</Link>.</p>
@@ -225,7 +225,7 @@ export function EmailCommunicationPage({ slug }: { slug: string }) {
         {done ? (
           <div className="flex min-h-[50vh] items-center justify-center">
             <div className="max-w-sm text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success" /></div>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success-ink" /></div>
               <h2 className="mb-2 text-lg font-bold text-navy">Email sent</h2>
               <p className="mb-6 text-sm text-ink-muted">Sent to {done.failed ? `${done.sent} of ${done.sent + done.failed} recipients (${done.names})` : done.names}, each with their own name and paper details filled in. Every email is listed in Email Logs.</p>
               <button type="button" onClick={again} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-95">Compose another</button>
@@ -292,7 +292,7 @@ export function EmailCommunicationPage({ slug }: { slug: string }) {
                   </div>
                 )}
               </div>
-              {error && <p role="alert" style={{ background: "var(--danger-soft)" }} className="rounded-lg px-3 py-2 text-xs font-semibold leading-relaxed text-danger">{error}</p>}
+              {error && <p role="alert" style={{ background: "var(--danger-soft)" }} className="rounded-lg px-3 py-2 text-xs font-semibold leading-relaxed text-danger-ink">{error}</p>}
               {!canSend && <p className="text-center text-[11px] leading-relaxed text-ink-faint">Pick at least one audience with people in it, and add a subject and a message to send.</p>}
             </div>
           </div>

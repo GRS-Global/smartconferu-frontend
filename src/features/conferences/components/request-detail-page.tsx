@@ -24,9 +24,9 @@ import type { ConferenceRequest } from "@/types/conference-request";
 const SUPPORT_EMAIL = "support@smartconferu.com";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const STATUS = {
-  pending: { label: "Pending Review", color: "var(--warning)", bg: "var(--warning-soft)" },
-  approved: { label: "Approved", color: "var(--success)", bg: "var(--success-soft)" },
-  rejected: { label: "Rejected", color: "var(--danger)", bg: "var(--danger-soft)" },
+  pending: { label: "Pending Review", color: "var(--warning-ink)", bg: "var(--warning-soft)" },
+  approved: { label: "Approved", color: "var(--success-ink)", bg: "var(--success-soft)" },
+  rejected: { label: "Rejected", color: "var(--danger-ink)", bg: "var(--danger-soft)" },
   cancelled: { label: "Cancelled", color: "var(--ink-muted)", bg: "var(--muted)" },
 } as const;
 const TYPE_LABEL: Record<string, string> = { conference: "Conference", book: "Book", journal_special: "Journal Special Issue", journal: "Journal", other: "Other" };
@@ -59,7 +59,7 @@ export function RequestDetailPage({ id }: { id: string }) {
   const title = state.status === "ready" && state.request ? `Conference Request — ${state.request.acronym}` : "Conference Request";
   if (state.status === "auth") return <><PageHeader title={title} breadcrumbs={crumbs} /><SessionEnded /></>;
   if (state.status === "loading") return <><PageHeader title={title} breadcrumbs={crumbs} /><div role="status" aria-label="Loading the request" className="p-4 sm:p-8"><div className="h-64 animate-pulse rounded-2xl border border-line bg-white" /></div></>;
-  if (state.status === "error") return <><PageHeader title={title} breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger"><TriangleAlert size={18} aria-hidden="true" /> {state.message}</div></>;
+  if (state.status === "error") return <><PageHeader title={title} breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger-ink"><TriangleAlert size={18} aria-hidden="true" /> {state.message}</div></>;
   if (!state.request) {
     return (
       <>
@@ -96,14 +96,14 @@ export function RequestDetailPage({ id }: { id: string }) {
   ].filter((f) => f.value);
   const details = [{ label: "Acronym", value: r.acronym }, { label: "Title", value: r.title }, ...fields].filter((d) => d.value);
   const steps: Array<{ label: string; note: string; Icon: LucideIcon; color: string; bg: string }> = [
-    { label: "Request sent", note: showDate(r.submittedAt), Icon: Check, color: "var(--success)", bg: "var(--success-soft)" },
+    { label: "Request sent", note: showDate(r.submittedAt), Icon: Check, color: "var(--success-ink)", bg: "var(--success-soft)" },
     r.status === "cancelled"
       ? { label: "Review stopped", note: "You cancelled it", Icon: Ban, color: "var(--ink-muted)", bg: "var(--muted)" }
       : r.status === "pending"
-        ? { label: "In review", note: "Our team is checking it", Icon: Clock, color: "var(--warning)", bg: "var(--warning-soft)" }
-        : { label: "Reviewed", note: "Checked by our team", Icon: Check, color: "var(--success)", bg: "var(--success-soft)" },
-    r.status === "approved" ? { label: "Approved", note: "The conference is live", Icon: Check, color: "var(--success)", bg: "var(--success-soft)" }
-      : r.status === "rejected" ? { label: "Not approved", note: "See the message below", Icon: X, color: "var(--danger)", bg: "var(--danger-soft)" }
+        ? { label: "In review", note: "Our team is checking it", Icon: Clock, color: "var(--warning-ink)", bg: "var(--warning-soft)" }
+        : { label: "Reviewed", note: "Checked by our team", Icon: Check, color: "var(--success-ink)", bg: "var(--success-soft)" },
+    r.status === "approved" ? { label: "Approved", note: "The conference is live", Icon: Check, color: "var(--success-ink)", bg: "var(--success-soft)" }
+      : r.status === "rejected" ? { label: "Not approved", note: "See the message below", Icon: X, color: "var(--danger-ink)", bg: "var(--danger-soft)" }
       : r.status === "cancelled" ? { label: "Cancelled", note: "No decision needed", Icon: Ban, color: "var(--ink-muted)", bg: "var(--muted)" }
       : { label: "Decision", note: "We'll email you", Icon: Clock, color: "var(--ink-faint)", bg: "var(--muted)" },
   ];
@@ -142,7 +142,7 @@ export function RequestDetailPage({ id }: { id: string }) {
               <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <Link href="/my-requests" style={{ border: "1px solid var(--border)" }} className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:bg-canvas"><ArrowLeft size={14} aria-hidden="true" /> My Requests</Link>
                 {r.status === "approved" && <button type="button" onClick={openConference} className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-primary-hover">Open the conference</button>}
-                {r.status === "pending" && !showCancel && <button type="button" onClick={() => setShowCancel(true)} className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-danger transition-colors hover:bg-danger-soft"><XCircle size={14} aria-hidden="true" /> Cancel this request</button>}
+                {r.status === "pending" && !showCancel && <button type="button" onClick={() => setShowCancel(true)} className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-danger-ink transition-colors hover:bg-danger-soft"><XCircle size={14} aria-hidden="true" /> Cancel this request</button>}
               </div>
             </div>
           </section>
@@ -190,7 +190,7 @@ export function RequestDetailPage({ id }: { id: string }) {
                 )}
                 {r.status === "rejected" && r.decidedNote && (
                   <div style={{ border: "1px solid var(--border)" }} className="mt-4 rounded-xl bg-danger-soft px-4 py-3.5">
-                    <div className="mb-1 text-xs font-bold text-danger">Message from Smartconferu</div>
+                    <div className="mb-1 text-xs font-bold text-danger-ink">Message from Smartconferu</div>
                     <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{r.decidedNote}</p>
                   </div>
                 )}

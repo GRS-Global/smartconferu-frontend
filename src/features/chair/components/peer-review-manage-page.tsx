@@ -28,9 +28,9 @@ import { chairPaperHref } from "@/lib/routes";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 /** The prototype's review-status wording and colours for this table (PR_REVIEW_STATUS). */
 const REVIEW_STATUS: Record<ReviewerState, { label: string; color: string; bg: string }> = {
-  done: { label: "Submitted", color: "var(--success)", bg: "var(--success-soft)" },
+  done: { label: "Submitted", color: "var(--success-ink)", bg: "var(--success-soft)" },
   active: { label: "Reviewing", color: "var(--primary)", bg: "var(--primary-soft)" },
-  overdue: { label: "Overdue", color: "var(--danger)", bg: "var(--danger-soft)" },
+  overdue: { label: "Overdue", color: "var(--danger-ink)", bg: "var(--danger-soft)" },
   waiting: { label: "Not accepted yet", color: "#B45309", bg: "var(--warning-soft)" },
   invite: { label: "Invitation pending", color: "#B45309", bg: "var(--warning-soft)" },
 };

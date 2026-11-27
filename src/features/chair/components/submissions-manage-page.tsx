@@ -45,7 +45,7 @@ export function SubmissionsManagePage({ slug }: { slug: string }) {
           <button type="button" aria-pressed={tab === "form"} onClick={() => setTab("form")} className={tabCls(tab === "form")}>Submission Form</button>
           <button type="button" aria-pressed={tab === "settings"} onClick={() => setTab("settings")} className={tabCls(tab === "settings")}>Submission Settings</button>
         </div>
-        {error && <p role="alert" className="mb-4 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
+        {error && <p role="alert" className="mb-4 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{error}</p>}
         {tab === "settings" ? (
           <SubmissionSettingsPanel slug={slug} acronym={conference.acronym} received={data.papers.length} lastNumber={lastNumber} settings={settings} deadline={info?.submissionDeadline ?? ""} detailsHref={`/chair/${e}/settings`} onOpenForm={() => setTab("form")} />
         ) : editing ? (

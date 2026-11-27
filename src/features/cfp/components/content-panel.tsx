@@ -31,7 +31,7 @@ export function ContentPanel({ slug, acronym, initialHtml, preview, onDone, onSa
     return (
       <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
         <div className="max-w-sm text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success" /></div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success-ink" /></div>
           <h2 className="mb-2 text-lg font-bold text-navy">Content saved</h2>
           <p className="mb-6 text-sm text-ink-muted">Your changes to the {acronym} CFP content have been saved.</p>
           <Button onClick={onDone}>Back to Overview</Button>
@@ -62,7 +62,7 @@ export function ContentPanel({ slug, acronym, initialHtml, preview, onDone, onSa
         <RichTextEditor value={initialHtml} onChange={setHtml} label="CFP content" placeholder="Write the CFP content here…" headings maxHeight={480} />
       </div>
       {mode === "preview" && <CfpPublicPreview {...preview} html={richTextToHtml(html)} heading="Preview — how authors will see this CFP" />}
-      {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
         <Button onClick={() => void save()} disabled={busy || html === initialHtml} title={html === initialHtml ? "No changes to save" : undefined}>{busy ? "Saving…" : "Save Changes"}</Button>

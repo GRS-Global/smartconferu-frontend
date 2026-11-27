@@ -17,6 +17,7 @@ import { conferenceDest } from "../links";
 import { authorStatusOf } from "../status";
 import { useAuthorPaper } from "../use-author-paper";
 import { useConferenceCertificates } from "@/features/certificates/use-conference-certificates";
+import { CERTIFICATES_ENABLED } from "@/lib/config";
 import { DecisionCard, FilesTable, ManageCard, PaperBody, PaperTimeline, PresentationPanel, ScreeningNotice, certificateTitleOf, lockReasonOf } from "./paper-parts";
 import { StatusPill } from "./submission-parts";
 import { authorPaperHref } from "@/lib/routes";
@@ -110,8 +111,8 @@ export function AuthorPaperPage({ label }: { label: string }) {
         breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, ...(listDest ? [{ label: "My Submissions", href: listDest.href }] : [{ label: "My Submissions" }]), { label: paper.id }]}
       />
       <div className="hd-page p-8">
-        {notice && <div role="status" className="mb-4 flex items-start justify-between gap-3 rounded-lg bg-warning-soft px-3.5 py-2.5 text-sm font-medium text-warning"><span>{notice}</span><button type="button" onClick={() => setNotice("")} className="shrink-0 text-xs font-bold underline">Dismiss</button></div>}
-        {fileError && <div role="alert" className="mb-4 flex items-start justify-between gap-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger"><span>{fileError}</span><button type="button" onClick={() => setFileError("")} className="shrink-0 text-xs font-bold underline">Dismiss</button></div>}
+        {notice && <div role="status" className="mb-4 flex items-start justify-between gap-3 rounded-lg bg-warning-soft px-3.5 py-2.5 text-sm font-medium text-warning-ink"><span>{notice}</span><button type="button" onClick={() => setNotice("")} className="shrink-0 text-xs font-bold underline">Dismiss</button></div>}
+        {fileError && <div role="alert" className="mb-4 flex items-start justify-between gap-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger-ink"><span>{fileError}</span><button type="button" onClick={() => setFileError("")} className="shrink-0 text-xs font-bold underline">Dismiss</button></div>}
 
         <div className="mb-5">
           <PageHero
@@ -139,7 +140,7 @@ export function AuthorPaperPage({ label }: { label: string }) {
                     </HeroButton>
                   </>
                 )}
-                {certificates > 0 && certificatesDest ? (
+                {CERTIFICATES_ENABLED && certificates > 0 && certificatesDest ? (
                   <HeroLink icon={Award} primary href={certificatesDest.href}>Certificate</HeroLink>
                 ) : (
                   <button type="button" disabled title={certificateTitle} aria-label={certificateTitle} className="inline-flex h-12 cursor-not-allowed items-center gap-2 rounded-xl border border-line bg-white px-5 text-[14px] font-bold text-ink-faint">

@@ -2,13 +2,15 @@
 
 import { TriangleAlert } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { SessionEnded } from "@/features/auth/components/session-ended";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { completeProfileUrl } from "@/lib/auth-redirect";
 import { getProfileCompleteness } from "../completeness";
 import { useProfile } from "../profile-context";
+
+const noSubscribe = () => () => undefined;
 
 function Waiting({ label }: { label: string }) {
   return (
@@ -28,6 +30,7 @@ export function ProfileGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { state, reload } = useProfile();
+  const inBrowser = useSyncExternalStore(noSubscribe, () => true, () => false);
   const incomplete = state.status === "ready" && getProfileCompleteness(state.profile).missingRequired.length > 0;
 
   useEffect(() => {
@@ -50,7 +53,15 @@ export function ProfileGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (state.status === "loading") return <Waiting label="Loading your profile" />;
   if (incomplete) return <Waiting label="Taking you to your profile" />;
-  return <>{children}</>;
+  // While the profile loads, the page is already rendered but kept out of sight: its code and its data load at the same time as the
+  // profile instead of after it. The wrapper stays the same when it shows, so the page is not mounted twice.
+  // Only in the browser: the server render (and the prerender) shows the placeholder alone, as before.
+  const loading = state.status === "loading";
+  return (
+    <>
+      {(loading || !inBrowser) && <Waiting label="Loading your profile" />}
+      {inBrowser && <div style={{ display: loading ? "none" : "contents" }}>{children}</div>}
+    </>
+  );
 }

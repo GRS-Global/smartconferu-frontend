@@ -1,5 +1,5 @@
 import { Calendar, Clock, Globe, Info, type LucideIcon } from "lucide-react";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { createElement, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { CountryFlag } from "@/components/ui/country-flag";
 import { cityOf, monogram, rangeLabel } from "@/features/author/format";
 import { countryCodeOf } from "@/lib/country-codes";
@@ -13,9 +13,9 @@ import type { ConferenceDetails } from "@/types/author-submission";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const rise = (i: number) => ({ animationDelay: `${Math.min(i, 10) * 60}ms` });
 
-interface PageHeroProps { tile: ReactNode; title: string; badge?: ReactNode; subtitle?: ReactNode; chips?: ReactNode; actions?: ReactNode; /** Full-width content under everything (a progress timeline). */ footer?: ReactNode; label?: string; /** Put the buttons under the chips (a long title), not beside them. */ actionsBelow?: boolean }
+interface PageHeroProps { /** The page title is the h2 under the page header's h1; a page without a PageHeader passes 1. */ level?: 1 | 2; tile: ReactNode; title: string; badge?: ReactNode; subtitle?: ReactNode; chips?: ReactNode; actions?: ReactNode; /** Full-width content under everything (a progress timeline). */ footer?: ReactNode; label?: string; /** Put the buttons under the chips (a long title), not beside them. */ actionsBelow?: boolean }
 
-export function PageHero({ tile, title, badge, subtitle, chips, actions, footer, label = "Page header", actionsBelow = false }: PageHeroProps) {
+export function PageHero({ level = 2, tile, title, badge, subtitle, chips, actions, footer, label = "Page header", actionsBelow = false }: PageHeroProps) {
   return (
     <section aria-label={label} style={{ ...CARD, ...rise(0) }} className="hd-rise hd-shine ui-accent-card hd-hero flex flex-wrap items-center gap-5 rounded-2xl px-5 py-6 sm:gap-6 sm:px-8 sm:py-8">
       <span aria-hidden="true" className="hd-grid" />
@@ -24,7 +24,7 @@ export function PageHero({ tile, title, badge, subtitle, chips, actions, footer,
       <div aria-hidden="true" style={{ background: "var(--primary)" }} className="hd-float flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-[22px] text-[28px] font-extrabold text-white shadow-[0_12px_28px_rgba(124,58,237,0.32)]">{tile}</div>
       <div className="min-w-0 flex-1 basis-[240px]">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-[28px] font-extrabold leading-tight text-navy" style={{ letterSpacing: "-0.02em" }}>{title}</h1>
+          {createElement(`h${level}`, { className: "text-[28px] font-extrabold leading-tight text-navy", style: { letterSpacing: "-0.02em" } }, title)}
           {badge}
         </div>
         {subtitle && <div className="mt-0.5 text-[15px] leading-snug text-ink-soft">{subtitle}</div>}

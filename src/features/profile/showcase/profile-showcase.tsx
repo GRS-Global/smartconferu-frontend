@@ -447,7 +447,7 @@ export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: 
                           <div className="text-[15px] font-semibold leading-snug text-navy">
                             {soc?.name || e.org}
                             {membershipPending(e) && <span className="ml-2 align-middle text-xs font-semibold text-[#B45309]">Pending review</span>}
-                            {e.verification === "rejected" && <span className="ml-2 align-middle text-xs font-semibold text-danger">Not accepted{e.verificationReason ? `: ${e.verificationReason}` : ""}</span>}
+                            {e.verification === "rejected" && <span className="ml-2 align-middle text-xs font-semibold text-danger-ink">Not accepted{e.verificationReason ? `: ${e.verificationReason}` : ""}</span>}
                           </div>
                           <div className="mt-0.5 text-sm text-ink-soft">
                             {e.title}

@@ -10,19 +10,14 @@ import { buildTourSteps, DETAIL_LABELS, gateOpen, missingDetails } from "./tour-
 import type { ConferenceSetup, SetupTask } from "./use-setup";
 import { readTourState, writeTourState } from "./tour-state";
 import { rememberTourShown, tourNotShownYet } from "./tour-seen";
+import { openSetupGuide, playWaiting, SETUP_OPEN_EVENT, startConferenceTour, START_EVENT } from "./tour-events";
 
 /* The chair's guided tour of Conference Settings (the prototype's SetupTourRunner + SetupTourPausedBar). "Take a tour" in the sidebar opens a short welcome,
    then a spotlight walks through the settings pages: the menu item first (with an "Open …" button), then the cards that matter on the page itself. Opening
    a page pauses the tour (a "Continue tour" pill stays at the bottom) so the chair can look around; Skip tour / Esc / × leave it and it can be taken again.
    Progress is kept in this browser. Nothing here marks a setup item done or publishes anything. */
 
-const START_EVENT = "conference-tour-start";
-/** Starts the tour from anywhere (the sidebar's "Take a tour" button). */
-export const startConferenceTour = () => window.dispatchEvent(new Event(START_EVENT));
-
-const SETUP_OPEN_EVENT = "conference-setup-open";
-/** Opens the setup checklist from anywhere (the menu's "Finish setup" card). */
-export const openSetupGuide = () => window.dispatchEvent(new Event(SETUP_OPEN_EVENT));
+// startConferenceTour / openSetupGuide live in ./tour-events (so the pages that press them do not load this module).
 
 /* The tour takes the chair to a step's page only when the tour itself moved (Next, Back, start, resume), never just because a page opened: every page draws its
    own shell, so without this a chair who went to another page by hand was sent straight back to the step's page and could not leave it. */
@@ -81,9 +76,13 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
       });
     };
     const checklist = () => setMode("checklist");
-    window.addEventListener(START_EVENT, start);
-    window.addEventListener(SETUP_OPEN_EVENT, checklist);
-    return () => { window.removeEventListener(START_EVENT, start); window.removeEventListener(SETUP_OPEN_EVENT, checklist); };
+    // preventDefault tells the sender that someone is listening (otherwise the press is kept until we are).
+    const onStart = (e: Event) => { e.preventDefault(); start(); };
+    const onChecklist = (e: Event) => { e.preventDefault(); checklist(); };
+    window.addEventListener(START_EVENT, onStart);
+    window.addEventListener(SETUP_OPEN_EVENT, onChecklist);
+    playWaiting();
+    return () => { window.removeEventListener(START_EVENT, onStart); window.removeEventListener(SETUP_OPEN_EVENT, onChecklist); };
   }, [slug, setMode]);
 
   if (mode === "off") return null;

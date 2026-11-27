@@ -113,7 +113,7 @@ function TemplateEditor({ template, onSaved }: { template: EmailTemplate; onSave
         </div>
       </div>
       {error && (
-        <p role="alert" className="text-[13px] mt-4" style={{ color: "var(--danger)" }}>
+        <p role="alert" className="text-[13px] mt-4" style={{ color: "var(--danger-ink)" }}>
           {error}
         </p>
       )}

@@ -89,7 +89,7 @@ function Inner({ kind, initialEmail, onClose, onSignedIn, onMfaRequired }: Props
     <Dialog open={kind !== null} onClose={onClose} size="md" title={flow.title}>
       {step === "sent" && (
         <div className="py-3 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft"><Check size={22} className="text-success" aria-hidden="true" /></div>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft"><Check size={22} className="text-success-ink" aria-hidden="true" /></div>
           <p className="text-sm font-semibold text-navy">Check your inbox</p>
           <p className="mb-5 mt-1 text-xs leading-relaxed text-ink-muted">
             If an account exists for <b>{email.trim()}</b>, we&apos;ve sent it a link to choose a new password. The link works once, expires after an hour, and must be opened in this browser. Don&apos;t see it? Check your spam folder.

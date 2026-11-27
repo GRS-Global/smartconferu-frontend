@@ -112,7 +112,7 @@ export function CreateSlidesForm({ prefill }: { prefill: PaperCandidate | null }
                     <div className="flex items-center justify-between mb-3">
                       <span style={{ color: "var(--navy)" }} className="text-xs font-bold">Author {i + 1}</span>
                       {authors.length > 1 && (
-                        <button onClick={() => removeAuthor(i)} style={{ color: "var(--danger)" }} className="text-xs flex items-center gap-1 font-medium hover:underline cursor-pointer">
+                        <button onClick={() => removeAuthor(i)} style={{ color: "var(--danger-ink)" }} className="text-xs flex items-center gap-1 font-medium hover:underline cursor-pointer">
                           <Trash2 size={12} /> Remove
                         </button>
                       )}
@@ -290,7 +290,7 @@ export function CreateSlidesForm({ prefill }: { prefill: PaperCandidate | null }
             </div>
           )}
 
-          {problem && <p role="alert" style={{ color: "var(--danger)" }} className="mt-4 text-sm">{problem}</p>}
+          {problem && <p role="alert" style={{ color: "var(--danger-ink)" }} className="mt-4 text-sm">{problem}</p>}
 
           <div className="sticky bottom-6 mt-6 z-10">
             <div style={{ background: "#FFFFFF", border: "1px solid var(--border)" }} className="rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4 flex-wrap">

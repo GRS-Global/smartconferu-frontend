@@ -1,6 +1,6 @@
 import { DATA_SOURCE } from "@/lib/config";
 import { api } from "@/lib/api-client";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 
 /* The real emails of an action that has just been saved (the prototype's src/data/email.js › sendActionEmails). The browser only
    says which action happened; the email server works out who gets what, checks the signed-in user may do it, sends it and records
@@ -34,7 +34,7 @@ export async function sendActionEmails(event: ActionEmail, data: Record<string, 
     return null;
   }
   try {
-    const { data: { session } } = await getSupabase().auth.getSession();
+    const { data: { session } } = await (await supabase()).auth.getSession();
     if (!session) return "Saved, but the emails weren't sent: you're signed out — please sign in again.";
     const ask = () => fetch("/api/send-email", {
       method: "POST",
@@ -82,7 +82,7 @@ export async function sendEmailEvent(event: ActionEmail, data: Record<string, un
     } catch (e) { return { sent: 0, failed: 0, error: e instanceof Error ? e.message : "The email couldn't be sent." }; }
   }
   try {
-    const { data: { session } } = await getSupabase().auth.getSession();
+    const { data: { session } } = await (await supabase()).auth.getSession();
     if (!session) return { sent: 0, failed: 0, error: "You're signed out — please sign in again." };
     const res = await fetch("/api/send-email", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ event, data }) });
     const body = (await res.json().catch(() => ({}))) as { error?: string; sent?: number; failed?: unknown[] };

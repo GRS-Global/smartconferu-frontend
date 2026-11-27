@@ -14,7 +14,7 @@ export function AppHeader() {
         <div className="flex min-w-0 items-center gap-2 lg:gap-6">
           <MobileNav />
           <Link href="/dashboard" aria-label="Smartconferu home" className="shrink-0 transition-opacity hover:opacity-85">
-            <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={127} height={32} priority className="h-8 w-auto" />
+            <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={127} height={32} className="h-8 w-auto" />
           </Link>
           <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex">
             {NAV_GROUPS.map((group) => (

@@ -3,6 +3,7 @@ import type { AnalyticsData } from "../data";
 import type { Conference } from "@/types/conference";
 import { FileText, CheckCircle2, Users, Globe2, Sparkles, MapPin, Calendar, ChevronRight } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { legendText } from "../chart-theme";
 import { AnalyticsCard, AnalyticsStatCard, AnalyticsEmptyState } from "../components";
 import { CHART_COLORS, TOOLTIP_STYLE, AXIS_STYLE, STATUS_TONE, type Tone } from "../chart-theme";
 
@@ -121,7 +122,7 @@ export default function OverviewTab({ conference, data, onTabChange = () => {} }
                   <XAxis dataKey="name" {...AXIS_STYLE} />
                   <YAxis {...AXIS_STYLE} width={40} />
                   <Tooltip {...TOOLTIP_STYLE} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend formatter={legendText} wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="Domestic" fill={CHART_COLORS.warning} radius={[6, 6, 0, 0]} />
                   <Bar dataKey="International" fill={CHART_COLORS.primary} radius={[6, 6, 0, 0]} />
                 </BarChart>

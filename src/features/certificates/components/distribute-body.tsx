@@ -180,7 +180,7 @@ export function DistributeBody({ conference, certificates, distributions, audien
   return (
     <div>
       <div className="px-4 sm:px-8 pt-8 pb-0">
-        <PageHero
+        <PageHero level={1}
           label="Distribute"
           tile={<Send size={34} />}
           title="Distribute"
@@ -281,7 +281,7 @@ export function DistributeBody({ conference, certificates, distributions, audien
                             <button
                               onClick={() => { void actions.deleteDistribution(d.id); }}
                               aria-label={`Delete ${d.name}`} title="Delete"
-                              style={{ border: "1px solid var(--border)", color: "var(--danger)" }}
+                              style={{ border: "1px solid var(--border)", color: "var(--danger-ink)" }}
                               className="w-8 h-8 rounded-lg flex items-center justify-center bg-white hover:bg-[var(--danger-soft)] transition-colors cursor-pointer"
                             >
                               <Trash2 size={13} />

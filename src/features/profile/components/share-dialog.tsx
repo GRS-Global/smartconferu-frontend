@@ -100,7 +100,7 @@ export function ShareDialog({ profile, onClose, onTogglePublic }: { profile: Pro
                 {connected.map((f) => (
                   <button key={f.key} type="button" onClick={() => void shareTo(f)} title={f.label} className="group flex flex-col items-center gap-1.5">
                     <span className="transition-opacity group-hover:opacity-80"><BrandIcon field={f} size={32} /></span>
-                    <span className={`max-w-full truncate text-[10px] font-semibold ${copiedKey === f.key ? "text-success" : "text-ink-muted"}`}>{copiedKey === f.key ? "Copied!" : f.label}</span>
+                    <span className={`max-w-full truncate text-[10px] font-semibold ${copiedKey === f.key ? "text-success-ink" : "text-ink-muted"}`}>{copiedKey === f.key ? "Copied!" : f.label}</span>
                   </button>
                 ))}
               </div>
@@ -119,7 +119,7 @@ export function ShareDialog({ profile, onClose, onTogglePublic }: { profile: Pro
         </div>
         <Switch checked={isPublic} disabled={busy} onChange={(v) => void toggle(v)} labelledBy="public-profile-label" />
       </div>
-      {error && <p role="alert" className="mt-2 text-[11.5px] text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-[11.5px] text-danger-ink">{error}</p>}
     </Dialog>
   );
 }

@@ -53,7 +53,7 @@ export function PaperSummaryPanel({ paper, onClose }: { paper: ChatPaper; onClos
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
         {state.status === "loading" && <div role="status" className="text-xs text-ink-muted">Loading the summary…</div>}
-        {state.status === "error" && <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger">{state.message}</p>}
+        {state.status === "error" && <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-ink">{state.message}</p>}
         {data && data.status === "none" && (
           <div className="rounded-xl border border-line bg-canvas p-4">
             <p className="text-sm font-semibold text-navy">The summary isn&apos;t ready yet</p>
@@ -64,9 +64,9 @@ export function PaperSummaryPanel({ paper, onClose }: { paper: ChatPaper; onClos
         {data && data.status === "ready" && (
           <>
             {!data.upToDate && (
-              <div className="flex flex-wrap items-center gap-3 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+              <div className="flex flex-wrap items-center gap-3 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning-ink">
                 <span className="min-w-0 flex-1 font-semibold">The authors uploaded a newer version after this summary was written.</span>
-                <button type="button" onClick={() => void write()} disabled={busy} className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-warning bg-white px-3 text-xs font-bold text-warning disabled:opacity-60"><RefreshCw size={12} aria-hidden="true" /> {busy ? "Updating…" : "Update the summary"}</button>
+                <button type="button" onClick={() => void write()} disabled={busy} className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-warning bg-white px-3 text-xs font-bold text-warning-ink disabled:opacity-60"><RefreshCw size={12} aria-hidden="true" /> {busy ? "Updating…" : "Update the summary"}</button>
               </div>
             )}
             <p style={{ borderLeft: "3px solid var(--primary)" }} className="whitespace-pre-wrap rounded-r-xl bg-canvas py-3 pl-4 pr-4 text-[14px] leading-relaxed text-ink">{data.summary}</p>
@@ -79,7 +79,7 @@ export function PaperSummaryPanel({ paper, onClose }: { paper: ChatPaper; onClos
             <p className="text-[11px] leading-relaxed text-ink-faint">Written by AI from the paper&apos;s text{data.updatedAt ? ` · ${new Date(data.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}. It only repeats what the paper states and names no author — check it against the paper itself.</p>
           </>
         )}
-        {problem && <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger">{problem}</p>}
+        {problem && <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-ink">{problem}</p>}
       </div>
     </section>
     </div>

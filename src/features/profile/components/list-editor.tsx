@@ -44,7 +44,7 @@ function GradeFields({ entry, onChange, idPrefix, part }: { entry: Entry; onChan
           {MEMBERSHIP_GRADES.map((n) => <option key={n} value={n}>{n}</option>)}
           <option value={PROFILE_OTHER}>Other — not in the list</option>
         </select>
-        {entry.gradeRejectReason && !other && <span className="mt-1 block text-xs text-danger">Your grade wasn&apos;t accepted: {entry.gradeRejectReason} Pick one from the list.</span>}
+        {entry.gradeRejectReason && !other && <span className="mt-1 block text-xs text-danger-ink">Your grade wasn&apos;t accepted: {entry.gradeRejectReason} Pick one from the list.</span>}
       </Field>
     );
   }
@@ -238,14 +238,14 @@ export function ListEditor({ kind, profile, save, onDone, onCancel, startSociety
                     <div className="truncate text-sm font-semibold text-navy">{e.title}</div>
                     <div className="mt-0.5 truncate text-[13px] text-ink-muted">{[society?.name || e.org, e.memberNumber && `No. ${e.memberNumber}`, formatEntryPeriod(e)].filter(Boolean).join(" · ")}</div>
                     {copy.society && membershipPending(e) && <div style={{ color: PENDING_AMBER }} className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold"><Clock size={12} strokeWidth={2.2} aria-hidden="true" /> Pending review</div>}
-                    {copy.society && e.verification === "rejected" && <div className="mt-0.5 text-xs font-semibold text-danger">Not accepted{e.verificationReason ? `: ${e.verificationReason}` : ""}</div>}
+                    {copy.society && e.verification === "rejected" && <div className="mt-0.5 text-xs font-semibold text-danger-ink">Not accepted{e.verificationReason ? `: ${e.verificationReason}` : ""}</div>}
                   </div>
                   <div role="group" aria-label={`Edit or reorder ${e.title}`} className="flex shrink-0 gap-0.5">
                     <button type="button" onClick={() => setEditId(e.id)} disabled={editId !== null} aria-label={`Edit ${e.title}`} title="Edit" className={rowBtn}><Pencil size={14} aria-hidden="true" /></button>
                     <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} aria-label={`Move ${e.title} up`} title="Move up" className={rowBtn}><ChevronUp size={16} aria-hidden="true" /></button>
                     <button type="button" onClick={() => move(i, i + 1)} disabled={i === list.length - 1} aria-label={`Move ${e.title} down`} title="Move down" className={rowBtn}><ChevronDown size={16} aria-hidden="true" /></button>
                   </div>
-                  <button type="button" onClick={() => setList((l) => l.filter((x) => x.id !== e.id))} aria-label={`Remove ${e.title}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger"><Trash2 size={16} aria-hidden="true" /></button>
+                  <button type="button" onClick={() => setList((l) => l.filter((x) => x.id !== e.id))} aria-label={`Remove ${e.title}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted hover:bg-danger-soft hover:text-danger-ink"><Trash2 size={16} aria-hidden="true" /></button>
                 </>
               )}
             </div>

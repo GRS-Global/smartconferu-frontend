@@ -34,10 +34,10 @@ interface SubColumn {
 }
 const SUB_COLUMNS: SubColumn[] = [
   { key: "sent", label: "Submissions", value: (r) => r.sent, color: "var(--navy)" },
-  { key: "not_registered", label: "Accepted – registration pending", value: (r) => r.counts.not_registered, color: "var(--warning)", action: true },
-  { key: "registered", label: "Accepted & registered", value: (r) => r.counts.registered, color: "var(--success)" },
+  { key: "not_registered", label: "Accepted – registration pending", value: (r) => r.counts.not_registered, color: "var(--warning-ink)", action: true },
+  { key: "registered", label: "Accepted & registered", value: (r) => r.counts.registered, color: "var(--success-ink)" },
   { key: "not_accepted", label: "Rejected", value: (r) => r.counts.not_accepted, color: "var(--ink-muted)" },
-  { key: "revise", label: "Revision Required", value: (r) => r.counts.revise, color: "var(--warning)" },
+  { key: "revise", label: "Revision Required", value: (r) => r.counts.revise, color: "var(--warning-ink)" },
   { key: "waitlist", label: "Waitlisted", value: (r) => r.counts.waitlist, color: "var(--ink-soft)" },
   { key: "no_result", label: "No Decision", value: (r) => r.counts.no_result, color: "var(--ink-soft)" },
 ];
@@ -273,9 +273,9 @@ export function OptionABC({ variant, rows, onEnter, onRegister, onOpenCertificat
     {
       key: "all", count: roleCounts.all,
       stats: [
-        { label: "Active", value: rows.filter((r) => r.conf.status === "active").length, color: "var(--success)", onClick: () => applyStat("all", {}, onlyActive), on: roleFilter === "all" && collapsed.archived && !collapsed.active },
+        { label: "Active", value: rows.filter((r) => r.conf.status === "active").length, color: "var(--success-ink)", onClick: () => applyStat("all", {}, onlyActive), on: roleFilter === "all" && collapsed.archived && !collapsed.active },
         { label: "Past (archived)", value: rows.filter((r) => r.conf.status !== "active").length, onClick: () => applyStat("all", {}, onlyPast), on: roleFilter === "all" && collapsed.active && !collapsed.archived },
-        { label: "Starting in 30 days", value: startsSoon, color: "var(--warning)" },
+        { label: "Starting in 30 days", value: startsSoon, color: "var(--warning-ink)" },
         { label: "Certificates earned", value: rows.filter((r) => r.anyCertificate).length, color: "var(--primary)", onClick: () => applyStat("all", { cert: "issued" }), on: roleFilter === "all" && filters.cert === "issued" },
       ],
     },
@@ -294,9 +294,9 @@ export function OptionABC({ variant, rows, onEnter, onRegister, onOpenCertificat
       key: "chair", count: roleCounts.chair,
       stats: [
         { label: "Submissions", value: chairT.received, onClick: () => applyStat("chair") },
-        { label: "Accepted", value: chairT.accepted, color: "var(--success)" },
+        { label: "Accepted", value: chairT.accepted, color: "var(--success-ink)" },
         { label: "Rejected", value: chairT.rejected, color: "var(--ink-soft)" },
-        { label: "No decision", value: chairT.undecided, color: "var(--warning)", attention: true, onClick: () => applyStat("chair", { role: { "ch-decisions": ["undecided"] } }), on: roleOn("chair", "ch-decisions", "undecided") },
+        { label: "No decision", value: chairT.undecided, color: "var(--warning-ink)", attention: true, onClick: () => applyStat("chair", { role: { "ch-decisions": ["undecided"] } }), on: roleOn("chair", "ch-decisions", "undecided") },
         { label: "Withdrawn", value: chairT.withdrawn, color: "var(--ink-muted)", onClick: () => applyStat("chair", { role: { "ch-decisions": ["withdrawn"] } }), on: roleOn("chair", "ch-decisions", "withdrawn") },
         { label: "Registrations", value: chairT.registrations, color: "var(--primary)", onClick: () => applyStat("chair", { role: { "ch-registrations": ["some"] } }), on: roleOn("chair", "ch-registrations", "some") },
       ],
@@ -305,16 +305,16 @@ export function OptionABC({ variant, rows, onEnter, onRegister, onOpenCertificat
       key: "reviewer", count: roleCounts.reviewer,
       stats: [
         { label: "Papers assigned", value: reviewerT.assigned, onClick: () => applyStat("reviewer", { role: { "rv-assigned": ["some"] } }), on: roleOn("reviewer", "rv-assigned", "some") },
-        { label: "Reviewed", value: reviewerT.done, color: "var(--success)", onClick: () => applyStat("reviewer", { role: { "rv-progress": ["done"] } }), on: roleOn("reviewer", "rv-progress", "done") },
-        { label: "Pending", value: reviewerT.pending, color: "var(--warning)", attention: true, onClick: () => applyStat("reviewer", { role: { "rv-progress": ["pending"] } }), on: roleOn("reviewer", "rv-progress", "pending") },
+        { label: "Reviewed", value: reviewerT.done, color: "var(--success-ink)", onClick: () => applyStat("reviewer", { role: { "rv-progress": ["done"] } }), on: roleOn("reviewer", "rv-progress", "done") },
+        { label: "Pending", value: reviewerT.pending, color: "var(--warning-ink)", attention: true, onClick: () => applyStat("reviewer", { role: { "rv-progress": ["pending"] } }), on: roleOn("reviewer", "rv-progress", "pending") },
         { label: "Invitation Rejected", value: reviewerT.declined, color: "var(--ink-soft)", onClick: () => applyStat("reviewer", { role: { "rv-progress": ["declined"] } }), on: roleOn("reviewer", "rv-progress", "declined") },
-        { label: "Review Overdue", value: reviewerT.overdue, color: "var(--danger)", attention: true, onClick: () => applyStat("reviewer", { role: { "rv-due": ["overdue"] } }), on: roleOn("reviewer", "rv-due", "overdue") },
+        { label: "Review Overdue", value: reviewerT.overdue, color: "var(--danger-ink)", attention: true, onClick: () => applyStat("reviewer", { role: { "rv-due": ["overdue"] } }), on: roleOn("reviewer", "rv-due", "overdue") },
       ],
     },
     {
       key: "committee", count: roleCounts.committee,
       stats: [
-        { label: "Upcoming", value: committeeT.upcoming, color: "var(--success)", onClick: () => applyStat("committee", {}, onlyActive), on: roleFilter === "committee" && collapsed.archived && !collapsed.active },
+        { label: "Upcoming", value: committeeT.upcoming, color: "var(--success-ink)", onClick: () => applyStat("committee", {}, onlyActive), on: roleFilter === "committee" && collapsed.archived && !collapsed.active },
         { label: "Finished", value: committeeT.finished, onClick: () => applyStat("committee", {}, onlyPast), on: roleFilter === "committee" && collapsed.active && !collapsed.archived },
         { label: "Certificates ready", value: committeeT.certificates, color: "var(--primary)", onClick: () => applyStat("committee", { cert: "issued" }), on: roleFilter === "committee" && filters.cert === "issued" },
         { label: "Committee roles held", value: new Set(rows.filter((r) => r.committee).map((r) => r.committee?.label)).size },
@@ -343,7 +343,7 @@ export function OptionABC({ variant, rows, onEnter, onRegister, onOpenCertificat
       {row.next.key === "register" ? (
         <button type="button" onClick={(e) => { e.stopPropagation(); onRegister(row.conf); }} className="whitespace-nowrap rounded-lg bg-primary px-3 py-1.5 text-[12.5px] font-bold text-white hover:bg-primary-hover">Register now</button>
       ) : (
-        <span className={cn("text-[12.5px] font-bold", row.next.tone === "warning" ? "text-warning" : row.next.key === "none" ? "text-ink-faint" : "text-ink-soft")}>{row.next.text}</span>
+        <span className={cn("text-[12.5px] font-bold", row.next.tone === "warning" ? "text-warning-ink" : row.next.key === "none" ? "text-ink-faint" : "text-ink-soft")}>{row.next.text}</span>
       )}
     </td>
   );
@@ -357,10 +357,10 @@ export function OptionABC({ variant, rows, onEnter, onRegister, onOpenCertificat
         className="px-2 py-3.5 text-center align-top"
       >
         {v === 0 ? (
-          <span className="text-[15px] font-bold text-line-strong" aria-label="0">–</span>
+          <span className="text-[15px] font-bold text-ink-faint" aria-label="0">–</span>
         ) : action ? (
           <button type="button" onClick={(e) => { e.stopPropagation(); onRegister(row.conf); }} className="inline-flex flex-col items-center">
-            <span className="text-[17px] font-extrabold leading-tight text-warning">{v}</span>
+            <span className="text-[17px] font-extrabold leading-tight text-warning-ink">{v}</span>
             <span className="text-[11px] font-bold text-[#92400E] underline-offset-2 hover:underline">Register now</span>
           </button>
         ) : (
@@ -536,7 +536,7 @@ export function OptionABC({ variant, rows, onEnter, onRegister, onOpenCertificat
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-navy px-5 py-3.5 text-[13px] text-slate-200">
           <div className="flex items-center gap-2.5">
             <b className="text-sm text-white">Totals for this list</b>
-            <span className="text-ink-faint">{filtered.length} conference{filtered.length === 1 ? "" : "s"} shown{chips.length ? " · filtered" : ""}</span>
+            <span className="text-slate-400">{filtered.length} conference{filtered.length === 1 ? "" : "s"} shown{chips.length ? " · filtered" : ""}</span>
           </div>
           {!isAuthorView ? (
             <div className="flex flex-wrap items-center gap-4 font-semibold">

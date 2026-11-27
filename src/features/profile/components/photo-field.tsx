@@ -75,9 +75,9 @@ export function PhotoField({ value, onChange, initials }: PhotoFieldProps) {
             <Camera size={13} className="text-primary" aria-hidden="true" /> {shown ? "Change photo" : "Upload photo"}
             <input ref={input} id={inputId} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" tabIndex={-1} onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
-          {value.kind !== "none" && <button type="button" onClick={() => { setError(""); onChange({ kind: "none" }); }} className="text-xs font-semibold text-ink-muted hover:text-danger">Remove</button>}
+          {value.kind !== "none" && <button type="button" onClick={() => { setError(""); onChange({ kind: "none" }); }} className="text-xs font-semibold text-ink-muted hover:text-danger-ink">Remove</button>}
         </div>
-        {error ? <p role="alert" className="mt-1 text-[11.5px] text-danger">{error}</p> : <p className="mt-1 truncate text-[11px] text-ink-faint">{name || "Profile photo (optional) · JPG or PNG, or drag & drop"}</p>}
+        {error ? <p role="alert" className="mt-1 text-[11.5px] text-danger-ink">{error}</p> : <p className="mt-1 truncate text-[11px] text-ink-faint">{name || "Profile photo (optional) · JPG or PNG, or drag & drop"}</p>}
       </div>
       {cropping && (
         <Modal title="Crop your photo" subtitle="Drag and zoom so your face sits inside the circle." icon={Camera} onClose={() => setCropping(null)} maxWidth="max-w-[480px]" roomy>

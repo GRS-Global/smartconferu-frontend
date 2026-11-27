@@ -35,10 +35,10 @@ export interface PaperResultDef {
 /** The outcomes the author sees — every one comes from the paper's *notified* outcome (nothing notified = "No Decision"),
  *  so an unpublished decision never shows here. `counted` ones are dashboard numbers; drafts only feed chips and filters. */
 export const PAPER_RESULTS: PaperResultDef[] = [
-  { key: "not_registered", label: "Accepted – registration pending", short: "registration pending", color: "var(--warning)", action: true, counted: true },
-  { key: "registered", label: "Accepted & registered", short: "accepted & registered", color: "var(--success)", counted: true },
+  { key: "not_registered", label: "Accepted – registration pending", short: "registration pending", color: "var(--warning-ink)", action: true, counted: true },
+  { key: "registered", label: "Accepted & registered", short: "accepted & registered", color: "var(--success-ink)", counted: true },
   { key: "not_accepted", label: "Rejected", short: "rejected", color: "var(--ink-soft)", counted: true },
-  { key: "revise", label: "Revision Required", short: "revision required", color: "var(--warning)", counted: true },
+  { key: "revise", label: "Revision Required", short: "revision required", color: "var(--warning-ink)", counted: true },
   { key: "waitlist", label: "Waitlisted", short: "waitlisted", color: "var(--ink-soft)", counted: true },
   { key: "no_result", label: "No Decision", short: "no decision", color: "var(--ink-soft)", counted: true },
   { key: "draft", label: "Paper Upload Pending", short: "upload pending", color: "var(--ink-muted)" },
@@ -57,11 +57,11 @@ export interface OutcomeColumn {
 /** Option D splits "Accepted" three ways: registered / not registered (conference over) / registration pending. */
 export const OUTCOME_COLUMNS: OutcomeColumn[] = [
   { key: "submitted", label: "Submitted", color: "var(--navy)" },
-  { key: "registered", label: "Registered", color: "var(--success)", accepted: true },
-  { key: "notRegistered", label: "Not registered", color: "var(--danger)", accepted: true },
-  { key: "pending", label: "Registration pending", color: "var(--warning)", accepted: true, action: true },
+  { key: "registered", label: "Registered", color: "var(--success-ink)", accepted: true },
+  { key: "notRegistered", label: "Not registered", color: "var(--danger-ink)", accepted: true },
+  { key: "pending", label: "Registration pending", color: "var(--warning-ink)", accepted: true, action: true },
   { key: "rejected", label: "Not Accepted", color: "var(--ink-soft)" },
-  { key: "revise", label: "Revision Required", color: "var(--warning)" },
+  { key: "revise", label: "Revision Required", color: "var(--warning-ink)" },
   { key: "waitlist", label: "Waitlisted", color: "var(--ink-soft)" },
   { key: "noDecision", label: "No Decision", color: "var(--ink-soft)" },
 ];

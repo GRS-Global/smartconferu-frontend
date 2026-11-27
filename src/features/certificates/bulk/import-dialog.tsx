@@ -95,7 +95,7 @@ export function ImportDialog({ existing, usedFields, onClose, onImport }: {
             <button onClick={() => input.current?.click()} disabled={busy} style={{ background: "var(--primary)" }} className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-bold disabled:opacity-50 cursor-pointer"><Upload size={14} /> Choose a file</button>
             <input ref={input} type="file" accept=".csv,.tsv,.txt,.xlsx,text/csv" aria-label="Choose a spreadsheet file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void load(f); }} />
           </div>
-          {error && <p role="alert" style={{ color: "var(--danger)" }} className="text-sm font-semibold">{error}</p>}
+          {error && <p role="alert" style={{ color: "var(--danger-ink)" }} className="text-sm font-semibold">{error}</p>}
           <ul style={{ color: "var(--ink-muted)" }} className="text-xs leading-relaxed list-disc pl-5 space-y-1">
             <li>CSV (comma, semicolon or tab) or Excel <strong>.xlsx</strong>; the first sheet is read. Up to {MAX_ROWS.toLocaleString()} rows and {MAX_FILE_BYTES / 1024 / 1024} MB.</li>
             <li>The first row should be the column names. They are matched to the fields automatically; you can change any of them in the next step.</li>
@@ -114,26 +114,26 @@ export function ImportDialog({ existing, usedFields, onClose, onImport }: {
               <input type="checkbox" checked={hasHeader} onChange={(e) => { setHasHeader(e.target.checked); setMap(autoMap(e.target.checked ? table!.headers : table!.headers.map((_, i) => `Column ${i + 1}`))); setAuto({} as Record<ImportFieldKey, boolean>); }} style={{ accentColor: "var(--primary)" }} /> First row has the column names
             </label>
           </div>
-          {table?.truncated && <p role="status" style={{ color: "var(--warning)" }} className="text-xs font-semibold">Only the first {MAX_ROWS.toLocaleString()} rows are used.</p>}
+          {table?.truncated && <p role="status" style={{ color: "var(--warning-ink)" }} className="text-xs font-semibold">Only the first {MAX_ROWS.toLocaleString()} rows are used.</p>}
 
           <div style={{ border: "1px solid var(--border)" }} className="rounded-xl overflow-hidden">
             {IMPORT_FIELDS.map((f, i) => (
               <div key={f.key} style={{ borderTop: i ? "1px solid var(--muted)" : "none" }} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 sm:gap-4 items-center px-4 py-3">
                 <div>
-                  <label htmlFor={`map-${f.key}`} style={{ color: "var(--navy)" }} className="text-sm font-bold">{f.label}{f.required && <span style={{ color: "var(--danger)" }}> *</span>}</label>
+                  <label htmlFor={`map-${f.key}`} style={{ color: "var(--navy)" }} className="text-sm font-bold">{f.label}{f.required && <span style={{ color: "var(--danger-ink)" }}> *</span>}</label>
                   <div style={{ color: "var(--ink-muted)" }} className="text-[11px]">{f.hint}</div>
                 </div>
                 <select id={`map-${f.key}`} value={map[f.key]} onChange={(e) => setField(f.key, Number(e.target.value))} style={selectStyle} className={`${selectClass} w-full`}>
                   <option value={-1}>— none —</option>
                   {effective.headers.map((h, ci) => <option key={ci} value={ci}>{h}</option>)}
                 </select>
-                <span style={{ color: auto[f.key] ? "var(--success)" : "var(--ink-faint)" }} className="text-[11px] font-semibold w-24 sm:text-right">{map[f.key] >= 0 ? (auto[f.key] ? "Matched" : "Chosen") : f.required ? "Required" : "Optional"}</span>
+                <span style={{ color: auto[f.key] ? "var(--success-ink)" : "var(--ink-faint)" }} className="text-[11px] font-semibold w-24 sm:text-right">{map[f.key] >= 0 ? (auto[f.key] ? "Matched" : "Chosen") : f.required ? "Required" : "Optional"}</span>
               </div>
             ))}
           </div>
 
           {unmappedUsed.length > 0 && (
-            <p role="status" style={{ color: "var(--warning)" }} className="text-xs font-semibold flex items-start gap-1.5"><AlertTriangle size={13} className="mt-0.5 shrink-0" /> This certificate prints {unmappedUsed.map((f) => f.label.toLowerCase()).join(" and ")}, but no column is chosen for it, so it will be empty.</p>
+            <p role="status" style={{ color: "var(--warning-ink)" }} className="text-xs font-semibold flex items-start gap-1.5"><AlertTriangle size={13} className="mt-0.5 shrink-0" /> This certificate prints {unmappedUsed.map((f) => f.label.toLowerCase()).join(" and ")}, but no column is chosen for it, so it will be empty.</p>
           )}
 
           <div>
@@ -152,10 +152,10 @@ export function ImportDialog({ existing, usedFields, onClose, onImport }: {
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2 text-xs font-bold">
             <span style={{ background: "var(--primary-soft)", color: "var(--primary)" }} className="px-3 py-1.5 rounded-full">{ready.length} will be added</span>
-            {count("no-name") > 0 && <span style={{ background: "var(--danger-soft)", color: "var(--danger)" }} className="px-3 py-1.5 rounded-full">{count("no-name")} skipped: no name</span>}
-            {(count("duplicate-in-file") + count("duplicate-in-list")) > 0 && <span style={{ background: "var(--warning-soft)", color: "var(--warning)" }} className="px-3 py-1.5 rounded-full">{count("duplicate-in-file") + count("duplicate-in-list")} repeated</span>}
-            {count("no-email") > 0 && <span style={{ background: "var(--warning-soft)", color: "var(--warning)" }} className="px-3 py-1.5 rounded-full">{count("no-email")} without an email</span>}
-            {count("bad-email") > 0 && <span style={{ background: "var(--warning-soft)", color: "var(--warning)" }} className="px-3 py-1.5 rounded-full">{count("bad-email")} with a wrong-looking email</span>}
+            {count("no-name") > 0 && <span style={{ background: "var(--danger-soft)", color: "var(--danger-ink)" }} className="px-3 py-1.5 rounded-full">{count("no-name")} skipped: no name</span>}
+            {(count("duplicate-in-file") + count("duplicate-in-list")) > 0 && <span style={{ background: "var(--warning-soft)", color: "var(--warning-ink)" }} className="px-3 py-1.5 rounded-full">{count("duplicate-in-file") + count("duplicate-in-list")} repeated</span>}
+            {count("no-email") > 0 && <span style={{ background: "var(--warning-soft)", color: "var(--warning-ink)" }} className="px-3 py-1.5 rounded-full">{count("no-email")} without an email</span>}
+            {count("bad-email") > 0 && <span style={{ background: "var(--warning-soft)", color: "var(--warning-ink)" }} className="px-3 py-1.5 rounded-full">{count("bad-email")} with a wrong-looking email</span>}
           </div>
           <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer" style={{ color: "var(--ink-soft)" }}>
             <input type="checkbox" checked={skipDuplicates} onChange={(e) => setSkipDuplicates(e.target.checked)} style={{ accentColor: "var(--primary)" }} /> Skip people who are already on this list or appear twice in the file
@@ -171,7 +171,7 @@ export function ImportDialog({ existing, usedFields, onClose, onImport }: {
                       <td style={{ color: "var(--ink-faint)" }} className="px-3 py-1.5 align-top">{r.line}</td>
                       <td style={{ color: "var(--ink)" }} className="px-3 py-1.5 font-medium align-top">
                         <span className="block max-w-[260px] break-words">{r.person.name || "—"}</span>
-                        <span style={{ color: r.problems.length ? "var(--warning)" : "var(--success)" }} className="block text-[10.5px] font-semibold mt-0.5">{r.problems.length ? r.problems.map((p) => PROBLEM_TEXT[p]).join("; ") : "OK"}</span>
+                        <span style={{ color: r.problems.length ? "var(--warning-ink)" : "var(--success-ink)" }} className="block text-[10.5px] font-semibold mt-0.5">{r.problems.length ? r.problems.map((p) => PROBLEM_TEXT[p]).join("; ") : "OK"}</span>
                       </td>
                       <td style={{ color: "var(--ink-muted)" }} className="px-3 py-1.5 align-top whitespace-nowrap">{r.person.email || "—"}</td>
                       <td style={{ color: "var(--ink-muted)" }} className="px-3 py-1.5 align-top whitespace-nowrap">{r.person.roleLabel || "—"}</td>

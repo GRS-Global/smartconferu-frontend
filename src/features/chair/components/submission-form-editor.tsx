@@ -51,14 +51,14 @@ export function SubmissionFormEditor({ initial, stored, onSave, busy }: { initia
             <div className="flex items-start gap-1">
               <button type="button" disabled={i === 0} onClick={() => move(i, -1)} aria-label={`Move question ${i + 1} up`} className={iconBtn}><ArrowUp size={14} aria-hidden="true" /></button>
               <button type="button" disabled={i === rows.length - 1} onClick={() => move(i, 1)} aria-label={`Move question ${i + 1} down`} className={iconBtn}><ArrowDown size={14} aria-hidden="true" /></button>
-              <button type="button" onClick={() => setRows((l) => l.filter((x) => x.key !== r.key))} aria-label={`Delete question ${i + 1}`} className={`${iconBtn} hover:bg-danger-soft hover:text-danger`}><Trash2 size={14} aria-hidden="true" /></button>
+              <button type="button" onClick={() => setRows((l) => l.filter((x) => x.key !== r.key))} aria-label={`Delete question ${i + 1}`} className={`${iconBtn} hover:bg-danger-soft hover:text-danger-ink`}><Trash2 size={14} aria-hidden="true" /></button>
             </div>
           </li>
         ))}
       </ul>
-      {bad && <p role="alert" className="mt-3 text-xs font-medium text-danger">Every question needs a name, and a choice needs at least two options.</p>}
+      {bad && <p role="alert" className="mt-3 text-xs font-medium text-danger-ink">Every question needs a name, and a choice needs at least two options.</p>}
       <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
-        {!stored && <span className="mr-auto text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save the form.</span>}
+        {!stored && <span className="mr-auto text-xs font-semibold text-warning-ink">Run migration 0028_conference_settings.sql to save the form.</span>}
         {rows.length > 0 && <Button variant="ghost" onClick={() => setRows([])}><RotateCcw size={14} aria-hidden="true" /> Remove all</Button>}
         <Button variant="outline" disabled={rows.length >= 30} onClick={() => setRows((l) => [...l, { key: ++uid, id: `q-${Date.now().toString(36)}${uid}`, type: "short_text", label: "", required: false, optionsText: "" }])}><Plus size={14} aria-hidden="true" /> Add question</Button>
         <Button disabled={busy || !stored || bad || !changed} title={changed ? undefined : "No changes to save"} onClick={() => onSave(serialize(rows))}>{busy ? "Saving…" : "Save form"}</Button>

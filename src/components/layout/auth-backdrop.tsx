@@ -1,5 +1,6 @@
 // Full-bleed photo under a dark scrim (solid navy underneath is the fallback if the image doesn't load).
-const AUTH_BG_IMAGE = "https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg?auto=compress&cs=tinysrgb&w=1920";
+// Served by the app itself (a 33 KB WebP of the photo, it was a 250 KB JPEG from a third party that also set its own cookies on visitors).
+const AUTH_BG_IMAGE = "/auth-bg.webp";
 
 /** The sign-in / complete-profile background (fixed, so it stays put while a long form scrolls over it). */
 export function AuthBackdrop() {

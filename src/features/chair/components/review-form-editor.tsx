@@ -69,14 +69,14 @@ export function InstructionsEditor({ initial, stored, onSave, busy, mode: savedM
             <span className="hidden text-[11px] text-ink-faint sm:inline">· or drag &amp; drop</span>
             <input type="file" accept="application/pdf,.pdf" className="hidden" aria-label="Choose a PDF" onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
-          {pdfError && <p role="alert" className="mt-2 text-xs font-semibold text-danger">{pdfError}</p>}
+          {pdfError && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">{pdfError}</p>}
         </>
       ) : (
         <>
           <RichTextEditor value={html} onChange={setHtml} label="Reviewer instructions" placeholder="What reviewers should focus on, scoring guidance, conflicts of interest, deadlines…" maxHeight={360} />
           <div className="mt-3 flex items-center justify-end gap-3">
-            {!stored && <span className="mr-auto text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save this.</span>}
-            {saved && !busy && <span className="flex items-center gap-1 text-xs font-semibold text-success"><Check size={13} aria-hidden="true" /> Saved</span>}
+            {!stored && <span className="mr-auto text-xs font-semibold text-warning-ink">Run migration 0028_conference_settings.sql to save this.</span>}
+            {saved && !busy && <span className="flex items-center gap-1 text-xs font-semibold text-success-ink"><Check size={13} aria-hidden="true" /> Saved</span>}
             <button type="button" onClick={save} disabled={busy || !changed} title={changed ? undefined : "No changes to save"} className="h-10 cursor-pointer rounded-xl bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60">{busy ? "Saving…" : "Save instructions"}</button>
           </div>
         </>
@@ -110,13 +110,13 @@ export function FormEditor({ initial, custom, stored, onSave, onReset, busy }: {
   const iconBtn = "flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-primary-soft hover:text-primary disabled:opacity-30";
   return (
     <Card icon={ClipboardList} title="Review form" desc={custom ? "The form reviewers fill in for this conference." : "The standard form. Change it and it becomes this conference's own."}
-      footer={<>{!stored && <span className="mr-auto text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save the form.</span>}{custom && <Button variant="ghost" disabled={busy || !stored} onClick={onReset}><RotateCcw size={14} aria-hidden="true" /> Use the standard form</Button>}<Button disabled={busy || !stored || problems || !changed} title={changed ? undefined : "No changes to save"} onClick={() => onSave(toSections())}>{busy ? "Saving…" : "Save form"}</Button></>}>
+      footer={<>{!stored && <span className="mr-auto text-xs font-semibold text-warning-ink">Run migration 0028_conference_settings.sql to save the form.</span>}{custom && <Button variant="ghost" disabled={busy || !stored} onClick={onReset}><RotateCcw size={14} aria-hidden="true" /> Use the standard form</Button>}<Button disabled={busy || !stored || problems || !changed} title={changed ? undefined : "No changes to save"} onClick={() => onSave(toSections())}>{busy ? "Saving…" : "Save form"}</Button></>}>
       <div className="space-y-5">
         {secs.map((s, si) => (
           <div key={s.key} className="rounded-xl border border-line p-4">
             <div className="mb-3 flex items-center gap-2">
               <input aria-label={`Section ${si + 1} name`} value={s.name} maxLength={80} onChange={(e) => setSecs((l) => l.map((x) => (x.key === s.key ? { ...x, name: e.target.value } : x)))} className={`${INPUT_CLASS} max-w-xs font-bold`} />
-              <button type="button" disabled={s.fields.some((f) => PROTECTED_FIELD_IDS.includes(f.id)) || secs.length === 1} onClick={() => setSecs((l) => l.filter((x) => x.key !== s.key))} aria-label={`Delete section ${s.name || si + 1}`} title={s.fields.some((f) => PROTECTED_FIELD_IDS.includes(f.id)) ? "This section holds fields that stay" : undefined} className={`${iconBtn} hover:bg-danger-soft hover:text-danger`}><Trash2 size={14} aria-hidden="true" /></button>
+              <button type="button" disabled={s.fields.some((f) => PROTECTED_FIELD_IDS.includes(f.id)) || secs.length === 1} onClick={() => setSecs((l) => l.filter((x) => x.key !== s.key))} aria-label={`Delete section ${s.name || si + 1}`} title={s.fields.some((f) => PROTECTED_FIELD_IDS.includes(f.id)) ? "This section holds fields that stay" : undefined} className={`${iconBtn} hover:bg-danger-soft hover:text-danger-ink`}><Trash2 size={14} aria-hidden="true" /></button>
             </div>
             <ul className="space-y-3">
               {s.fields.map((f, fi) => {
@@ -137,7 +137,7 @@ export function FormEditor({ initial, custom, stored, onSave, onReset, busy }: {
                     <div className="flex items-start gap-1">
                       <button type="button" disabled={fi === 0} onClick={() => moveField(s.key, fi, -1)} aria-label={`Move ${f.label || "field"} up`} className={iconBtn}><ArrowUp size={14} aria-hidden="true" /></button>
                       <button type="button" disabled={fi === s.fields.length - 1} onClick={() => moveField(s.key, fi, 1)} aria-label={`Move ${f.label || "field"} down`} className={iconBtn}><ArrowDown size={14} aria-hidden="true" /></button>
-                      <button type="button" disabled={locked} onClick={() => setSecs((l) => l.map((x) => (x.key === s.key ? { ...x, fields: x.fields.filter((y) => y.key !== f.key) } : x)))} aria-label={`Delete ${f.label || "field"}`} title={locked ? "This field stays" : undefined} className={`${iconBtn} hover:bg-danger-soft hover:text-danger`}><Trash2 size={14} aria-hidden="true" /></button>
+                      <button type="button" disabled={locked} onClick={() => setSecs((l) => l.map((x) => (x.key === s.key ? { ...x, fields: x.fields.filter((y) => y.key !== f.key) } : x)))} aria-label={`Delete ${f.label || "field"}`} title={locked ? "This field stays" : undefined} className={`${iconBtn} hover:bg-danger-soft hover:text-danger-ink`}><Trash2 size={14} aria-hidden="true" /></button>
                     </div>
                   </li>
                 );
@@ -148,7 +148,7 @@ export function FormEditor({ initial, custom, stored, onSave, onReset, busy }: {
         ))}
       </div>
       <button type="button" onClick={() => setSecs((l) => [...l, { key: ++uid, id: `s-${Date.now().toString(36)}`, name: "", fields: [] }])} className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"><Plus size={14} aria-hidden="true" /> Add section</button>
-      {problems && <p role="alert" className="mt-3 text-xs font-medium text-danger">Every section and field needs a name, and a single choice needs at least two options.</p>}
+      {problems && <p role="alert" className="mt-3 text-xs font-medium text-danger-ink">Every section and field needs a name, and a single choice needs at least two options.</p>}
     </Card>
   );
 }

@@ -40,9 +40,9 @@ export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { s
   const expiry = (decided?.status === "approved" && decided.newExpiry) || licenseExpiry || (createdAt ? addDays(createdAt, TRIAL_DAYS) : "");
   const days = expiry ? daysUntil(expiry) : null;
   const tone = days === null ? null
-    : days < 0 ? { label: `Expired ${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} ago`, color: "var(--danger)", bg: "var(--danger-soft)" }
-      : days <= 30 ? { label: days === 0 ? "Expires today" : `Expires in ${days} day${days === 1 ? "" : "s"}`, color: "var(--warning)", bg: "var(--warning-soft)" }
-        : { label: `${days} days left`, color: "var(--success)", bg: "var(--success-soft)" };
+    : days < 0 ? { label: `Expired ${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} ago`, color: "var(--danger-ink)", bg: "var(--danger-soft)" }
+      : days <= 30 ? { label: days === 0 ? "Expires today" : `Expires in ${days} day${days === 1 ? "" : "s"}`, color: "var(--warning-ink)", bg: "var(--warning-soft)" }
+        : { label: `${days} days left`, color: "var(--success-ink)", bg: "var(--success-soft)" };
 
   // The new date has to be after the current expiry (or after today, if it has already lapsed).
   const today = addDays(null, 0);
@@ -72,7 +72,7 @@ export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { s
       {pending ? (
         <div style={{ border: "1px solid var(--border)" }} className="mt-2 rounded-lg bg-warning-soft px-3 py-2.5">
           <div className="flex items-start gap-2">
-            <Clock size={13} aria-hidden="true" className="mt-0.5 shrink-0 text-warning" />
+            <Clock size={13} aria-hidden="true" className="mt-0.5 shrink-0 text-warning-ink" />
             <div className="min-w-0 flex-1 text-xs leading-relaxed text-ink-soft"><span className="font-semibold text-navy">Extension requested to {show(pending.requestedDate)}</span><span className="block text-ink-muted">Waiting for the Super Admin · sent {ago(pending.createdAt)}. You&apos;ll get a notification when it&apos;s decided.</span></div>
           </div>
           <div className="mt-1.5 flex justify-end"><button type="button" onClick={() => setConfirmWithdraw(true)} className="cursor-pointer text-[11px] font-semibold text-ink-muted hover:underline">Withdraw request</button></div>
@@ -81,7 +81,7 @@ export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { s
         <>
           {decided && (
             <div style={{ border: "1px solid var(--border)", background: decided.status === "approved" ? "var(--success-soft)" : "var(--danger-soft)" }} className="mt-2 flex items-start gap-2 rounded-lg px-3 py-2.5">
-              {decided.status === "approved" ? <Check size={13} aria-hidden="true" className="mt-0.5 shrink-0 text-success" /> : <XCircle size={13} aria-hidden="true" className="mt-0.5 shrink-0 text-danger" />}
+              {decided.status === "approved" ? <Check size={13} aria-hidden="true" className="mt-0.5 shrink-0 text-success-ink" /> : <XCircle size={13} aria-hidden="true" className="mt-0.5 shrink-0 text-danger-ink" />}
               <p className="min-w-0 text-xs leading-relaxed text-ink-soft">
                 {decided.status === "approved"
                   ? <><span className="font-semibold text-navy">Extension approved</span> — the license now runs until {show(decided.newExpiry || decided.requestedDate)}.</>
@@ -104,13 +104,13 @@ export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { s
               <span className="flex items-center gap-2"><span className="text-sm font-bold text-navy">{expiry ? show(expiry) : "Not set"}</span>{tone && <span style={{ background: tone.bg, color: tone.color }} className="rounded-full px-2 py-0.5 text-[10.5px] font-bold">{tone.label}</span>}</span>
             </div>
             <div className="mt-4">
-              <label htmlFor="license-ext-date" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">Extend until <span className="text-danger">*</span></label>
+              <label htmlFor="license-ext-date" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">Extend until <span className="text-danger-ink">*</span></label>
               <div className="mb-2 flex flex-wrap items-center gap-1.5">
                 {[1, 3, 6, 12].map((m) => { const v = addMonths(floor, m); const active = draft.date === v; return <button key={m} type="button" aria-pressed={active} onClick={() => setDraft({ ...draft, date: v })} style={{ border: `1px solid ${active ? "var(--primary)" : "var(--border)"}` }} className={`h-8 cursor-pointer rounded-full px-3 text-xs font-semibold transition-colors ${active ? "bg-primary-soft text-primary" : "bg-white text-ink-soft"}`}>+{m === 12 ? "1 year" : `${m} month${m > 1 ? "s" : ""}`}</button>; })}
               </div>
               <input id="license-ext-date" type="date" min={minDate} value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} className={`w-full rounded-xl border-[1.5px] bg-white px-3.5 py-2.5 text-sm outline-none focus:ring-4 ${draft.touched && dateError ? "border-danger focus:ring-danger-soft" : "border-line focus:border-primary focus:ring-primary-soft"}`} />
               {draft.touched && dateError
-                ? <p role="alert" className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {dateError}</p>
+                ? <p role="alert" className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {dateError}</p>
                 : draft.date && expiry && <p className="mt-1.5 text-xs text-ink-faint">{Math.max(0, daysUntil(draft.date) - Math.max(days ?? 0, 0))} more days than today&apos;s license.</p>}
             </div>
             <div className="mt-4">
@@ -118,7 +118,7 @@ export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { s
               <textarea id="license-ext-reason" rows={3} maxLength={500} value={draft.reason} onChange={(e) => setDraft({ ...draft, reason: e.target.value })} placeholder="e.g. Certificates and the proceedings go out three weeks after the event." className="w-full resize-none rounded-xl border-[1.5px] border-line bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary-soft" />
             </div>
             <p className="mt-4 flex items-center gap-1.5 text-xs text-ink-faint"><Bell size={12} aria-hidden="true" /> The Super Admin gets an in-app notification.</p>
-            {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
             <div className="mt-6 flex items-center justify-end gap-3">
               <button type="button" onClick={() => setDraft(null)} disabled={busy} className="h-10 cursor-pointer rounded-xl px-3 text-sm font-semibold text-ink-muted hover:bg-canvas">Cancel</button>
               <button type="button" onClick={() => void submit()} disabled={busy} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white hover:shadow-[0_0_24px_rgba(124,58,237,0.35)] disabled:opacity-60"><Send size={14} aria-hidden="true" /> {busy ? "Sending…" : "Send request"}</button>

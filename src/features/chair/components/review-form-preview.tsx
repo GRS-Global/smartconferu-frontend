@@ -52,7 +52,7 @@ export function InstructionsPreview({ text, pdf = null, mode = "html", defaultOp
 export function InstructionsPdfRow({ pdf }: { pdf: InstructionsPdf }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-line bg-canvas px-3.5 py-2.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-[10px] font-extrabold text-danger">PDF</span>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-[10px] font-extrabold text-[#B91C1C]">PDF</span>
       <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-ink">{pdf.name}</span><span className="block text-xs text-ink-faint">Attached document</span></span>
       <a href={pdf.url} target="_blank" rel="noopener noreferrer" download={pdf.name} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-bold text-primary hover:bg-canvas"><Download size={13} aria-hidden="true" /> Download</a>
     </div>
@@ -65,18 +65,18 @@ export function StarRating({ value = 0, onChange, size = 22, max = 5, disabled =
   const readOnly = !onChange || disabled;
   const shown = hover || value;
   return (
-    <div className="flex items-center gap-1" role="group" aria-label={label}>
+    <div className="flex items-center gap-1" role={readOnly ? "group" : "radiogroup"} aria-label={label}>
       <div className="flex items-center gap-0.5" onMouseLeave={() => setHover(0)}>
         {Array.from({ length: max }, (_, k) => k + 1).map((n) => {
           const fill = shown >= n ? 100 : shown >= n - 0.5 ? 50 : 0;
           return (
             <span key={n} className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
               <Star size={size} strokeWidth={1.75} style={{ color: "var(--border-strong)" }} className="absolute inset-0" aria-hidden="true" />
-              {fill > 0 && <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill}%` }}><Star size={size} strokeWidth={1.75} fill="var(--warning)" style={{ color: "var(--warning)" }} aria-hidden="true" /></span>}
+              {fill > 0 && <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill}%` }}><Star size={size} strokeWidth={1.75} fill="var(--warning)" style={{ color: "var(--warning-ink)" }} aria-hidden="true" /></span>}
               {!readOnly && (
                 <>
-                  <button type="button" aria-label={`${n - 0.5} out of ${max}`} onClick={() => onChange(n - 0.5)} onMouseEnter={() => setHover(n - 0.5)} className="absolute left-0 top-0 h-full w-1/2 cursor-pointer" />
-                  <button type="button" aria-label={`${n} out of ${max}`} onClick={() => onChange(n)} onMouseEnter={() => setHover(n)} className="absolute right-0 top-0 h-full w-1/2 cursor-pointer" />
+                  <button type="button" role="radio" aria-checked={value === n - 0.5} aria-label={`${n - 0.5} out of ${max}`} onClick={() => onChange(n - 0.5)} onMouseEnter={() => setHover(n - 0.5)} className="absolute left-0 top-0 h-full w-1/2 cursor-pointer" />
+                  <button type="button" role="radio" aria-checked={value === n} aria-label={`${n} out of ${max}`} onClick={() => onChange(n)} onMouseEnter={() => setHover(n)} className="absolute right-0 top-0 h-full w-1/2 cursor-pointer" />
                 </>
               )}
             </span>
@@ -124,7 +124,7 @@ export function ReviewFormBody({ form, hiddenFields = [], values, onChange, disa
                       {b.fields.map((f, i) => (
                         <div key={f.id} className={cn("flex flex-wrap items-center justify-between gap-4 px-4 py-3.5", i > 0 && "border-t border-muted")}>
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink"><span>{f.label}{f.required && <span className="text-danger"> *</span>}</span>{badge(f)}</div>
+                            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink"><span>{f.label}{f.required && <span className="text-danger-ink"> *</span>}</span>{badge(f)}</div>
                             {f.description && <p className="mt-0.5 text-[11px] text-ink-faint">{f.description}</p>}
                           </div>
                           <StarRating value={num(f)} max={f.max ?? 5} label={f.label} disabled={disabled} onChange={(v) => onChange(f.id, v)} />
@@ -138,7 +138,7 @@ export function ReviewFormBody({ form, hiddenFields = [], values, onChange, disa
                 return (
                   <div key={f.id}>
                     <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-                      <label htmlFor={f.type === "long_text" ? `rfp-${f.id}` : undefined} className="flex items-center gap-2 text-sm font-semibold text-ink"><span>{f.label}{f.required && <span className="text-danger"> *</span>}</span>{badge(f)}</label>
+                      <label htmlFor={f.type === "long_text" ? `rfp-${f.id}` : undefined} className="flex items-center gap-2 text-sm font-semibold text-ink"><span>{f.label}{f.required && <span className="text-danger-ink"> *</span>}</span>{badge(f)}</label>
                       {onPolish && f.id === "f-summary" && <button type="button" onClick={onPolish} disabled={disabled || !text.trim()} title={text.trim() ? "Improve the wording, clarity and tone of your review — you approve the result before it replaces your text" : "Write your review first, then polish it with Smart Assist"} className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-[1.5px] border-[var(--primary-soft-border)] bg-primary-soft px-2.5 py-1 text-[11px] font-bold text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"><Sparkles size={12} aria-hidden="true" /> Polish with Smart Assist</button>}
                     </div>
                     {f.description && <p className="mb-2 text-[11px] text-ink-faint">{f.description}</p>}

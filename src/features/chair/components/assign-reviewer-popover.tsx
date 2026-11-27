@@ -43,7 +43,7 @@ export function AssignReviewerPopover({ row, candidates, maxLoad, deadline, anch
       <div style={{ borderBottom: "1px solid var(--muted)" }} className="px-4 pb-3 pt-3.5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-bold text-navy">Assign to {row.paper.id}</span>
-          <span style={{ color: row.reviewers.length < row.target ? "#B45309" : "var(--success)" }} className="text-xs font-bold">{row.reviewers.length} / {row.target} assigned</span>
+          <span style={{ color: row.reviewers.length < row.target ? "#B45309" : "var(--success-ink)" }} className="text-xs font-bold">{row.reviewers.length} / {row.target} assigned</span>
         </div>
         <label style={{ border: "1px solid var(--border)" }} className="mt-2.5 flex h-8 items-center gap-2 rounded-lg px-2.5">
           <Search size={13} aria-hidden="true" className="text-ink-faint" />
@@ -61,12 +61,12 @@ export function AssignReviewerPopover({ row, candidates, maxLoad, deadline, anch
                 <span aria-hidden="true" className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[11px] font-bold text-primary">{initials(rev.name)}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[13px] font-semibold text-ink">{rev.name}</span>
+                    <span className="text-[13px] font-semibold text-ink [overflow-wrap:anywhere]">{rev.name}</span>
                     {rev.status === "invited" && <span style={{ background: "var(--warning-soft)", color: "#B45309" }} className="rounded px-1.5 text-[10px] font-bold">Invited</span>}
                   </div>
-                  <div style={{ color: conflict ? "var(--danger)" : "var(--ink-faint)" }} className="text-[11px] leading-snug">{conflict ? `⚠ ${conflict}` : rev.email}</div>
+                  <div style={{ color: conflict ? "var(--danger-ink)" : "var(--ink-faint)" }} className="text-[11px] leading-snug [overflow-wrap:anywhere]">{conflict ? `⚠ ${conflict}` : rev.email}</div>
                 </div>
-                <span style={{ color: full ? "var(--danger)" : "var(--ink-muted)" }} title="Papers already assigned in this conference" className="shrink-0 pt-0.5 text-[11px] font-bold tabular-nums">{load}{maxLoad ? `/${maxLoad}` : ""} papers</span>
+                <span style={{ color: full ? "var(--danger-ink)" : "var(--ink-muted)" }} title="Papers already assigned in this conference" className="shrink-0 pt-0.5 text-[11px] font-bold tabular-nums">{load}{maxLoad ? `/${maxLoad}` : ""} papers</span>
                 {!open && (
                   <button type="button" disabled={blocked} onClick={() => { setPicking(rev.memberId); setDue(deadline || plusDays(28)); }} title={conflict ? "Conflict of interest — can't be assigned" : full ? "Already at the maximum papers per reviewer" : `Assign ${rev.name}`} aria-label={`Assign ${rev.name}`} style={blocked ? { color: "var(--border-strong)", border: "1px solid var(--border)" } : { color: "var(--primary)", border: "1px solid var(--primary-soft-border)", background: "var(--primary-soft)" }} className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg enabled:hover:border-primary disabled:cursor-not-allowed">
                     <Plus size={14} aria-hidden="true" />

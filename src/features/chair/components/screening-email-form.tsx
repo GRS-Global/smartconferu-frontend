@@ -89,9 +89,9 @@ function History({ logs, label, keys }: { logs: ChairEmailLog[]; label: string; 
                 const ok = l.status !== "failed";
                 return (
                   <li key={l.id} className="flex items-start gap-3 px-3 py-2.5">
-                    <span className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}>{ok ? <Check size={11} strokeWidth={3} aria-hidden="true" /> : <X size={11} strokeWidth={3} aria-hidden="true" />}</span>
+                    <span className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${ok ? "bg-success-soft text-success-ink" : "bg-danger-soft text-danger-ink"}`}>{ok ? <Check size={11} strokeWidth={3} aria-hidden="true" /> : <X size={11} strokeWidth={3} aria-hidden="true" />}</span>
                     <div className="min-w-0 flex-1"><div className="break-words text-[12.5px] font-semibold leading-snug text-ink">{l.subject}</div><div className="mt-0.5 break-words text-[11.5px] text-ink-muted">To {l.toName || l.toEmail || "—"}{l.template ? ` · ${l.template}` : ""}</div></div>
-                    <div className="shrink-0 text-right"><div className="whitespace-nowrap text-[11.5px] font-semibold text-ink-soft">{stamp(l.createdAt)}</div><div className={`text-[11px] font-bold ${ok ? "text-success" : "text-danger"}`}>{ok ? "Sent" : "Failed"}</div></div>
+                    <div className="shrink-0 text-right"><div className="whitespace-nowrap text-[11.5px] font-semibold text-ink-soft">{stamp(l.createdAt)}</div><div className={`text-[11px] font-bold ${ok ? "text-success-ink" : "text-danger-ink"}`}>{ok ? "Sent" : "Failed"}</div></div>
                   </li>
                 );
               })}
@@ -169,7 +169,7 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
           </div>
         )}
         <div className="space-y-1.5 rounded-lg bg-canvas px-3 py-2 text-xs text-ink-soft">
-          {to.length === 0 && <div className="font-semibold text-danger">No author of this paper has an email address on file.</div>}
+          {to.length === 0 && <div className="font-semibold text-danger-ink">No author of this paper has an email address on file.</div>}
           {to.map((a) => <div key={a.email}><b>To:</b> {a.name} &lt;{a.email}&gt; <span className="text-ink-faint">· corresponding author{to.length > 1 ? " · gets their own email" : ""}</span></div>)}
           {!p.reject && coAuthors.length > 0 && (
             <label className="flex cursor-pointer items-start gap-2">
@@ -198,7 +198,7 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
             {p.reportFiles.length ? (
               <div className="flex flex-wrap gap-2">{p.reportFiles.map((name) => <span key={name} className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary-soft-border bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary"><FileText size={13} aria-hidden="true" className="shrink-0" /> <span className="truncate">{name}</span></span>)}</div>
             ) : (
-              <p className="inline-flex items-center gap-1.5 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger"><AlertTriangle size={13} aria-hidden="true" /> No plagiarism report is uploaded for V{p.n} — upload it in the table first so the author can see it.</p>
+              <p className="inline-flex items-center gap-1.5 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-ink"><AlertTriangle size={13} aria-hidden="true" /> No plagiarism report is uploaded for V{p.n} — upload it in the table first so the author can see it.</p>
             )}
           </div>
         ) : (p.items?.length ?? 0) > 0 && (
@@ -207,9 +207,9 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
             <ul className="grid divide-y divide-line rounded-lg border border-line sm:grid-cols-2 sm:divide-y-0">
               {p.items!.map((it) => (
                 <li key={it.key} className="flex items-center gap-2 px-3 py-2 text-xs">
-                  <span className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${it.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}>{it.ok ? <Check size={10} strokeWidth={3} aria-hidden="true" /> : <X size={10} strokeWidth={3} aria-hidden="true" />}</span>
+                  <span className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${it.ok ? "bg-success-soft text-success-ink" : "bg-danger-soft text-danger-ink"}`}>{it.ok ? <Check size={10} strokeWidth={3} aria-hidden="true" /> : <X size={10} strokeWidth={3} aria-hidden="true" />}</span>
                   <span className="font-semibold text-ink">{it.label}</span>
-                  <span className={`ml-auto text-right ${it.ok ? "text-ink-muted" : "text-danger"}`}>{it.value}</span>
+                  <span className={`ml-auto text-right ${it.ok ? "text-ink-muted" : "text-danger-ink"}`}>{it.value}</span>
                 </li>
               ))}
             </ul>
@@ -226,7 +226,7 @@ export function ScreeningEmailForm(p: ScreeningEmailFormProps) {
           )}
         </div>
       </div>
-      {p.error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{p.error}</p>}
+      {p.error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{p.error}</p>}
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="outline" onClick={p.onClose} disabled={p.busy}>Cancel</Button>
         <Button disabled={p.busy || to.length === 0 || !subject.trim() || !body.trim() || (!p.reject && !due)} onClick={send}>

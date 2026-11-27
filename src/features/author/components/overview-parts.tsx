@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Award, Check, ChevronRight, Image as ImageIcon, MessageSquare, Mic, Sparkles, type LucideIcon } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/animated-number";
-import { FEEDBACK_ENABLED } from "@/lib/config";
+import { CERTIFICATES_ENABLED, FEEDBACK_ENABLED, FLYER_ENABLED } from "@/lib/config";
 import type { Dest } from "../links";
 import type { Todo } from "../todos";
 
@@ -37,7 +37,7 @@ export function TodoPanel({ todos }: { todos: Todo[] }) {
       </div>
       {todos.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-5 py-8 text-center">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success-soft"><Check size={18} aria-hidden="true" className="text-success" /></span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success-soft"><Check size={18} aria-hidden="true" className="text-success-ink" /></span>
           <p className="text-sm text-ink-soft">All clear. Nothing needs you right now.</p>
         </div>
       ) : (
@@ -66,12 +66,12 @@ export interface Numbers { submitted: number; accepted: number; rejected: number
 export function NumbersStrip({ n }: { n: Numbers }) {
   const items: Array<{ label: string; value: number; color?: string; sub?: boolean; warn?: boolean }> = [
     { label: "Submitted", value: n.submitted },
-    { label: "Accepted", value: n.accepted, color: "var(--success)" },
+    { label: "Accepted", value: n.accepted, color: "var(--success-ink)" },
     { label: "Rejected", value: n.rejected, color: "var(--ink-soft)" },
     { label: "No Decision", value: n.noDecision, color: "var(--ink-soft)" },
-    { label: "Registered", value: n.registered, color: "var(--success)", sub: true },
-    { label: "Not Registered", value: n.notRegistered, color: "var(--danger)", sub: true },
-    { label: "Registration Pending", value: n.pending, color: "var(--warning)", sub: true, warn: true },
+    { label: "Registered", value: n.registered, color: "var(--success-ink)", sub: true },
+    { label: "Not Registered", value: n.notRegistered, color: "var(--danger-ink)", sub: true },
+    { label: "Registration Pending", value: n.pending, color: "var(--warning-ink)", sub: true, warn: true },
   ];
   return (
     <section aria-label="Your numbers for this conference" style={{ ...CARD, ...rise(1) }} className="hd-rise sub-strip flex overflow-hidden rounded-2xl bg-white">
@@ -97,23 +97,23 @@ interface WrapItem { key: string; icon: LucideIcon; tone: string; bg: string; ti
 export function WrapUp({ acronym, flyerCount, presented, certificates = 0, feedbackDest, certificatesDest, flyerDest }: { acronym: string; flyerCount: number; presented: number; certificates?: number; feedbackDest: Dest | null; certificatesDest: Dest | null; flyerDest: Dest | null }) {
   // The first card reads the certificates the organisers have issued to this person; the second always asks (no stored feedback here).
   const items: WrapItem[] = [
-    certificates > 0
+    ...(!CERTIFICATES_ENABLED ? [] : [certificates > 0
       ? { key: "cert", icon: Award, tone: "var(--primary)", bg: "var(--primary-soft)", title: `${certificates} certificate${certificates === 1 ? "" : "s"} ready`, sub: "Download them any time. They were also sent to your email.", cta: `View certificate${certificates === 1 ? "" : "s"}`, primary: true, dest: certificatesDest }
-      : { key: "cert", icon: Award, tone: "var(--ink-faint)", bg: "var(--muted)", title: "No certificate yet", sub: "The organisers haven't sent certificates yet.", cta: "Open certificates", dest: certificatesDest },
+      : { key: "cert", icon: Award, tone: "var(--ink-faint)", bg: "var(--muted)", title: "No certificate yet", sub: "The organisers haven't sent certificates yet.", cta: "Open certificates", dest: certificatesDest }]),
     ...(FEEDBACK_ENABLED ? [{ key: "feedback", icon: MessageSquare, tone: "var(--warning)", bg: "var(--warning-soft)", title: "How was it?", sub: "Tell the organisers in 2 minutes.", cta: "Give feedback", primary: true, dest: feedbackDest }] : []),
-    {
+    ...(!FLYER_ENABLED ? [] : [{
       key: "flyer", icon: flyerCount ? ImageIcon : Mic, tone: "var(--cat-virtual)", bg: "var(--cat-virtual-soft)",
       title: presented ? `You presented ${presented} paper${presented === 1 ? "" : "s"}` : "Your flyer",
       sub: flyerCount ? "Your speaker flyer is still here to download and share." : "Flyers are made for registered papers.",
       cta: "Open flyer", dest: flyerDest,
-    },
+    }]),
   ];
   return (
     <section aria-label="Wrap-up" className="hd-rise flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <Sparkles size={16} aria-hidden="true" className="text-primary" />
         <h2 className="text-[15px] font-extrabold text-navy">{acronym} has finished</h2>
-        <span className="text-[13px] font-semibold text-ink-muted">· here&apos;s everything you got from it</span>
+        {items.length > 0 && <span className="text-[13px] font-semibold text-ink-muted">· here&apos;s everything you got from it</span>}
       </div>
       <div className={`grid grid-cols-1 gap-3.5 ${items.length > 2 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
         {items.map((it, i) => {

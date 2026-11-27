@@ -9,7 +9,7 @@ import { AuthMessage } from "@/components/ui/auth-message";
 import { PasswordField } from "@/components/ui/password-field";
 import { REGISTER_PATH, safeNext } from "@/lib/auth-redirect";
 import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 import { MfaRequiredError } from "@/services/errors";
 import { authService } from "../auth-service";
 import { MfaCodeForm } from "./mfa-code-form";
@@ -22,7 +22,6 @@ import { cn } from "@/lib/cn";
 // As in the prototype the border does not change on focus (there its inline border style overrides the focus class) and there is no outline.
 const INPUT = "field-no-outline w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-slate-400";
 /** The line under the logo is fixed text in the prototype's sign-in page (not tied to any account). */
-const TAGLINE = "World Conference on Information Systems for Business Management";
 const BTN_FX = "transition-all hover:shadow-[0_0_30px_rgba(124,58,237,0.35)] hover:scale-[1.02]";
 
 /** Errors Supabase puts in the URL hash when an emailed link is expired or already used. Read before
@@ -71,12 +70,18 @@ export function LoginForm() {
       void authService().then((a) => a.isSignedIn()).then((ok) => { if (live && ok) { setDone(true); router.replace(next); router.refresh(); } }).catch(() => undefined);
       return () => { live = false; };
     }
-    const db = getSupabase();
-    db.auth.getSession().then(({ data }) => { if (data.session) { setDone(true); router.replace(next); router.refresh(); } });
-    const { data } = db.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) { setDone(true); router.replace(next); router.refresh(); }
+    // The Supabase client is loaded here, not with the page.
+    let live = true;
+    let off: () => void = () => undefined;
+    void supabase().then((db) => {
+      if (!live) return;
+      db.auth.getSession().then(({ data }) => { if (live && data.session) { setDone(true); router.replace(next); router.refresh(); } });
+      const { data } = db.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" && session) { setDone(true); router.replace(next); router.refresh(); }
+      });
+      off = () => data.subscription.unsubscribe();
     });
-    return () => data.subscription.unsubscribe();
+    return () => { live = false; off(); };
   }, [mock, configured, next, router]);
 
   const submit = async () => {
@@ -121,9 +126,8 @@ export function LoginForm() {
     <div className="relative z-10 w-full max-w-[480px]">
       <Link href="/" className="mb-8 flex flex-col items-center justify-center gap-3 text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-lg">
-          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
+          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={24} height={36} priority className="h-9 w-6" />
         </span>
-        <span className="text-xs text-white/60">{TAGLINE}</span>
       </Link>
 
       <div className="rounded-2xl bg-white p-8 shadow-2xl">

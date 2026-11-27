@@ -211,7 +211,7 @@ export function PublishPage() {
         <div className="p-8 flex items-center justify-center" style={{ minHeight: "60vh" }}>
           <div className="text-center max-w-sm">
             <div style={{ background: "var(--success-soft)" }} className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check size={28} style={{ color: "var(--success)" }} strokeWidth={2.5} />
+              <Check size={28} style={{ color: "var(--success-ink)" }} strokeWidth={2.5} />
             </div>
             <h2 style={{ color: "var(--navy)" }} className="text-lg font-bold mb-2">Proposal submitted</h2>
             <p style={{ color: "var(--ink-muted)" }} className="text-sm mb-6">
@@ -655,7 +655,7 @@ export function PublishPage() {
             </div>
           )}
 
-          {sendProblem && <p role="alert" style={{ color: "var(--danger)" }} className="mt-4 text-sm">{sendProblem}</p>}
+          {sendProblem && <p role="alert" style={{ color: "var(--danger-ink)" }} className="mt-4 text-sm">{sendProblem}</p>}
 
           <div className="sticky bottom-6 mt-6 z-10">
             <div style={{ background: "#FFFFFF", border: "1px solid var(--border)" }} className="rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4 flex-wrap">

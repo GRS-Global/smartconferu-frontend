@@ -76,13 +76,13 @@ export function PhotoEditor({ profile, save, uploadPhoto, onDone, onCancel }: Ed
                 <input ref={input} id={inputId} type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} className="sr-only" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
               </label>
               {shown && adjustFrom && <button type="button" onClick={() => setCropping({ src: adjustFrom, name })} className="inline-flex cursor-pointer items-center gap-1 rounded text-xs font-semibold text-primary hover:underline"><Crop size={12} aria-hidden="true" /> Adjust photo</button>}
-              {shown && <button type="button" disabled={busy} onClick={() => { setLocalSource(""); void run(() => save({ photoPath: null })); }} className="cursor-pointer rounded text-xs font-semibold text-ink-muted transition-colors hover:text-danger">Remove</button>}
+              {shown && <button type="button" disabled={busy} onClick={() => { setLocalSource(""); void run(() => save({ photoPath: null })); }} className="cursor-pointer rounded text-xs font-semibold text-ink-muted transition-colors hover:text-danger-ink">Remove</button>}
             </div>
-            {error ? <p role="alert" className="mt-1 text-[11.5px] text-danger">{error}</p> : <p className="mt-1 truncate text-[11px] text-ink-faint">{busy ? "Saving…" : name || "Profile photo (optional) · JPG or PNG, or drag & drop"}</p>}
+            {error ? <p role="alert" className="mt-1 text-[11.5px] text-danger-ink">{error}</p> : <p className="mt-1 truncate text-[11px] text-ink-faint">{busy ? "Saving…" : name || "Profile photo (optional) · JPG or PNG, or drag & drop"}</p>}
           </div>
         </div>
       )}
-      {cropping && error && <p role="alert" className="mt-2 text-[11.5px] text-danger">{error}</p>}
+      {cropping && error && <p role="alert" className="mt-2 text-[11.5px] text-danger-ink">{error}</p>}
       <div className="mt-5 border-t border-muted pt-4">
         <div className="text-sm font-semibold text-ink">Default avatar</div>
         <p className="mb-3 text-xs text-ink-muted">{shown ? "Shown if you remove your photo. " : "Shown until you upload a photo. "}Your initials by default — or pick an illustration.</p>

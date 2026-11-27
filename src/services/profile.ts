@@ -1,5 +1,7 @@
 import { DATA_SOURCE } from "@/lib/config";
 import type { Profile, ProfilePatch, ProfileVerification } from "@/types/profile";
+// The own backend is the data source: loaded with the page, not as a separate request when first used (it sits on every page's first data read).
+import { apiProfileService } from "./api/profile";
 
 /** The contract the profile screens depend on. Failures throw AuthRequiredError (no session),
  *  ServiceConfigError (Supabase not configured) or ServiceError (a request failed, message ready to show). */
@@ -23,6 +25,6 @@ export interface ProfileService {
 /** There is no profile service in mock mode (mock has no accounts and never reaches Supabase). */
 export async function getProfileService(): Promise<ProfileService> {
   if (DATA_SOURCE === "mock") throw new Error("Profiles are not available in mock data mode.");
-  if (DATA_SOURCE === "api") return (await import("./api/profile")).apiProfileService;
+  if (DATA_SOURCE === "api") return apiProfileService;
   return (await import("./supabase/profile")).supabaseProfileService;
 }

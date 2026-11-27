@@ -69,7 +69,7 @@ export function LayoutMenu({ view, setView, doc, page, setGuides, setMargin, onC
             <button type="button" onClick={() => addGuide("x")} title="Vertical guide at this distance from the left" style={{ border: "1px solid var(--border)", color: "var(--ink-soft)" }} className="h-9 px-2.5 rounded-lg text-[11px] font-bold cursor-pointer">Vertical</button>
             <button type="button" onClick={() => addGuide("y")} title="Horizontal guide at this distance from the top" style={{ border: "1px solid var(--border)", color: "var(--ink-soft)" }} className="h-9 px-2.5 rounded-lg text-[11px] font-bold cursor-pointer">Horizontal</button>
           </div>
-          <button type="button" disabled={count === 0 || view.lockGuides} onClick={() => setGuides({ x: [], y: [] })} style={{ color: "var(--danger)" }} className="text-xs font-bold hover:underline disabled:opacity-40 disabled:no-underline cursor-pointer disabled:cursor-default">Remove all guides{count ? ` (${count})` : ""}</button>
+          <button type="button" disabled={count === 0 || view.lockGuides} onClick={() => setGuides({ x: [], y: [] })} style={{ color: "var(--danger-ink)" }} className="text-xs font-bold hover:underline disabled:opacity-40 disabled:no-underline cursor-pointer disabled:cursor-default">Remove all guides{count ? ` (${count})` : ""}</button>
         </Group>
         <Group title="GRID">
           <Check id="lm-grid" text="Show grid" checked={view.grid} onChange={(v) => patch({ grid: v })} />

@@ -14,9 +14,9 @@ export const SEND_TYPES: Record<SendType, { label: string; desc: string }> = {
 };
 
 export const SEND_TYPE_TONE: Record<SendType, { color: string; bg: string }> = {
-  auto: { color: "var(--success)", bg: "var(--success-soft)" },
+  auto: { color: "var(--success-ink)", bg: "var(--success-soft)" },
   chair: { color: "var(--primary)", bg: "var(--primary-soft)" },
-  scheduled: { color: "var(--warning)", bg: "var(--warning-soft)" },
+  scheduled: { color: "var(--warning-ink)", bg: "var(--warning-soft)" },
   bulk: { color: "var(--secondary)", bg: "var(--secondary-soft)" },
 };
 

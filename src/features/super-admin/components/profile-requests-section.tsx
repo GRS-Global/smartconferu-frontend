@@ -146,7 +146,7 @@ function Decision({ request, onClose, onDone }: { request: ProfileRequest; onClo
               {needsGroup && (
                 <label className="mb-4 block">
                   <span className="mb-1.5 block text-[13px] font-semibold" style={{ color: "var(--text)" }}>
-                    Heading <span style={{ color: "var(--danger)" }}>*</span>
+                    Heading <span style={{ color: "var(--danger-ink)" }}>*</span>
                   </span>
                   <input className="sa-input" list="pr-groups" value={group} onChange={(e) => setGroup(e.target.value)} placeholder="e.g. Natural Sciences" />
                   <datalist id="pr-groups">
@@ -185,13 +185,13 @@ function Decision({ request, onClose, onDone }: { request: ProfileRequest; onClo
           {mode === "reject" && (
             <label className="mb-4 block">
               <span className="mb-1.5 block text-[13px] font-semibold" style={{ color: "var(--text)" }}>
-                Reason (the member sees this) <span style={{ color: "var(--danger)" }}>*</span>
+                Reason (the member sees this) <span style={{ color: "var(--danger-ink)" }}>*</span>
               </span>
               <textarea className="sa-input" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. We couldn't verify this. Please pick one from the list." />
             </label>
           )}
           {error && (
-            <p role="alert" className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+            <p role="alert" className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
               {error}
             </p>
           )}

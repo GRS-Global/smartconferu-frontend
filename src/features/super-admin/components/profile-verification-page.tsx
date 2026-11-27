@@ -11,7 +11,7 @@ type Tab = "pending" | "resolved";
 
 function Signal({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <li className="flex items-center gap-2 text-[13px]" style={{ color: ok ? "var(--success)" : "var(--text-muted)" }}>
+    <li className="flex items-center gap-2 text-[13px]" style={{ color: ok ? "var(--success-ink)" : "var(--text-muted)" }}>
       {ok ? <Check size={14} aria-hidden="true" /> : <X size={14} aria-hidden="true" />}
       {label}
     </li>
@@ -110,13 +110,13 @@ function Decision({ request, onClose, onDone }: { request: ProfileVerificationRe
       {pending && rejecting && (
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-semibold" style={{ color: "var(--text)" }}>
-            Reason (the member sees it and is emailed) <span style={{ color: "var(--danger)" }}>*</span>
+            Reason (the member sees it and is emailed) <span style={{ color: "var(--danger-ink)" }}>*</span>
           </span>
           <textarea className="sa-input" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Please add your ORCID iD or your faculty page, then ask again." />
         </label>
       )}
       {error && (
-        <p role="alert" className="mt-3 text-[12.5px]" style={{ color: "var(--danger)" }}>
+        <p role="alert" className="mt-3 text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
           {error}
         </p>
       )}

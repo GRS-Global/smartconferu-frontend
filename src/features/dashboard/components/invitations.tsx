@@ -81,7 +81,7 @@ export function useInvitations({ invitations, respond, onAnswered, onOpenWorkspa
       <DeclineDialog invitation={flow?.mode === "decline" ? flow.inv : null} onClose={() => setFlow(null)} onConfirm={decline} />
       {toast && (
         <div role="status" aria-live="polite" className="fixed bottom-6 right-6 z-[60] flex w-[22rem] max-w-[calc(100vw-2rem)] items-start gap-3 rounded-2xl border border-line bg-white p-4 shadow-2xl">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success"><Check size={18} strokeWidth={2.5} aria-hidden="true" /></span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success-ink"><Check size={18} strokeWidth={2.5} aria-hidden="true" /></span>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-bold text-navy">{toast.title}</div>
             <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">{toast.text}</p>
@@ -121,7 +121,7 @@ function AcceptDialog({ invitation, onClose, onConfirm }: { invitation: ReviewIn
         <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--primary)]" />
         <span>I will review papers honestly and on time, keep them confidential, and declare any conflict of interest to the chair.</span>
       </label>
-      {error && <p role="alert" className="mt-3 text-[13px] font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-[13px] font-semibold text-danger-ink">{error}</p>}
       <div className="mt-4 flex items-center justify-end gap-2">
         <Button variant="ghost" onClick={() => { setAck(false); onClose(); }}>Cancel</Button>
         <Button disabled={!ack || busy} onClick={() => invitation && run(async () => { await onConfirm(invitation); setAck(false); })}>
@@ -145,7 +145,7 @@ function DeclineDialog({ invitation, onClose, onConfirm }: { invitation: ReviewI
       </select>
       <label className="mb-1 block text-xs font-bold text-ink-soft" htmlFor="decline-note">Note (optional)</label>
       <textarea id="decline-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full rounded-xl border border-line px-3 py-2.5 text-sm outline-none focus:border-primary" />
-      {error && <p role="alert" className="mt-3 text-[13px] font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-[13px] font-semibold text-danger-ink">{error}</p>}
       <div className="mt-4 flex items-center justify-end gap-2">
         <Button variant="ghost" onClick={close}>Cancel</Button>
         <Button disabled={busy} onClick={() => invitation && run(async () => { await onConfirm(invitation, [reason, note.trim()].filter(Boolean).join(" — ")); setNote(""); })}>
@@ -238,15 +238,15 @@ export function InvitationList({ view, list, onAccept, onDecline, onOpenWorkspac
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">{inv.acronym}</span>
-                <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-bold text-success">Reviewer</span>
+                <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-bold text-success-ink">Reviewer</span>
                 {inv.conferenceName && <span className="truncate text-sm font-medium text-ink">{inv.conferenceName}</span>}
-                {urgent && <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-bold text-danger"><Clock size={11} strokeWidth={2.6} aria-hidden="true" /> {urgentLabel}</span>}
+                {urgent && <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-bold text-danger-ink"><Clock size={11} strokeWidth={2.6} aria-hidden="true" /> {urgentLabel}</span>}
               </div>
               <p className="mt-1.5 text-xs text-ink-muted">
                 {inviteDetails(inv)}{view === "pending" && inv.respondBy ? <> · <span className="font-semibold text-[#B45309]">reply by {fmtDate(inv.respondBy)}</span></> : ""}
               </p>
               {view === "history" && (
-                <p className={cn("mt-1 inline-flex flex-wrap items-center gap-1.5 text-xs", accepted ? "text-success" : "text-ink-soft")}>
+                <p className={cn("mt-1 inline-flex flex-wrap items-center gap-1.5 text-xs", accepted ? "text-success-ink" : "text-ink-soft")}>
                   {accepted ? <Check size={12} strokeWidth={2.6} aria-hidden="true" /> : <X size={12} strokeWidth={2.6} aria-hidden="true" />}
                   <span className="font-semibold">{accepted ? "Accepted" : "Declined"} {inv.respondedAt}</span>
                   {!accepted && inv.declineReason && <span className="text-ink-muted">· “{inv.declineReason}”</span>}

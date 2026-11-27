@@ -49,7 +49,7 @@ function AcceptForm({ paper, onClose, onDone, onSessionEnded }: { paper: Reviewe
         </span>
       </label>
       <p className="mt-3 text-[11px] text-ink-faint">Have a conflict? Cancel and choose <b>Decline → Conflict of interest</b> instead.</p>
-      {error && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-ink">{error}</p>}
       <Footer onCancel={onClose}>
         <button type="button" disabled={!coi || saving} onClick={confirm} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"><Check size={15} aria-hidden="true" /> {saving ? "Saving…" : "Accept & start reviewing"}</button>
       </Footer>
@@ -71,16 +71,16 @@ function DeclineForm({ paper, onClose, onDone, onSessionEnded }: { paper: Review
   };
   return (
     <>
-      <div className="mb-2 text-[13px] font-semibold text-ink-soft">Why are you declining? <span className="text-danger">*</span></div>
+      <div className="mb-2 text-[13px] font-semibold text-ink-soft">Why are you declining? <span className="text-danger-ink">*</span></div>
       <div className="grid gap-2 sm:grid-cols-2">
         {DECLINE_ASSIGNMENT_REASONS.map((r) => {
           const on = reason === r;
           return <button key={r} type="button" onClick={() => setReason(r)} aria-pressed={on} style={{ border: `1.5px solid ${on ? "var(--primary)" : "var(--border)"}`, background: on ? "var(--primary-soft)" : "#FFFFFF", color: on ? "var(--primary)" : "var(--ink)" }} className="rounded-xl px-3.5 py-2.5 text-left text-sm font-semibold transition-colors">{r}</button>;
         })}
       </div>
-      <label htmlFor="decline-note" className="mb-1.5 mt-4 block text-[13px] font-semibold text-ink-soft">Note to the chair {reason === "Other" ? <span className="text-danger">*</span> : <span className="font-normal text-ink-faint">(optional)</span>}</label>
+      <label htmlFor="decline-note" className="mb-1.5 mt-4 block text-[13px] font-semibold text-ink-soft">Note to the chair {reason === "Other" ? <span className="text-danger-ink">*</span> : <span className="font-normal text-ink-faint">(optional)</span>}</label>
       <textarea id="decline-note" rows={3} value={note} maxLength={800} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Suggest a colleague who'd be a better fit…" className="w-full resize-y rounded-xl border-[1.5px] border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-primary" />
-      {error && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-ink">{error}</p>}
       <Footer onCancel={onClose}>
         <button type="button" disabled={!reason || (reason === "Other" && !note.trim()) || saving} onClick={confirm} className="h-10 rounded-xl bg-danger px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45">{saving ? "Saving…" : "Decline paper"}</button>
       </Footer>

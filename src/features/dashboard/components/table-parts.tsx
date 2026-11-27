@@ -45,7 +45,7 @@ export function NumberCell({ value, color, className, style }: { value: number; 
   return (
     <td style={style} className={cn("px-2 py-3.5 text-center align-top", className)}>
       {value === 0
-        ? <span className="text-[15px] font-bold text-line-strong" aria-label="0">–</span>
+        ? <span className="text-[15px] font-bold text-ink-faint" aria-label="0">–</span>
         : <span style={{ color }} className="text-[17px] font-extrabold">{value}</span>}
     </td>
   );

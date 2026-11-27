@@ -19,9 +19,9 @@ import type { ConferenceRequest } from "@/types/conference-request";
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const STATUS = {
-  pending: { label: "Pending Review", color: "var(--warning)", bg: "var(--warning-soft)" },
-  approved: { label: "Approved", color: "var(--success)", bg: "var(--success-soft)" },
-  rejected: { label: "Rejected", color: "var(--danger)", bg: "var(--danger-soft)" },
+  pending: { label: "Pending Review", color: "var(--warning-ink)", bg: "var(--warning-soft)" },
+  approved: { label: "Approved", color: "var(--success-ink)", bg: "var(--success-soft)" },
+  rejected: { label: "Rejected", color: "var(--danger-ink)", bg: "var(--danger-soft)" },
   cancelled: { label: "Cancelled", color: "var(--ink-muted)", bg: "var(--muted)" },
 } as const;
 const showDate = (iso: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—");
@@ -41,7 +41,7 @@ export function MyRequestsPage() {
   const crumbs = [{ label: "Conferences", href: "/dashboard" }, { label: "My Requests" }];
   if (state.status === "auth") return <><PageHeader title="My Requests" breadcrumbs={crumbs} /><SessionEnded /></>;
   if (state.status === "loading") return <><PageHeader title="My Requests" breadcrumbs={crumbs} /><div role="status" aria-label="Loading your requests" className="p-4 sm:p-8"><div className="h-48 animate-pulse rounded-2xl border border-line bg-white" /></div></>;
-  if (state.status === "error") return <><PageHeader title="My Requests" breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger"><TriangleAlert size={18} aria-hidden="true" /> {state.message}<Button variant="outline" onClick={load} className="ml-auto">Try again</Button></div></>;
+  if (state.status === "error") return <><PageHeader title="My Requests" breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger-ink"><TriangleAlert size={18} aria-hidden="true" /> {state.message}<Button variant="outline" onClick={load} className="ml-auto">Try again</Button></div></>;
   // Waiting requests first; the order inside each group is kept (the list arrives newest first).
   const rows = [...state.rows.filter((r) => r.status === "pending"), ...state.rows.filter((r) => r.status !== "pending")];
   const open = (r: ConferenceRequest) => {

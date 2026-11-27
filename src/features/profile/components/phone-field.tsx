@@ -10,6 +10,7 @@ import { joinPhone, parsePhoneValue } from "../phone";
 
 interface PhoneFieldProps {
   id: string;
+  ariaLabel?: string;
   phone: string;
   onPhoneChange: (v: string) => void;
   onBlur?: () => void;
@@ -25,7 +26,7 @@ interface PhoneFieldProps {
 
 /** "+<dial code> <number>" stored as one string; with a number entered, offers SMS / WhatsApp notifications.
  *  The number being typed is kept locally (the stored string is trimmed, which would eat a space typed between digit groups). */
-export function PhoneField({ id, phone, onPhoneChange, onBlur, channels = [], onChannelsChange, invalid, describedBy, inputClassName, bare }: PhoneFieldProps) {
+export function PhoneField({ id, ariaLabel, phone, onPhoneChange, onBlur, channels = [], onChannelsChange, invalid, describedBy, inputClassName, bare }: PhoneFieldProps) {
   const parsed = parsePhoneValue(phone);
   const [dial, setDial] = useState(parsed.dial);
   const [number, setNumber] = useState(parsed.number);
@@ -49,7 +50,7 @@ export function PhoneField({ id, phone, onPhoneChange, onBlur, channels = [], on
         <div className="relative min-w-0 flex-1">
           {!bare && <Phone size={14} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" />}
           <input
-            ref={numberRef} id={id} type="tel" inputMode="tel" autoComplete="tel-national" value={number} placeholder={bare ? "98765 43210" : "Mobile number (optional)"}
+            ref={numberRef} id={id} aria-label={ariaLabel} type="tel" inputMode="tel" autoComplete="tel-national" value={number} placeholder={bare ? "98765 43210" : "Mobile number (optional)"}
             aria-invalid={invalid || undefined} aria-describedby={describedBy}
             onChange={(e) => { setNumber(e.target.value); emit(dial, e.target.value); }}
             onBlur={onBlur}

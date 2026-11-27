@@ -26,9 +26,9 @@ const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)
 const FCTL = "h-7 w-full rounded-md border-[1.5px] border-line bg-white text-[11px] normal-case tracking-normal outline-none focus:border-primary";
 const ORDER: Record<ReviewerState, number> = { overdue: 0, waiting: 1, invite: 1, active: 2, done: 3 };
 const STATUS_CFG = {
-  not_started: { label: "Not started", color: "var(--warning)", bg: "var(--warning-soft)" },
+  not_started: { label: "Not started", color: "var(--warning-ink)", bg: "var(--warning-soft)" },
   in_progress: { label: "In progress", color: "var(--secondary)", bg: "var(--primary-soft)" },
-  completed: { label: "Completed", color: "var(--success)", bg: "var(--success-soft)" },
+  completed: { label: "Completed", color: "var(--success-ink)", bg: "var(--success-soft)" },
 } as const;
 type ReviewStatus = keyof typeof STATUS_CFG;
 const initials = (n: string) => n.split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -91,8 +91,8 @@ function ReviewerForm({ mode, initial, tracks, onClose, onSave, busy, error, can
   return (
     <>
       <div className="space-y-4">
-        <div><label htmlFor="rv-name" className="mb-1 block text-xs font-semibold text-ink-soft">Full name <span className="text-danger">*</span></label><input id="rv-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm outline-none focus:border-primary" /></div>
-        <div><label htmlFor="rv-email" className="mb-1 block text-xs font-semibold text-ink-soft">Email address <span className="text-danger">*</span></label><input id="rv-email" value={email} readOnly={mode === "edit"} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm outline-none focus:border-primary read-only:bg-canvas read-only:text-ink-muted" /></div>
+        <div><label htmlFor="rv-name" className="mb-1 block text-xs font-semibold text-ink-soft">Full name <span className="text-danger-ink">*</span></label><input id="rv-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm outline-none focus:border-primary" /></div>
+        <div><label htmlFor="rv-email" className="mb-1 block text-xs font-semibold text-ink-soft">Email address <span className="text-danger-ink">*</span></label><input id="rv-email" value={email} readOnly={mode === "edit"} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm outline-none focus:border-primary read-only:bg-canvas read-only:text-ink-muted" /></div>
         {(
           <div>
             <div className="mb-1 text-xs font-semibold text-ink-soft">Tracks</div>
@@ -103,7 +103,7 @@ function ReviewerForm({ mode, initial, tracks, onClose, onSave, busy, error, can
           </div>
         )}
       </div>
-      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <Button disabled={!ok || busy || (mode === "edit" && !changed)} title={mode === "edit" && !changed ? "No changes to save" : undefined} onClick={() => onSave(v, false)}>{busy ? "Saving…" : mode === "edit" ? "Save" : "Add reviewer"}</Button>
         {mode === "add" && <Button variant="outline" disabled={!ok || busy || !canAssign} title={canAssign ? "Adds the reviewer, then opens the list of papers so you can assign some to them right away" : "No paper is ready for a reviewer yet (papers need their file and, when it is on, the screening first)"} onClick={() => onSave(v, true)}>Add &amp; assign papers</Button>}
@@ -130,10 +130,10 @@ function AssignDialog({ rev, rows, data, deadline, load, maxLoad, onClose, onAss
   const atLimit = picked.length >= room;
   return (
     <>
-      {rev.status === "invited" && <p className="mb-3 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">{rev.name} hasn&apos;t accepted the committee invitation yet. These papers reach them once they do, and they can still accept or decline each one.</p>}
+      {rev.status === "invited" && <p className="mb-3 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning-ink">{rev.name} hasn&apos;t accepted the committee invitation yet. These papers reach them once they do, and they can still accept or decline each one.</p>}
       <p className="mb-3 text-xs font-semibold text-ink-soft">{load}{maxLoad ? ` of ${maxLoad}` : ""} paper{load === 1 ? "" : "s"} now · {picked.length} selected</p>
       <label className="mb-3 flex h-9 w-72 max-w-full items-center gap-2 rounded-lg border border-line bg-white px-3"><Search size={14} aria-hidden="true" className="text-ink-faint" /><input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search ID, title or track" aria-label="Search papers" className="min-w-0 flex-1 bg-transparent text-[13px] outline-none" /></label>
-      {atLimit && maxLoad !== null && <p className="mb-2 text-xs font-semibold text-warning">{rev.name} would reach the maximum of {maxLoad} papers — no more can be selected.</p>}
+      {atLimit && maxLoad !== null && <p className="mb-2 text-xs font-semibold text-warning-ink">{rev.name} would reach the maximum of {maxLoad} papers — no more can be selected.</p>}
       <ul className="max-h-[44vh] divide-y divide-muted overflow-y-auto rounded-xl border border-line">
         {items.length === 0 && <li className="px-4 py-8 text-center text-sm text-ink-faint">No paper can take a reviewer yet.</li>}
         {items.map(({ r, block, needs }) => {
@@ -144,14 +144,14 @@ function AssignDialog({ rev, rows, data, deadline, load, maxLoad, onClose, onAss
               <label className={`flex items-start gap-3 px-4 py-2.5 ${off ? "cursor-not-allowed" : "cursor-pointer hover:bg-canvas"}`} title={block ?? (off ? "Reached the maximum papers per reviewer" : undefined)}>
                 <input type="checkbox" checked={on} disabled={off} aria-label={`Select ${r.paper.id}`} onChange={() => setPicked((l) => (l.includes(r.paper.dbId) ? l.filter((x) => x !== r.paper.dbId) : [...l, r.paper.dbId]))} className="mt-1" />
                 <span className="w-[72px] shrink-0 pt-0.5 text-xs font-semibold text-ink-muted">{r.paper.id}</span>
-                <span className="min-w-0 flex-1"><span className="line-clamp-2 block text-[13px] font-semibold leading-snug text-navy">{r.paper.title}</span><span className="mt-1 flex flex-wrap items-center gap-2">{r.paper.track && <span className="rounded bg-muted px-1.5 py-0.5 text-[10.5px] font-bold text-ink-soft">{r.paper.track}</span>}{block && <span className={`text-[11px] font-semibold ${block.startsWith("Conflict") ? "text-danger" : "text-ink-faint"}`}>{block}</span>}</span></span>
-                <span className={`shrink-0 whitespace-nowrap pt-0.5 text-[11px] font-bold tabular-nums ${block ? "text-ink-faint" : needs ? "text-warning" : "text-success"}`}>{r.reviewers.length} of {r.target} reviewers</span>
+                <span className="min-w-0 flex-1"><span className="line-clamp-2 block text-[13px] font-semibold leading-snug text-navy">{r.paper.title}</span><span className="mt-1 flex flex-wrap items-center gap-2">{r.paper.track && <span className="rounded bg-muted px-1.5 py-0.5 text-[10.5px] font-bold text-ink-soft">{r.paper.track}</span>}{block && <span className={`text-[11px] font-semibold ${block.startsWith("Conflict") ? "text-danger-ink" : "text-ink-faint"}`}>{block}</span>}</span></span>
+                <span className={`shrink-0 whitespace-nowrap pt-0.5 text-[11px] font-bold tabular-nums ${block ? "text-ink-faint" : needs ? "text-warning-ink" : "text-success-ink"}`}>{r.reviewers.length} of {r.target} reviewers</span>
               </label>
             </li>
           );
         })}
       </ul>
-      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-xs font-semibold text-ink-soft">Review due <input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="h-9 rounded-lg border-[1.5px] border-line px-2 text-[13px] outline-none focus:border-primary" /></label>
         <span className="ml-auto inline-flex gap-2"><Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button><Button disabled={!picked.length || !due || busy} onClick={() => onAssign(picked, due)}><Check size={15} aria-hidden="true" /> {busy ? "Assigning…" : `Assign ${picked.length || ""} paper${picked.length === 1 ? "" : "s"}`}</Button></span>
@@ -292,39 +292,39 @@ export function ReviewersPage({ slug }: { slug: string }) {
                           <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[11px] font-bold text-primary">{initials(r.rev.name)}</span>
                           <div>
                             <div className="flex flex-wrap items-center gap-1.5 font-medium text-ink">{r.rev.name}
-                              {r.rev.status === "invited" && <span title={`Invited ${r.rev.invitedAt} — hasn't accepted yet`} className="rounded-full bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning">Invited · not accepted</span>}
-                              {declined && <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-[10px] font-bold text-danger">Declined invitation</span>}
+                              {r.rev.status === "invited" && <span title={`Invited ${r.rev.invitedAt} — hasn't accepted yet`} className="rounded-full bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning-ink">Invited · not accepted</span>}
+                              {declined && <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-[10px] font-bold text-danger-ink">Declined invitation</span>}
                             </div>
                             <div className="text-xs text-ink-faint">{r.rev.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3">{r.rev.tracks.length ? <div className="flex flex-wrap gap-1">{r.rev.tracks.map((t) => <span key={t} className="rounded-md bg-canvas px-2 py-0.5 text-[10.5px] font-medium text-ink-soft">{t}</span>)}</div> : <span className="text-xs text-line-strong">All tracks</span>}</td>
+                      <td className="px-5 py-3">{r.rev.tracks.length ? <div className="flex flex-wrap gap-1">{r.rev.tracks.map((t) => <span key={t} className="rounded-md bg-canvas px-2 py-0.5 text-[10.5px] font-medium text-ink-soft">{t}</span>)}</div> : <span className="text-xs text-ink-faint">All tracks</span>}</td>
                       <td className="px-5 py-3">
-                        {r.papers.length === 0 ? <span className="text-xs text-line-strong">No papers yet</span> : (
+                        {r.papers.length === 0 ? <span className="text-xs text-ink-faint">No papers yet</span> : (
                           <button type="button" aria-expanded={isOpen} onClick={() => setOpen((l) => (l.includes(r.rev.memberId) ? l.filter((x) => x !== r.rev.memberId) : [...l, r.rev.memberId]))} title={isOpen ? "Hide their papers" : "Show their papers"} className={`-ml-1.5 flex items-center gap-1.5 rounded-xl border py-1 pl-1.5 pr-2 text-left transition-colors hover:border-primary hover:bg-primary-soft ${isOpen ? "border-primary bg-primary-soft" : "border-transparent"}`}>
                             <span className="flex max-w-[290px] flex-wrap items-center gap-1">
-                              {r.papers.slice(0, 3).map(({ row, state: st }) => <span key={row.paper.dbId} title={`${row.paper.title} — ${REVIEWER_STATE[st].word}`} className={`inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-md border px-2 text-[11px] font-bold tabular-nums ${st === "overdue" ? "border-danger bg-danger-soft text-danger" : "border-line bg-white text-ink"}`}><span aria-hidden="true" style={{ background: REVIEWER_STATE[st].color }} className="h-1.5 w-1.5 shrink-0 rounded-full" />{row.paper.id}</span>)}
+                              {r.papers.slice(0, 3).map(({ row, state: st }) => <span key={row.paper.dbId} title={`${row.paper.title} — ${REVIEWER_STATE[st].word}`} className={`inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-md border px-2 text-[11px] font-bold tabular-nums ${st === "overdue" ? "border-danger bg-danger-soft text-danger-ink" : "border-line bg-white text-ink"}`}><span aria-hidden="true" style={{ background: REVIEWER_STATE[st].color }} className="h-1.5 w-1.5 shrink-0 rounded-full" />{row.paper.id}</span>)}
                               {r.papers.length > 3 && <span className="text-[11px] font-bold text-ink-muted">+{r.papers.length - 3} more</span>}
                             </span>
                             <ChevronDown size={13} aria-hidden="true" className={`shrink-0 text-primary transition-transform ${isOpen ? "rotate-180" : ""}`} />
                           </button>
                         )}
                       </td>
-                      <td className="px-5 py-3"><div className="whitespace-nowrap text-[13px]"><span className="font-semibold text-primary">{r.assigned}</span><span className="text-ink-muted"> paper{r.assigned === 1 ? "" : "s"}</span>{r.assigned > 0 && <span className={r.done >= r.assigned ? "text-success" : "text-ink-muted"}> · {r.done} reviewed</span>}</div></td>
+                      <td className="px-5 py-3"><div className="whitespace-nowrap text-[13px]"><span className="font-semibold text-primary">{r.assigned}</span><span className="text-ink-muted"> paper{r.assigned === 1 ? "" : "s"}</span>{r.assigned > 0 && <span className={r.done >= r.assigned ? "text-success-ink" : "text-ink-muted"}> · {r.done} reviewed</span>}</div></td>
                       <td className="whitespace-nowrap px-5 py-3">
                         {r.rate == null
                           ? <span title={`${r.sent} sent so far`} className="text-xs font-semibold text-ink-faint">New reviewer</span>
-                          : <span title={`${r.onTime} of ${r.sent} on time`} style={{ color: r.rate >= 0.9 ? "var(--success)" : r.rate >= 0.7 ? "#B45309" : "var(--danger)" }} className="font-bold tabular-nums">{Math.round(r.rate * 100)}%</span>}
-                        {r.overdueNow > 0 && <div className="text-[11px] font-semibold text-danger">{r.overdueNow} overdue now</div>}
+                          : <span title={`${r.onTime} of ${r.sent} on time`} style={{ color: r.rate >= 0.9 ? "var(--success-ink)" : r.rate >= 0.7 ? "#B45309" : "var(--danger-ink)" }} className="font-bold tabular-nums">{Math.round(r.rate * 100)}%</span>}
+                        {r.overdueNow > 0 && <div className="text-[11px] font-semibold text-danger-ink">{r.overdueNow} overdue now</div>}
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3">{r.helpful ? <span style={{ color: "#8A6212" }} className="inline-flex items-center gap-1 font-bold"><ThumbsUp size={12} aria-hidden="true" /> {r.helpful}</span> : <span className="text-line-strong">—</span>}</td>
+                      <td className="whitespace-nowrap px-5 py-3">{r.helpful ? <span style={{ color: "#8A6212" }} className="inline-flex items-center gap-1 font-bold"><ThumbsUp size={12} aria-hidden="true" /> {r.helpful}</span> : <span className="text-ink-faint">—</span>}</td>
                       <td className="px-5 py-3"><span style={{ color: cfg.color, background: cfg.bg }} className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold">{cfg.label}</span></td>
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-3">
                           <button type="button" disabled={declined} onClick={() => { setError(""); setModal({ kind: "assign", rev: r.rev }); }} title={declined ? "Declined the committee invitation" : `Choose papers for ${r.rev.name}`} className="group inline-flex h-8 items-center gap-2 whitespace-nowrap rounded-full border border-line bg-white pl-1.5 pr-3 text-xs font-bold text-navy transition-all enabled:hover:border-primary enabled:hover:bg-primary-soft enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"><span aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary-soft text-primary"><Plus size={12} strokeWidth={2.5} /></span> Assign papers</button>
                           <button type="button" onClick={() => { setError(""); setModal({ kind: "edit", rev: r.rev }); }} aria-label={`Edit ${r.rev.name}`} className="text-ink-faint transition-colors hover:text-primary"><Pencil size={14} /></button>
-                          <button type="button" onClick={() => { setError(""); setModal({ kind: "remove", rev: r.rev }); }} aria-label={`Remove ${r.rev.name}`} className="text-ink-faint transition-colors hover:text-danger"><Trash2 size={14} /></button>
+                          <button type="button" onClick={() => { setError(""); setModal({ kind: "remove", rev: r.rev }); }} aria-label={`Remove ${r.rev.name}`} className="text-ink-faint transition-colors hover:text-danger-ink"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -361,7 +361,7 @@ export function ReviewersPage({ slug }: { slug: string }) {
         {modal?.kind === "remove" && (
           <>
             <p className="text-sm text-ink-soft"><b className="text-navy">{modal.rev.name}</b> comes off the committee, and so do their assignments and reviews in this conference.</p>
-            {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
             <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={close} disabled={busy}>Cancel</Button><Button onClick={() => void doRemove()} disabled={busy} className="bg-danger hover:bg-danger"><Trash2 size={14} aria-hidden="true" /> {busy ? "Removing…" : "Remove reviewer"}</Button></div>
           </>
         )}

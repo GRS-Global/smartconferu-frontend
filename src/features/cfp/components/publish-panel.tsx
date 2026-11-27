@@ -3,7 +3,7 @@
 import { AlertTriangle, Check, Clock, Globe2, ShieldCheck } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { openSetupGuide } from "@/features/tour/conference-tour";
+import { openSetupGuide } from "@/features/tour/tour-events";
 import { CFP_NEEDS_APPROVAL, getCfpService } from "@/services/cfps";
 import { AuthRequiredError } from "@/services/errors";
 import { CfpPublicPreview, type CfpPreviewProps } from "./cfp-public-preview";
@@ -73,7 +73,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
     return (
       <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
         <div className="max-w-md text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning-soft"><ShieldCheck size={28} aria-hidden="true" className="text-warning" /></div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning-soft"><ShieldCheck size={28} aria-hidden="true" className="text-warning-ink" /></div>
           <h2 className="mb-2 text-lg font-bold text-navy">Call for Papers sent for approval</h2>
           <p className="mb-6 text-sm text-ink-muted">A Super Admin will review it. Submissions open as soon as it is approved — you will get a notification and an email. If it is not approved, you will see why and can send it again.</p>
           <Button variant="outline" onClick={onPublished}>Go to CFP Manager</Button>
@@ -85,7 +85,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
     return (
       <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
         <div className="max-w-md text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success" /></div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success-ink" /></div>
           <h2 className="mb-2 text-lg font-bold text-navy">Call for Papers published</h2>
           <div className="mb-6">
             <p className="mb-3 text-sm text-ink-muted">Submissions are open. Share this link with authors — they sign in (or register) and submit their paper:</p>
@@ -114,9 +114,9 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
       )}
       {!awaiting && missing.length > 0 && notice("danger", (
         <>
-          <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger" />
+          <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger-ink" />
           <div className="min-w-[16rem] flex-1">
-            <p className="text-sm font-bold text-danger">Finish setting up {acronym} before you publish</p>
+            <p className="text-sm font-bold text-danger-ink">Finish setting up {acronym} before you publish</p>
             <p className="mt-0.5 text-xs text-ink-soft">{missing.length} thing{plural(missing.length)} still missing: {missing.map(lower).join(", ")}.</p>
           </div>
           <button type="button" onClick={() => openSetupGuide()} className="h-9 cursor-pointer rounded-lg bg-danger px-4 text-xs font-bold text-white">Open the setup checklist</button>
@@ -124,8 +124,8 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
       ))}
       {!awaiting && notice("warning", (
         <>
-          <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-warning" />
-          <p className="text-xs leading-relaxed text-warning">{CFP_NEEDS_APPROVAL ? <><strong>Note:</strong> your CFP goes to the Super Admin for approval. Submissions open only once it is approved. Please make sure the CFP is ready — check the preview alongside.</> : <><strong>Warning:</strong> publishing opens submissions straight away: authors can use the submission link as soon as you publish. Please make sure the CFP is ready — check the preview alongside.</>}</p>
+          <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-warning-ink" />
+          <p className="text-xs leading-relaxed text-warning-ink">{CFP_NEEDS_APPROVAL ? <><strong>Note:</strong> your CFP goes to the Super Admin for approval. Submissions open only once it is approved. Please make sure the CFP is ready — check the preview alongside.</> : <><strong>Warning:</strong> publishing opens submissions straight away: authors can use the submission link as soon as you publish. Please make sure the CFP is ready — check the preview alongside.</>}</p>
         </>
       ))}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
@@ -156,7 +156,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
               <input id="cfp-page" value={locked ? chosen : page} disabled={locked} onChange={(e) => { setPage(e.target.value); setError(""); }} className="min-w-0 flex-1 rounded-r-lg border-[1.5px] border-line px-3.5 py-2.5 text-sm outline-none focus:border-primary disabled:bg-canvas disabled:text-ink-faint" />
             </div>
             {locked && chosen && <p className="text-xs text-ink-faint">You&apos;ve already chosen this page — it can only be set once.</p>}
-            {error && <p role="alert" className="text-xs font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="text-xs font-semibold text-danger-ink">{error}</p>}
             <ul className="mt-3 list-inside list-disc space-y-1 text-xs text-ink-faint">
               <li>Letters, digits, underscores and hyphens only</li>
               <li>Must include at least one letter and one digit</li>

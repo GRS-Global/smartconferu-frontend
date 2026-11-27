@@ -80,15 +80,15 @@ function NextStep({ nextRow, awaitingCount, total, sent, onOpen }: { nextRow: Re
 function NumbersStrip({ n }: { n: ReviewerNumbers }) {
   const items = [
     { label: "Papers Assigned", value: n.assigned, color: "var(--navy)", warn: false },
-    { label: "Reviewed", value: n.done, color: "var(--success)", warn: false },
-    { label: "Pending", value: n.pending, color: n.overdue ? "var(--danger)" : "var(--warning)", warn: n.pending > 0 },
+    { label: "Reviewed", value: n.done, color: "var(--success-ink)", warn: false },
+    { label: "Pending", value: n.pending, color: n.overdue ? "var(--danger-ink)" : "var(--warning-ink)", warn: n.pending > 0 },
     { label: "Invitation Rejected", value: n.declined, color: "var(--ink-soft)", warn: false },
   ];
   return (
     <section aria-label="Your numbers for this conference" style={{ ...CARD, ...rise(1) }} className="hd-rise sub-strip sub-strip-2 flex overflow-hidden rounded-2xl bg-white">
       {items.map((it, i) => (
         <div key={it.label} style={{ borderLeft: i ? "1px solid var(--muted)" : "none", background: it.warn ? (n.overdue ? "var(--danger-soft)" : "var(--warning-soft)") : "#FFFFFF" }} className="flex min-w-0 flex-1 basis-0 flex-col items-start justify-center gap-0.5 px-3.5 py-3">
-          <b style={{ color: it.value ? it.color : "var(--border-strong)" }} className="text-xl leading-tight"><AnimatedNumber value={it.value} /></b>
+          <b style={{ color: it.value ? it.color : "var(--ink-faint)" }} className="text-xl leading-tight"><AnimatedNumber value={it.value} /></b>
           <span className="text-xs font-semibold leading-tight text-ink-muted">{it.label}{it.warn && n.overdue ? " · overdue" : ""}</span>
         </div>
       ))}
@@ -103,7 +103,7 @@ function PendingCard({ paper, onOpen, onAccept, onDecline }: { paper: ReviewerPa
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-semibold text-ink-faint">{paper.id}</span>
-          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10.5px] font-bold text-warning">Waiting for your response</span>
+          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10.5px] font-bold text-warning-ink">Waiting for your response</span>
           {paper.track && <span className="text-[11px] text-ink-faint">{paper.track}</span>}
         </div>
         <button type="button" onClick={onOpen} className="text-left text-sm font-semibold leading-snug text-ink hover:underline">{paper.title}</button>

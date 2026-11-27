@@ -27,7 +27,7 @@ function Message({ icon, title, children }: { icon: React.ReactNode; title?: str
         <div className="mx-auto mb-3 flex justify-center">{icon}</div>
         {title && <h1 className="mb-2 text-lg font-bold text-navy">{title}</h1>}
         <div className="text-sm text-ink-muted">{children}</div>
-        <Link href="/cfp" className="mt-6 inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">Go to My CFPs</Link>
+        <Link href="/" className="mt-6 inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">Go to Home</Link>
       </div>
     </main>
   );
@@ -43,12 +43,12 @@ export function PublicCfpPage({ page }: { page: string }) {
   }, [page]);
 
   if (state.status === "loading") return <main className="min-h-screen bg-canvas p-8"><div role="status" aria-label="Loading the Call for Papers" className="mx-auto h-64 max-w-5xl animate-pulse rounded-2xl border border-line bg-white" /></main>;
-  if (state.status === "error") return <Message icon={<XCircle size={26} aria-hidden="true" className="text-danger" />}>{state.message}</Message>;
+  if (state.status === "error") return <Message icon={<XCircle size={26} aria-hidden="true" className="text-danger-ink" />}>{state.message}</Message>;
   if (state.status === "missing") return <Message icon={<Send size={26} aria-hidden="true" className="text-ink-faint" />}>No published call for papers found at <span className="font-semibold">/cfp/{page || "…"}</span> — it may not be published yet, or the address is wrong.</Message>;
 
   const { cfp } = state;
   // A closed Call for Papers has no public page: the address no longer opens the CFP or its submission form.
-  if (cfp.status === "closed") return <Message icon={<XCircle size={26} aria-hidden="true" className="text-danger" />} title={`${cfp.acronym} has closed its Call for Papers`}>This link no longer takes submissions.</Message>;
+  if (cfp.status === "closed") return <Message icon={<XCircle size={26} aria-hidden="true" className="text-danger-ink" />} title={`${cfp.acronym} has closed its Call for Papers`}>This link no longer takes submissions.</Message>;
 
   const accent = themeOf(cfp.themeId).accent;
   const html = docOf(cfp.doc, { about: cfp.about, topics: cfp.topics, venue: cfp.venue, city: cfp.city, country: cfp.country, contactEmail: cfp.contactEmail }, cfp.acronym);

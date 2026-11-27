@@ -8,7 +8,7 @@ import { AuthMessage } from "@/components/ui/auth-message";
 import { PasswordField } from "@/components/ui/password-field";
 import { DEFAULT_AFTER_LOGIN, LOGIN_PATH } from "@/lib/auth-redirect";
 import { AUTH_API, AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 import { authService } from "../auth-service";
 import { OLD_LINK_MESSAGE, readEmailLink } from "../email-link";
 
@@ -53,16 +53,20 @@ export function ResetPasswordForm() {
 
     let live = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const db = getSupabase();
-    const { data } = db.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" && live) { clearTimeout(timer); setPhase({ kind: "ready" }); }
+    let off: () => void = () => undefined;
+    void supabase().then((db) => {
+      if (!live) return;
+      const { data } = db.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY" && live) { clearTimeout(timer); setPhase({ kind: "ready" }); }
+      });
+      off = () => data.subscription.unsubscribe();
+      // getSession() resolves once the client has finished starting up (and exchanging the code). If no recovery session was
+      // announced shortly after, the link could not be used here.
+      void db.auth.getSession().then(() => {
+        timer = setTimeout(() => { if (live) setPhase((p) => (p.kind === "checking" ? { kind: "invalid", message: NOT_OPENED } : p)); }, 1200);
+      });
     });
-    // getSession() resolves once the client has finished starting up (and exchanging the code). If no recovery session was
-    // announced shortly after, the link could not be used here.
-    void db.auth.getSession().then(() => {
-      timer = setTimeout(() => { if (live) setPhase((p) => (p.kind === "checking" ? { kind: "invalid", message: NOT_OPENED } : p)); }, 1200);
-    });
-    return () => { live = false; clearTimeout(timer); data.subscription.unsubscribe(); };
+    return () => { live = false; clearTimeout(timer); off(); };
   }, [mock, configured]);
 
   const problem = password.length < MIN_LENGTH ? `Password must be at least ${MIN_LENGTH} characters.` : password !== password2 ? "The two passwords don't match." : "";
@@ -94,7 +98,7 @@ export function ResetPasswordForm() {
     <div className="relative z-10 w-full max-w-[480px]">
       <Link href="/" className="mb-8 flex items-center justify-center text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-lg">
-          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
+          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={24} height={36} priority className="h-9 w-6" />
         </span>
       </Link>
 

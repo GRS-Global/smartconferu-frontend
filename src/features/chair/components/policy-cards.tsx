@@ -54,7 +54,7 @@ export function SubmissionStatus({ policy, deadline, received, nextNo }: { polic
   return (
     <div id="ss-status" role="status" className={cn("scroll-mt-24 flex flex-wrap items-center gap-3 rounded-2xl border px-5 py-3.5 text-sm", open ? "border-[#BBF7D0] bg-success-soft" : "border-line bg-muted")}>
       <span className={cn("h-2 w-2 rounded-full", open ? "bg-success" : "bg-ink-faint")} aria-hidden="true" />
-      <b className={open ? "text-success" : "text-ink-muted"}>{open ? "Submissions open" : "Submissions paused"}</b>
+      <b className={open ? "text-success-ink" : "text-ink-muted"}>{open ? "Submissions open" : "Submissions paused"}</b>
       <span className="text-ink-soft">{open ? (closes ? `Closes automatically on ${closes}` : "No deadline set yet") : "Authors can't submit until you switch it back on"}</span>
       <span className="ml-auto text-xs text-ink-muted">{received} received · Next ID: #{nextNo}</span>
     </div>
@@ -108,7 +108,7 @@ export function NumberingCard({ initial, prefix, received, nextNo, busy, onSave 
         <div><label htmlFor="ss-max" className={LABEL}>Maximum Number of Submissions</label><input id="ss-max" type="number" min={1} value={t.max} placeholder="No limit" onChange={(e) => setT({ ...t, max: e.target.value })} className={INPUT_CLASS} /><p className="mt-1 text-xs text-ink-faint">{received} received to date. Leave blank for no limit.</p></div>
         <div><label htmlFor="ss-per" className={LABEL}>Maximum Submissions per Author</label><input id="ss-per" type="number" min={1} value={t.per} placeholder="No limit" onChange={(e) => setT({ ...t, per: e.target.value })} className={INPUT_CLASS} /><p className="mt-1 text-xs text-ink-faint">Leave blank for no limit.</p></div>
       </div>
-      {invalid && <p role="alert" className="mt-3 text-xs font-semibold text-danger">Use whole numbers of 1 or more, or leave a box empty.</p>}
+      {invalid && <p role="alert" className="mt-3 text-xs font-semibold text-danger-ink">Use whole numbers of 1 or more, or leave a box empty.</p>}
     </PolicyCard>
   );
 }
@@ -168,8 +168,8 @@ export function VisibilityCard({ initial, mode, fields, onChange }: { initial: R
 
 export interface EmailItem { name: string; kind: "Automatic" | "Scheduled reminder" | "Chair action"; count: number; to: string; also?: string; when: string; /** The email template this is (Email Templates), when it has one. */ key?: string; /** Who it goes to: a reviewer's email shows the signed-in person as the sample recipient, as in the prototype. */ role?: "reviewer" | "chair" | "author" | "registration" }
 
-const ROLE_TONE = { reviewer: { color: "var(--success)", bg: "var(--success-soft)" }, chair: { color: "var(--secondary)", bg: "var(--secondary-soft)" }, author: { color: "var(--primary)", bg: "var(--primary-soft)" }, registration: { color: "var(--warning)", bg: "var(--warning-soft)" } } as const;
-const KIND_TONE = { Automatic: "bg-success-soft text-success", "Chair action": "bg-primary-soft text-primary", "Scheduled reminder": "bg-warning-soft text-warning" } as const;
+const ROLE_TONE = { reviewer: { color: "var(--success-ink)", bg: "var(--success-soft)" }, chair: { color: "var(--secondary)", bg: "var(--secondary-soft)" }, author: { color: "var(--primary)", bg: "var(--primary-soft)" }, registration: { color: "var(--warning-ink)", bg: "var(--warning-soft)" } } as const;
+const KIND_TONE = { Automatic: "bg-success-soft text-success-ink", "Chair action": "bg-primary-soft text-primary", "Scheduled reminder": "bg-warning-soft text-warning-ink" } as const;
 
 /** One email of a panel: what it is, who gets it and when, "Edit template" (opens it in Email Templates, Back leads here again) and "See how email looks"
  *  (the email, with sample values, right under the row). */
@@ -198,7 +198,7 @@ function EmailRow({ rowId, e, slug, conferenceName, acronym, backLabel, backHref
             <div className="truncate"><span className="font-semibold text-ink-muted">When:</span> {e.when}</div>
           </div>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
           <Link href={edit} title="Change this email's subject and message in Email Templates" className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11px] font-bold text-navy transition-colors hover:border-primary hover:text-primary"><Pencil size={12} aria-hidden="true" /> Edit template</Link>
           {e.key
             ? <button type="button" onClick={toggle} aria-expanded={open} style={{ border: "1px solid var(--primary-soft-border)", background: open ? "var(--primary)" : "#FFFFFF", color: open ? "#FFFFFF" : "var(--primary)" }} className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold hover:opacity-90">{open ? <EyeOff size={12} aria-hidden="true" /> : <Eye size={12} aria-hidden="true" />} {open ? "Hide email" : "See how email looks"}</button>
@@ -237,7 +237,7 @@ export function EmailsPanel({ id, title, desc, items, href, slug, conferenceName
   return (
     <section id={id} data-tour={id?.replace(/^rs-/, "rv-")} style={CARD} className="scroll-mt-24 rounded-2xl bg-white p-5">
       <div className="mb-3.5 flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning"><Clock size={16} aria-hidden="true" /></span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning-ink"><Clock size={16} aria-hidden="true" /></span>
         <div><h3 className="text-sm font-bold text-navy">{title}</h3><p className="mt-0.5 text-xs text-ink-faint">{desc}</p></div>
       </div>
       <ul className="space-y-2">

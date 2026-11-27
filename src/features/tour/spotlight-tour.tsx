@@ -48,7 +48,7 @@ export interface TourStep {
 }
 
 const BADGES = {
-  required: { label: "Required", bg: "var(--danger-soft)", color: "var(--danger)" },
+  required: { label: "Required", bg: "var(--danger-soft)", color: "var(--danger-ink)" },
   recommended: { label: "Recommended", bg: "var(--primary-soft)", color: "var(--primary)" },
   info: { label: "Good to know", bg: "var(--muted)", color: "var(--ink-muted)" },
 } as const;
@@ -237,10 +237,10 @@ function TourStepView({ step, index, total, onBack, onNext, onSkipTour, onFinish
           <p id={textId} className="mt-1 text-[13px] leading-relaxed text-ink-soft">{step.text}</p>
           {step.note && <p className="mt-2 text-xs text-ink-muted">{step.note}</p>}
           {step.gateHint && !lost && (blocked
-            ? <p style={{ color: "var(--warning)" }} className="mt-2 flex items-start gap-1.5 text-xs font-semibold"><Lock size={12} aria-hidden="true" className="mt-0.5 shrink-0" /> {step.gateHint}</p>
-            : <p style={{ color: "var(--success)" }} className="mt-2 text-xs font-semibold">Looks good — you can continue.</p>)}
+            ? <p style={{ color: "var(--warning-ink)" }} className="mt-2 flex items-start gap-1.5 text-xs font-semibold"><Lock size={12} aria-hidden="true" className="mt-0.5 shrink-0" /> {step.gateHint}</p>
+            : <p style={{ color: "var(--success-ink)" }} className="mt-2 text-xs font-semibold">Looks good — you can continue.</p>)}
           {lost && (
-            <div role="alert" style={{ background: "var(--warning-soft)", color: "var(--warning)" }} className="mt-2 rounded-lg px-2.5 py-2 text-xs">
+            <div role="alert" style={{ background: "var(--warning-soft)", color: "var(--warning-ink)" }} className="mt-2 rounded-lg px-2.5 py-2 text-xs">
               <div className="font-semibold">We couldn&apos;t find this on the page.</div>
               <div className="mt-1.5 flex items-center gap-3">
                 <button type="button" onClick={() => { setRect(null); setPhase("finding"); setAttempt((a) => a + 1); }} className="cursor-pointer font-bold underline">Try again</button>

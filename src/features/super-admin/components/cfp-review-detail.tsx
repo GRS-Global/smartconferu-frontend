@@ -61,7 +61,7 @@ export function CfpReviewDetail({ c }: { c: AdminConference }) {
           </div>
         </div>
         {error ? (
-          <p className="mt-3 text-[12.5px]" style={{ color: "var(--danger)" }}>Couldn&apos;t load the full page: {error}</p>
+          <p className="mt-3 text-[12.5px]" style={{ color: "var(--danger-ink)" }}>Couldn&apos;t load the full page: {error}</p>
         ) : (
           <button type="button" disabled={!cfp} onClick={() => setFull(true)} className="inline-flex items-center gap-1.5 mt-3 text-[13px] font-semibold cursor-pointer disabled:cursor-wait disabled:opacity-50" style={{ color: "var(--primary)" }}>
             <Eye size={14} /> {cfp ? "Open full preview" : "Loading the page…"}

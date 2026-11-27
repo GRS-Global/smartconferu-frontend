@@ -12,7 +12,7 @@ function CertificateMark({ issued, count }: { issued: boolean; count: number }) 
       {many && <span aria-hidden="true" className="absolute inset-0 -translate-y-[4px] translate-x-[4px] rounded-[0.7rem] border border-[#C4B5FD] bg-[#DDD6FE]" />}
       <span
         style={issued ? { background: "linear-gradient(140deg,#8B5CF6 0%,#6D28D9 100%)", boxShadow: "0 4px 12px rgba(124,58,237,0.30), inset 0 1px 0 rgba(255,255,255,0.25)" } : undefined}
-        className={cn("cert-face relative flex h-[34px] w-[34px] items-center justify-center rounded-[0.7rem]", issued ? "text-white" : "border-[1.5px] border-dashed border-line bg-white text-line-strong")}
+        className={cn("cert-face relative flex h-[34px] w-[34px] items-center justify-center rounded-[0.7rem]", issued ? "text-white" : "border-[1.5px] border-dashed border-line bg-white text-ink-faint")}
       >
         <Award size={16} strokeWidth={issued ? 2.2 : 1.8} aria-hidden="true" />
       </span>

@@ -31,7 +31,7 @@ function SaveStatus({ save, canSave, onCancel, label = "Save", formId }: { save:
   if (formId) {
     return (
       <>
-        {save.saved && <span role="status" className="mr-auto inline-flex items-center gap-1 text-xs font-semibold text-success"><Check size={13} strokeWidth={3} aria-hidden="true" /> Saved</span>}
+        {save.saved && <span role="status" className="mr-auto inline-flex items-center gap-1 text-xs font-semibold text-success-ink"><Check size={13} strokeWidth={3} aria-hidden="true" /> Saved</span>}
         {onCancel && <button type="button" onClick={onCancel} className="h-10 cursor-pointer rounded-lg px-4 text-sm font-semibold text-ink-soft transition-colors hover:bg-muted hover:text-navy">Cancel</button>}
         <button type="submit" form={formId} disabled={!canSave || save.busy} className="h-10 cursor-pointer rounded-lg bg-primary px-[22px] text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-ink-faint disabled:hover:bg-ink-faint">{save.busy ? "Saving…" : label}</button>
       </>
@@ -39,7 +39,7 @@ function SaveStatus({ save, canSave, onCancel, label = "Save", formId }: { save:
   }
   return (
     <div className="flex items-center gap-2.5">
-      {save.saved && <span role="status" className="inline-flex items-center gap-1 text-xs font-semibold text-success"><Check size={13} strokeWidth={3} aria-hidden="true" /> Saved</span>}
+      {save.saved && <span role="status" className="inline-flex items-center gap-1 text-xs font-semibold text-success-ink"><Check size={13} strokeWidth={3} aria-hidden="true" /> Saved</span>}
       {onCancel && <button type="button" onClick={onCancel} className="h-8 rounded-lg px-3.5 text-xs font-semibold text-ink-soft hover:bg-muted hover:text-navy">Cancel</button>}
       <button type="submit" disabled={!canSave || save.busy} className="h-8 rounded-lg bg-primary px-4 text-xs font-bold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50">
         {save.busy ? "Saving…" : label}

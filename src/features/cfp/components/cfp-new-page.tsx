@@ -54,7 +54,7 @@ export function CfpNewPage() {
   const crumbs = [{ label: "Calls for Papers", href: "/cfp" }, { label: "Add New" }];
   if (state.status === "auth") return <><PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} /><SessionEnded /></>;
   if (state.status === "loading") return <><PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} /><div role="status" aria-label="Loading your conferences" className="p-4 sm:p-8"><div className="h-48 animate-pulse rounded-2xl border border-line bg-white" /></div></>;
-  if (state.status === "error") return <><PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger"><TriangleAlert size={18} aria-hidden="true" /><span className="flex-1">{state.message}</span><button type="button" onClick={load} className="cursor-pointer rounded-lg border border-danger px-3 py-1.5 text-xs font-bold">Try again</button></div></>;
+  if (state.status === "error") return <><PageHeader title="Add a New Call for Papers" breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger-ink"><TriangleAlert size={18} aria-hidden="true" /><span className="flex-1">{state.message}</span><button type="button" onClick={load} className="cursor-pointer rounded-lg border border-danger px-3 py-1.5 text-xs font-bold">Try again</button></div></>;
 
   const rows = state.rows.slice(0, visibleCount);
   return (
@@ -88,10 +88,10 @@ export function CfpNewPage() {
                     <td className="px-5 py-3.5 text-ink-soft"><span className="inline-flex items-center gap-1.5">{c.country && <CountryFlag code={countryCodeOf(c.country) ?? ""} />} {c.country || "—"}</span></td>
                     <td className="px-5 py-3.5 text-ink-muted">{showDate(c.startDate)}</td>
                     <td className="px-5 py-3.5 text-ink-muted">{showDate(c.endDate)}</td>
-                    <td className="px-5 py-3.5 text-center">{draft ? <span title="A draft CFP already exists for this conference" className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-1 text-[10.5px] font-bold text-warning"><Check size={11} strokeWidth={3} aria-hidden="true" /> Draft</span> : <span className="text-line-strong">—</span>}</td>
+                    <td className="px-5 py-3.5 text-center">{draft ? <span title="A draft CFP already exists for this conference" className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-1 text-[10.5px] font-bold text-warning-ink"><Check size={11} strokeWidth={3} aria-hidden="true" /> Draft</span> : <span className="text-ink-faint">—</span>}</td>
                     <td className="px-5 py-3.5 text-center">
                       {taken
-                        ? <span aria-label={`${c.acronym} already has a CFP`} title="This conference already has a CFP" className="inline-flex h-7 w-7 cursor-not-allowed items-center justify-center rounded-lg border-[1.5px] border-line text-line-strong"><Plus size={14} aria-hidden="true" /></span>
+                        ? <span aria-label={`${c.acronym} already has a CFP`} title="This conference already has a CFP" className="inline-flex h-7 w-7 cursor-not-allowed items-center justify-center rounded-lg border-[1.5px] border-line text-ink-faint"><Plus size={14} aria-hidden="true" /></span>
                         : <Link href={draft ? cfpManagerHref(c.slug) : `/cfp/new/${encodeURIComponent(c.slug)}`} aria-label={draft ? `Continue draft CFP for ${c.acronym}` : `Add CFP for ${c.acronym}`} title={draft ? "Continue the existing draft" : "Add a new CFP"} className="inline-flex h-7 w-7 items-center justify-center rounded-lg border-[1.5px] border-line text-primary transition-colors hover:border-primary hover:bg-primary-soft"><Plus size={14} aria-hidden="true" /></Link>}
                     </td>
                   </tr>

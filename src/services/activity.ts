@@ -1,6 +1,6 @@
 import { DATA_SOURCE } from "@/lib/config";
 import { api } from "@/lib/api-client";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-lazy";
 import type { ChairActivityLog } from "@/types/chair";
 import { AuthRequiredError, ServiceError } from "./errors";
 
@@ -18,7 +18,7 @@ export async function loadMyActivityLogs(conferenceSlug: string, role: "author" 
     const rows = await api<Array<{ id: string; at: string; actorName: string; actorRole: ChairActivityLog["actorRole"]; action: string; module: string; description: string; status: "success" | "failed"; previousValue: string | null; newValue: string | null }>>(`/conferences/${encodeURIComponent(conferenceSlug)}/my-activity`, { query: { role, limit: 500 } });
     return rows.map((l) => ({ id: l.id, datetime: l.at, actorName: l.actorName, actorRole: l.actorRole, action: l.action, module: l.module, description: l.description, status: l.status, ...(l.previousValue ? { previousValue: l.previousValue } : {}), ...(l.newValue ? { newValue: l.newValue } : {}) } satisfies ChairActivityLog));
   }
-  const db = getSupabase();
+  const db = (await supabase());
   const { data: auth } = await db.auth.getUser();
   if (!auth.user) throw new AuthRequiredError();
   const conf = await db.from("conferences").select("id").eq("slug", conferenceSlug).limit(1);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AnalyticsData } from "../data";
 import { MapPinned, Trophy, FileText, CheckCircle2, LayoutList, Database } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { legendText } from "../chart-theme";
 import { AnalyticsCard, AnalyticsStatCard, AnalyticsEmptyState, SectionLabel, StatChip, MiniTile, FilteredTable } from "../components";
 import { CHART_COLORS, CHART_CATEGORICAL, TOOLTIP_STYLE, AXIS_STYLE } from "../chart-theme";
 
@@ -52,7 +53,7 @@ export default function RegionTab({ data }: { data: AnalyticsData }) {
               <div style={{ color: "var(--navy)" }} className="text-sm font-bold mt-0.5">{r.leadingRegion.region}</div>
             </div>
             <div className="text-right">
-              <div style={{ color: "var(--warning)" }} className="text-lg font-extrabold leading-none">{fmt(r.leadingRegion.papers)}</div>
+              <div style={{ color: "var(--warning-ink)" }} className="text-lg font-extrabold leading-none">{fmt(r.leadingRegion.papers)}</div>
               <div style={{ color: "var(--ink-faint)" }} className="text-[11px] mt-0.5">papers · {r.leadingRegion.sharePct}% of regional total</div>
             </div>
           </div>
@@ -84,7 +85,7 @@ export default function RegionTab({ data }: { data: AnalyticsData }) {
                   ))}
                 </Pie>
                 <Tooltip {...TOOLTIP_STYLE} />
-                <Legend wrapperStyle={{ fontSize: 11 }} layout="vertical" verticalAlign="middle" align="right" />
+                <Legend formatter={legendText} wrapperStyle={{ fontSize: 11 }} layout="vertical" verticalAlign="middle" align="right" />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -99,7 +100,7 @@ export default function RegionTab({ data }: { data: AnalyticsData }) {
               <XAxis dataKey="region" {...AXIS_STYLE} angle={-35} textAnchor="end" height={60} interval={0} />
               <YAxis {...AXIS_STYLE} width={40} />
               <Tooltip {...TOOLTIP_STYLE} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Legend formatter={legendText} wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="Submitted" fill={CHART_COLORS.primary} radius={[6, 6, 0, 0]} />
               <Bar dataKey="Accepted" fill={CHART_COLORS.success} radius={[6, 6, 0, 0]} />
             </BarChart>

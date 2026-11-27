@@ -40,7 +40,7 @@ export function EnhanceReviewDialog({ open, input, onApply, onClose }: { open: b
           <p className="max-w-sm text-xs text-ink-muted">Fixing grammar, clarity and tone while keeping your meaning and your judgment. This takes a few seconds.</p>
         </div>
       )}
-      {state.status === "error" && <div role="alert" className="flex items-start gap-2 rounded-xl bg-danger-soft px-4 py-3 text-sm font-medium text-danger"><AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0" /><span>{state.message} Your review is untouched.</span></div>}
+      {state.status === "error" && <div role="alert" className="flex items-start gap-2 rounded-xl bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink"><AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0" /><span>{state.message} Your review is untouched.</span></div>}
       {state.status === "done" && (
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
@@ -61,7 +61,7 @@ export function EnhanceReviewDialog({ open, input, onApply, onClose }: { open: b
             </div>
           </div>
           {state.improvements.length > 0 && (
-            <div><div className="mb-1.5 text-xs font-bold text-navy">What was improved</div><ul className="space-y-1">{state.improvements.map((t, i) => <li key={i} className="flex items-start gap-2 text-[13px] text-ink-soft"><Check size={13} aria-hidden="true" className="mt-1 shrink-0 text-success" /> {t}</li>)}</ul></div>
+            <div><div className="mb-1.5 text-xs font-bold text-navy">What was improved</div><ul className="space-y-1">{state.improvements.map((t, i) => <li key={i} className="flex items-start gap-2 text-[13px] text-ink-soft"><Check size={13} aria-hidden="true" className="mt-1 shrink-0 text-success-ink" /> {t}</li>)}</ul></div>
           )}
           {state.suggestions.length > 0 && (
             <div className="rounded-xl border border-[var(--primary-soft-border)] bg-primary-soft px-4 py-3"><div className="mb-1 text-xs font-bold text-navy">You may want to say more about <span className="font-medium text-ink-muted">(not added to your review)</span></div><ul className="space-y-1">{state.suggestions.map((t, i) => <li key={i} className="flex items-start gap-2 text-[13px] text-ink-soft"><span aria-hidden="true">•</span> {t}</li>)}</ul></div>

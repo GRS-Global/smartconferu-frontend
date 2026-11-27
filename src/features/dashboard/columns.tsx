@@ -23,7 +23,7 @@ export interface RoleColumn {
 
 export function BigNumber({ value, color = "var(--navy)" }: { value: number; color?: string }) {
   return value === 0
-    ? <span className="text-[15px] font-bold text-line-strong" aria-label="0">–</span>
+    ? <span className="text-[15px] font-bold text-ink-faint" aria-label="0">–</span>
     : <span style={{ color }} className="text-[17px] font-extrabold">{value}</span>;
 }
 
@@ -32,7 +32,7 @@ function RoleNext({ next, role, conf, onEnter }: { next: NextStep; role: Confere
     const danger = next.tone === "danger";
     return (
       <div className="flex flex-col items-start gap-1">
-        <span style={{ color: danger ? "var(--danger)" : "var(--ink-soft)" }} className="text-[12.5px] font-bold">{next.text}</span>
+        <span style={{ color: danger ? "var(--danger-ink)" : "var(--ink-soft)" }} className="text-[12.5px] font-bold">{next.text}</span>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onEnter(conf, role); }}
@@ -216,17 +216,17 @@ export function roleSummaryItems(view: RoleFilter, t: Record<string, number>): S
   if (view === "reviewer") return [
     { label: "Conferences", value: t.conferences },
     { label: "Papers assigned", value: t.assigned },
-    { label: "Reviewed", value: t.done, color: "var(--success)", dark: "#86EFAC" },
-    { label: "Pending", value: t.pending, color: "var(--warning)", tone: "warning", dark: "#FCD34D" },
+    { label: "Reviewed", value: t.done, color: "var(--success-ink)", dark: "#86EFAC" },
+    { label: "Pending", value: t.pending, color: "var(--warning-ink)", tone: "warning", dark: "#FCD34D" },
     { label: "Invitation Rejected", value: t.declined, color: "var(--ink-soft)", dark: "#CBD5E1" },
-    { label: "Review Overdue", value: t.overdue, color: "var(--danger)", dark: "#FCA5A5" },
+    { label: "Review Overdue", value: t.overdue, color: "var(--danger-ink)", dark: "#FCA5A5" },
   ];
   if (view === "chair") return [
     { label: "Conferences", value: t.conferences },
     { label: "Submissions", value: t.received },
-    { label: "Accepted", value: t.accepted, color: "var(--success)", dark: "#86EFAC" },
+    { label: "Accepted", value: t.accepted, color: "var(--success-ink)", dark: "#86EFAC" },
     { label: "Rejected", value: t.rejected, color: "var(--ink-soft)", dark: "#CBD5E1" },
-    { label: "No decision", value: t.undecided, color: "var(--warning)", tone: "warning", dark: "#FCD34D" },
+    { label: "No decision", value: t.undecided, color: "var(--warning-ink)", tone: "warning", dark: "#FCD34D" },
     { label: "Withdrawn", value: t.withdrawn || 0, color: "var(--ink-muted)", dark: "#CBD5E1" },
     { label: "Marked registered", value: t.registrations, color: "var(--primary)" },
   ];

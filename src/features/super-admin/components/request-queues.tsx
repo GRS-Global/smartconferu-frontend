@@ -129,7 +129,7 @@ function DecisionEmail({ c, approve, reason, defaults, mail, setMail, save, setS
               ))}
             </div>
           </div>
-          {needsLink && <p role="alert" className="text-[12px] font-semibold" style={{ color: "var(--danger)" }}>Keep {"{{dashboard_link}}"} in the message: it is how the chair opens the conference.</p>}
+          {needsLink && <p role="alert" className="text-[12px] font-semibold" style={{ color: "var(--danger-ink)" }}>Keep {"{{dashboard_link}}"} in the message: it is how the chair opens the conference.</p>}
           {changed && start && <button type="button" onClick={() => setMail(start)} className="text-[12px] font-semibold cursor-pointer" style={{ color: "var(--primary)" }}>Reset to the saved text</button>}
         </div>
       )}
@@ -339,7 +339,7 @@ export function ConferenceRequestsPage() {
               {rows.length === 0 && (
                 <tr>
                   <td colSpan={7} className="!py-16 text-center">
-                    <div className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-3" style={{ background: "var(--success-soft)", color: "var(--success)" }}>
+                    <div className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-3" style={{ background: "var(--success-soft)", color: "var(--success-ink)" }}>
                       <PartyPopper size={26} />
                     </div>
                     <p className="font-semibold" style={{ color: "var(--text)" }}>
@@ -489,7 +489,7 @@ function RequestDrawer({
             <div className="mb-4">
               <label className="block">
                 <span className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--text)" }}>
-                  Reason (shown to the chair)<span style={{ color: "var(--danger)" }}> *</span>
+                  Reason (shown to the chair)<span style={{ color: "var(--danger-ink)" }}> *</span>
                 </span>
                 <textarea rows={3} className="sa-input resize-none !h-auto py-2.5" value={reason} onChange={(e) => setReason(e.target.value)} autoFocus maxLength={1000} />
               </label>

@@ -224,7 +224,7 @@ export function MyCertificatesBody({ certs, scope, role }: { certs: MyCertificat
                             {withdrawn && <Pill tone="danger">Withdrawn</Pill>}
                           </div>
                           {withdrawn && (
-                            <p style={{ color: "var(--danger)" }} className="text-[12px] font-semibold mt-1.5 leading-snug">
+                            <p style={{ color: "var(--danger-ink)" }} className="text-[12px] font-semibold mt-1.5 leading-snug">
                               The conference has withdrawn this certificate.{withdrawn.replacedBy ? ` A corrected one (${withdrawn.replacedBy}) replaces it.` : ""}
                             </p>
                           )}
@@ -252,14 +252,14 @@ export function MyCertificatesBody({ certs, scope, role }: { certs: MyCertificat
                             onClick={() => copyVerifyLink(recipient.serial)}
                             aria-label={`Copy the verify link for ${recipient.serial}`}
                             title="Copy the verify link"
-                            style={{ border: "1px solid var(--border)", color: copied === recipient.serial ? "var(--success)" : "var(--ink-muted)" }}
+                            style={{ border: "1px solid var(--border)", color: copied === recipient.serial ? "var(--success-ink)" : "var(--ink-muted)" }}
                             className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[var(--canvas)] transition-colors cursor-pointer"
                           >
                             <Share2 size={14} />
                           </button>
                         </div>
                         {copied === recipient.serial && (
-                          <span style={{ color: "var(--success)" }} className="text-[11px] font-semibold -mt-1">Verify link copied.</span>
+                          <span style={{ color: "var(--success-ink)" }} className="text-[11px] font-semibold -mt-1">Verify link copied.</span>
                         )}
                       </div>
                     </CertCard>

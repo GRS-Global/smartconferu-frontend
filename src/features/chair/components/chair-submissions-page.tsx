@@ -32,10 +32,10 @@ const STAT_CARDS: Array<{ key: QuickKey; label: string; icon: LucideIcon; color:
   { key: "all", label: "Submitted", icon: FileText, color: "var(--navy)" },
   { key: "initial", label: "Initial check", icon: ShieldCheck, color: "var(--primary)" },
   { key: "plagiarism", label: "Plagiarism check", icon: ShieldCheck, color: "#0369A1" },
-  { key: "review", label: "Review", icon: Clock, color: "var(--warning)" },
+  { key: "review", label: "Review", icon: Clock, color: "var(--warning-ink)" },
   { key: "decision", label: "Decision", icon: Check, color: "#7C3AED" },
-  { key: "registration", label: "Registration", icon: Ticket, color: "var(--success)" },
-  { key: "withdrawn", label: "Withdrawn", icon: XCircle, color: "var(--danger)" },
+  { key: "registration", label: "Registration", icon: Ticket, color: "var(--success-ink)" },
+  { key: "withdrawn", label: "Withdrawn", icon: XCircle, color: "var(--danger-ink)" },
 ];
 
 const dateValue = (text: string | null) => { const t = Date.parse(text || ""); return Number.isNaN(t) ? null : t; };
@@ -297,7 +297,7 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
               <button type="button" onClick={() => { setActionError(""); setBulk("assign"); }} className={bulkBtn}><Eye size={13} aria-hidden="true" /> Assign reviewers</button>
               <button type="button" onClick={() => { setActionError(""); setBulk("decisions"); }} className={bulkBtn}><Pencil size={13} aria-hidden="true" /> Edit decisions</button>
               <button type="button" onClick={() => { setActionError(""); setBulk("track"); }} className={bulkBtn}><Tag size={13} aria-hidden="true" /> Edit track</button>
-              <button type="button" onClick={() => { setActionError(""); setConfirmDelete([...selected]); }} className="flex items-center gap-1.5 text-xs font-semibold text-danger hover:underline"><Trash2 size={13} aria-hidden="true" /> Delete</button>
+              <button type="button" onClick={() => { setActionError(""); setConfirmDelete([...selected]); }} className="flex items-center gap-1.5 text-xs font-semibold text-danger-ink hover:underline"><Trash2 size={13} aria-hidden="true" /> Delete</button>
               <button type="button" onClick={() => setSelected([])} className="text-xs font-semibold text-ink-muted hover:underline">Clear</button>
             </div>
           </div>
@@ -325,7 +325,7 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
                       </td>
                       {shownColumns.map((c) => <td key={c.key} className="px-3 py-3.5 align-top">{c.render(p, ctx)}</td>)}
                       <td onClick={(e) => e.stopPropagation()} className="px-3 py-3.5 text-right align-top">
-                        <button type="button" onClick={() => { setActionError(""); setConfirmDelete([p.dbId]); }} aria-label={`Delete submission ${p.id}`} className="text-ink-faint transition-colors hover:text-danger"><Trash2 size={15} aria-hidden="true" /></button>
+                        <button type="button" onClick={() => { setActionError(""); setConfirmDelete([p.dbId]); }} aria-label={`Delete submission ${p.id}`} className="text-ink-faint transition-colors hover:text-danger-ink"><Trash2 size={15} aria-hidden="true" /></button>
                       </td>
                     </tr>
                   );
@@ -349,10 +349,10 @@ export function ChairSubmissionsPage({ slug }: { slug: string }) {
 
       <Dialog open={confirmDelete !== null} onClose={() => { if (!busy) setConfirmDelete(null); }} title="Delete Submission(s)" size="sm">
         <div className="mb-5 flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft"><AlertTriangle size={18} aria-hidden="true" className="text-danger" /></div>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft"><AlertTriangle size={18} aria-hidden="true" className="text-danger-ink" /></div>
           <p className="text-sm leading-relaxed text-ink-soft">{(confirmDelete?.length ?? 0) === 1 ? "Are you sure you want to delete this submission? This cannot be undone." : `Are you sure you want to delete these ${confirmDelete?.length ?? 0} submissions? This cannot be undone.`}</p>
         </div>
-        {actionError && confirmDelete && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{actionError}</p>}
+        {actionError && confirmDelete && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{actionError}</p>}
         <div className="flex items-center justify-end gap-3">
           <button type="button" disabled={busy} onClick={() => setConfirmDelete(null)} className="rounded-lg border-[1.5px] border-line px-4 py-2 text-sm font-semibold text-ink-muted hover:bg-slate-50 disabled:opacity-50">Cancel</button>
           <button type="button" disabled={busy} onClick={() => { if (confirmDelete) void performDelete(confirmDelete); }} className="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-50">{busy ? "Deleting…" : "Delete"}</button>

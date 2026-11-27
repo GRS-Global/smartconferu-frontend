@@ -11,7 +11,7 @@ export interface ReviewRow { paper: ReviewerPaper; status: ReviewStatus; step: R
 
 export const REVIEW_STATUS: Record<ReviewStatusKey, Omit<ReviewStatus, "key">> = {
   respond: { label: "Awaiting your response", icon: Inbox, color: "#6D28D9", bg: "#F3E8FF", border: "#DDD6FE" },
-  overdue: { label: "Overdue", icon: AlarmClock, color: "var(--danger)", bg: "var(--danger-soft)", border: "#FECACA" },
+  overdue: { label: "Overdue", icon: AlarmClock, color: "var(--danger-ink)", bg: "var(--danger-soft)", border: "#FECACA" },
   draft: { label: "Draft saved", icon: PenLine, color: "var(--primary-hover)", bg: "var(--primary-soft)", border: "var(--primary-soft-border)" },
   todo: { label: "Not started", icon: CircleDashed, color: "#92400E", bg: "var(--warning-soft)", border: "#FDE68A" },
   sent: { label: "Review sent", icon: FileCheck, color: "#15803D", bg: "var(--success-soft)", border: "#BBF7D0" },
@@ -32,10 +32,10 @@ export function reviewRows(papers: ReviewerPaper[], finished: boolean): ReviewRo
     const status: ReviewStatus = { ...base, key, label: key === "sent" && typeof score === "number" ? `Review sent · ${score}/5` : key === "overdue" && paper.draft ? "Draft · overdue" : base.label };
     const step: ReviewStep = {
       respond: { label: "Accept or decline this paper", tone: "#6D28D9", cta: "Respond" },
-      overdue: { label: paper.draft ? "Overdue · finish your review" : "Overdue · review now", tone: "var(--danger)", cta: paper.draft ? "Continue review" : "Start review" },
+      overdue: { label: paper.draft ? "Overdue · finish your review" : "Overdue · review now", tone: "var(--danger-ink)", cta: paper.draft ? "Continue review" : "Start review" },
       draft: { label: "Continue your review", tone: "var(--primary)", cta: "Continue review" },
       todo: { label: "Start your review", tone: "var(--primary)", cta: "Start review" },
-      sent: { label: finished ? "Review sent" : "Review sent · you can still edit it", tone: "var(--success)", cta: finished ? "View review" : "Edit review" },
+      sent: { label: finished ? "Review sent" : "Review sent · you can still edit it", tone: "var(--success-ink)", cta: finished ? "View review" : "Edit review" },
       closed: { label: "Review window closed", tone: "var(--ink-faint)", cta: "View paper" },
     }[key];
     return { paper, status, step, late };

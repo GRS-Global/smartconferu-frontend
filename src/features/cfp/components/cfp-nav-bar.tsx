@@ -40,7 +40,7 @@ export function CfpNavBar({ navItems, editMenuItems, editMenuActive }: { navItem
               const Icon = item.icon;
               const color = item.danger ? "var(--danger)" : item.active ? "var(--primary)" : "var(--ink)";
               const row = "flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold";
-              const icon = <Icon size={14} aria-hidden="true" style={{ color: item.danger ? "var(--danger)" : "var(--primary)" }} />;
+              const icon = <Icon size={14} aria-hidden="true" style={{ color: item.danger ? "var(--danger-ink)" : "var(--primary)" }} />;
               return (
                 <Fragment key={item.label}>
                   {item.divider && <div style={{ borderTop: "1px solid var(--muted)" }} className="my-1.5" />}

@@ -17,7 +17,7 @@ export function DeletionRequestsBanner({ requests }: { requests: DeletionRequest
         {asks.map((d) => (
           <li key={d.id} style={{ borderTop: "1px solid var(--muted)" }}>
             <Link href={`/super-admin/conferences/${d.conferenceId}`} className="sa-row-link">
-              <span className="w-9 h-9 rounded-xl inline-flex items-center justify-center shrink-0" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>
+              <span className="w-9 h-9 rounded-xl inline-flex items-center justify-center shrink-0" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)" }}>
                 <Trash2 size={17} />
               </span>
               <span className="flex-1 min-w-0 text-left">

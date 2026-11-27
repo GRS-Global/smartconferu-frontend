@@ -52,7 +52,7 @@ function useSave(onClose: () => void, onSaved: (s: Saved) => void, onSessionEnde
   return { saving, error, run };
 }
 
-const Error_ = ({ message }: { message: string }) => (message ? <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger">{message}</p> : null);
+const Error_ = ({ message }: { message: string }) => (message ? <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-ink">{message}</p> : null);
 
 interface CommonProps { /** The chair of the conference editing the paper for its authors (not one of them). */ asChair?: boolean; paper: AuthorPaper; open: boolean; onClose: () => void; onSaved: (s: Saved) => void; onSessionEnded: () => void }
 
@@ -102,7 +102,7 @@ function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonPro
     <>
       <div className="space-y-4">
         <div>
-          <label htmlFor="paper-title" className={LABEL}>Title<span className="text-danger" aria-hidden="true"> *</span></label>
+          <label htmlFor="paper-title" className={LABEL}>Title<span className="text-danger-ink" aria-hidden="true"> *</span></label>
           <input id="paper-title" value={title} maxLength={500} onChange={(e) => setTitle(e.target.value)} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
         </div>
         <div>
@@ -110,7 +110,7 @@ function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonPro
           <KeywordsEditor value={keywords} onChange={setKeywords} />
         </div>
         <div>
-          <label htmlFor="paper-abstract" className={LABEL}>Abstract<span className="text-danger" aria-hidden="true"> *</span></label>
+          <label htmlFor="paper-abstract" className={LABEL}>Abstract<span className="text-danger-ink" aria-hidden="true"> *</span></label>
           <textarea id="paper-abstract" value={abstract} maxLength={20000} rows={7} onChange={(e) => setAbstract(e.target.value)} className={`${INPUT_CLASS} resize-y bg-canvas leading-relaxed focus:bg-white`} />
           <span className="mt-1 block text-right text-[11px] text-ink-faint">{words} words</span>
         </div>
@@ -183,16 +183,16 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
               <div className="flex items-center gap-1">
                 <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up" className={iconBtn}><ArrowUp size={14} aria-hidden="true" /></button>
                 <button type="button" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move down" className={iconBtn}><ArrowDown size={14} aria-hidden="true" /></button>
-                <button type="button" onClick={() => remove(a.key)} disabled={rows.length === 1} aria-label="Remove author" className={`${iconBtn} text-ink-faint hover:text-danger`}><Trash2 size={14} aria-hidden="true" /></button>
+                <button type="button" onClick={() => remove(a.key)} disabled={rows.length === 1} aria-label="Remove author" className={`${iconBtn} text-ink-faint hover:text-danger-ink`}><Trash2 size={14} aria-hidden="true" /></button>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor={`author-name-${a.key}`} className={LABEL}>Full name<span className="text-danger" aria-hidden="true"> *</span></label>
+                <label htmlFor={`author-name-${a.key}`} className={LABEL}>Full name<span className="text-danger-ink" aria-hidden="true"> *</span></label>
                 <input id={`author-name-${a.key}`} value={a.name} maxLength={200} onChange={(e) => update(a.key, { name: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
               </div>
               <div>
-                <label htmlFor={`author-email-${a.key}`} className={LABEL}>Email<span className="text-danger" aria-hidden="true"> *</span></label>
+                <label htmlFor={`author-email-${a.key}`} className={LABEL}>Email<span className="text-danger-ink" aria-hidden="true"> *</span></label>
                 <input id={`author-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
               </div>
               <div className="sm:col-span-2">
@@ -210,7 +210,7 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
       <button type="button" onClick={() => setRows((l) => (l.length < 50 ? [...l, { key: ++rowKey, name: "", email: "", affiliation: "", country: "", corresponding: false }] : l))} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong py-2.5 text-sm font-bold text-primary hover:bg-primary-soft">
         <UserPlus size={15} aria-hidden="true" /> Add co-author
       </button>
-      {!meListed && <p role="alert" className="mt-2 text-xs font-semibold text-danger">You have to stay on the paper as an author or co-author. Put your own name and email back to save.</p>}
+      {!meListed && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">You have to stay on the paper as an author or co-author. Put your own name and email back to save.</p>}
       <Error_ message={error} />
       <Actions onCancel={onClose} saving={saving} disabled={!valid} onSave={save} />
     </>
@@ -237,7 +237,7 @@ function WithdrawForm({ paper, registered, asChair = false, onClose, onSaved, on
   return (
     <>
       <div className="flex items-start gap-3">
-        <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft"><AlertTriangle size={18} className="text-danger" /></span>
+        <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft"><AlertTriangle size={18} className="text-danger-ink" /></span>
         <p className="text-sm leading-relaxed text-ink-soft">{message}</p>
       </div>
       <Error_ message={error} />
@@ -295,7 +295,7 @@ function FileField({ id, file, onFile }: { id: string; file: File | null; onFile
       <input id={id} type="file" accept={ACCEPT} className="sr-only" onChange={(e) => { onFile(e.target.files?.[0] ?? null); e.target.value = ""; }} />
       {file && (
         <div className="mt-2 flex items-center justify-between gap-3">
-          <p role={problem ? "alert" : undefined} className={`text-xs ${problem ? "font-semibold text-danger" : "text-ink-faint"}`}>{problem || "Ready to upload."}</p>
+          <p role={problem ? "alert" : undefined} className={`text-xs ${problem ? "font-semibold text-danger-ink" : "text-ink-faint"}`}>{problem || "Ready to upload."}</p>
           <button type="button" onClick={() => onFile(null)} className="shrink-0 text-xs font-bold text-primary hover:underline">Remove</button>
         </div>
       )}

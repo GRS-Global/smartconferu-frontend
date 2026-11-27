@@ -172,7 +172,7 @@ export function AffiliationTimelineRow({ a, current, last, showPrimary, owner }:
             {showPrimary && <span className={`${pill} mr-1.5 bg-primary-soft font-bold text-primary`}>Primary</span>}
             {relationship && <span className={`${pill} mr-1.5 bg-muted text-ink-soft`}>{relationship}</span>}
             {owner && current && a.pending && <span title="Our team is checking this institution's official name" style={{ color: PENDING_AMBER }} className="inline-flex items-center gap-1 align-middle text-xs font-semibold"><Clock size={12} strokeWidth={2.2} aria-hidden="true" /> Pending review</span>}
-            {owner && current && a.rejectReason && !a.pending && <span className="ml-1 text-xs font-semibold text-danger">Not accepted: {a.rejectReason}</span>}
+            {owner && current && a.rejectReason && !a.pending && <span className="ml-1 text-xs font-semibold text-danger-ink">Not accepted: {a.rejectReason}</span>}
           </div>
           {current ? (
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-success-soft px-2 py-0.5 text-[11.5px] font-bold text-[#15803D]"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#16A34A]" /> Current</span>

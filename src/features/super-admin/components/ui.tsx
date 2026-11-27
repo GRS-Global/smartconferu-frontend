@@ -42,7 +42,7 @@ export type Tone = "primary" | "secondary" | "accent" | "success" | "warning" | 
 export const TONES: Record<Tone, { bg: string; fg: string; solid: string }> = {
   primary: { bg: "var(--primary-soft)", fg: "var(--primary)", solid: "var(--primary)" },
   secondary: { bg: "var(--secondary-soft)", fg: "var(--secondary)", solid: "var(--secondary)" },
-  accent: { bg: "color-mix(in srgb, var(--accent) 10%, #FFFFFF)", fg: "var(--cat-virtual)", solid: "var(--accent)" },
+  accent: { bg: "#E6F8FB" /* var(--accent) at 10% on white */, fg: "var(--cat-virtual)", solid: "var(--accent)" },
   success: { bg: "var(--success-soft)", fg: "var(--success)", solid: "var(--success)" },
   warning: { bg: "var(--warning-soft)", fg: "var(--warning)", solid: "var(--warning)" },
   danger: { bg: "var(--danger-soft)", fg: "var(--danger)", solid: "var(--danger)" },
@@ -134,9 +134,9 @@ export function PageTitle({ title, crumb, icon: IconC, description, actions, par
             </span>
           )}
           <div className="min-w-0">
-            <h2 className="text-[24px] font-bold leading-tight tracking-tight truncate" style={{ color: "var(--text)" }}>
+            <h1 className="text-[24px] font-bold leading-tight tracking-tight truncate" style={{ color: "var(--text)" }}>
               {title}
-            </h2>
+            </h1>
             {description && (
               <p className="text-[13.5px] mt-0.5" style={{ color: "var(--text-muted)" }}>
                 {description}
@@ -330,7 +330,7 @@ export function TextField({ label, value, onChange, placeholder, hint, required,
     <label className="block mb-4">
       <span className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--text)" }}>
         {label}
-        {required && <span style={{ color: "var(--danger)" }}> *</span>}
+        {required && <span style={{ color: "var(--danger-ink)" }}> *</span>}
       </span>
       <input className="sa-input" type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
       {hint && (

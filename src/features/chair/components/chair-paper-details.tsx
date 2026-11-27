@@ -137,7 +137,7 @@ export function ManageCard({ detail, onDetails, onAuthors, onFiles, onWithdraw }
       </div>
       {!closed && (
         <div className="border-t border-muted p-5">
-          <button type="button" onClick={onWithdraw} className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-danger-soft bg-white py-2.5 text-sm font-bold text-danger transition-colors hover:bg-danger-soft"><XCircle size={14} aria-hidden="true" /> Withdraw for the authors</button>
+          <button type="button" onClick={onWithdraw} className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-danger-soft bg-white py-2.5 text-sm font-bold text-danger-ink transition-colors hover:bg-danger-soft"><XCircle size={14} aria-hidden="true" /> Withdraw for the authors</button>
           <p className="mt-1.5 text-center text-[10.5px] text-ink-faint">Only when the authors ask. The authors are emailed. This can&apos;t be undone.</p>
         </div>
       )}

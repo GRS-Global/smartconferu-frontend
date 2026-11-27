@@ -27,9 +27,9 @@ import { EmailTemplateEditor } from "./email-template-editor";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const MODULES: Array<[string, string]> = [["account", "Account & security"], ["team", "Organization & team"], ["setup", "Conference setup"], ["submission", "Call for Papers & submission"], ["recruitment", "Reviewer recruitment"], ["reviewing", "Review assignment & reviewing"], ["decision", "Decision"], ["after", "Registration & camera-ready"]];
 const SEND_TYPES: Record<string, { label: string; cls: string }> = {
-  auto: { label: "Automatic", cls: "bg-success-soft text-success" },
+  auto: { label: "Automatic", cls: "bg-success-soft text-success-ink" },
   chair: { label: "Chair action", cls: "bg-primary-soft text-primary" },
-  scheduled: { label: "Scheduled reminder", cls: "bg-warning-soft text-warning" },
+  scheduled: { label: "Scheduled reminder", cls: "bg-warning-soft text-warning-ink" },
   bulk: { label: "Bulk / manual", cls: "bg-muted text-ink-soft" },
 };
 const tokensOf = (...texts: string[]) => [...new Set(texts.flatMap((t) => [...t.matchAll(/{{\s*(\w+)\s*}}/g)].map((m) => m[1])))];
@@ -94,7 +94,7 @@ export function EmailTemplatesPane({ slug, conferenceName, conferenceAcronym, te
     if (!del) return;
     if (await run(() => getChairService().then((s) => s.deleteEmailTemplate(slug, del.key)), { title: "Email deleted", text: `${del.label || "The email"} was deleted.` })) setDel(null);
   };
-  const TONE: Record<string, { color: string; bg: string }> = { auto: { color: "var(--success)", bg: "var(--success-soft)" }, chair: { color: "var(--primary)", bg: "var(--primary-soft)" }, scheduled: { color: "var(--warning)", bg: "var(--warning-soft)" }, bulk: { color: "var(--secondary)", bg: "var(--secondary-soft)" } };
+  const TONE: Record<string, { color: string; bg: string }> = { auto: { color: "var(--success-ink)", bg: "var(--success-soft)" }, chair: { color: "var(--primary)", bg: "var(--primary-soft)" }, scheduled: { color: "var(--warning-ink)", bg: "var(--warning-soft)" }, bulk: { color: "var(--secondary)", bg: "var(--secondary-soft)" } };
   const jumpTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); setFlash(id); setTimeout(() => setFlash((f) => (f === id ? null : f)), 1600); };
   const card = (id: string, label: string, pillKey: string, when: string, to: string, enabled: boolean, subject: string, onToggle: (v: boolean) => void, onEdit: () => void, extra?: React.ReactNode, custom = false) => {
     const st = SEND_TYPES[pillKey] ?? { label: pillKey, cls: "" };
@@ -142,7 +142,7 @@ export function EmailTemplatesPane({ slug, conferenceName, conferenceAcronym, te
   }
   return (
     <>
-      {error && !edit && !del && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && !edit && !del && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{error}</p>}
       {templates.platform.length === 0 ? (
         <div style={CARD} className="rounded-2xl bg-white p-8 text-center text-sm text-ink-muted">No email templates yet. Run <code>supabase/migrations/0005_email_templates.sql</code> and they appear here.</div>
       ) : (
@@ -179,7 +179,7 @@ export function EmailTemplatesPane({ slug, conferenceName, conferenceAcronym, te
                   <div className="mb-3 flex items-center gap-2"><h3 className="text-sm font-bold text-navy">Custom emails</h3><span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-extrabold text-ink-muted">{customs.length}</span></div>
                   {customs.length === 0 ? <p style={{ border: "1.5px dashed var(--border)" }} className="rounded-2xl p-10 text-center text-sm text-ink-faint">No custom emails yet. Create one and pick it from Send Email.</p> : (
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                      {customs.map((t) => card(`et-${t.key}`, t.label || "Untitled Email", "bulk", "Chair sends it from Send Email", "Chosen audience", t.enabled, t.subject || "No subject yet", (v) => toggleCustom(t, v), () => openCustom(t), <button type="button" onClick={() => { setError(""); setDel({ key: t.key, label: t.label }); }} aria-label={`Delete ${t.label}`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger"><Trash2 size={13} aria-hidden="true" /></button>, true))}
+                      {customs.map((t) => card(`et-${t.key}`, t.label || "Untitled Email", "bulk", "Chair sends it from Send Email", "Chosen audience", t.enabled, t.subject || "No subject yet", (v) => toggleCustom(t, v), () => openCustom(t), <button type="button" onClick={() => { setError(""); setDel({ key: t.key, label: t.label }); }} aria-label={`Delete ${t.label}`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger-ink"><Trash2 size={13} aria-hidden="true" /></button>, true))}
                     </div>
                   )}
                 </section>
@@ -221,7 +221,7 @@ export function EmailTemplatesPane({ slug, conferenceName, conferenceAcronym, te
       )}
 
       <Dialog open={del !== null} onClose={() => { if (!busy) setDel(null); }} title="Delete this email?" size="md">
-        {del && (<><p className="text-sm text-ink-soft"><b className="text-navy">{del.label || "Untitled Email"}</b> is deleted for this conference.</p>{error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}<div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setDel(null)} disabled={busy}>Cancel</Button><Button className="bg-danger hover:bg-danger" onClick={() => void removeCustom()} disabled={busy}><Trash2 size={14} aria-hidden="true" /> {busy ? "Deleting…" : "Delete"}</Button></div></>)}
+        {del && (<><p className="text-sm text-ink-soft"><b className="text-navy">{del.label || "Untitled Email"}</b> is deleted for this conference.</p>{error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}<div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setDel(null)} disabled={busy}>Cancel</Button><Button className="bg-danger hover:bg-danger" onClick={() => void removeCustom()} disabled={busy}><Trash2 size={14} aria-hidden="true" /> {busy ? "Deleting…" : "Delete"}</Button></div></>)}
       </Dialog>
       <FlowToast toast={toast} onClose={closeToast} />
     </>

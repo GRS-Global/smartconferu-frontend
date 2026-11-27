@@ -55,7 +55,7 @@ export function ReviewTimelineEditor({ timeline, emailsHref, onSave }: { timelin
   const box = (key: keyof Draft, label: string, min: number, max: number) => (
     <input type="number" min={min} max={max} value={String(draft[key])} onChange={(e) => set({ [key]: e.target.value } as Partial<Draft>)} aria-label={label} aria-invalid={Boolean(problems[key as keyof typeof problems])} style={{ border: `1.5px solid ${problems[key as keyof typeof problems] ? "var(--danger)" : "var(--border)"}` }} className="w-20 rounded-lg px-3 py-2 text-right text-sm tabular-nums text-ink outline-none" />
   );
-  const err = (m?: string) => m && <p role="alert" className="flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {m}</p>;
+  const err = (m?: string) => m && <p role="alert" className="flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {m}</p>;
   const card = (children: React.ReactNode) => <div className="space-y-2.5 rounded-xl border border-line p-4">{children}</div>;
   const emailLink = <Link href={emailsHref} className="font-semibold text-primary hover:underline">Edit this email</Link>;
   return (
@@ -82,8 +82,8 @@ export function ReviewTimelineEditor({ timeline, emailsHref, onSave }: { timelin
       </div>
       <p className="text-xs text-ink-faint">Reminders go by email and to the reviewer&apos;s bell, only to reviewers who haven&apos;t submitted yet. They are sent once a day in the morning, by the conference&apos;s calendar day.
         {saving === "saving" && <span className="ml-2 font-semibold text-ink-muted">Saving…</span>}
-        {saving === "saved" && <span className="ml-2 font-semibold text-success">Saved</span>}
-        {saving === "failed" && <span role="alert" className="ml-2 font-semibold text-danger">Couldn&apos;t save — try again.</span>}
+        {saving === "saved" && <span className="ml-2 font-semibold text-success-ink">Saved</span>}
+        {saving === "failed" && <span role="alert" className="ml-2 font-semibold text-danger-ink">Couldn&apos;t save — try again.</span>}
       </p>
     </div>
   );

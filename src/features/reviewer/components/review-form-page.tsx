@@ -55,7 +55,7 @@ export function FieldRow({ field, value, onChange, disabled }: { field: ReviewFi
   const id = `review-${field.id}`;
   return (
     <div className="py-4">
-      <label htmlFor={field.type === "long_text" ? id : undefined} className="block text-[13.5px] font-bold text-navy">{field.label}{field.required && <span className="text-danger" aria-hidden="true"> *</span>}</label>
+      <label htmlFor={field.type === "long_text" ? id : undefined} className="block text-[13.5px] font-bold text-navy">{field.label}{field.required && <span className="text-danger-ink" aria-hidden="true"> *</span>}</label>
       {field.description && <p className="mt-0.5 text-xs text-ink-muted">{field.description}</p>}
       <div className="mt-2.5">
         {field.type === "long_text" && <textarea id={id} value={typeof value === "string" ? value : ""} rows={6} maxLength={20000} disabled={disabled} onChange={(e) => onChange(e.target.value)} className="w-full resize-y rounded-xl border-[1.5px] border-line bg-white px-3.5 py-2.5 text-sm leading-relaxed text-ink outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary-soft disabled:bg-canvas disabled:text-ink-muted" />}
@@ -107,7 +107,7 @@ function ExtensionModal({ due, onClose, onSend }: { due: string; onClose: () => 
         <button type="button" disabled={bad} onClick={() => { void send(); }} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"><Send size={14} aria-hidden="true" /> {busy ? "Sending…" : "Send request"}</button>
       </>}
     >
-      <label htmlFor="ext-date" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">New deadline <span className="text-danger">*</span></label>
+      <label htmlFor="ext-date" className="mb-1.5 block text-[13px] font-semibold text-ink-soft">New deadline <span className="text-danger-ink">*</span></label>
       <div className="mb-2 flex gap-1.5">
         {[3, 7, 14].map((d) => {
           const v = shiftIsoDate(due || minISO, d);
@@ -119,7 +119,7 @@ function ExtensionModal({ due, onClose, onSend }: { due: string; onClose: () => 
       <label htmlFor="ext-reason" className="mb-1.5 mt-4 block text-[13px] font-semibold text-ink-soft">Reason <span className="font-normal text-ink-faint">(optional)</span></label>
       <textarea id="ext-reason" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Travelling for a week — I'll finish right after." className="w-full resize-y rounded-xl border-[1.5px] border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary-soft" />
       <p className="mt-3 text-[11px] text-ink-faint">The chair approves or declines; you&apos;ll get a notification either way.</p>
-      {error && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger-ink">{error}</p>}
     </Modal>
   );
 }
@@ -131,7 +131,7 @@ function PendingCard({ paper, onRespond }: { paper: ReviewerPaper; onRespond: (k
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-semibold text-ink-faint">{paper.id}</span>
-          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10.5px] font-bold text-warning">Waiting for your response</span>
+          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10.5px] font-bold text-warning-ink">Waiting for your response</span>
           {paper.track && <span className="text-[11px] text-ink-faint">{paper.track}</span>}
         </div>
         <span className="block text-left text-sm font-semibold leading-snug text-ink">{paper.title}</span>
@@ -238,7 +238,7 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
         {(open) => (
           <div>
             <PaperHeader paper={bannerPaper} acronym={conference.acronym} keywords={paper.keywords} compact={open} file={file ? { name: file.name } : null} onFile={(download) => { void openFile(download); }} />
-            {fileError && <div role="alert" className="mb-4 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">{fileError}</div>}
+            {fileError && <div role="alert" className="mb-4 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger-ink">{fileError}</div>}
 
             {/* One slim strip: the review's due date (and "ask for more time") and how far the form is. */}
             <div style={CARD} className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl bg-white px-4 py-3">
@@ -247,8 +247,8 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
                   <Calendar size={14} aria-hidden="true" className="shrink-0 text-primary" />
                   <span className="text-xs font-bold text-ink-muted">Review due</span>
                   <span className="text-sm font-semibold text-ink">{dayText(due)}</span>
-                  <span style={{ color: submitted ? "var(--success)" : dueDays != null && dueDays < 0 ? "var(--danger)" : dueDays != null && dueDays <= 3 ? "var(--warning)" : "var(--ink-muted)" }} className="text-xs font-bold">{submitted ? "Submitted" : dueDays != null && dueDays < 0 ? `Overdue · ${relDay(dueDays)}` : relDay(dueDays)}</span>
-                  {paper.extension?.status === "pending" && <span className="rounded-md bg-warning-soft px-2 py-0.5 text-[11px] font-medium text-warning">Asked for more time until {dayText(paper.extension.date)} — waiting for the chair</span>}
+                  <span style={{ color: submitted ? "var(--success-ink)" : dueDays != null && dueDays < 0 ? "var(--danger-ink)" : dueDays != null && dueDays <= 3 ? "var(--warning-ink)" : "var(--ink-muted)" }} className="text-xs font-bold">{submitted ? "Submitted" : dueDays != null && dueDays < 0 ? `Overdue · ${relDay(dueDays)}` : relDay(dueDays)}</span>
+                  {paper.extension?.status === "pending" && <span className="rounded-md bg-warning-soft px-2 py-0.5 text-[11px] font-medium text-warning-ink">Asked for more time until {dayText(paper.extension.date)} — waiting for the chair</span>}
                   {paper.extension?.status === "declined" && <span className="rounded-md bg-canvas px-2 py-0.5 text-[11px] font-medium text-ink-muted">More time declined — deadline unchanged</span>}
                   {!submitted && !detail.decision && paper.extension?.status !== "pending" && <button type="button" onClick={() => setExtOpen(true)} className="inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-primary hover:underline"><Clock size={12} aria-hidden="true" /> Ask for more time</button>}
                 </div>
@@ -256,13 +256,13 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
               <div className="flex min-w-[280px] flex-1 flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="text-xs font-bold text-navy">Your review</span>
                 <span className="h-2 w-24 overflow-hidden rounded-full bg-muted"><span style={{ background: complete ? "var(--success)" : "var(--primary)", width: `${pct}%` }} className="block h-full rounded-full transition-all" /></span>
-                <span style={{ color: complete ? "var(--success)" : "var(--ink-muted)" }} className="text-xs font-bold">{pct}%</span>
+                <span style={{ color: complete ? "var(--success-ink)" : "var(--ink-muted)" }} className="text-xs font-bold">{pct}%</span>
                 {sections.map((s) => {
                   const req = s.fields.filter((f) => f.required);
                   const done = req.filter((f) => isFieldAnswered(values[f.id])).length;
                   return (
                     <button key={s.id} type="button" onClick={() => jumpTo(s.id)} className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-line px-2 py-1 text-left transition-colors hover:bg-canvas">
-                      {req.length > 0 && done === req.length ? <Check size={13} aria-hidden="true" className="shrink-0 text-success" /> : <span aria-hidden="true" className="h-3 w-3 shrink-0 rounded-full border-[1.5px] border-line-strong" />}
+                      {req.length > 0 && done === req.length ? <Check size={13} aria-hidden="true" className="shrink-0 text-success-ink" /> : <span aria-hidden="true" className="h-3 w-3 shrink-0 rounded-full border-[1.5px] border-line-strong" />}
                       <span className="truncate text-xs font-medium text-ink-soft">{s.name}</span>
                       {req.length > 0 && <span className="shrink-0 text-[11px] font-semibold text-ink-faint">{done}/{req.length}</span>}
                     </button>
@@ -288,8 +288,8 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
               <>
                 {submitted && !locked && (
                   <div className="mb-5 flex items-start gap-2 rounded-xl border border-success bg-success-soft p-3.5">
-                    <Check size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-success" />
-                    <span className="text-xs font-semibold leading-relaxed text-success">Your review has been submitted — the chair can see it with the paper&apos;s other reviews. You can still update it until the paper is decided.</span>
+                    <Check size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-success-ink" />
+                    <span className="text-xs font-semibold leading-relaxed text-success-ink">Your review has been submitted — the chair can see it with the paper&apos;s other reviews. You can still update it until the paper is decided.</span>
                   </div>
                 )}
                 {detail.decision && (
@@ -305,9 +305,9 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
                   </div>
                 )}
 
-                <div className="mb-4 flex items-center gap-1.5 text-ink-faint">
-                  <KeyRound size={12} aria-hidden="true" className="shrink-0" />
-                  <span className="text-[11px] font-medium">Fields marked <span className="font-bold">confidential</span> are shown only to the chair. Your comments to the authors may be shared with them — anonymously — when the chair sends the decision.</span>
+                <div className="mb-4 flex items-start gap-1.5 text-ink-faint">
+                  <KeyRound size={12} aria-hidden="true" className="mt-0.5 shrink-0" />
+                  <span className="min-w-0 text-[11px] font-medium">Fields marked <span className="font-bold">confidential</span> are shown only to the chair. Your comments to the authors may be shared with them — anonymously — when the chair sends the decision.</span>
                 </div>
 
                 {/* Locked: every field (and button) inside is disabled. */}
@@ -316,14 +316,14 @@ function Workspace({ detail, conference, due, onChanged, onToast, onSessionEnded
                 </fieldset>
                 <EnhanceReviewDialog open={polish} input={{ review: String(values["f-summary"] ?? ""), title: paper.title, abstract: paper.abstract, ratings: fields.filter((f) => f.type === "score" && Number(values[f.id]) > 0).map((f) => ({ label: f.label, value: Number(values[f.id]) })), submissionId: paper.dbId || undefined }} onApply={(t) => { change("f-summary", t); setPolish(false); }} onClose={() => setPolish(false)} />
 
-                {sendError && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">{sendError}</p>}
+                {sendError && <p role="alert" className="mt-3 rounded-lg bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger-ink">{sendError}</p>}
                 {/* Sticky submit bar — floats above the form while scrolling. */}
                 {!locked && (
                   <>
                     <div style={{ border: "1px solid var(--border)", boxShadow: "0 4px 16px rgba(15,23,42,0.08)" }} className="sticky bottom-4 mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl bg-white px-4 py-3">
                       <span className="flex flex-col">
-                        <span style={{ color: complete ? "var(--success)" : "var(--ink-muted)" }} className="text-xs font-semibold">{complete ? "All required fields answered" : `${answered} of ${required.length} required fields answered`}</span>
-                        {saveError ? <span role="alert" className="mt-0.5 text-[11px] font-semibold text-danger">{saveError}</span> : savedAt && <span className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-faint"><Check size={11} aria-hidden="true" /> Draft saved {draftAge(savedAt)}</span>}
+                        <span style={{ color: complete ? "var(--success-ink)" : "var(--ink-muted)" }} className="text-xs font-semibold">{complete ? "All required fields answered" : `${answered} of ${required.length} required fields answered`}</span>
+                        {saveError ? <span role="alert" className="mt-0.5 text-[11px] font-semibold text-danger-ink">{saveError}</span> : savedAt && <span className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-faint"><Check size={11} aria-hidden="true" /> Draft saved {draftAge(savedAt)}</span>}
                       </span>
                       <div className="flex items-center gap-3">
                         <Link href={overview} className="cursor-pointer text-sm font-semibold text-ink-muted transition-colors hover:text-navy">{savedAt ? "Save & close" : "Cancel"}</Link>

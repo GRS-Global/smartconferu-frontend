@@ -47,7 +47,7 @@ function DrawerFooter({ onCancel, onSave, label, busy, disabled }: { onCancel: (
 
 function FormError({ error }: { error: string | null }) {
   return error ? (
-    <p role="alert" className="text-[12.5px] -mt-2 mb-3" style={{ color: "var(--danger)" }}>
+    <p role="alert" className="text-[12.5px] -mt-2 mb-3" style={{ color: "var(--danger-ink)" }}>
       {error}
     </p>
   ) : null;
@@ -794,7 +794,7 @@ export function ResearchAreasPage() {
               </Button>
             </div>
             {saveError && (
-              <p role="alert" className="text-[13px] mt-3" style={{ color: "var(--danger)" }} onClick={() => setError(null)}>
+              <p role="alert" className="text-[13px] mt-3" style={{ color: "var(--danger-ink)" }} onClick={() => setError(null)}>
                 {saveError}
               </p>
             )}

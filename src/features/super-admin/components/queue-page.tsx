@@ -257,7 +257,7 @@ export function QueuePage<T>({ config: q, items, onChanged }: { config: QueueCon
               {rows.length === 0 && (
                 <tr>
                   <td colSpan={colCount} className="!py-16 text-center">
-                    <div className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-3" style={{ background: "var(--success-soft)", color: "var(--success)" }}>
+                    <div className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-3" style={{ background: "var(--success-soft)", color: "var(--success-ink)" }}>
                       <PartyPopper size={26} />
                     </div>
                     <p className="font-semibold" style={{ color: "var(--text)" }}>
@@ -413,7 +413,7 @@ function FormField({ field, value, onChange }: { field: QueueField; value: strin
   const label = (
     <span className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--text)" }}>
       {field.label}
-      {field.required && <span style={{ color: "var(--danger)" }}> *</span>}
+      {field.required && <span style={{ color: "var(--danger-ink)" }}> *</span>}
     </span>
   );
   if (field.type === "textarea")

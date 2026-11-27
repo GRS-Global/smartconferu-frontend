@@ -15,11 +15,11 @@ import type { Conference } from "@/types/conference";
    answer is kept in the database (`conference_feedback`, migration 0042). */
 
 const SCALE: Array<{ value: number; label: string; icon: LucideIcon; color: string; soft: string }> = [
-  { value: 1, label: "Poor", icon: Angry, color: "var(--danger)", soft: "var(--danger-soft)" },
-  { value: 2, label: "Fair", icon: Frown, color: "var(--warning)", soft: "var(--warning-soft)" },
+  { value: 1, label: "Poor", icon: Angry, color: "var(--danger-ink)", soft: "var(--danger-soft)" },
+  { value: 2, label: "Fair", icon: Frown, color: "var(--warning-ink)", soft: "var(--warning-soft)" },
   { value: 3, label: "Good", icon: Meh, color: "var(--ink-soft)", soft: "var(--muted)" },
   { value: 4, label: "Very good", icon: Smile, color: "var(--primary)", soft: "var(--primary-soft)" },
-  { value: 5, label: "Excellent", icon: Laugh, color: "var(--success)", soft: "var(--success-soft)" },
+  { value: 5, label: "Excellent", icon: Laugh, color: "var(--success-ink)", soft: "var(--success-soft)" },
 ];
 const TOPICS: Array<{ id: string; label: string; icon: LucideIcon }> = [
   { id: "talks", label: "Talks & sessions", icon: Presentation },
@@ -98,7 +98,7 @@ function Form({ conference, sent, initialProblem, onSent }: { conference: Confer
     return (
       <div className="p-4 sm:p-8">
         <div style={CARD} className="max-w-xl rounded-2xl bg-white p-10 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success-soft"><Check size={24} strokeWidth={2.6} aria-hidden="true" className="text-success" /></div>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success-soft"><Check size={24} strokeWidth={2.6} aria-hidden="true" className="text-success-ink" /></div>
           <h3 className="mb-1 text-lg font-extrabold text-navy">Thanks for your feedback</h3>
           <p className="mb-5 text-sm text-ink-muted">Sent {sent.anonymous ? "without your name" : "with your name"} on {fmt(new Date(sent.at))}. You can change it until {fmt(closes)}.</p>
           {face && FaceIcon && (
@@ -136,7 +136,7 @@ function Form({ conference, sent, initialProblem, onSent }: { conference: Confer
           <div className="text-[12.5px] font-bold text-primary">{conference.acronym}</div>
           <h2 style={{ letterSpacing: "-0.02em" }} className="mt-1 text-[24px] font-extrabold text-navy">How was {conference.acronym}?</h2>
           <p className="mt-1 text-sm text-ink-muted">One tap is enough. Everything after that is optional.</p>
-          {notOpenYet && <p className="mt-2 text-xs font-bold text-warning">Preview: the form opens on {fmt(opens)}; answers can&apos;t be sent before then.</p>}
+          {notOpenYet && <p className="mt-2 text-xs font-bold text-warning-ink">Preview: the form opens on {fmt(opens)}; answers can&apos;t be sent before then.</p>}
           <div role="radiogroup" aria-label="Overall rating" className="mt-6 flex justify-center gap-2 sm:gap-3">
             {SCALE.map((s) => {
               const on = overall === s.value;
@@ -208,7 +208,7 @@ function Form({ conference, sent, initialProblem, onSent }: { conference: Confer
           </div>
         </div>
       </section>
-      {error && <p role="alert" className="mt-3 text-center text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-center text-sm font-semibold text-danger-ink">{error}</p>}
       <p className="mt-3 text-center text-xs text-ink-faint">Open until {fmt(closes)}. You can change your answers until then.</p>
     </form>
   );

@@ -24,21 +24,21 @@ const outcomeCol = (key: string) => OUTCOME_COLUMNS.find((c) => c.key === key) a
 // Author table order: Submitted · Accepted (sum of the three registration columns) · Not Accepted · Revision Required · Waitlisted · No Decision ·
 // then the accepted papers split by registration (grouped header).
 const D_AUTHOR_HEADS: Record<string, string> = { rejected: "Not Accepted", revise: "Revision Required", waitlist: "Waitlisted", noDecision: "No Decision" };
-const D_ACCEPTED_SUM = { key: "accepted", label: "Accepted", color: "var(--success)" };
+const D_ACCEPTED_SUM = { key: "accepted", label: "Accepted", color: "var(--success-ink)" };
 const D_AUTHOR_COLUMNS = [outcomeCol("submitted"), D_ACCEPTED_SUM, outcomeCol("rejected"), outcomeCol("revise"), outcomeCol("waitlist"), outcomeCol("noDecision"), ...D_ACCEPTED];
 // "Accepted" has no column of its own, but the strip's Accepted number filters by it.
 const D_NUM_FILTERS = [...OUTCOME_COLUMNS, { key: "accepted", label: "Accepted" }];
 const D_STATUS: Array<{ key: Status; label: string }> = [{ key: "all", label: "All" }, { key: "active", label: "Active" }, { key: "archived", label: "Archived" }];
 const D_REVIEWER_COLUMNS = [
   { key: "assigned", label: "Papers Assigned", color: "var(--navy)" },
-  { key: "done", label: "Reviewed", color: "var(--success)" },
-  { key: "pending", label: "Pending", color: "var(--warning)" },
+  { key: "done", label: "Reviewed", color: "var(--success-ink)" },
+  { key: "pending", label: "Pending", color: "var(--warning-ink)" },
   { key: "declined", label: "Invitation Rejected", color: "var(--ink-soft)" },
 ];
 const D_CHAIR_DECISIONS = [
-  { key: "accepted", label: "Accepted", color: "var(--success)" },
+  { key: "accepted", label: "Accepted", color: "var(--success-ink)" },
   { key: "rejected", label: "Reject", color: "var(--ink-soft)" },
-  { key: "undecided", label: "No Decision", color: "var(--warning)" },
+  { key: "undecided", label: "No Decision", color: "var(--warning-ink)" },
   { key: "withdrawn", label: "Withdrawn", color: "var(--ink-muted)" },
 ];
 // The top boxes name each number as the agreed decision list does for that role; the table keeps its own headers.
@@ -229,10 +229,10 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
     glance = [
       { label: "Conferences", value: t.conferences, ...allConferences },
       { label: "Submitted", value: t.submitted, ...byNumber("submitted") },
-      { label: "Accepted", value: t.accepted, color: "var(--success)", ...byNumber("accepted") },
+      { label: "Accepted", value: t.accepted, color: "var(--success-ink)", ...byNumber("accepted") },
       ...D_ACCEPTED.map((c) => ({ label: c.label, value: t[c.key], color: c.color, sub: true, tone: c.action ? ("warning" as const) : undefined, ...byNumber(c.key) })),
       { label: "Not Accepted", value: t.rejected, color: "var(--ink-soft)", ...byNumber("rejected") },
-      { label: "Revision Required", value: t.revise, color: "var(--warning)", ...byNumber("revise") },
+      { label: "Revision Required", value: t.revise, color: "var(--warning-ink)", ...byNumber("revise") },
       { label: "Waitlisted", value: t.waitlist, color: "var(--ink-soft)", ...byNumber("waitlist") },
       { label: "No decision", value: t.noDecision, color: "var(--ink-soft)", ...byNumber("noDecision") },
     ];
@@ -242,16 +242,16 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
       view === "reviewer" ? [
         { label: "Conferences", value: totals.conferences },
         { label: "Papers assigned", value: totals.assigned },
-        { label: "Reviewed", value: totals.done, color: "var(--success)" },
-        { label: "Pending", value: totals.pending, color: "var(--warning)", tone: "warning" },
+        { label: "Reviewed", value: totals.done, color: "var(--success-ink)" },
+        { label: "Pending", value: totals.pending, color: "var(--warning-ink)", tone: "warning" },
         { label: "Invitation Rejected", value: totals.declined, color: "var(--ink-soft)" },
-        { label: "Review Overdue", value: totals.overdue, color: "var(--danger)" },
+        { label: "Review Overdue", value: totals.overdue, color: "var(--danger-ink)" },
       ] : view === "chair" ? [
         { label: "Conferences", value: totals.conferences },
         { label: "Submissions", value: totals.received },
-        { label: "Accepted", value: totals.accepted, color: "var(--success)" },
+        { label: "Accepted", value: totals.accepted, color: "var(--success-ink)" },
         { label: "Rejected", value: totals.rejected, color: "var(--ink-soft)" },
-        { label: "No decision", value: totals.undecided, color: "var(--warning)", tone: "warning" },
+        { label: "No decision", value: totals.undecided, color: "var(--warning-ink)", tone: "warning" },
         { label: "Withdrawn", value: totals.withdrawn, color: "var(--ink-muted)" },
         { label: "Marked registered", value: totals.registrations, color: "var(--primary)" },
       ] : [
@@ -283,8 +283,8 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
       key: "author", count: authorT.conferences,
       stats: [
         { label: "Submissions", value: authorT.submitted, onClick: openRole("author", byNumber("submitted")) },
-        { label: "Accepted – Registration Pending", value: authorT.pending, color: "var(--warning)", attention: true, onClick: openRole("author", byNumber("pending")) },
-        { label: "Registered", value: authorT.registered, color: "var(--success)", onClick: openRole("author", byNumber("registered")) },
+        { label: "Accepted – Registration Pending", value: authorT.pending, color: "var(--warning-ink)", attention: true, onClick: openRole("author", byNumber("pending")) },
+        { label: "Registered", value: authorT.registered, color: "var(--success-ink)", onClick: openRole("author", byNumber("registered")) },
         { label: "Not Accepted", value: authorT.rejected, color: "var(--ink-soft)", onClick: openRole("author", byNumber("rejected")) },
         { label: "No Decision", value: authorT.noDecision, color: "var(--ink-soft)", onClick: openRole("author", byNumber("noDecision")) },
       ],
@@ -293,9 +293,9 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
       key: "chair", count: chairT.conferences,
       stats: [
         { label: "Submissions", value: chairT.received, onClick: openRole("chair", byRole("ch-received", "some")) },
-        { label: "Accepted", value: chairT.accepted, color: "var(--success)", onClick: openRole("chair", byRole("ch-decisions", "accepted")) },
+        { label: "Accepted", value: chairT.accepted, color: "var(--success-ink)", onClick: openRole("chair", byRole("ch-decisions", "accepted")) },
         { label: "Reject", value: chairT.rejected, color: "var(--ink-soft)", onClick: openRole("chair", byRole("ch-decisions", "rejected")) },
-        { label: "No Decision", value: chairT.undecided, color: "var(--warning)", attention: true, onClick: openRole("chair", byRole("ch-decisions", "undecided")) },
+        { label: "No Decision", value: chairT.undecided, color: "var(--warning-ink)", attention: true, onClick: openRole("chair", byRole("ch-decisions", "undecided")) },
         { label: "Withdrawn", value: chairT.withdrawn, color: "var(--ink-muted)", onClick: openRole("chair", byRole("ch-decisions", "withdrawn")) },
         { label: "Marked registered", value: chairT.registrations, color: "var(--primary)", onClick: openRole("chair", byRole("ch-registrations", "some")) },
       ],
@@ -304,16 +304,16 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
       key: "reviewer", count: reviewerT.conferences,
       stats: [
         { label: "Papers assigned", value: reviewerT.assigned, onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer["Papers assigned"]) },
-        { label: "Reviewed", value: reviewerT.done, color: "var(--success)", onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer.Reviewed) },
-        { label: "Pending", value: reviewerT.pending, color: "var(--warning)", attention: true, onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer.Pending) },
+        { label: "Reviewed", value: reviewerT.done, color: "var(--success-ink)", onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer.Reviewed) },
+        { label: "Pending", value: reviewerT.pending, color: "var(--warning-ink)", attention: true, onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer.Pending) },
         { label: "Invitation Rejected", value: reviewerT.declined, color: "var(--ink-soft)", onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer["Invitation Rejected"]) },
-        { label: "Review Overdue", value: reviewerT.overdue, color: "var(--danger)", attention: true, onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer["Review Overdue"]) },
+        { label: "Review Overdue", value: reviewerT.overdue, color: "var(--danger-ink)", attention: true, onClick: openRole("reviewer", GLANCE_ACTIONS.reviewer["Review Overdue"]) },
       ],
     },
     {
       key: "committee", count: committeeT.conferences,
       stats: [
-        { label: "Upcoming", value: committeeT.upcoming, color: "var(--success)", onClick: () => { pickRole("committee"); setStatus("active"); } },
+        { label: "Upcoming", value: committeeT.upcoming, color: "var(--success-ink)", onClick: () => { pickRole("committee"); setStatus("active"); } },
         { label: "Finished", value: committeeT.finished, onClick: () => { pickRole("committee"); setStatus("archived"); } },
         { label: "Certificates ready", value: committeeT.certificates, color: "var(--primary)", onClick: () => { pickRole("committee"); setF({ cert: "issued" }); } },
         { label: "Committee roles held", value: new Set(rolesRows("committee").map((r) => r.committee?.label)).size },
@@ -401,10 +401,10 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
     return (
       <td key="pending" className="px-4 py-3.5 align-top">
         {!pending ? (
-          <span className="text-[15px] font-bold text-line-strong" aria-label="0">–</span>
+          <span className="text-[15px] font-bold text-ink-faint" aria-label="0">–</span>
         ) : (
           <div className="min-w-[110px]">
-            <div className="mb-1.5 whitespace-nowrap text-[13px] font-bold text-warning">{pending} Pending</div>
+            <div className="mb-1.5 whitespace-nowrap text-[13px] font-bold text-warning-ink">{pending} Pending</div>
             <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div style={{ width: `${(done / assigned) * 100}%` }} className="h-full rounded-full bg-warning" /></div>
           </div>
         )}
@@ -426,10 +426,10 @@ export function OptionD({ rows, onEnter, onRegister, onOpenCertificates, banner,
         className="px-2 py-3.5 text-center align-top"
       >
         {v === 0 ? (
-          <span className="text-[15px] font-bold text-line-strong" aria-label="0">–</span>
+          <span className="text-[15px] font-bold text-ink-faint" aria-label="0">–</span>
         ) : register ? (
           <button type="button" onClick={(e) => { e.stopPropagation(); onRegister(row.conf); }} className="inline-flex flex-col items-center">
-            <span className="text-[17px] font-extrabold leading-tight text-warning">{v}</span>
+            <span className="text-[17px] font-extrabold leading-tight text-warning-ink">{v}</span>
             <span className="whitespace-nowrap text-[11px] font-bold text-[#92400E] underline-offset-2 hover:underline">Register now</span>
           </button>
         ) : (

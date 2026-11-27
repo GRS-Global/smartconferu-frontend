@@ -32,7 +32,7 @@ function Success({ title, text, button, onClick }: { title: string; text: string
   return (
     <div className="flex items-center justify-center p-8" style={{ minHeight: "60vh" }}>
       <div className="max-w-sm text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success" /></div>
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft"><Check size={28} strokeWidth={2.5} aria-hidden="true" className="text-success-ink" /></div>
         <h2 className="mb-2 text-lg font-bold text-navy">{title}</h2>
         <p className="mb-6 text-sm text-ink-muted">{text}</p>
         <Button onClick={onClick}>{button}</Button>
@@ -95,7 +95,7 @@ export function ManagersPanel({ slug, acronym, managers, onAdd, onDone, onChange
                   <td className="px-4 py-2.5"><input aria-label={`Last name of ${m.first} ${m.last}`} value={m.last} onChange={(e) => update(m.id, { last: e.target.value })} className={cell} /></td>
                   <td className="overflow-hidden px-4 py-2.5"><span className="block truncate text-sm text-ink-muted">{m.email}</span></td>
                   {PERMISSIONS.map((p) => <td key={p.key} className="px-3 py-2.5 text-center"><Box checked={m.permissions[p.key]} onChange={() => toggle(m.id, p.key)} label={`${p.label} for ${m.first} ${m.last}`} /></td>)}
-                  <td className="px-3 py-2.5 text-center"><button type="button" onClick={() => remove(m.id)} aria-label={`Remove ${m.first} ${m.last}`} className="cursor-pointer text-ink-faint transition-colors hover:text-danger"><Trash2 size={14} aria-hidden="true" /></button></td>
+                  <td className="px-3 py-2.5 text-center"><button type="button" onClick={() => remove(m.id)} aria-label={`Remove ${m.first} ${m.last}`} className="cursor-pointer text-ink-faint transition-colors hover:text-danger-ink"><Trash2 size={14} aria-hidden="true" /></button></td>
                 </tr>
               ))}
             </tbody>
@@ -123,7 +123,7 @@ export function ManagersPanel({ slug, acronym, managers, onAdd, onDone, onChange
         </div>
       </div>
       <ScheduledEmailsPanel slug={slug} title="Team emails sent automatically" desc="Follow-ups the system sends after you invite someone to the team." keys={["teamInviteReminder", "teamMemberJoined"]} />
-      {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
         <Button onClick={() => void save()} disabled={busy || !dirty} title={dirty ? undefined : "No changes to save"}>{busy ? "Saving…" : "Save Changes"}</Button>
@@ -235,7 +235,7 @@ export function AddManagerPanel({ slug, acronym, confName, managers, onDone, onA
           )}
         </div>
       )}
-      {error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="text-sm font-semibold text-danger-ink">{error}</p>}
       <div className="flex items-center justify-between pb-4 pt-1">
         <Button variant="outline" onClick={onDone} disabled={busy}>Cancel</Button>
         {mode === "manual"

@@ -109,6 +109,8 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
 
 export const get = <T>(path: string) => api<T>(path);
 export const post = <T>(path: string, json?: unknown) => api<T>(path, { method: "POST", json: json ?? {} });
+/** A decision: `keepalive` lets the browser finish it even when the tab is closed or reloaded the moment after (the queues send a held decision as the page goes away). */
+export const postKept = <T>(path: string, json: unknown) => api<T>(path, { method: "POST", json, keepalive: true });
 export const patch = <T>(path: string, json: unknown) => api<T>(path, { method: "PATCH", json });
 export const put = <T>(path: string, json: unknown) => api<T>(path, { method: "PUT", json });
 export const del = <T>(path: string) => api<T>(path, { method: "DELETE" });

@@ -1,5 +1,7 @@
 import { DATA_SOURCE } from "@/lib/config";
 import type { AppNotification } from "@/types/notification";
+// The own backend is the data source: loaded with the page, not as a separate request when first used (it sits on every page's first data read).
+import { apiNotificationService } from "./api/notifications";
 
 /** An unread notification as the bell counts it. */
 export interface UnreadRow { id: string; kind: string; slug: string | null }
@@ -32,6 +34,6 @@ export interface NotificationService {
  *  there is no fallback from one source to the other. */
 export async function getNotificationService(): Promise<NotificationService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/notifications")).mockNotificationService;
-  if (DATA_SOURCE === "api") return (await import("./api/notifications")).apiNotificationService;
+  if (DATA_SOURCE === "api") return apiNotificationService;
   return (await import("./supabase/notifications")).supabaseNotificationService;
 }

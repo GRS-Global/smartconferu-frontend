@@ -22,10 +22,10 @@ const ACTIONS = ["Created", "Updated", "Deleted", "Enabled", "Disabled", "Assign
 const ROLE = { chair: "Chair", author: "Author", reviewer: "Reviewer", system: "System" } as const;
 // The app's three semantic tokens (and primary / neutral), so the colour-blind remap of success / warning / danger holds for these badges too.
 const TONE: Record<string, { color: string; bg: string }> = {
-  Created: { color: "var(--primary)", bg: "var(--primary-soft)" }, Updated: { color: "var(--primary)", bg: "var(--primary-soft)" }, Deleted: { color: "var(--danger)", bg: "var(--danger-soft)" },
-  Enabled: { color: "var(--success)", bg: "var(--success-soft)" }, Disabled: { color: "var(--ink-muted)", bg: "var(--muted)" }, Assigned: { color: "var(--primary)", bg: "var(--primary-soft)" },
-  Unassigned: { color: "var(--warning)", bg: "var(--warning-soft)" }, Published: { color: "var(--success)", bg: "var(--success-soft)" }, Submitted: { color: "var(--primary)", bg: "var(--primary-soft)" },
-  Sent: { color: "var(--primary)", bg: "var(--primary-soft)" }, Approved: { color: "var(--success)", bg: "var(--success-soft)" }, Rejected: { color: "var(--danger)", bg: "var(--danger-soft)" }, Changed: { color: "var(--primary)", bg: "var(--primary-soft)" },
+  Created: { color: "var(--primary)", bg: "var(--primary-soft)" }, Updated: { color: "var(--primary)", bg: "var(--primary-soft)" }, Deleted: { color: "var(--danger-ink)", bg: "var(--danger-soft)" },
+  Enabled: { color: "var(--success-ink)", bg: "var(--success-soft)" }, Disabled: { color: "var(--ink-muted)", bg: "var(--muted)" }, Assigned: { color: "var(--primary)", bg: "var(--primary-soft)" },
+  Unassigned: { color: "var(--warning-ink)", bg: "var(--warning-soft)" }, Published: { color: "var(--success-ink)", bg: "var(--success-soft)" }, Submitted: { color: "var(--primary)", bg: "var(--primary-soft)" },
+  Sent: { color: "var(--primary)", bg: "var(--primary-soft)" }, Approved: { color: "var(--success-ink)", bg: "var(--success-soft)" }, Rejected: { color: "var(--danger-ink)", bg: "var(--danger-soft)" }, Changed: { color: "var(--primary)", bg: "var(--primary-soft)" },
 };
 const parts = (iso: string) => { const d = new Date(iso); return { date: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) }; };
 const whenUtc = (iso: string) => { const p = parts(iso); return `${p.date} · ${p.time} UTC`; };
@@ -37,7 +37,7 @@ function ActionBadge({ action }: { action: string }) {
 
 function Select({ value, onChange, options, all, label }: { value: string; onChange: (v: string) => void; options: string[]; all: string; label: string }) {
   return (
-    <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} style={{ border: "1px solid var(--border)" }} className="cursor-pointer rounded-lg bg-canvas px-3 py-2 text-xs font-semibold text-ink outline-none">
+    <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} style={{ border: "1px solid var(--border)" }} className="min-w-0 max-w-full cursor-pointer truncate rounded-lg bg-canvas px-3 py-2 text-xs font-semibold text-ink outline-none">
       <option value="all">{all}</option>
       {options.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -148,7 +148,7 @@ function LogsView({ logs, chair, crumbs }: { logs: ChairActivityLog[]; chair: bo
                           <td className="px-4 py-3.5"><ActionBadge action={l.action} /></td>
                           <td className="px-4 py-3.5 text-ink-muted">{l.module}</td>
                           <td className="max-w-[260px] px-4 py-3.5 text-ink">{l.description}</td>
-                          <td className="px-4 py-3.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${l.status === "failed" ? "bg-danger-soft text-danger" : "bg-success-soft text-success"}`}>{l.status}</span></td>
+                          <td className="px-4 py-3.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${l.status === "failed" ? "bg-danger-soft text-danger-ink" : "bg-success-soft text-success-ink"}`}>{l.status}</span></td>
                           <td className="px-4 py-3.5 text-center"><button type="button" onClick={() => setOpen(l)} className="cursor-pointer whitespace-nowrap text-xs font-semibold text-primary hover:underline">View Details</button></td>
                         </tr>
                       );
@@ -209,7 +209,7 @@ export function MyActivityLogsPage({ slug, role }: { slug: string; role: "author
   return (
     <ConferenceShell role={role} conference={conference} roles={roles} others={others} active="activity-log">
       {problem ? (
-        <><PageHeader title="Activity Logs" breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: conference.acronym }]} /><p role="alert" className="m-8 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{problem}</p></>
+        <><PageHeader title="Activity Logs" breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: conference.acronym }]} /><p role="alert" className="m-8 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{problem}</p></>
       ) : logs === null ? (
         <><PageHeader title="Activity Logs" breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: conference.acronym }]} /><div role="status" aria-label="Loading the activity log" className="p-8"><div className="h-48 animate-pulse rounded-2xl border border-line bg-white" /></div></>
       ) : (

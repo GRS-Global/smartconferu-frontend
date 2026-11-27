@@ -219,7 +219,7 @@ export function ConferencesPage() {
                       <td className="whitespace-nowrap">
                         {live ? fmtDate(c.licenseExpiry) : "—"}
                         {live && left >= 0 && left <= 7 && (
-                          <p className="text-[12px] font-semibold" style={{ color: left <= 3 ? "var(--danger)" : "var(--warning)" }}>
+                          <p className="text-[12px] font-semibold" style={{ color: left <= 3 ? "var(--danger-ink)" : "var(--warning-ink)" }}>
                             {left} days left
                           </p>
                         )}
@@ -250,7 +250,7 @@ export function ConferencesPage() {
         <div className="fixed inset-0 z-[70] flex items-center justify-center px-4" onKeyDown={(e) => e.key === "Escape" && setBringBack(null)}>
           <div className="absolute inset-0" style={{ background: "rgba(11,16,32,0.45)" }} onClick={() => setBringBack(null)} />
           <div className="relative w-full max-w-[440px] bg-white rounded-2xl p-6 sa-pop" style={{ boxShadow: "var(--shadow-pop)" }} role="dialog" aria-modal="true" aria-labelledby="sa-bringback-title">
-            <span className="inline-flex w-11 h-11 rounded-xl items-center justify-center mb-4" style={{ background: "var(--success-soft)", color: "var(--success)" }}>
+            <span className="inline-flex w-11 h-11 rounded-xl items-center justify-center mb-4" style={{ background: "var(--success-soft)", color: "var(--success-ink)" }}>
               <RotateCcw size={22} />
             </span>
             <h2 id="sa-bringback-title" className="text-[19px] font-bold" style={{ color: "var(--text)" }}>
@@ -260,7 +260,7 @@ export function ConferencesPage() {
               It returns as <b style={{ color: "var(--text)" }}>archived</b>, with all its papers, reviews and authors. {bringBack.requester?.name ?? "Its chair"} is told. They can restore it to active from Conference Settings.
             </p>
             {actionError && (
-              <p role="alert" className="text-[13px] -mt-2 mb-4" style={{ color: "var(--danger)" }}>
+              <p role="alert" className="text-[13px] -mt-2 mb-4" style={{ color: "var(--danger-ink)" }}>
                 {actionError}
               </p>
             )}

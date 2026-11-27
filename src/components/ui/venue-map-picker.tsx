@@ -139,8 +139,8 @@ export function VenueMapPicker({ onLocationChange, initialAddress = "", venue = 
   if (status === "no-key" || status === "error") {
     return (
       <div style={{ border: "1.5px dashed var(--warning-border)" }} className="flex items-start gap-2.5 rounded-xl bg-warning-soft px-4 py-3.5">
-        <AlertTriangle size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-warning" />
-        <p className="text-xs leading-relaxed text-warning">
+        <AlertTriangle size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-warning-ink" />
+        <p className="text-xs leading-relaxed text-warning-ink">
           {status === "no-key"
             ? <>Map address picker isn&apos;t configured yet — add <code className="[font-family:inherit]">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to <code className="[font-family:inherit]">.env.local</code> to enable it.</>
             : <>Couldn&apos;t load Google Maps (check the API key and that Maps JavaScript API / Places API / Geocoding API are enabled). You can still fill in the fields below manually.</>}
@@ -168,7 +168,7 @@ export function VenueMapPicker({ onLocationChange, initialAddress = "", venue = 
         )}
       </div>
       {geocodingOff && (
-        <div className="flex items-start gap-2 rounded-lg bg-warning-soft px-3 py-2 text-xs leading-snug text-warning"><AlertTriangle size={13} aria-hidden="true" className="mt-px shrink-0" /><span>Clicking or dragging the pin can&apos;t fill in the address yet — enable the <b>Geocoding API</b> for this Google Maps key. Searching an address works.</span></div>
+        <div className="flex items-start gap-2 rounded-lg bg-warning-soft px-3 py-2 text-xs leading-snug text-warning-ink"><AlertTriangle size={13} aria-hidden="true" className="mt-px shrink-0" /><span>Clicking or dragging the pin can&apos;t fill in the address yet — enable the <b>Geocoding API</b> for this Google Maps key. Searching an address works.</span></div>
       )}
       {suggestion && !liveAddress && suggestion.venue === venueName && (
         <div style={{ border: "1px solid var(--primary-soft-border)" }} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg bg-primary-soft px-3 py-2.5">

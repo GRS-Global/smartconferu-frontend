@@ -15,6 +15,8 @@ export interface ComboOption<T> {
 
 interface ComboboxProps<T> {
   id: string;
+  /** The box's name for assistive tech when no <label> points at it. */
+  ariaLabel?: string;
   /** What is typed in the box. */
   text: string;
   onTextChange: (text: string) => void;
@@ -34,7 +36,7 @@ interface ComboboxProps<T> {
 }
 
 /** An accessible combobox (ARIA 1.2 list autocomplete): type to filter, arrows to move, Enter to pick, Escape to close. */
-export function Combobox<T>({ id, text, onTextChange, options, onSelect, placeholder, invalid, describedBy, disabled, emptyHint, className, inputClassName }: ComboboxProps<T>) {
+export function Combobox<T>({ id, ariaLabel, text, onTextChange, options, onSelect, placeholder, invalid, describedBy, disabled, emptyHint, className, inputClassName }: ComboboxProps<T>) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const listId = useId();
@@ -58,6 +60,7 @@ export function Combobox<T>({ id, text, onTextChange, options, onSelect, placeho
     <div className={cn("relative", className)}>
       <input
         id={id}
+        aria-label={ariaLabel}
         role="combobox"
         aria-expanded={shown}
         aria-controls={shown ? listId : undefined}

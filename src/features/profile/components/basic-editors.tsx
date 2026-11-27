@@ -64,7 +64,7 @@ export function IntroEditor({ profile, save, onDone, onCancel, onManageAffiliati
         <Field label="City" htmlFor="profile-city"><input id="profile-city" autoComplete="address-level2" value={d.city} onChange={(e) => set("city")(e.target.value)} className={INPUT_CLASS} /></Field>
         <Field label="State / Region" htmlFor="profile-state"><input id="profile-state" autoComplete="address-level1" value={d.state} onChange={(e) => set("state")(e.target.value)} className={INPUT_CLASS} /></Field>
       </div>
-      {missing && <p role="alert" className="text-[13px] font-medium text-danger">Name, designation, gender and country can&apos;t be empty.</p>}
+      {missing && <p role="alert" className="text-[13px] font-medium text-danger-ink">Name, designation, gender and country can&apos;t be empty.</p>}
     </SectionCard>
   );
 }
@@ -252,7 +252,7 @@ export function PhoneEditor({ profile, save, onDone, onCancel }: EditorProps) {
           <div className="mt-1.5">
             <PhoneField bare id="phone-number" phone={phone} onPhoneChange={setPhone} onBlur={() => setTouched(true)} invalid={touched && Boolean(problem)} describedBy={touched && problem ? "phone-number-error" : undefined} inputClassName="h-[42px] w-full rounded-lg border border-line bg-white px-3 text-sm font-medium text-ink outline-none transition-shadow placeholder:text-slate-400 focus:border-primary focus:ring-[3px] focus:ring-primary-soft" />
           </div>
-          {touched && problem && <p id="phone-number-error" role="alert" className="mt-1.5 text-xs font-medium text-danger">{problem}</p>}
+          {touched && problem && <p id="phone-number-error" role="alert" className="mt-1.5 text-xs font-medium text-danger-ink">{problem}</p>}
           <p className="mt-1.5 text-xs text-ink-faint">Verifying a number by code isn&apos;t available yet, so a new number is saved as not verified.</p>
         </div>
         <div>

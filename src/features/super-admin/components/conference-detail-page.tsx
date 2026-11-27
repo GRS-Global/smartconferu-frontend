@@ -270,7 +270,7 @@ export function ConferenceDetailPage({ id }: { id: string }) {
           </div>
         )}
         {actionError && (
-          <p role="alert" className="text-[13px] mt-3" style={{ color: "var(--danger)" }}>
+          <p role="alert" className="text-[13px] mt-3" style={{ color: "var(--danger-ink)" }}>
             {actionError}
           </p>
         )}

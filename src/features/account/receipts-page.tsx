@@ -116,7 +116,7 @@ export function ReceiptsPage() {
                   <td className="px-5 py-3.5" style={{ color: "var(--ink)" }}><span className="font-semibold">{r.description}</span></td>
                   <td className="px-5 py-3.5" style={{ color: "var(--ink)" }}>{formatCurrency(r.amount)}</td>
                   <td className="px-5 py-3.5">
-                    <span style={{ color: "var(--success)", background: "var(--success-soft)" }} className="text-xs font-semibold px-2.5 py-1 rounded-full">Paid</span>
+                    <span style={{ color: "var(--success-ink)", background: "var(--success-soft)" }} className="text-xs font-semibold px-2.5 py-1 rounded-full">Paid</span>
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -156,7 +156,7 @@ export function ReceiptsPage() {
         <Modal title="Delete Receipt" onClose={() => setConfirmDeleteId(null)} maxWidth="max-w-sm">
           <div className="flex items-start gap-3 mb-5">
             <div style={{ background: "var(--danger-soft)" }} className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
-              <AlertTriangle size={18} style={{ color: "var(--danger)" }} />
+              <AlertTriangle size={18} style={{ color: "var(--danger-ink)" }} />
             </div>
             <p style={{ color: "var(--ink-soft)" }} className="text-sm leading-relaxed">
               Once deleted, you won't be able to access this receipt again. Are you sure you want to continue?

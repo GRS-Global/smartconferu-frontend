@@ -136,18 +136,18 @@ export function DownloadDialog({ cert, conference, items, onClose }: { cert: Cer
         )}
 
         {phase === "done" && built && (
-          <p style={{ color: "var(--success)" }} className="text-sm font-semibold flex items-center gap-2"><Check size={16} /> Saved {built.filename} · {built.count} {built.count === 1 ? "certificate" : "certificates"} · {size(built.blob.size)}
+          <p style={{ color: "var(--success-ink)" }} className="text-sm font-semibold flex items-center gap-2"><Check size={16} /> Saved {built.filename} · {built.count} {built.count === 1 ? "certificate" : "certificates"} · {size(built.blob.size)}
             <button onClick={() => saveBlob(built.blob, built.filename)} style={{ color: "var(--primary)" }} className="text-xs font-bold hover:underline cursor-pointer ml-2">Save again</button></p>
         )}
-        {error && <p role="alert" style={{ color: "var(--danger)" }} className="text-sm font-semibold">{error}</p>}
+        {error && <p role="alert" style={{ color: "var(--danger-ink)" }} className="text-sm font-semibold">{error}</p>}
 
         {failures.length > 0 && !running && (
           <div style={{ border: "1px solid var(--warning-border)", background: "var(--warning-soft)" }} className="rounded-xl p-3.5">
-            <p style={{ color: "var(--warning)" }} className="text-sm font-bold flex items-center gap-2"><AlertTriangle size={15} /> {failures.length} {failures.length === 1 ? "certificate" : "certificates"} could not be made{phase === "done" ? " and are not in the file" : ""}</p>
+            <p style={{ color: "var(--warning-ink)" }} className="text-sm font-bold flex items-center gap-2"><AlertTriangle size={15} /> {failures.length} {failures.length === 1 ? "certificate" : "certificates"} could not be made{phase === "done" ? " and are not in the file" : ""}</p>
             <ul className="mt-2 space-y-1 max-h-32 overflow-auto">
               {failures.map((f) => <li key={f.key} style={{ color: "var(--ink-soft)" }} className="text-xs"><strong>{f.name}</strong> ({f.serial}): {f.reason}</li>)}
             </ul>
-            <button onClick={() => void start()} style={{ border: "1px solid var(--warning-border)", color: "var(--warning)" }} className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white cursor-pointer"><RotateCcw size={12} /> Try those again</button>
+            <button onClick={() => void start()} style={{ border: "1px solid var(--warning-border)", color: "var(--warning-ink)" }} className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white cursor-pointer"><RotateCcw size={12} /> Try those again</button>
           </div>
         )}
       </div>

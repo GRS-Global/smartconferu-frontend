@@ -8,8 +8,8 @@ import { ServiceError } from "../errors";
    same places the Supabase version used. The backend replaces `content` / `theme` as a whole, so a save reads what is stored and writes it back merged.
    Every `:conferenceId` in a path may be the conference's slug.
 
-   Not in the backend yet (see GAP-REPORT.md): finding a published CFP by its page address (`loadPublic`), checking whether a page address is taken
-   (`takenPages`) and the managers' permissions. */
+   Not in the backend yet (see GAP-REPORT.md): checking whether a page address is taken before sending (`takenPages`; the backend refuses a clash when the
+   address is saved) and the managers' permissions. */
 
 const isoDay = (ts: string | null) => (ts ? ts.slice(0, 10) : "");
 const PAGE = /^[A-Za-z0-9_-]+$/;
@@ -21,6 +21,10 @@ interface ConferenceResponse {
   submissionDeadline: string | null; cfpStatus: string; myRoles: string[];
 }
 interface CfpResponse { conferenceId: string; status: string; content: Record<string, unknown>; theme: Record<string, unknown>; decidedAt: string | null; submittedAt: string | null; adminNote: string | null; updatedAt: string }
+interface PublicCfpDto {
+  slug: string; acronym: string; title: string; status: "published" | "closed"; venue: string | null; city: string | null; country: string | null; webPage: string | null;
+  contactEmail: string | null; about: string | null; topics: string[]; startDate: string | null; endDate: string | null; submissionDeadline: string | null; doc: string; themeId: string;
+}
 interface MemberResponse { id: string; role: string; status: string; name: string; email: string | null }
 interface SubmissionLite { status: string }
 
@@ -74,10 +78,20 @@ export const apiCfpService: CfpService = {
     } satisfies CfpDetail;
   },
 
-  // The backend can't find a CFP by its page address yet (only by the conference's slug): reads as "no CFP there".
+  // A published (or closed) CFP by the page address its chair chose: readable without signing in.
   async loadPublic(page): Promise<PublicCfp | null> {
-    void page;
-    return null;
+    if (!PAGE.test(page)) return null;
+    try {
+      const c = await api<PublicCfpDto>(`/public/cfp-pages/${encodeURIComponent(page)}`, { auth: false });
+      return {
+        slug: c.slug, acronym: c.acronym, name: c.title, status: c.status, venue: c.venue ?? "", city: c.city ?? "", country: c.country ?? "", webPage: c.webPage ?? "",
+        contactEmail: c.contactEmail ?? "", about: c.about ?? "", topics: c.topics, startDate: c.startDate ?? "", endDate: c.endDate ?? "",
+        submissionDeadline: isoDay(c.submissionDeadline), doc: c.doc, themeId: c.themeId,
+      };
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null;
+      throw e;
+    }
   },
 
   // The backend does not check page addresses yet, so none is reported as taken; publishing is where a clash would have to be refused.

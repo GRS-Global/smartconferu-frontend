@@ -29,10 +29,14 @@ export function useChairConference(slug: string, { board: withBoard = false, poo
     let cancelled = false;
     Promise.all([getConferenceService(), getChairService()])
       .then(async ([conferences, chair]): Promise<ChairConferenceState> => {
+        // What the page shows is read at the same time as the account's list of conferences (one round trip less); the list only decides whether this
+        // account may see it. A read for a conference the account does not chair simply fails and is not used.
+        const rest = Promise.all([chair.loadConference(slug), withBoard ? chair.loadReviewBoard(slug) : Promise.resolve(null), withPool ? chair.loadReviewerPool(slug) : Promise.resolve(null), withDetails ? getAuthorSubmissionService().then((a) => a.conferenceDetails(slug)) : Promise.resolve(null), withFiles ? chair.loadScreeningFiles(slug) : Promise.resolve(null), withSetup ? chair.loadReviewSetup(slug) : Promise.resolve(null), withInfo ? chair.loadInfo(slug) : Promise.resolve(null), withSettings ? chair.loadSettings(slug) : Promise.resolve(null), withLogs ? chair.loadEmailLogs(slug) : Promise.resolve(null)]);
+        rest.catch(() => undefined);
         const { source } = await conferences.loadDashboard();
         const mine = source.conferences.find((c) => c.conference.id === slug && c.roles.includes("chair"));
         if (!mine) return { status: "missing" };
-        const [data, board, pool, details, files, setup, info, settings, logs] = await Promise.all([chair.loadConference(slug), withBoard ? chair.loadReviewBoard(slug) : Promise.resolve(null), withPool ? chair.loadReviewerPool(slug) : Promise.resolve(null), withDetails ? getAuthorSubmissionService().then((a) => a.conferenceDetails(slug)) : Promise.resolve(null), withFiles ? chair.loadScreeningFiles(slug) : Promise.resolve(null), withSetup ? chair.loadReviewSetup(slug) : Promise.resolve(null), withInfo ? chair.loadInfo(slug) : Promise.resolve(null), withSettings ? chair.loadSettings(slug) : Promise.resolve(null), withLogs ? chair.loadEmailLogs(slug) : Promise.resolve(null)]);
+        const [data, board, pool, details, files, setup, info, settings, logs] = await rest;
         return { status: "ready", conference: mine.conference, roles: mine.roles, others: source.conferences.filter((c) => c.conference.id !== slug && c.roles.includes("chair")).map((c) => c.conference), data, board, pool, details, files, setup, info, settings, logs };
       })
       .then((next) => { if (!cancelled) setState(next); })

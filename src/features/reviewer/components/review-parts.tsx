@@ -204,10 +204,10 @@ export function ReviewsTable({ rows, onOpen, onAccept, onDecline }: { rows: Revi
                 <td className="whitespace-nowrap px-3 py-3 font-semibold text-ink-muted">{p.id}</td>
                 <td className="px-3 py-3"><div title={p.title} className="line-clamp-2 max-w-[420px] font-semibold leading-snug text-navy">{p.title}</div><BlindNote compact /></td>
                 <td className="whitespace-nowrap px-3 py-3 text-ink-soft">{p.assignedOn || "—"}</td>
-                <td style={{ color: r.late ? "var(--danger)" : "var(--ink-soft)" }} className={`whitespace-nowrap px-3 py-3 text-xs ${r.late ? "font-bold" : "font-semibold"}`}>{p.due && p.response !== "pending" ? fmtFull(p.due) : "—"}</td>
+                <td style={{ color: r.late ? "var(--danger-ink)" : "var(--ink-soft)" }} className={`whitespace-nowrap px-3 py-3 text-xs ${r.late ? "font-bold" : "font-semibold"}`}>{p.due && p.response !== "pending" ? fmtFull(p.due) : "—"}</td>
                 <td className="whitespace-nowrap px-3 py-3"><StatusPill status={r.status} /></td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  {typeof p.review?.score === "number" ? <span className="text-[13px] font-extrabold text-navy">{p.review.score}<span className="text-[10.5px] font-semibold text-ink-faint">/5</span></span> : <span className="text-line-strong">—</span>}
+                  {typeof p.review?.score === "number" ? <span className="text-[13px] font-extrabold text-navy">{p.review.score}<span className="text-[10.5px] font-semibold text-ink-faint">/5</span></span> : <span className="text-ink-faint">—</span>}
                 </td>
                 <td className="px-3 py-3 text-center"><PaperCertificate row={r} /></td>
                 <td style={STICKY} className="whitespace-nowrap py-3 pl-3 pr-4">
@@ -241,8 +241,8 @@ export function ReviewerFilterStrip({ rows, filter, onChange, assigned, declined
   const overdue = rows.filter((r) => r.status.key === "overdue").length;
   const items: Array<{ key: FilterKey | null; label: string; n: number; color: string; warn?: boolean; note?: string; extra?: boolean; fixed?: boolean }> = [
     { key: "all", label: "Papers Assigned", n: assigned, color: "var(--navy)" },
-    { key: "sent", label: "Reviewed", n: rows.filter(test("sent")).length, color: "var(--success)" },
-    { key: "todo", label: "Pending", n: rows.filter(test("todo")).length, color: overdue ? "var(--danger)" : "var(--warning)", warn: true, note: overdue ? " · overdue" : "" },
+    { key: "sent", label: "Reviewed", n: rows.filter(test("sent")).length, color: "var(--success-ink)" },
+    { key: "todo", label: "Pending", n: rows.filter(test("todo")).length, color: overdue ? "var(--danger-ink)" : "var(--warning-ink)", warn: true, note: overdue ? " · overdue" : "" },
     { key: "respond", label: "Needs response", n: rows.filter(test("respond")).length, color: "#6D28D9", extra: true },
     { key: null, label: "Invitation Rejected", n: declined, color: "var(--ink-soft)", fixed: true },
   ];
@@ -253,7 +253,7 @@ export function ReviewerFilterStrip({ rows, filter, onChange, assigned, declined
         const off = !it.fixed && it.n === 0 && it.key !== "all" && !on;
         const body = (
           <>
-            <b style={{ color: it.n ? it.color : "var(--border-strong)" }} className="text-xl leading-tight tabular-nums">{it.n}</b>
+            <b style={{ color: it.n ? it.color : "var(--ink-faint)" }} className="text-xl leading-tight tabular-nums">{it.n}</b>
             <span className={`text-xs font-semibold leading-tight ${on ? "text-primary" : "text-ink-muted"}`}>{it.label}{it.note || ""}</span>
           </>
         );

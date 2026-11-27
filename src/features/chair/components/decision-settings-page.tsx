@@ -16,6 +16,7 @@ import { useChairConference } from "../use-chair-conference";
 import { DECISION_EMAILS, EmailsPanel } from "./policy-cards";
 import { SectionsRail } from "./sections-rail";
 import { HelpLabel } from "./setting-label";
+import { textColor } from "@/lib/text-color";
 
 /* Conference Settings › Decision (the prototype's ConfSettingsDecisionPage): the outcomes a chair can give a paper — a name, a colour, a
    description and the order they are offered in (the Decision menu on Peer Review and the paper page). Each one has an outcome that
@@ -59,7 +60,7 @@ function outcomeFromLabel(label: string): Outcome {
 /** What the author is told for each outcome (the standard wording; the database keeps no per-conference wording). */
 const STAGES = ["upload_pending", "no_decision", "plagiarism_clear"];
 const AUTHOR_SEES: Record<string, string> = { upload_pending: "Paper Upload Pending", no_decision: "Under Review", plagiarism_clear: "Under Review", revise: "Revision Required", waitlist: "Waitlisted", accept: "Accepted – Registration Pending", registered: "Registered", reject: "Not Accepted" };
-const pill = (color: string) => ({ color, background: `${color}1A`, border: `1px solid ${color}33` });
+const pill = (color: string) => ({ color: textColor(color), background: `${color}1A`, border: `1px solid ${color}33` });
 const COLS = "grid grid-cols-[28px_44px_128px_minmax(120px,180px)_minmax(120px,180px)_minmax(0,1fr)_72px] items-center gap-3";
 
 interface Draft { id?: string; serial: number; label: string; color: string; hex: string; outcome: Outcome | ""; description: string; authorLabel: string }
@@ -136,7 +137,7 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
             <Button size="sm" data-tour="dc-add" className="!px-4 !text-sm !font-semibold" onClick={openAdd} disabled={busy}><Plus size={15} aria-hidden="true" /> Add decision</Button>
           </div>
           <p className="-mt-1 mb-4 text-xs text-ink-faint">The options a chair can choose from when recording a decision on a submission. Drag <GripVertical size={11} aria-hidden="true" className="-mt-0.5 inline" /> to reorder — S.No. sets the order they&apos;re offered in.</p>
-          {error && !editor && !del && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{error}</p>}
+          {error && !editor && !del && <p role="alert" className="mb-3 text-sm font-semibold text-danger-ink">{error}</p>}
           {types.length === 0 ? (
             <div className="rounded-xl border-[1.5px] border-dashed border-line py-10 text-center">
               <p className="text-sm font-semibold text-ink-muted">No decision types yet</p>
@@ -154,8 +155,8 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
                     <span className="flex min-w-0 items-center gap-2"><span style={{ background: t.color, boxShadow: "inset 0 0 0 1px rgba(15,23,42,0.12)" }} className="h-5 w-5 shrink-0 rounded-md" aria-hidden="true" /><code className="text-xs text-ink-soft [font-family:inherit]">{t.color.toUpperCase()}</code></span>
                     <span className="min-w-0"><span style={pill(t.color)} className="inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold"><span style={{ background: t.color }} className="h-1.5 w-1.5 shrink-0 rounded-full" aria-hidden="true" /><span className="truncate">{t.label}</span></span><span className="mt-1 block pl-1 text-[10px] font-semibold text-ink-faint">→ {OUTCOMES.find((o) => o.key === t.outcome)?.label ?? "No outcome set"}</span></span>
                     <span className="min-w-0 text-[12.5px] font-bold leading-snug text-navy" title={STAGES.includes(t.outcome) ? "Stage — the author never sees the chair's name for it" : "Exactly what the author sees on their paper"}>{t.authorLabel?.trim() || AUTHOR_SEES[t.outcome] || t.label}</span>
-                    <span className={`line-clamp-2 text-xs leading-relaxed ${t.description ? "text-ink-soft" : "text-line-strong"}`} title={t.description || undefined}>{t.description || "No description"}</span>
-                    <span className="flex items-center justify-end gap-1"><button type="button" onClick={() => openEdit(t, i)} aria-label={`Edit ${t.label}`} title="Edit" className={`${iconBtn} cursor-pointer hover:bg-primary-soft hover:text-primary`}><Pencil size={13} aria-hidden="true" /></button><button type="button" onClick={() => { setError(""); setDel(t); }} aria-label={`Delete ${t.label}`} title="Delete" className={`${iconBtn} cursor-pointer hover:bg-danger-soft hover:text-danger`}><Trash2 size={13} aria-hidden="true" /></button></span>
+                    <span className={`line-clamp-2 text-xs leading-relaxed ${t.description ? "text-ink-soft" : "text-ink-faint"}`} title={t.description || undefined}>{t.description || "No description"}</span>
+                    <span className="flex items-center justify-end gap-1"><button type="button" onClick={() => openEdit(t, i)} aria-label={`Edit ${t.label}`} title="Edit" className={`${iconBtn} cursor-pointer hover:bg-primary-soft hover:text-primary`}><Pencil size={13} aria-hidden="true" /></button><button type="button" onClick={() => { setError(""); setDel(t); }} aria-label={`Delete ${t.label}`} title="Delete" className={`${iconBtn} cursor-pointer hover:bg-danger-soft hover:text-danger-ink`}><Trash2 size={13} aria-hidden="true" /></button></span>
                   </div>
                 ))}
               </div>
@@ -175,11 +176,11 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
             <button type="button" onClick={() => void save()} disabled={busy || Boolean(errs.label || errs.hex) || Boolean(editor.id && JSON.stringify(editor) === editorStart)} title={editor.id && JSON.stringify(editor) === editorStart ? "No changes to save" : undefined} className="h-10 cursor-pointer rounded-xl bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Saving…" : editor.id ? "Save changes" : "Add decision"}</button>
           </>}>
           <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-4">
-            <div><label htmlFor="dc-serial" className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionSerial">S.No.</HelpLabel> <span className="text-danger">*</span></label><input id="dc-serial" type="number" min={1} max={maxSerial} value={editor.serial} onChange={(e) => setEditor({ ...editor, serial: e.target.value === "" ? 0 : Number(e.target.value) })} onBlur={() => setEditor({ ...editor, serial: Math.min(Math.max(Number(editor.serial) || maxSerial, 1), maxSerial) })} className={`${FIELD()} tabular-nums`} /></div>
-            <div><label htmlFor="dc-label" className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionLabel">Decision</HelpLabel> <span className="text-danger">*</span></label><input id="dc-label" autoFocus maxLength={80} value={editor.label} onChange={(e) => { setEditor({ ...editor, label: e.target.value }); setTouched(true); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void save(); } }} placeholder="e.g. Accept with Shepherding" aria-invalid={touched && Boolean(errs.label)} className={FIELD(touched && Boolean(errs.label))} /></div>
+            <div><label htmlFor="dc-serial" className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionSerial">S.No.</HelpLabel> <span className="text-danger-ink">*</span></label><input id="dc-serial" type="number" min={1} max={maxSerial} value={editor.serial} onChange={(e) => setEditor({ ...editor, serial: e.target.value === "" ? 0 : Number(e.target.value) })} onBlur={() => setEditor({ ...editor, serial: Math.min(Math.max(Number(editor.serial) || maxSerial, 1), maxSerial) })} className={`${FIELD()} tabular-nums`} /></div>
+            <div><label htmlFor="dc-label" className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionLabel">Decision</HelpLabel> <span className="text-danger-ink">*</span></label><input id="dc-label" autoFocus maxLength={80} value={editor.label} onChange={(e) => { setEditor({ ...editor, label: e.target.value }); setTouched(true); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void save(); } }} placeholder="e.g. Accept with Shepherding" aria-invalid={touched && Boolean(errs.label)} className={FIELD(touched && Boolean(errs.label))} /></div>
           </div>
           <p className="mt-1.5 text-xs text-ink-faint">Position 1–{maxSerial}{!editor.id && " · defaults to the end"}. Other decisions shift to make room.</p>
-          {touched && errs.label && <p role="alert" className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {errs.label}</p>}
+          {touched && errs.label && <p role="alert" className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {errs.label}</p>}
           <div className="mt-5">
             <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><label htmlFor="dc-author">Author sees</label></span>
             <input id="dc-author" maxLength={120} value={editor.authorLabel} onChange={(e) => setEditor({ ...editor, authorLabel: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void save(); } }} placeholder={editor.id ? AUTHOR_SEES[editor.outcome as string] ?? "" : labelTrim || "Same as the decision name"} className={FIELD()} />
@@ -187,7 +188,7 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
           </div>
           <div className="mt-5"><label htmlFor="dc-desc" className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionDescription">Description</HelpLabel></label><textarea id="dc-desc" rows={3} maxLength={1000} value={editor.description} onChange={(e) => setEditor({ ...editor, description: e.target.value })} placeholder="What this decision means for the author — e.g. what they need to do next." className={`${FIELD()} resize-none`} /></div>
           <div className="mt-5">
-            <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionColor">Color code</HelpLabel> <span className="text-danger">*</span></span>
+            <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft"><HelpLabel help="decisionColor">Color code</HelpLabel> <span className="text-danger-ink">*</span></span>
             <div className="rounded-2xl border border-line bg-canvas p-4">
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_148px]">
                 <ColorPicker value={editor.color} onChange={(c) => setEditor({ ...editor, color: c, hex: c })} />
@@ -209,14 +210,14 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
                 </div>
               </div>
             </div>
-            {errs.hex && editor.hex.length >= 7 && <p role="alert" className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {errs.hex}</p>}
+            {errs.hex && editor.hex.length >= 7 && <p role="alert" className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {errs.hex}</p>}
           </div>
           <div className="mt-5 flex items-center gap-3 rounded-xl border border-line bg-canvas px-4 py-3">
             <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Preview</span>
             <span className="text-sm font-bold tabular-nums text-ink-muted">{Math.min(Math.max(Number(editor.serial) || maxSerial, 1), maxSerial)}</span>
             <span style={pill(editor.color)} className="inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold"><span style={{ background: editor.color }} className="h-1.5 w-1.5 shrink-0 rounded-full" aria-hidden="true" /><span className="truncate">{labelTrim || "Decision name"}</span></span>
           </div>
-          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
         </Modal>
       )}
       {del && (
@@ -226,7 +227,7 @@ export function DecisionSettingsPage({ slug }: { slug: string }) {
             <button type="button" onClick={() => void remove()} disabled={busy} className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-danger px-5 text-sm font-semibold text-white disabled:opacity-60"><Trash2 size={14} aria-hidden="true" /> {busy ? "Deleting…" : "Delete"}</button>
           </>}>
           <p className="text-sm leading-relaxed text-ink-soft">Decisions already recorded with it stay on their submissions. The remaining decisions are renumbered.</p>
-          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{error}</p>}
+          {error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{error}</p>}
         </Modal>
       )}
       <FlowToast toast={toast} onClose={closeToast} />

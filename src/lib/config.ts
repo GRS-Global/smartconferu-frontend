@@ -25,6 +25,12 @@ export const WEBSITE_URL = (process.env.NEXT_PUBLIC_WEBSITE_URL ?? "").replace(/
  *  "Module 1 — Feedback". Set to true to bring it back; nothing else has to change. */
 export const FEEDBACK_ENABLED = false;
 
+/** Certificates (chair Design / Distribute, author and reviewer Certificates, My Certificates) and the Speaker Flyer (chair) / My flyer
+ *  (author) show "Coming soon" in the sidebar and on their pages while these are false; the public /verify/<id> page too (CERTIFICATES_ENABLED).
+ *  Set to true to bring them back. Details: GAP-REPORT.md "Switched off: Certificates and Speaker Flyer". */
+export const CERTIFICATES_ENABLED = false;
+export const FLYER_ENABLED = false;
+
 /** Sign-in goes through the own backend (NEXT_PUBLIC_DATA_SOURCE=api) instead of Supabase Auth. */
 export const AUTH_API = DATA_SOURCE === "api";
 /** Whether sign-in can work at all: the backend is the auth server in `api` mode, otherwise Supabase must be configured. */

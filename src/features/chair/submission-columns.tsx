@@ -2,6 +2,7 @@ import { FileCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import { ATTENDANCE_LABELS, PAYMENT_LABELS, attendanceLabel, type ChairConference, type ChairPaper, type ReviewBoard } from "@/types/chair";
 import { CHAIR_STAGES, chairStageOf, isDecision, type Screening } from "./stage";
+import { textColor } from "@/lib/text-color";
 
 /* The Submissions list's column catalogue (the prototype's SUBMISSION_COLUMNS, submissionColumnTools and SUBMISSION_COLUMN_GROUPS):
    what each column shows, which ones are on by default, and the search box or dropdown under its title. Columns that need tables
@@ -18,7 +19,7 @@ export const COLUMN_GROUPS: Array<{ key: ListColumn["group"]; label: string }> =
   { key: "registration", label: "Registration & attendance" },
 ];
 
-const dash = () => <span style={{ color: "var(--border-strong)" }} className="text-xs">—</span>;
+const dash = () => <span style={{ color: "var(--ink-faint)" }} className="text-xs">—</span>;
 const pill = (text: string, color: string, bg: string) => <span style={{ color, background: bg }} className="whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold">{text}</span>;
 const correspondingOf = (p: ChairPaper) => p.authors.find((a) => a.corresponding) ?? p.authors[0];
 
@@ -38,7 +39,7 @@ export const COLUMNS: ListColumn[] = [
       <div className="min-w-0 max-w-[clamp(200px,20vw,300px)]">
         <div className="text-[13px] font-bold leading-snug text-navy">{p.title}</div>
         <div className="mt-0.5 truncate text-[11.5px] text-ink-muted">{p.authors.map((a) => a.name).join(", ")}</div>
-        {p.authors.some((a) => a.corresponding && !a.hasAccount) && <div title="The paper is linked to this author when they register with the email on the paper" className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-warning">Awaiting author account</div>}
+        {p.authors.some((a) => a.corresponding && !a.hasAccount) && <div title="The paper is linked to this author when they register with the email on the paper" className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-warning-ink">Awaiting author account</div>}
       </div>
     ),
   },
@@ -64,7 +65,7 @@ export const COLUMNS: ListColumn[] = [
   {
     key: "reviewProgress", group: "review", label: "Review progress", defaultOn: true,
     render: (p) => {
-      if (!p.reviewersAssigned) return <span className="whitespace-nowrap text-xs font-semibold text-warning">none assigned</span>;
+      if (!p.reviewersAssigned) return <span className="whitespace-nowrap text-xs font-semibold text-warning-ink">none assigned</span>;
       return (
         <div className="flex items-center gap-2">
           <span className="block h-1.5 w-12 shrink-0 overflow-hidden rounded-full bg-muted"><span style={{ width: `${(p.reviewsReceived / p.reviewersAssigned) * 100}%` }} className="block h-full rounded-full bg-primary" /></span>
@@ -86,7 +87,7 @@ export const COLUMNS: ListColumn[] = [
     render: (p, ctx) => {
       const d = decisionOf(p, ctx.data);
       return d
-        ? <span style={{ color: d.color, background: `${d.color}1A`, border: `1px solid ${d.color}33` }} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold"><span style={{ background: d.color }} className="h-1.5 w-1.5 rounded-full" />{d.label}</span>
+        ? <span style={{ color: textColor(d.color), background: `${d.color}1A`, border: `1px solid ${d.color}33` }} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold"><span style={{ background: d.color }} className="h-1.5 w-1.5 rounded-full" />{d.label}</span>
         : <span className="text-xs text-ink-faint">Pending</span>;
     },
   },

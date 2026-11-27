@@ -1,6 +1,8 @@
 import { DATA_SOURCE } from "@/lib/config";
 import type { ReviewValues } from "@/types/reviewer";
 import type { DeletionRequest, CfpFacts, LicenseRequest, ChairActivityLog, ChairConference, ChairEmailLog, ChairPaperDetail, ReviewSetup, ConferenceInfo, ConferenceSettings, ConferenceTrack, ReviewLimits, ReviewTimeline, SubmissionPolicy, ReviewPolicy, ScreeningCriteria, ConferenceTemplate, EmailTemplates, DecisionType, InviteResult, ScreeningFile, PoolReviewer, ReviewBoard, ReviewerPool } from "@/types/chair";
+// The own backend is the data source: loaded with the page, not as a separate request when first used (it sits on every page's first data read).
+import { apiChairService } from "./api/chair";
 
 /** The contract the Chair workspace depends on. Failures throw: AuthRequiredError (no session), ServiceConfigError (Supabase not
  *  configured) or ServiceError (a request failed, with a message ready to show). */
@@ -120,6 +122,6 @@ export interface ChairService {
  *  there is no fallback from one source to the other. */
 export async function getChairService(): Promise<ChairService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/chair")).mockChairService;
-  if (DATA_SOURCE === "api") return (await import("./api/chair")).apiChairService;
+  if (DATA_SOURCE === "api") return apiChairService;
   return (await import("./supabase/chair")).supabaseChairService;
 }

@@ -39,7 +39,7 @@ import { chairPaperHref } from "@/lib/routes";
 
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const TONES = {
-  danger: { color: "var(--danger)", bg: "var(--danger-soft)", border: "#FECACA" },
+  danger: { color: "var(--danger-ink)", bg: "var(--danger-soft)", border: "#FECACA" },
   warning: { color: "#B45309", bg: "var(--warning-soft)", border: "#FCD9A8" },
   info: { color: "#0369A1", bg: "#E0F2FE", border: "#BAE6FD" },
 } as const;
@@ -73,7 +73,7 @@ function Select({ label, value, onChange, options }: { label: string; value: str
 /** One reviewer line per column: the same lines, in the same order, in Reviewer / Review / Due / Score. */
 function Lines({ r, cell }: { r: PrRow; cell: (x: PrRow["reviewers"][number]) => ReactNode }) {
   const dec = declinedShown(r);
-  if (r.reviewers.length === 0 && dec.length === 0) return <span className="text-line-strong">—</span>;
+  if (r.reviewers.length === 0 && dec.length === 0) return <span className="text-ink-faint">—</span>;
   return (
     <>
       {r.reviewers.map((x, i) => <div key={x.r.assignmentId} className={`${LINE} ${i ? "border-t border-dashed border-line" : ""}`}>{cell(x)}</div>)}
@@ -377,7 +377,7 @@ export function PeerReviewPage({ slug }: { slug: string }) {
       <PageHeader title="Peer Review" breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: conference.acronym }]} />
       <div className="hd-page space-y-5 p-8">
         <div className="flex flex-wrap items-center gap-3">
-          {dueBadge && <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold ${dueBadge.tone === "danger" ? "bg-danger-soft text-danger" : dueBadge.tone === "warning" ? "bg-warning-soft text-warning" : "bg-primary-soft text-primary"}`}><Clock size={13} aria-hidden="true" /> {dueBadge.text}</span>}
+          {dueBadge && <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold ${dueBadge.tone === "danger" ? "bg-danger-soft text-danger-ink" : dueBadge.tone === "warning" ? "bg-warning-soft text-warning-ink" : "bg-primary-soft text-primary"}`}><Clock size={13} aria-hidden="true" /> {dueBadge.text}</span>}
           <span className="text-xs text-ink-faint">Target {board.target} reviewers per paper · {settings?.limits.maxPapersPerReviewer ? `up to ${settings.limits.maxPapersPerReviewer} papers each` : "no limit on papers per reviewer"} · <Link href={`/chair/${slug}/settings/review`} className="font-semibold text-primary hover:underline">Change</Link></span>
         </div>
         {settings && <ReviewTimelineStrip slug={slug} timeline={settings.timeline} onSaved={reload} />}
@@ -448,7 +448,7 @@ export function PeerReviewPage({ slug }: { slug: string }) {
 
         {["waiting", "overdue", "extensions"].includes(filter) && (overdueReviews.length > 0 || askingForTime > 0) && (
           <div style={{ background: "var(--danger-soft)", border: "1px solid var(--border)" }} className="flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
-            <Bell size={16} aria-hidden="true" className="shrink-0 text-danger" />
+            <Bell size={16} aria-hidden="true" className="shrink-0 text-danger-ink" />
             <div className="min-w-0 flex-1 text-[13px] text-ink-soft">
               {overdueReviews.length > 0 && <><b className="text-navy">{overdueReviews.length} review{overdueReviews.length === 1 ? " is" : "s are"} overdue.</b>{" "}</>}
               {askingForTime > 0 && <>{askingForTime} paper{askingForTime === 1 ? " has a reviewer" : "s have reviewers"} asking for more time — open the paper to approve or decline.</>}
@@ -478,7 +478,7 @@ export function PeerReviewPage({ slug }: { slug: string }) {
             </div>
             <div className="flex gap-1.5">
               {([
-                { key: "reject", label: "Reject", range: `below ${cut.reject}`, color: "var(--danger)", bg: "var(--danger-soft)" },
+                { key: "reject", label: "Reject", range: `below ${cut.reject}`, color: "var(--danger-ink)", bg: "var(--danger-soft)" },
                 { key: "borderline", label: "Decide yourself", range: `${cut.reject} – ${cut.accept}`, color: "#B45309", bg: "var(--warning-soft)" },
                 { key: "accept", label: "Accept", range: `${cut.accept} and above`, color: "#15803D", bg: "var(--success-soft)" },
               ] as const).map((b) => {
@@ -503,7 +503,7 @@ export function PeerReviewPage({ slug }: { slug: string }) {
         {/* Shown whenever a decision is waiting to be sent (not only under the Decided filter), so the chair does not have to hunt for the button. */}
         {unsent.length > 0 && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-warning-soft px-4 py-3">
-            <Mail size={16} aria-hidden="true" className="shrink-0 text-warning" />
+            <Mail size={16} aria-hidden="true" className="shrink-0 text-warning-ink" />
             <div className="min-w-0 flex-1 text-[13px] text-ink-soft"><b className="text-navy">{unsent.length} decision{unsent.length === 1 ? "" : "s"} not sent to the authors yet.</b> Authors get the decision and the reviewer comments you shared.</div>
             <Button size="sm" onClick={() => setNotifyOpen(true)} disabled={busy}><Send size={13} aria-hidden="true" /> Notify {unsent.length} author{unsent.length === 1 ? "" : "s"}</Button>
           </div>
@@ -559,7 +559,7 @@ export function PeerReviewPage({ slug }: { slug: string }) {
                       <span style={{ background: st.bg, color: st.color }} className="whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-bold">{st.label}</span>
                       {!r.decided && r.reviewers.length > 0 && <div className="mt-1 whitespace-nowrap text-[11px] tabular-nums text-ink-muted">{r.reviewsIn} of {r.reviewers.length} review{r.reviewers.length === 1 ? "" : "s"} in</div>}
                       {!r.decided && r.reviewers.length > 0 && <div className="mt-1.5 flex gap-[3px]" aria-hidden="true">{r.reviewers.map((x) => <span key={x.r.assignmentId} title={`${x.r.name} — ${REVIEWER_STATE[x.state].label}`} style={{ background: REVIEWER_STATE[x.state].color }} className="h-[5px] w-[22px] rounded-full" />)}</div>}
-                      {keptIds.includes(r.paper.dbId) && !active.match(r) && <span title="Done here — it leaves this list when you change the filter or reopen the page" className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-success"><Check size={12} strokeWidth={3} aria-hidden="true" /> Done</span>}
+                      {keptIds.includes(r.paper.dbId) && !active.match(r) && <span title="Done here — it leaves this list when you change the filter or reopen the page" className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-success-ink"><Check size={12} strokeWidth={3} aria-hidden="true" /> Done</span>}
                     </td>
                     {([
                       { on: icOn, value: scOf(r).initial ?? "pending", list: CHECK_DECISIONS, page: "initial-check", cta: "Open Initial check", done: "passed", key: "ic" },
@@ -582,15 +582,15 @@ export function PeerReviewPage({ slug }: { slug: string }) {
                         <Lines r={r} cell={(x) => (<><span title={`${x.r.name} — ${REVIEWER_STATE[x.state].label}`} style={{ color: REVIEWER_STATE[x.state].color, boxShadow: `0 0 0 2px #FFFFFF, 0 0 0 3px ${REVIEWER_STATE[x.state].color}` }} className="ml-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[9.5px] font-bold">{initials(x.r.name)}</span><span className="max-w-[140px] truncate text-[13px] font-semibold text-navy">{x.r.name}</span></>)} />
                       )}
                     {assignHint(r)}</td>
-                    <td className="px-3 py-2.5"><Lines r={r} cell={(x) => <span title={REVIEWER_STATE[x.state].label} style={{ color: REVIEWER_STATE[x.state].color, background: `color-mix(in srgb, ${REVIEWER_STATE[x.state].color} 12%, white)` }} className="rounded-full px-2 py-0.5 text-[11px] font-bold">{REVIEWER_STATE[x.state].word}</span>} /></td>
-                    <td data-nav-stop className="px-3 py-2.5"><Lines r={r} cell={(x) => <><span className={`text-xs font-bold ${x.lateDays ? "text-danger" : x.r.review ? "text-ink-faint" : "text-ink"}`}>{x.r.due ? day(x.r.due) : "—"}</span>{x.lateDays > 0 && <span className="text-[11px] text-danger">{x.lateDays}d late</span>}{!r.decided && canRemind(x) && (reminded.includes(x.r.assignmentId)
+                    <td className="px-3 py-2.5"><Lines r={r} cell={(x) => <span title={REVIEWER_STATE[x.state].label} style={{ color: REVIEWER_STATE[x.state].color, background: `color-mix(in srgb, ${REVIEWER_STATE[x.state].color} 7%, white)` }} className="rounded-full px-2 py-0.5 text-[11px] font-bold">{REVIEWER_STATE[x.state].word}</span>} /></td>
+                    <td data-nav-stop className="px-3 py-2.5"><Lines r={r} cell={(x) => <><span className={`text-xs font-bold ${x.lateDays ? "text-danger-ink" : x.r.review ? "text-ink-faint" : "text-ink"}`}>{x.r.due ? day(x.r.due) : "—"}</span>{x.lateDays > 0 && <span className="text-[11px] text-danger-ink">{x.lateDays}d late</span>}{!r.decided && canRemind(x) && (reminded.includes(x.r.assignmentId)
                       ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-faint"><Check size={11} aria-hidden="true" /> Reminded</span>
                       : <button type="button" disabled={busy} onClick={() => void remindMany([{ row: r, x }])} className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-bold text-primary hover:underline disabled:opacity-50"><Bell size={11} aria-hidden="true" /> Send reminder</button>)}</>} /></td>
                     <td className="whitespace-nowrap px-3 py-2.5">
-                      <Lines r={r} cell={(x) => (x.r.review?.score ? <><span className="text-[13px] font-extrabold text-navy">{x.r.review.score}<span className="text-[10.5px] font-semibold text-ink-faint">/5</span></span>{typeof x.r.review.answers["f-decision"] === "string" && <span className="text-[11px] text-ink-muted">{String(x.r.review.answers["f-decision"])}</span>}</> : <span className="text-line-strong">—</span>)} />
+                      <Lines r={r} cell={(x) => (x.r.review?.score ? <><span className="text-[13px] font-extrabold text-navy">{x.r.review.score}<span className="text-[10.5px] font-semibold text-ink-faint">/5</span></span>{typeof x.r.review.answers["f-decision"] === "string" && <span className="text-[11px] text-ink-muted">{String(x.r.review.answers["f-decision"])}</span>}</> : <span className="text-ink-faint">—</span>)} />
                       {r.reviewers.length > 0 && (
                         <div className={`${LINE} mt-0.5 border-t border-line`}>
-                          {r.avg != null ? <><span className="text-[13px] font-extrabold text-navy">Avg {r.avg}<span className="text-[10.5px] font-semibold text-ink-faint">/5</span></span>{r.split && <span title="Reviewers disagree — a recommendation split or a score gap of 2+" className="rounded-md bg-warning-soft px-1.5 py-0.5 text-[10.5px] font-bold text-warning">Split</span>}</> : <span className="text-[11px] text-ink-faint">No scores yet</span>}
+                          {r.avg != null ? <><span className="text-[13px] font-extrabold text-navy">Avg {r.avg}<span className="text-[10.5px] font-semibold text-ink-faint">/5</span></span>{r.split && <span title="Reviewers disagree — a recommendation split or a score gap of 2+" className="rounded-md bg-warning-soft px-1.5 py-0.5 text-[10.5px] font-bold text-warning-ink">Split</span>}</> : <span className="text-[11px] text-ink-faint">No scores yet</span>}
                         </div>
                       )}
                     </td>
@@ -605,14 +605,14 @@ export function PeerReviewPage({ slug }: { slug: string }) {
                           {r.decided && !cur && <option value="decided" disabled>{OUTCOME_LABEL[r.paper.outcome] ?? r.paper.outcome}</option>}
                         </select>
                         {!canDecide && <div className="mt-1 text-[11px] text-ink-faint">{reason}</div>}
-                        {canDecide && !r.decided && (r.stage === "ready" ? <div className="mt-1 text-[11px] font-semibold text-success">All reviews in</div> : pendingReviews > 0 && <div className="mt-1 text-[11px] font-semibold text-warning">{pendingReviews} review{pendingReviews === 1 ? "" : "s"} still pending</div>)}
-                        {r.unsent && <div className="mt-1 text-[11px] font-semibold text-warning">Not sent to authors</div>}
+                        {canDecide && !r.decided && (r.stage === "ready" ? <div className="mt-1 text-[11px] font-semibold text-success-ink">All reviews in</div> : pendingReviews > 0 && <div className="mt-1 text-[11px] font-semibold text-warning-ink">{pendingReviews} review{pendingReviews === 1 ? "" : "s"} still pending</div>)}
+                        {r.unsent && <div className="mt-1 text-[11px] font-semibold text-warning-ink">Not sent to authors</div>}
                       </div>
                     </td>
                     {show("plagiarism") && (
                       <td className="px-3 py-3 text-center">
-                        {similarityOf(r) === null ? <span className="text-line-strong">—</span> : (
-                          <span style={{ color: similarityOf(r)! > similarityLimit ? (plCleared(r) ? "#B45309" : "var(--danger)") : "var(--ink-soft)" }} className="text-xs font-bold tabular-nums">{similarityOf(r)}%</span>
+                        {similarityOf(r) === null ? <span className="text-ink-faint">—</span> : (
+                          <span style={{ color: similarityOf(r)! > similarityLimit ? (plCleared(r) ? "#B45309" : "var(--danger-ink)") : "var(--ink-soft)" }} className="text-xs font-bold tabular-nums">{similarityOf(r)}%</span>
                         )}
                         {plCleared(r) && similarityOf(r) !== null && similarityOf(r)! > similarityLimit && <div className="text-[10px] text-ink-faint">cleared</div>}
                       </td>

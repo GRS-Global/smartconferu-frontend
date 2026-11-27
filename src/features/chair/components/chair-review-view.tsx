@@ -5,6 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { ChairPaperDetail, ChairReviewer, DecisionType } from "@/types/chair";
 import { daysUntil } from "../peer-review";
+import { textColor } from "@/lib/text-color";
 
 /* The chair's peer-review page body (the prototype's SubmissionDetailPage, chair layout): "Compare reviews" (each reviewer's scores side by side,
    gaps of 2 or more highlighted, the average and the confidence-weighted overall), "Reviewers & Scores" (a card per reviewer with their stars,
@@ -15,9 +16,9 @@ import { daysUntil } from "../peer-review";
 const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" } as const;
 const WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };
 const REC_TONE: Record<string, { color: string; bg: string }> = {
-  Accept: { color: "var(--success)", bg: "var(--success-soft)" },
+  Accept: { color: "var(--success-ink)", bg: "var(--success-soft)" },
   "Re-review": { color: "#B45309", bg: "var(--warning-soft)" },
-  Reject: { color: "var(--danger)", bg: "var(--danger-soft)" },
+  Reject: { color: "var(--danger-ink)", bg: "var(--danger-soft)" },
 };
 const OUTCOME_SUB: Record<string, string> = { accept: "Accepted", reject: "Rejected", revise: "Revision requested", waitlist: "Waitlisted", registered: "Registered", no_decision: "No decision", plagiarism_clear: "Plagiarism cleared", upload_pending: "Paper upload pending" };
 const initials = (n: string) => n.split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -54,7 +55,7 @@ function Compare({ detail }: { detail: ChairPaperDetail }) {
   return (
     <section style={CARD} className="rounded-2xl bg-white pt-5">
       <div className="px-5">
-        <Title aside={<span style={split ? { color: "#B45309", background: "var(--warning-soft)" } : { color: "var(--success)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><Check size={12} aria-hidden="true" /> {split ? "Reviewers differ" : "Reviewers agree"}</span>}>Compare reviews</Title>
+        <Title aside={<span style={split ? { color: "#B45309", background: "var(--warning-soft)" } : { color: "var(--success-ink)", background: "var(--success-soft)" }} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"><Check size={12} aria-hidden="true" /> {split ? "Reviewers differ" : "Reviewers agree"}</span>}>Compare reviews</Title>
         <p className="-mt-2 mb-3 text-xs text-ink-faint">Each reviewer&apos;s scores side by side. Gaps of 2 or more points are highlighted.</p>
       </div>
       <div className="overflow-x-auto border-t border-line">
@@ -67,10 +68,10 @@ function Compare({ detail }: { detail: ChairPaperDetail }) {
                 {fields.map((f) => {
                   const v = scoreOf(r, f.id); const g = gap(f.id);
                   const hot = v != null && g && (v === g.max || v === g.min);
-                  return <td key={f.id} style={hot ? { background: "var(--warning-soft)", color: "#B45309" } : undefined} className="px-3 py-2.5 text-center font-bold text-navy">{v ?? <span className="text-line-strong">—</span>}</td>;
+                  return <td key={f.id} style={hot ? { background: "var(--warning-soft)", color: "#B45309" } : undefined} className="px-3 py-2.5 text-center font-bold text-navy">{v ?? <span className="text-ink-faint">—</span>}</td>;
                 })}
-                <td className={`px-3 py-2.5 text-center text-[12.5px] font-semibold ${(r.review?.confidence ?? "").toLowerCase() === "high" ? "text-success" : "text-ink-soft"}`}>{cap(r.review?.confidence ?? "") || "—"}</td>
-                <td className="px-3 py-2.5 text-center">{recOf(r) ? <span style={REC_TONE[recOf(r)] ?? { color: "var(--ink-soft)", background: "var(--muted)" }} className="rounded-full px-2 py-0.5 text-[11px] font-bold">{recOf(r)}</span> : <span className="text-line-strong">—</span>}</td>
+                <td className={`px-3 py-2.5 text-center text-[12.5px] font-semibold ${(r.review?.confidence ?? "").toLowerCase() === "high" ? "text-success-ink" : "text-ink-soft"}`}>{cap(r.review?.confidence ?? "") || "—"}</td>
+                <td className="px-3 py-2.5 text-center">{recOf(r) ? <span style={REC_TONE[recOf(r)] ?? { color: "var(--ink-soft)", background: "var(--muted)" }} className="rounded-full px-2 py-0.5 text-[11px] font-bold">{recOf(r)}</span> : <span className="text-ink-faint">—</span>}</td>
               </tr>
             ))}
             <tr className="border-t border-line bg-[#F8FAFC]">
@@ -93,9 +94,9 @@ function Stars({ n }: { n: number }) {
 const dayLabel = (iso: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "—");
 function status(r: ChairReviewer): { text: string; tone: string; note: string } {
   if (r.review) return { text: `Reviewed${r.review.submittedAt ? ` · ${r.review.submittedAt}` : ""}`, tone: "text-ink-faint", note: "" };
-  if (r.awaitingInvite) return { text: "Hasn't accepted the committee invitation yet", tone: "text-warning", note: "This paper starts once they accept your committee invitation." };
-  if (r.response === "pending") return { text: `Waiting to accept the paper${r.assignedAt ? ` · assigned ${r.assignedAt}` : ""}`, tone: "text-warning", note: "Waiting for them to accept or decline. You'll be notified either way." };
-  if (r.due && daysUntil(r.due) < 0) return { text: `Overdue · was due ${dayLabel(r.due)}`, tone: "text-danger", note: "Waiting for this reviewer to submit their review." };
+  if (r.awaitingInvite) return { text: "Hasn't accepted the committee invitation yet", tone: "text-warning-ink", note: "This paper starts once they accept your committee invitation." };
+  if (r.response === "pending") return { text: `Waiting to accept the paper${r.assignedAt ? ` · assigned ${r.assignedAt}` : ""}`, tone: "text-warning-ink", note: "Waiting for them to accept or decline. You'll be notified either way." };
+  if (r.due && daysUntil(r.due) < 0) return { text: `Overdue · was due ${dayLabel(r.due)}`, tone: "text-danger-ink", note: "Waiting for this reviewer to submit their review." };
   return { text: `Accepted · review due ${dayLabel(r.due)}`, tone: "text-primary", note: "Waiting for this reviewer to submit their review." };
 }
 
@@ -113,7 +114,7 @@ function ReviewerCard({ r, locked, onShare, onEdit, onDecide, onAction }: { r: C
           <div className={`text-xs ${st.tone}`}>{st.text}</div>
         </div>
         {rec && <span style={REC_TONE[rec] ?? { color: "var(--ink-soft)", background: "var(--muted)" }} className="rounded-full px-2.5 py-1 text-[11.5px] font-bold">{rec}</span>}
-        {!r.awaitingInvite && <button type="button" disabled={locked} onClick={() => onAction("remove", r)} aria-label={`Remove ${r.name}`} className="cursor-pointer text-ink-faint transition-colors hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"><X size={14} aria-hidden="true" /></button>}
+        {!r.awaitingInvite && <button type="button" disabled={locked} onClick={() => onAction("remove", r)} aria-label={`Remove ${r.name}`} className="cursor-pointer text-ink-faint transition-colors hover:text-danger-ink disabled:cursor-not-allowed disabled:opacity-50"><X size={14} aria-hidden="true" /></button>}
       </div>
       {!r.awaitingInvite && (!rv || !r.byChair) && (
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -126,7 +127,7 @@ function ReviewerCard({ r, locked, onShare, onEdit, onDecide, onAction }: { r: C
       {/* The reviewer asked for more time: approve (moves their deadline) or decline. */}
       {!rv && r.extension && (
         <div style={{ border: "1px solid var(--border)" }} className="mt-2.5 flex flex-wrap items-start gap-3 rounded-lg bg-warning-soft px-3 py-2.5">
-          <Clock size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-warning" />
+          <Clock size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-warning-ink" />
           <div className="min-w-0 flex-1 text-xs leading-relaxed text-ink-soft">
             <b className="text-navy">Asked for more time until {dayLabel(r.extension.date)}</b>
             {r.extension.reason && <span> — “{r.extension.reason}”</span>}
@@ -142,7 +143,7 @@ function ReviewerCard({ r, locked, onShare, onEdit, onDecide, onAction }: { r: C
         <>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" disabled={locked} onClick={() => onEdit(r)} style={{ color: "var(--primary)", background: "var(--primary-soft)", borderColor: "var(--primary-soft)" } as CSSProperties} className={PILL}><Pencil size={12} aria-hidden="true" /> {r.byChair ? "Edit my review" : "View & edit review"}</button>
-            <button type="button" disabled={locked} onClick={() => onShare(r, !rv.shared)} aria-pressed={rv.shared} title="Send these comments to the authors with the decision (no name, no score)" className={`${PILL} ${rv.shared ? "border-success text-success" : "border-line text-ink-soft hover:bg-canvas"}`}>{rv.shared ? <Check size={12} aria-hidden="true" /> : <Share2 size={12} aria-hidden="true" />} {rv.shared ? "Shared with author" : "Share with author"}</button>
+            <button type="button" disabled={locked} onClick={() => onShare(r, !rv.shared)} aria-pressed={rv.shared} title="Send these comments to the authors with the decision (no name, no score)" className={`${PILL} ${rv.shared ? "border-success text-success-ink" : "border-line text-ink-soft hover:bg-canvas"}`}>{rv.shared ? <Check size={12} aria-hidden="true" /> : <Share2 size={12} aria-hidden="true" />} {rv.shared ? "Shared with author" : "Share with author"}</button>
 
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2.5">
@@ -213,7 +214,7 @@ export function ReviewBody(p: ReviewBodyProps) {
           {tiles.map((t) => {
             const on = (p.pick ?? p.outcomeType)?.id === t.id;
             return (
-              <button key={t.id} type="button" disabled={p.withdrawn || p.notified} onClick={() => p.onPick(t)} aria-pressed={on} style={on ? { background: t.color, borderColor: t.color, color: "#FFFFFF" } : undefined} className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border-[1.5px] px-3.5 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${on ? "" : "border-line bg-white hover:bg-canvas"}`}>
+              <button key={t.id} type="button" disabled={p.withdrawn || p.notified} onClick={() => p.onPick(t)} aria-pressed={on} style={on ? { background: textColor(t.color), borderColor: textColor(t.color), color: "#FFFFFF" } : undefined} className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border-[1.5px] px-3.5 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${on ? "" : "border-line bg-white hover:bg-canvas"}`}>
                 <span aria-hidden="true" style={{ background: on ? "#FFFFFF" : t.color }} className="h-2 w-2 shrink-0 rounded-full" />
                 <span className="min-w-0 flex-1"><span className={`block text-[13px] font-bold ${on ? "text-white" : "text-navy"}`}>{t.label}</span><span className={`block text-[11px] ${on ? "text-white/80" : "text-ink-faint"}`}>{OUTCOME_SUB[t.outcome] ?? t.outcome}</span></span>
                 {on && <Check size={15} aria-hidden="true" />}
@@ -233,16 +234,16 @@ export function ReviewBody(p: ReviewBodyProps) {
           <textarea id="decision-note" value={p.text} onChange={(e) => p.onNote(e.target.value)} disabled={p.notified} rows={5} maxLength={5000} placeholder="E.g. “All three reviewers liked the method. For the final version, add the statistical tests asked for in Section 4.”" className="block w-full resize-y border-0 bg-white px-3.5 py-3 text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-faint disabled:bg-canvas disabled:text-ink-muted" />
           <div className="flex items-center justify-between gap-2 border-t border-muted px-3.5 py-2 text-[11px] text-ink-faint">
             <span className="flex min-w-0 items-center gap-1.5">{commentable > 0 ? <><Share2 size={11} aria-hidden="true" /> {shared} of {commentable} reviewer comment{commentable === 1 ? "" : "s"} also go to the authors</> : "Only this note goes to the authors"}</span>
-            <span className={`shrink-0 tabular-nums ${p.text.length > 4500 ? "font-semibold text-warning" : ""}`}>{p.text.length.toLocaleString()} / 5,000</span>
+            <span className={`shrink-0 tabular-nums ${p.text.length > 4500 ? "font-semibold text-warning-ink" : ""}`}>{p.text.length.toLocaleString()} / 5,000</span>
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button disabled={!p.pick || p.busy} onClick={p.onRecord}>Record decision</Button>
           {p.current && !p.notified && <Button variant="outline" disabled={p.busy} onClick={p.onNotify}><Send size={14} aria-hidden="true" /> Notify authors</Button>}
         </div>
-        {p.current && <p className="mt-3 text-xs text-ink-soft">Recorded: <b className="text-navy">{p.current.label}</b>{!p.notified && <span className="ml-2 font-semibold text-warning">Not sent to the authors yet</span>}</p>}
-        {p.notified && <div style={{ background: "var(--success-soft)", color: "var(--success)" }} className="mt-3 flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[13px] font-bold"><Check size={14} aria-hidden="true" /> Authors notified{detail.notifiedAt ? ` · ${detail.notifiedAt}` : ""}</div>}
-        {p.error && <p role="alert" className="mt-3 text-sm font-semibold text-danger">{p.error}</p>}
+        {p.current && <p className="mt-3 text-xs text-ink-soft">Recorded: <b className="text-navy">{p.current.label}</b>{!p.notified && <span className="ml-2 font-semibold text-warning-ink">Not sent to the authors yet</span>}</p>}
+        {p.notified && <div style={{ background: "var(--success-soft)", color: "var(--success-ink)" }} className="mt-3 flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[13px] font-bold"><Check size={14} aria-hidden="true" /> Authors notified{detail.notifiedAt ? ` · ${detail.notifiedAt}` : ""}</div>}
+        {p.error && <p role="alert" className="mt-3 text-sm font-semibold text-danger-ink">{p.error}</p>}
       </section>
     </div>
   );

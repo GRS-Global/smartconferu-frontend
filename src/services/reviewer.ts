@@ -1,5 +1,7 @@
 import { DATA_SOURCE } from "@/lib/config";
 import type { ReviewDetail, ReviewValues, ReviewerAssignments } from "@/types/reviewer";
+// The own backend is the data source: loaded with the page, not as a separate request when first used (it sits on every page's first data read).
+import { apiReviewerService } from "./api/reviewer";
 
 /** The contract the Reviewer workspace depends on. Failures throw: AuthRequiredError (no session), ServiceConfigError (Supabase
  *  not configured) or ServiceError (a request failed, with a message ready to show). */
@@ -22,6 +24,6 @@ export interface ReviewerService {
  *  there is no fallback from one source to the other. */
 export async function getReviewerService(): Promise<ReviewerService> {
   if (DATA_SOURCE === "mock") return (await import("@/mocks/reviewer")).mockReviewerService;
-  if (DATA_SOURCE === "api") return (await import("./api/reviewer")).apiReviewerService;
+  if (DATA_SOURCE === "api") return apiReviewerService;
   return (await import("./supabase/reviewer")).supabaseReviewerService;
 }

@@ -18,9 +18,9 @@ const CARD = { border: "1px solid var(--border)", boxShadow: "var(--shadow-card)
 /** The prototype's CFP_STATUS_CONFIG (its "Active" state has no counterpart in the database). */
 const STATUS = {
   draft: { label: "Unpublished draft", color: "var(--ink-muted)", bg: "var(--muted)" },
-  review: { label: "Awaiting approval", color: "var(--warning)", bg: "var(--warning-soft)" },
+  review: { label: "Awaiting approval", color: "var(--warning-ink)", bg: "var(--warning-soft)" },
   published: { label: "Published", color: "var(--primary)", bg: "var(--primary-soft)" },
-  closed: { label: "Closed", color: "var(--danger)", bg: "var(--danger-soft)" },
+  closed: { label: "Closed", color: "var(--danger-ink)", bg: "var(--danger-soft)" },
 } as const;
 const showDate = (iso: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "—");
 const openHref = (r: CfpRow) => cfpManagerHref(r.slug);
@@ -39,7 +39,7 @@ export function CfpListPage() {
   const crumbs = [{ label: "Calls for Papers" }];
   if (state.status === "auth") return <><PageHeader title="Calls for Papers" breadcrumbs={crumbs} /><SessionEnded /></>;
   if (state.status === "loading") return <><PageHeader title="Calls for Papers" breadcrumbs={crumbs} /><div role="status" aria-label="Loading your Calls for Papers" className="p-4 sm:p-8"><div className="h-48 animate-pulse rounded-2xl border border-line bg-white" /></div></>;
-  if (state.status === "error") return <><PageHeader title="Calls for Papers" breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger"><TriangleAlert size={18} aria-hidden="true" /><span className="flex-1">{state.message}</span><button type="button" onClick={load} className="cursor-pointer rounded-lg border border-danger px-3 py-1.5 text-xs font-bold">Try again</button></div></>;
+  if (state.status === "error") return <><PageHeader title="Calls for Papers" breadcrumbs={crumbs} /><div role="alert" className="m-8 flex items-center gap-3 rounded-2xl border border-danger bg-danger-soft p-5 text-sm font-semibold text-danger-ink"><TriangleAlert size={18} aria-hidden="true" /><span className="flex-1">{state.message}</span><button type="button" onClick={load} className="cursor-pointer rounded-lg border border-danger px-3 py-1.5 text-xs font-bold">Try again</button></div></>;
 
   const rows = state.rows;
   const create = "/cfp/new";

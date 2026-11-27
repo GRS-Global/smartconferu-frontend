@@ -155,7 +155,7 @@ export function AuditLogPage() {
           {loading ? "Loading…" : `${rows.length}${next ? "+" : ""} ${rows.length === 1 ? "entry" : "entries"}`}
         </p>
         {error && (
-          <p role="alert" className="px-6 pb-3 text-[13px]" style={{ color: "var(--danger)" }}>
+          <p role="alert" className="px-6 pb-3 text-[13px]" style={{ color: "var(--danger-ink)" }}>
             {error}
           </p>
         )}

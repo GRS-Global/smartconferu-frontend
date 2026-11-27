@@ -16,8 +16,8 @@ import { readTourState, writeTourState } from "./tour-state";
 const STATUS: Record<SetupStatus, { label: string; bg: string; color: string }> = {
   not_started: { label: "Not started", bg: "var(--muted)", color: "var(--ink-muted)" },
   in_progress: { label: "In progress", bg: "var(--primary-soft)", color: "var(--primary)" },
-  attention: { label: "Needs attention", bg: "var(--warning-soft)", color: "var(--warning)" },
-  completed: { label: "Completed", bg: "var(--success-soft)", color: "var(--success)" },
+  attention: { label: "Needs attention", bg: "var(--warning-soft)", color: "var(--warning-ink)" },
+  completed: { label: "Completed", bg: "var(--success-soft)", color: "var(--success-ink)" },
 };
 const REC_STATUS = { not_started: STATUS.not_started, skipped: { label: "Skipped", bg: "var(--muted)", color: "var(--ink-muted)" }, reviewed: { label: "Reviewed", bg: "var(--primary-soft)", color: "var(--primary)" }, completed: STATUS.completed } as const;
 
@@ -77,7 +77,7 @@ function TaskList({ slug, setup, tasks, go, onShow, onDirty, openKey }: { slug: 
                 {(t.status === "in_progress" || t.status === "attention") && <span style={{ background: STATUS[t.status].bg, color: STATUS[t.status].color }} className="whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-bold">{STATUS[t.status].label}</span>}
               </div>
               <div className="text-xs text-ink-muted">{t.why}</div>
-              {t.issue && <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-warning"><AlertTriangle size={11} aria-hidden="true" /> {t.issue}</div>}
+              {t.issue && <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-warning-ink"><AlertTriangle size={11} aria-hidden="true" /> {t.issue}</div>}
               {open !== t.key && <button type="button" onClick={() => onShow(t)} className="mt-0.5 cursor-pointer text-xs font-semibold text-primary hover:underline">Show me in {where(t)}</button>}
             </div>
             <button type="button" onClick={() => toggle(t)} title={t.input && t.input !== "topics" ? "Opens an editor right here" : `Opens ${where(t)}`} style={open === t.key ? { border: "1px solid var(--border)", color: "var(--navy)" } : t.done ? { color: "var(--ink-muted)" } : { background: "var(--primary)", color: "#FFFFFF" }} className={`${t.done && open !== t.key ? "px-1 text-xs font-semibold hover:underline" : "h-8 rounded-lg px-3.5 text-xs font-bold"} cursor-pointer whitespace-nowrap`}>{open === t.key ? "Close" : cta(t)}</button>
@@ -88,7 +88,7 @@ function TaskList({ slug, setup, tasks, go, onShow, onDirty, openKey }: { slug: 
               {t.input === "language" && <select aria-label={t.label} value={draft} onChange={(e) => { setDraft(e.target.value); setError(""); onDirty(true); }} className={INPUT_CLASS}><option value="">Select a language</option>{LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}</select>}
               {t.input === "text" && <textarea rows={5} aria-label={t.label} value={draft} onChange={(e) => { setDraft(e.target.value); setError(""); onDirty(true); }} placeholder="Scope, audience, what makes it worth submitting to." className={`${INPUT_CLASS} resize-y`} />}
               {t.input === "url" && <input type="url" aria-label={t.label} value={draft} onChange={(e) => { setDraft(e.target.value); setError(""); onDirty(true); }} placeholder="https://" className={INPUT_CLASS} />}
-              {error && <p role="alert" className="flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {error}</p>}
+              {error && <p role="alert" className="flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {error}</p>}
               <button type="button" onClick={() => void save(t)} disabled={busy || !draft.trim()} className="h-8 cursor-pointer rounded-lg bg-primary px-4 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">{busy ? "Saving…" : "Save"}</button>
             </div>
           )}
@@ -118,10 +118,10 @@ export function SetupGuideModal({ slug, acronym, setup, go, onClose, onStartTour
   return (
     <Dialog open onClose={requestClose} title={`Set up ${acronym}`} description="Complete the required details before publishing your Call for Papers." icon={Sparkles} size="lg">
       <div>
-        <div className="flex items-center justify-between text-sm font-bold"><span className="text-navy">Required setup</span><span style={{ color: requiredDone ? "var(--success)" : "var(--ink-muted)" }} className="tabular-nums">{setup.done} of {setup.total} completed</span></div>
+        <div className="flex items-center justify-between text-sm font-bold"><span className="text-navy">Required setup</span><span style={{ color: requiredDone ? "var(--success-ink)" : "var(--ink-muted)" }} className="tabular-nums">{setup.done} of {setup.total} completed</span></div>
         <span className="mt-2 block h-2 overflow-hidden rounded-full bg-muted"><span style={{ background: requiredDone ? "var(--success)" : "var(--primary)", width: `${pct}%` }} className="block h-full rounded-full transition-all" /></span>
       </div>
-      {requiredDone && <div className="mt-4 rounded-xl bg-success-soft px-4 py-3 text-[13px] font-semibold text-success">Required setup is complete — your menu is unlocked. You can publish your Call for Papers when you&apos;re ready; it won&apos;t be published automatically.</div>}
+      {requiredDone && <div className="mt-4 rounded-xl bg-success-soft px-4 py-3 text-[13px] font-semibold text-success-ink">Required setup is complete — your menu is unlocked. You can publish your Call for Papers when you&apos;re ready; it won&apos;t be published automatically.</div>}
       {todo.length > 0 && (
         <>
           <h4 className="mt-5 text-[13px] font-bold text-navy">{requiredDone ? "Worth a look" : "Still to do"} <span className="font-semibold text-ink-faint">— {requiredDone ? `${todo.length} needs attention` : `${todo.length} required`}</span></h4>

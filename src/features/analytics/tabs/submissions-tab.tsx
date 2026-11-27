@@ -176,7 +176,7 @@ export default function SubmissionsTab({ data }: { data: AnalyticsData }) {
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="flex items-center gap-3">
-                  <div style={{ background: "var(--warning-soft)", color: "var(--warning)" }} className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                  <div style={{ background: "var(--warning-soft)", color: "var(--warning-ink)" }} className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
                     <User size={18} />
                   </div>
                   <div className="min-w-0">

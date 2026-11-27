@@ -1,7 +1,7 @@
 import {
   Award, BarChart3, Bell, Building2, Calendar, CreditCard, FileCheck, FileText, History, House, Image as ImageIcon, Mail, MessageSquare, Send, Settings, ShieldCheck, Users, type LucideIcon,
 } from "lucide-react";
-import { FEEDBACK_ENABLED } from "@/lib/config";
+import { CERTIFICATES_ENABLED, FEEDBACK_ENABLED, FLYER_ENABLED } from "@/lib/config";
 import { comingSoonHref } from "@/lib/navigation";
 import type { ConferenceRole } from "@/types/conference";
 
@@ -23,7 +23,11 @@ export interface MenuItem extends Omit<MenuLeaf, "app"> { app?: MenuLeaf["app"];
 const e = encodeURIComponent;
 const soon = (key: "registration" | "programme") => ({ app: () => comingSoonHref(key) });
 
-export const AUTHOR_MENU: MenuItem[] = [
+/** Drops the entries that are switched off (lib/config.ts); they are listed under "Coming soon" instead (SOON below). */
+const OFF = new Set([...(CERTIFICATES_ENABLED ? [] : ["certificates"]), ...(FLYER_ENABLED ? [] : ["flyer"])]);
+const live = (items: MenuItem[]): MenuItem[] => items.filter((i) => !OFF.has(i.key));
+
+export const AUTHOR_MENU: MenuItem[] = live([
   { key: "overview", label: "Dashboard", icon: House, app: (s) => `/author/${e(s)}/dashboard` },
   { key: "submissions", label: "My Submissions", icon: FileText, app: (s) => `/author/${e(s)}/submissions` },
   { key: "flyer", label: "My flyer", icon: ImageIcon, app: (s) => `/author/${e(s)}/flyer` },
@@ -31,17 +35,17 @@ export const AUTHOR_MENU: MenuItem[] = [
   ...(FEEDBACK_ENABLED ? [{ key: "feedback", label: "Feedback", icon: MessageSquare, app: (s: string) => `/author/${e(s)}/feedback` }] : []),
   { key: "updates", label: "Updates", icon: Bell, app: (s) => `/author/${e(s)}/updates` },
   { key: "activity-log", label: "Activity Log", icon: History, app: (s) => `/author/${e(s)}/activity-logs` },
-];
+]);
 
-export const REVIEWER_MENU: MenuItem[] = [
+export const REVIEWER_MENU: MenuItem[] = live([
   { key: "overview", label: "Dashboard", icon: Building2, app: (s) => `/reviewer/${e(s)}/overview` },
   { key: "reviews", label: "My Reviews", icon: FileCheck, app: (s) => `/reviewer/${e(s)}/reviews` },
   { key: "certificates", label: "Certificates", icon: Award, app: (s) => `/reviewer/${e(s)}/certificates` },
   { key: "updates", label: "Updates", icon: Bell, app: (s) => `/reviewer/${e(s)}/updates` },
   { key: "activity-log", label: "Activity Log", icon: History, app: (s) => `/reviewer/${e(s)}/activity-logs` },
-];
+]);
 
-export const CHAIR_MENU: MenuItem[] = [
+export const CHAIR_MENU: MenuItem[] = live([
   { key: "overview", label: "Dashboard", icon: Building2, app: (s) => `/chair/${e(s)}/dashboard` },
   { key: "cfp", label: "Call for Papers", icon: Send, app: (s) => `/chair/${e(s)}/cfp` },
   {
@@ -97,10 +101,17 @@ export const CHAIR_MENU: MenuItem[] = [
       { key: "email-logs", label: "Email Logs", app: (s) => `/chair/${e(s)}/settings/email-logs` },
     ],
   },
-];
+]);
 
-/** The chair's menu items that are announced but not built in the prototype either. */
-export const CHAIR_SOON: Array<{ label: string; icon: LucideIcon }> = [{ label: "Payment", icon: CreditCard }, { label: "Communications", icon: Mail }];
+type Soon = { label: string; icon: LucideIcon };
+const certSoon: Soon[] = CERTIFICATES_ENABLED ? [] : [{ label: "Certificates", icon: Award }];
+
+/** Each role's "Coming soon" sidebar entries: screens not built yet, plus the ones switched off in lib/config.ts. */
+export const SOON: Record<"author" | "reviewer" | "chair", Soon[]> = {
+  author: [...(FLYER_ENABLED ? [] : [{ label: "My flyer", icon: ImageIcon }]), ...certSoon],
+  reviewer: certSoon,
+  chair: [...certSoon, ...(FLYER_ENABLED ? [] : [{ label: "Speaker Flyer", icon: ImageIcon }]), { label: "Payment", icon: CreditCard }, { label: "Communications", icon: Mail }],
+};
 
 export const MENUS: Record<"author" | "reviewer" | "chair", MenuItem[]> = { author: AUTHOR_MENU, reviewer: REVIEWER_MENU, chair: CHAIR_MENU };
 

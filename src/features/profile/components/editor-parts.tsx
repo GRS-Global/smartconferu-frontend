@@ -61,4 +61,4 @@ export function RadioChoice({ checked, disabled, onSelect, children }: { checked
   );
 }
 
-export const FieldError = ({ text }: { text: string }) => (text ? <p role="alert" className="text-[13px] font-medium text-danger">{text}</p> : null);
+export const FieldError = ({ text }: { text: string }) => (text ? <p role="alert" className="text-[13px] font-medium text-danger-ink">{text}</p> : null);

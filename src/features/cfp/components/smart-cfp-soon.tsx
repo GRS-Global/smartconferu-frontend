@@ -16,7 +16,7 @@ export function SmartCfpSoon() {
     <div className="relative z-10 w-full max-w-[480px]">
       <Link href="/" className="mb-8 flex items-center justify-center text-center transition-opacity hover:opacity-90" aria-label="Smartconferu home">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-lg">
-          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={36} height={36} priority className="h-9 w-auto" />
+          <Image src="/smartconferu-mark.png" alt="Smartconferu" width={24} height={36} priority className="h-9 w-6" />
         </span>
       </Link>
       <div className="rounded-2xl bg-white p-8 text-center shadow-2xl">

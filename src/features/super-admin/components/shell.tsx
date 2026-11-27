@@ -283,7 +283,7 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
         aria-label="Admin navigation"
       >
         <div className="h-[72px] flex items-center gap-2 px-6 shrink-0">
-          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={127} height={32} priority className="h-8 w-auto" />
+          <Image src="/smartconferu-lockup.png" alt="Smartconferu" width={127} height={32} className="h-8 w-auto" />
           <span className="text-[10.5px] font-bold uppercase tracking-wider rounded-md px-1.5 py-0.5" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
             Admin
           </span>
@@ -342,16 +342,16 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
           className="m-3 mt-0 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 text-left shrink-0 enabled:hover:brightness-95 cursor-pointer disabled:cursor-default"
           style={{ background: overdue.length ? "var(--danger-soft)" : "var(--success-soft)" }}
         >
-          <ShieldCheck size={18} className="shrink-0" style={{ color: overdue.length ? "var(--danger)" : "var(--success)" }} />
+          <ShieldCheck size={18} className="shrink-0" style={{ color: overdue.length ? "var(--danger-ink)" : "var(--success-ink)" }} />
           <span className="min-w-0 flex-1">
             <span className="block text-[12.5px] font-semibold" style={{ color: "var(--text)" }}>
               {SLA_DAYS}-day review promise
             </span>
-            <span className="block text-[11.5px]" style={{ color: overdue.length ? "var(--danger)" : "var(--success)" }}>
+            <span className="block text-[11.5px]" style={{ color: overdue.length ? "var(--danger-ink)" : "var(--success-ink)" }}>
               {overdue.length ? `${overdue.length} past the limit · review oldest` : "Everything is inside the limit"}
             </span>
           </span>
-          {overdue.length > 0 && <ChevronRight size={15} className="shrink-0" style={{ color: "var(--danger)" }} />}
+          {overdue.length > 0 && <ChevronRight size={15} className="shrink-0" style={{ color: "var(--danger-ink)" }} />}
         </button>
       </aside>
 
@@ -540,7 +540,7 @@ function ProfileMenu({ onToast }: { onToast: (text: string) => void }) {
           {soon(Building, "Team & roles")}
           <div className="mt-1 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
             <div className="flex items-start gap-3 px-3 py-2">
-              <ShieldCheck size={17} className="shrink-0 mt-px" style={{ color: until ? "var(--success)" : "var(--text-faint)" }} />
+              <ShieldCheck size={17} className="shrink-0 mt-px" style={{ color: until ? "var(--success-ink)" : "var(--text-faint)" }} />
               <div className="text-[12.5px] leading-snug">
                 <p className="font-semibold" style={{ color: "var(--text)" }}>
                   This device

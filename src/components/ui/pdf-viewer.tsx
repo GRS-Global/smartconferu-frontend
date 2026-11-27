@@ -215,7 +215,7 @@ export function PdfViewer({ url, onOpenExternal }: { url: string; onOpenExternal
   if (error) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-sm text-danger">{error}</p>
+        <p className="text-sm text-danger-ink">{error}</p>
         {onOpenExternal && <button type="button" onClick={onOpenExternal} className="cursor-pointer text-sm font-bold text-primary hover:underline">Open the paper in a new tab</button>}
       </div>
     );
@@ -244,7 +244,7 @@ export function PdfViewer({ url, onOpenExternal }: { url: string; onOpenExternal
                 if (e.key === "Enter") { if (e.shiftKey) jump(-1); else if (e.currentTarget.value.trim() === query && totalHits) jump(1); else void runSearch(e.currentTarget.value); }
                 if (e.key === "Escape") { e.preventDefault(); closeSearch(); }
               }} placeholder="Search the paper" aria-label="Search the paper" className="w-36 bg-transparent text-xs text-ink outline-none placeholder:text-slate-400" />
-            {query && <span className={`whitespace-nowrap px-1 text-[11px] font-semibold tabular-nums ${totalHits ? "text-ink-muted" : "text-danger"}`}>{totalHits ? `${hitIndex + 1} of ${totalHits}` : "No results"}</span>}
+            {query && <span className={`whitespace-nowrap px-1 text-[11px] font-semibold tabular-nums ${totalHits ? "text-ink-muted" : "text-danger-ink"}`}>{totalHits ? `${hitIndex + 1} of ${totalHits}` : "No results"}</span>}
             <button type="button" disabled={!totalHits} onClick={() => jump(-1)} aria-label="Previous result" className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-ink-soft hover:bg-canvas disabled:opacity-40"><ChevronUp size={14} aria-hidden="true" /></button>
             <button type="button" disabled={!totalHits} onClick={() => jump(1)} aria-label="Next result" className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-ink-soft hover:bg-canvas disabled:opacity-40"><ChevronDown size={14} aria-hidden="true" /></button>
             <button type="button" onClick={closeSearch} aria-label="Close search" className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-ink-soft hover:bg-canvas"><X size={14} aria-hidden="true" /></button>

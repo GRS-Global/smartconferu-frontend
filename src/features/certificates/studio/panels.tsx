@@ -55,7 +55,7 @@ function IconBtn({ icon: Icon, title, onClick, active, disabled, danger }: { ico
   return (
     <button
       type="button" onClick={onClick} disabled={disabled} title={title} aria-label={title} aria-pressed={active}
-      style={{ border: "1px solid var(--border)", color: danger ? "var(--danger)" : active ? "var(--primary)" : "var(--ink-soft)", background: active ? "var(--primary-soft)" : "#fff" }}
+      style={{ border: "1px solid var(--border)", color: danger ? "var(--danger-ink)" : active ? "var(--primary)" : "var(--ink-soft)", background: active ? "var(--primary-soft)" : "#fff" }}
       className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 disabled:opacity-35 hover:bg-[var(--canvas)] focus-visible:outline-2 focus-visible:outline-[var(--primary)] cursor-pointer disabled:cursor-default"
     >
       <Icon size={15} />
@@ -266,7 +266,7 @@ function UploadsTab({ ctx }: { ctx: StudioCtx }) {
             void run(async () => { try { const r = await lib.service.replaceImage(id, f); setList((l) => (l ?? []).map((x) => (x.id === id ? r : x))); setVersion((v) => v + 1); setProblems([]); } catch (err) { fail(err); } });
           }} />
         {progress && <p role="status" style={{ color: "var(--ink-muted)" }} className="text-[11px]">{progress}</p>}
-        {problems.length > 0 && <ul role="alert" style={{ color: "var(--danger)" }} className="text-[11px] font-semibold space-y-1">{problems.map((m) => <li key={m}>{m}</li>)}</ul>}
+        {problems.length > 0 && <ul role="alert" style={{ color: "var(--danger-ink)" }} className="text-[11px] font-semibold space-y-1">{problems.map((m) => <li key={m}>{m}</li>)}</ul>}
         <p style={{ color: "var(--ink-faint)" }} className="text-[11px] leading-relaxed">PNG (transparent works), JPG or WebP, up to 2 MB each; up to 200 per conference. They are kept in storage, not inside the certificate. SVG is not accepted.</p>
         {ctx.conferenceLogoUrl && (
           <button type="button" onClick={() => void ctx.addPicture(ctx.conferenceLogoUrl!, "Conference logo")} style={{ border: "1px solid var(--border)", color: "var(--ink-soft)" }} className="w-full py-2 rounded-lg text-xs font-bold hover:border-[var(--primary)] cursor-pointer">Use the conference logo</button>
@@ -374,7 +374,7 @@ function FieldsTab({ ctx }: { ctx: StudioCtx }) {
                     <span style={{ color: "#5B21B6" }} className="text-[12px] font-bold">{f.label}</span>
                     <span style={{ color: "var(--ink-faint)" }} className="text-[10px] font-mono truncate">{"{{"}{f.token}{"}}"}</span>
                   </span>
-                  <span style={{ color: sample ? "var(--ink-muted)" : "var(--warning)" }} className="block text-[11px] mt-0.5 truncate italic">{sample || "Nothing to print yet for this conference"}</span>
+                  <span style={{ color: sample ? "var(--ink-muted)" : "var(--warning-ink)" }} className="block text-[11px] mt-0.5 truncate italic">{sample || "Nothing to print yet for this conference"}</span>
                 </button>
               );
             })}
@@ -409,9 +409,9 @@ function TokenList({ el, ctx }: { el: StudioElement; ctx: StudioCtx }) {
                 {!known.has(t) && <option value={t}>Unknown: {t}</option>}
                 {all.map((f) => <option key={f.token} value={f.token}>{f.label}</option>)}
               </select>
-              <button type="button" onClick={() => swap(t, "")} title={`Remove {{${t}}} from this text`} aria-label={`Remove the field ${t}`} style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "#fff" }} className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 cursor-pointer"><X size={14} /></button>
+              <button type="button" onClick={() => swap(t, "")} title={`Remove {{${t}}} from this text`} aria-label={`Remove the field ${t}`} style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "#fff" }} className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 cursor-pointer"><X size={14} /></button>
             </div>
-            <div style={{ color: !known.has(t) ? "var(--danger)" : ctx.values[t] ? "var(--ink-muted)" : "var(--warning)" }} className="text-[11px] mt-1 truncate italic">
+            <div style={{ color: !known.has(t) ? "var(--danger-ink)" : ctx.values[t] ? "var(--ink-muted)" : "var(--warning-ink)" }} className="text-[11px] mt-1 truncate italic">
               {!known.has(t) ? "This field does not exist, so it prints nothing. Pick one above." : ctx.values[t] ? `Prints: ${ctx.values[t]}` : "Nothing to print for this conference yet"}
             </div>
           </div>
@@ -649,7 +649,7 @@ function ImageProps({ el, ctx }: { el: StudioElement; ctx: StudioCtx }) {
         </select>
       </div>
       <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden" aria-label="Replace image" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) setProblem(await ctx.upload(f, el.id)); }} />
-      {problem && <p role="alert" style={{ color: "var(--danger)" }} className="text-[11px] font-semibold mt-1.5">{problem}</p>}
+      {problem && <p role="alert" style={{ color: "var(--danger-ink)" }} className="text-[11px] font-semibold mt-1.5">{problem}</p>}
       <p style={{ color: "var(--ink-faint)" }} className="text-[11px] mt-1.5">Drag a corner to resize (the proportions stay locked; hold Alt to stretch).</p>
     </div>
   );
@@ -723,7 +723,7 @@ function SignaturesTab({ ctx }: { ctx: StudioCtx }) {
   return (
     <>
       <p style={{ color: "var(--ink-soft)" }} className="text-xs leading-relaxed">Add a signatory, then put them on the certificate as a block you can drag. Only this conference&apos;s chairs see this library.</p>
-      {error && <p role="alert" style={{ color: "var(--danger)" }} className="text-[11.5px] font-semibold leading-snug">{error}</p>}
+      {error && <p role="alert" style={{ color: "var(--danger-ink)" }} className="text-[11.5px] font-semibold leading-snug">{error}</p>}
 
       {form ? (
         <div style={{ border: "1px solid var(--border)", background: "var(--canvas)" }} className="rounded-xl p-3 space-y-2">

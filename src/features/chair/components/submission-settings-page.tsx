@@ -72,7 +72,7 @@ function Screening({ initial, steps, onSave, busy }: { initial: ScreeningCriteri
         <div className="flex items-start gap-3">
           <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-canvas text-ink-faint"><Sparkles size={18} /></span>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-bold text-navy">Auto initial check</span><span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10.5px] font-bold text-warning"><Lock size={10} aria-hidden="true" /> Paid feature</span></div>
+            <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-bold text-navy">Auto initial check</span><span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10.5px] font-bold text-warning-ink"><Lock size={10} aria-hidden="true" /> Paid feature</span></div>
             <p className="mt-0.5 text-xs text-ink-muted">The system decides the initial check for every new paper, so you only handle the exceptions: a paper that meets every requirement passes by itself; one that doesn&apos;t is dealt with as chosen below. You can still change any decision.</p>
           </div>
           <button type="button" role="switch" aria-checked={false} aria-label="Auto initial check" disabled style={{ background: "var(--border-strong)" }} className="relative mt-1 h-[22px] w-10 shrink-0 cursor-not-allowed rounded-full opacity-60 transition-colors"><span style={{ transform: "translateX(2px)" }} className="absolute left-0 top-[2px] h-[18px] w-[18px] rounded-full bg-white shadow transition-transform" /></button>
@@ -85,7 +85,7 @@ function Screening({ initial, steps, onSave, busy }: { initial: ScreeningCriteri
         {num("sc-dmin", "Double Column · Min Pages", "dmin", problems.dmin, !on.initialCheck)}
         {num("sc-dmax", "Double Column · Max Pages", "dmax", problems.dmax, !on.initialCheck)}
       </div>
-      {!ok && <p role="alert" className="mt-3 text-xs font-medium text-danger">Check the numbers: a minimum can&apos;t be above its maximum.</p>}
+      {!ok && <p role="alert" className="mt-3 text-xs font-medium text-danger-ink">Check the numbers: a minimum can&apos;t be above its maximum.</p>}
     </section>
   );
 }
@@ -113,7 +113,7 @@ export function SubmissionSettingsPage({ slug }: { slug: string }) {
         <SubmissionSettingsPanel
           slug={slug} acronym={conference.acronym} received={data.papers.length} lastNumber={Math.max(0, ...data.papers.map((p) => Number(/(\d+)$/.exec(p.id)?.[1] ?? 0)))} settings={settings} deadline={info?.submissionDeadline ?? ""} detailsHref={`/chair/${e}/settings`}
           before={<>
-            {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{error}</p>}
           </>}
           below={<>
             <EmailsPanel id="ss-emails" title="Submission period emails" desc="Sent automatically around the submission window — nobody has to click anything." items={SUBMISSION_EMAILS} href={`/chair/${e}/settings/email-templates`} slug={slug} conferenceName={conference.name} acronym={conference.acronym} backLabel="Submission settings" />

@@ -55,10 +55,10 @@ function PeriodCard({ tl, onChange }: { tl: ReviewTimeline; onChange: (patch: Pa
   return (
     <Card id="rs-period" icon={Calendar} title="Reviewing period" desc="When reviewers can open and submit reviews. Also sets the &quot;Reviews due&quot; date reviewers see.">
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><label htmlFor="rs-opens" className={PERIOD_LABEL}>From <span className="text-danger">*</span></label><input id="rs-opens" type="datetime-local" value={tl.opensAt} onChange={(e) => onOpens(e.target.value)} className={DATE_BOX} /></div>
-        <div><label htmlFor="rs-closes" className={PERIOD_LABEL}>To <span className="text-danger">*</span></label><input id="rs-closes" type="datetime-local" value={tl.closesAt} min={tl.opensAt || undefined} onChange={(e) => onChange({ closesAt: e.target.value })} aria-invalid={Boolean(bad)} className={`${DATE_BOX} ${bad ? "!border-danger" : ""}`} /></div>
+        <div><label htmlFor="rs-opens" className={PERIOD_LABEL}>From <span className="text-danger-ink">*</span></label><input id="rs-opens" type="datetime-local" value={tl.opensAt} onChange={(e) => onOpens(e.target.value)} className={DATE_BOX} /></div>
+        <div><label htmlFor="rs-closes" className={PERIOD_LABEL}>To <span className="text-danger-ink">*</span></label><input id="rs-closes" type="datetime-local" value={tl.closesAt} min={tl.opensAt || undefined} onChange={(e) => onChange({ closesAt: e.target.value })} aria-invalid={Boolean(bad)} className={`${DATE_BOX} ${bad ? "!border-danger" : ""}`} /></div>
       </div>
-      {bad && <p role="alert" className="mt-2 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {bad}</p>}
+      {bad && <p role="alert" className="mt-2 flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {bad}</p>}
     </Card>
   );
 }
@@ -82,7 +82,7 @@ function AssignmentCard({ lim, stored, onChange }: { lim: ReviewLimits; stored: 
     <Card id="rs-assignment" icon={Users} title="Reviewer assignment" desc="Controls how many reviewers each submission gets, and how much load any one reviewer can carry.">
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <div className={row}>
-          <div><div className="flex items-center gap-1.5 text-sm font-medium text-ink"><HelpLabel help="reviewersPerPaper">Number of reviewers per paper</HelpLabel></div><div className="mt-0.5 text-xs text-ink-faint">How many reviewers get assigned to each submission by default.</div>{bad && <p role="alert" className="mt-1 text-xs font-medium text-danger">{bad}</p>}</div>
+          <div><div className="flex items-center gap-1.5 text-sm font-medium text-ink"><HelpLabel help="reviewersPerPaper">Number of reviewers per paper</HelpLabel></div><div className="mt-0.5 text-xs text-ink-faint">How many reviewers get assigned to each submission by default.</div>{bad && <p role="alert" className="mt-1 text-xs font-medium text-danger-ink">{bad}</p>}</div>
           <input type="number" min={1} max={20} value={per} onChange={(e) => typed(e.target.value)} aria-label="Number of reviewers per paper" aria-invalid={Boolean(bad)} className="w-20 shrink-0 rounded-lg border border-line px-3 py-2 text-right text-sm text-ink outline-none focus:border-primary" />
         </div>
         <div className={row}>
@@ -95,7 +95,7 @@ function AssignmentCard({ lim, stored, onChange }: { lim: ReviewLimits; stored: 
           </select>
         </div>
       </div>
-      {!stored && <p className="mt-3 text-xs font-semibold text-warning">Run migration 0028_conference_settings.sql to save the two limits.</p>}
+      {!stored && <p className="mt-3 text-xs font-semibold text-warning-ink">Run migration 0028_conference_settings.sql to save the two limits.</p>}
     </Card>
   );
 }
@@ -156,7 +156,7 @@ export function ReviewSettingsPanel({ slug, conferenceId, conferenceName, acrony
     <>
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="relative min-w-0 space-y-5">
-        {(error || problem) && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error || problem}</p>}
+        {(error || problem) && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{error || problem}</p>}
         <div aria-live="polite" className="pointer-events-none absolute -top-5 right-0 h-4 text-right text-[11px] font-semibold text-ink-faint">{status === "saving" ? "Saving…" : status === "saved" ? "All changes saved" : ""}</div>
         <PeriodCard tl={tl} onChange={(patch) => void saveTl(patch).catch(() => undefined)} />
         <Card id="rs-timeline" icon={Clock} title="Review timeline" desc="How many days each reviewer gets, and the two automatic reminders that nudge reviewers who haven't submitted yet.">
@@ -199,7 +199,7 @@ export function ReviewFormEditors({ slug, settings, setup, reload, onDone }: Omi
         <p className="text-sm text-ink-soft">Change what reviewers read and fill in. Each part has its own save.</p>
         <Button variant="outline" onClick={onDone}>Done</Button>
       </div>
-      {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
+      {error && <p role="alert" className="rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm font-semibold text-danger-ink">{error}</p>}
       <InstructionsEditor key={`i-${setup.instructions}-${settings.stored}`} initial={setup.instructions} stored={settings.stored} busy={busy === "instructions"} mode={setup.instructionsMode} pdf={setup.instructionsPdf} onSave={(t) => void run("instructions", () => getChairService().then((x) => x.saveReviewInstructions(slug, t)), { title: "Instructions saved", text: t.trim() ? "Reviewers read your text." : "Reviewers read the standard text." })} onMode={(m) => void run("instructions", () => getChairService().then((x) => x.saveReviewInstructionsMode(slug, m)), { title: "Instructions saved", text: m === "pdf" ? "Reviewers read the attached PDF." : "Reviewers read your written instructions." })} onPdf={async (file) => { let out: InstructionsPdf | undefined; await run("instructions", async () => { out = await (await getChairService()).saveReviewInstructionsPdf(slug, file); }, { title: "PDF attached", text: "Reviewers can download it from their review page." }); return out; }} />
       <FormEditor key={`f-${JSON.stringify(setup.form)}-${setup.custom}-${settings.stored}`} initial={setup.form} custom={setup.custom} stored={settings.stored} busy={busy === "form"} onSave={(f) => void run("form", () => getChairService().then((x) => x.saveReviewForm(slug, f)), { title: "Review form saved", text: "Reviewers fill in this form from now on." })} onReset={() => void run("form", () => getChairService().then((x) => x.saveReviewForm(slug, null)), { title: "Standard form back", text: "Reviewers fill in the standard form." })} />
       <FlowToast toast={toast} onClose={closeToast} />

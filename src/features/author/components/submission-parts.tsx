@@ -103,7 +103,7 @@ export function SubmissionCard({ row, index }: { row: SubmissionRow; index: numb
     <>
       {/* The status leads the card: a full-width band in the status colour, so it never overflows. */}
       <div style={{ background: status.bg, borderBottom: `1px solid ${status.border}`, color: status.color }} className="flex items-center gap-2.5 rounded-tl-xl rounded-tr-2xl py-2.5 pl-6 pr-5">
-        <span style={{ background: "#FFFFFF", border: `1px solid ${status.border}` }} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"><Icon size={15} strokeWidth={2.4} aria-hidden="true" /></span>
+        <span style={{ background: "#FFFFFF", border: `1px solid ${status.border}`, color: status.color.toUpperCase() === "#FFFFFF" ? status.bg : status.color }} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"><Icon size={15} strokeWidth={2.4} aria-hidden="true" /></span>
         <span className="text-[13px] font-extrabold uppercase tracking-wide">{status.label}</span>
       </div>
       <div className="ui-card-split flex items-center gap-5 py-5 pl-6 pr-5">
@@ -277,14 +277,14 @@ export function EmptySubmissions({ acronym, finished, newHref }: { acronym: stri
 const STRIP_ITEMS: Array<{ key: FilterKey; label: string; color: string; sub?: boolean; warn?: boolean; extra?: boolean }> = [
   { key: "all", label: "All", color: "var(--navy)" },
   { key: "submitted", label: "Submitted", color: "var(--navy)" },
-  { key: "accepted", label: "Accepted", color: "var(--success)" },
+  { key: "accepted", label: "Accepted", color: "var(--success-ink)" },
   { key: "rejected", label: "Rejected", color: "var(--ink-soft)" },
   { key: "nodecision", label: "No Decision", color: "var(--ink-soft)" },
-  { key: "registered", label: "Registered", color: "var(--success)", sub: true },
-  { key: "notregistered", label: "Not Registered", color: "var(--danger)", sub: true },
-  { key: "regpending", label: "Registration Pending", color: "var(--warning)", sub: true, warn: true },
-  { key: "draft", label: "Upload Pending", color: "var(--warning)", extra: true },
-  { key: "withdrawn", label: "Withdrawn", color: "var(--danger)", extra: true },
+  { key: "registered", label: "Registered", color: "var(--success-ink)", sub: true },
+  { key: "notregistered", label: "Not Registered", color: "var(--danger-ink)", sub: true },
+  { key: "regpending", label: "Registration Pending", color: "var(--warning-ink)", sub: true, warn: true },
+  { key: "draft", label: "Upload Pending", color: "var(--warning-ink)", extra: true },
+  { key: "withdrawn", label: "Withdrawn", color: "var(--danger-ink)", extra: true },
 ];
 
 export function FilterStrip({ rows, closed, filter, onChange }: { rows: SubmissionRow[]; closed: boolean; filter: FilterKey; onChange: (k: FilterKey) => void }) {

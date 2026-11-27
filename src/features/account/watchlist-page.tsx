@@ -16,8 +16,8 @@ import { PageLoading, PageProblem } from "./page-states";
 const CFP_TOPIC_COLORS = [
   { bg: "var(--primary-soft)", color: "var(--primary)" },
   { bg: "var(--secondary-soft)", color: "var(--secondary)" },
-  { bg: "var(--success-soft)", color: "var(--success)" },
-  { bg: "var(--warning-soft-2)", color: "var(--warning)" },
+  { bg: "var(--success-soft)", color: "var(--success-ink)" },
+  { bg: "var(--warning-soft-2)", color: "var(--warning-ink)" },
 ];
 
 const formatDisplayDate = (iso: string) => {
@@ -222,7 +222,7 @@ export function WatchlistPage() {
           )}
         </div>
 
-        {note && <p role="alert" style={{ color: "var(--danger)" }} className="mt-4 text-sm">{note}</p>}
+        {note && <p role="alert" style={{ color: "var(--danger-ink)" }} className="mt-4 text-sm">{note}</p>}
 
         {sorted.length > 0 && (
           <button

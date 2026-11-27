@@ -181,12 +181,12 @@ export function DashboardPage() {
           >
             {fmtDate(new Date().toISOString())}
           </p>
-          <h2
+          <h1
             className="text-[26px] font-bold tracking-tight leading-tight mt-0.5"
             style={{ color: "var(--text)" }}
           >
             {greeting()}, {name.split(" ")[0]}
-          </h2>
+          </h1>
           <p className="text-[14px] mt-1" style={{ color: "var(--text-soft)" }}>
             {pending.length ? (
               <>
@@ -196,7 +196,7 @@ export function DashboardPage() {
                   <>
                     {" "}
                     ·{" "}
-                    <b style={{ color: "var(--danger)" }}>
+                    <b style={{ color: "var(--danger-ink)" }}>
                       {late.length} past the {SLA_DAYS}-day promise
                     </b>
                   </>
@@ -334,7 +334,7 @@ export function DashboardPage() {
                   ) : (
                     <CheckCircle2
                       size={18}
-                      style={{ color: "var(--success)" }}
+                      style={{ color: "var(--success-ink)" }}
                       className="mx-2"
                     />
                   )}

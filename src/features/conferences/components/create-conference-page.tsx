@@ -199,10 +199,10 @@ export function CreateConferencePage() {
   const done = checks.length - missing.length;
   const canCreate = missing.length === 0 && policy;
   const invalid = (k: string) => (k === "startDate" ? datesInPast : (showErrors || (k === "endDate" && datesInPast)) && missing.some((c) => c.key === k));
-  const msg = (k: string) => invalid(k) && <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden="true" /> {checks.find((c) => c.key === k)?.msg}</p>;
+  const msg = (k: string) => invalid(k) && <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger-ink"><AlertTriangle size={12} aria-hidden="true" /> {checks.find((c) => c.key === k)?.msg}</p>;
   const cls = (k: string) => fieldCls(invalid(k));
   const focus = (k: string) => { const el = document.getElementById(`cc-${k}`); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus({ preventScroll: true }); };
-  const label = (text: string, k?: string, required?: boolean) => <label htmlFor={k ? `cc-${k}` : undefined} className="mb-1.5 block text-[13px] font-semibold text-ink-soft">{text}{required && <span className="text-danger"> *</span>}</label>;
+  const label = (text: string, k?: string, required?: boolean) => <label htmlFor={k ? `cc-${k}` : undefined} className="mb-1.5 block text-[13px] font-semibold text-ink-soft">{text}{required && <span className="text-danger-ink"> *</span>}</label>;
   const hint = (t: string) => <p className="mt-1.5 text-xs text-ink-faint">{t}</p>;
   const choice = (on: boolean, k?: string) => ({ border: `1.5px solid ${on ? "var(--primary)" : k && invalid(k) ? "var(--danger)" : "var(--border)"}`, background: on ? "var(--primary-soft)" : "#fff" });
 
@@ -232,7 +232,7 @@ export function CreateConferencePage() {
     return (
       <section id={`cc-section-${id}`} style={CARD} className="scroll-mt-24 rounded-2xl bg-white p-6">
         <div className="flex min-w-0 items-start gap-3 text-left">
-          <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold", ok ? "bg-success-soft text-success" : "bg-primary-soft text-primary")}>{ok ? <Check size={16} aria-hidden="true" /> : n}</div>
+          <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold", ok ? "bg-success-soft text-success-ink" : "bg-primary-soft text-primary")}>{ok ? <Check size={16} aria-hidden="true" /> : n}</div>
           <div className="min-w-0"><h2 className="flex items-center gap-2 text-base font-bold leading-snug text-navy">{meta.title}</h2><p className="mt-0.5 text-xs text-ink-faint">{meta.subtitle}</p></div>
         </div>
         <div className="mt-5"><div className="space-y-4">{children}</div></div>
@@ -275,7 +275,7 @@ export function CreateConferencePage() {
                 <span className="text-ink-soft">Create New Conference</span>
               </nav>
               <h1 style={{ letterSpacing: "-0.02em" }} className="text-[24px] font-extrabold leading-tight text-navy sm:text-[28px]">Create New Conference</h1>
-              <p className="mt-1.5 text-sm text-ink-muted">Takes about 2 minutes. Only fields marked <span className="text-danger">*</span> are required — topics, committees and branding come later on your Conference Profile.</p>
+              <p className="mt-1.5 text-sm text-ink-muted">Takes about 2 minutes. Only fields marked <span className="text-danger-ink">*</span> are required — topics, committees and branding come later on your Conference Profile.</p>
             </div>
             {isDirty && (
               <button type="button" onClick={() => setConfirmClear(true)} className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-line bg-white px-3.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-canvas">
@@ -333,7 +333,7 @@ export function CreateConferencePage() {
                       <button type="button" onClick={() => void smartFill()} disabled={fill.status === "loading"} className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary transition-opacity hover:opacity-80 disabled:cursor-wait disabled:opacity-60">
                         {fill.status === "loading" ? <Spinner size={13} tone="current" /> : <Sparkles size={13} aria-hidden="true" />} {fill.status === "loading" ? "Reading the website…" : "Fill the form from this website"}
                       </button>
-                      {fill.message && <p role={fill.status === "error" ? "alert" : "status"} className={cn("mt-1.5 text-xs", fill.status === "error" ? "font-semibold text-danger" : "text-ink-muted")}>{fill.message}</p>}
+                      {fill.message && <p role={fill.status === "error" ? "alert" : "status"} className={cn("mt-1.5 text-xs", fill.status === "error" ? "font-semibold text-danger-ink" : "text-ink-muted")}>{fill.message}</p>}
                     </div>
                   )}
                 </div>
@@ -371,7 +371,7 @@ export function CreateConferencePage() {
                   {label("About the conference", "about")}
                   <textarea id="cc-about" rows={8} maxLength={ABOUT_MAX_CHARS} value={form.about} onChange={(e) => set("about", e.target.value)} placeholder="Scope, audience, what makes it worth submitting to. This appears on your public conference page." className={cn(cls("about"), "resize-y")} />
                   {msg("about")}
-                  <p aria-live="polite" className={cn("mt-1.5 text-right text-xs", aboutWords > ABOUT_MAX_WORDS ? "font-semibold text-danger" : "text-ink-faint")}>
+                  <p aria-live="polite" className={cn("mt-1.5 text-right text-xs", aboutWords > ABOUT_MAX_WORDS ? "font-semibold text-danger-ink" : "text-ink-faint")}>
                     {aboutWords > ABOUT_MAX_WORDS && `${(aboutWords - ABOUT_MAX_WORDS).toLocaleString()} over the limit · `}
                     {aboutWords.toLocaleString()} / {ABOUT_MAX_WORDS.toLocaleString()} words
                   </p>
@@ -487,28 +487,28 @@ export function CreateConferencePage() {
               <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Live preview</div>
               <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary"><PreviewIcon size={18} aria-hidden="true" /></div>
-                <div className="min-w-0"><div className={cn("line-clamp-2 text-sm font-bold leading-snug", form.title ? "text-navy" : "text-line-strong")}>{form.title || "Your conference title"}</div><div className="mt-0.5 truncate text-xs text-ink-faint">{[form.acronym || "ACRONYM", typeMeta?.label, formatMeta?.label].filter(Boolean).join(" · ")}</div></div>
+                <div className="min-w-0"><div className={cn("line-clamp-2 text-sm font-bold leading-snug", form.title ? "text-navy" : "text-ink-faint")}>{form.title || "Your conference title"}</div><div className="mt-0.5 truncate text-xs text-ink-faint">{[form.acronym || "ACRONYM", typeMeta?.label, formatMeta?.label].filter(Boolean).join(" · ")}</div></div>
               </div>
               {form.about && <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-ink-soft">{form.about}</p>}
               {form.primaryArea && <p className="mt-2 truncate text-xs text-ink-faint">{[form.primaryArea, form.secondaryArea].filter(Boolean).join(" › ")}</p>}
               <div className="mt-4 space-y-2 border-t border-muted pt-3">
                 {([[Calendar, form.startDate || form.endDate ? `${showDate(form.startDate)} – ${showDate(form.endDate)}` : "", "Dates not set"], [form.eventType === "virtual" ? Globe2 : MapPin, location, "Location not set"], [Mail, form.contactEmail.trim(), "No contact email"]] as Array<[LucideIcon, string, string]>).map(([Icon, value, empty], i) => (
-                  <div key={i} className="flex min-w-0 items-center gap-2 text-xs"><Icon size={13} className="shrink-0 text-ink-faint" aria-hidden="true" /><span className={cn("truncate", value ? "text-ink-soft" : "text-line-strong")}>{value || empty}</span></div>
+                  <div key={i} className="flex min-w-0 items-center gap-2 text-xs"><Icon size={13} className="shrink-0 text-ink-faint" aria-hidden="true" /><span className={cn("truncate", value ? "text-ink-soft" : "text-ink-faint")}>{value || empty}</span></div>
                 ))}
               </div>
             </div>
             <div style={CARD} className="rounded-2xl bg-white p-5">
-              <div className="mb-2 flex items-center justify-between"><span className="text-sm font-bold text-navy">Required to create</span><span className={cn("text-xs font-bold", missing.length ? "text-ink-muted" : "text-success")}>{done}/{checks.length}</span></div>
+              <div className="mb-2 flex items-center justify-between"><span className="text-sm font-bold text-navy">Required to create</span><span className={cn("text-xs font-bold", missing.length ? "text-ink-muted" : "text-success-ink")}>{done}/{checks.length}</span></div>
               <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted"><div style={{ width: `${(done / checks.length) * 100}%` }} className={cn("h-full rounded-full transition-all duration-300", missing.length ? "bg-primary" : "bg-success")} /></div>
               <ul className="space-y-0.5">
                 {checks.map((c) => (
-                  <li key={c.key}><button type="button" onClick={() => focus(c.key)} className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-canvas"><span style={c.ok ? undefined : { border: `1.5px solid ${invalid(c.key) ? "var(--danger)" : "var(--border-strong)"}` }} className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded-full", c.ok && "bg-success text-white")}>{c.ok && <Check size={10} strokeWidth={3} aria-hidden="true" />}</span><span className={cn("text-xs font-medium", c.ok ? "text-ink-faint" : invalid(c.key) ? "text-danger" : "text-ink-soft")}>{c.label}</span></button></li>
+                  <li key={c.key}><button type="button" onClick={() => focus(c.key)} className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-canvas"><span style={c.ok ? undefined : { border: `1.5px solid ${invalid(c.key) ? "var(--danger)" : "var(--border-strong)"}` }} className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded-full", c.ok && "bg-success text-white")}>{c.ok && <Check size={10} strokeWidth={3} aria-hidden="true" />}</span><span className={cn("text-xs font-medium", c.ok ? "text-ink-faint" : invalid(c.key) ? "text-danger-ink" : "text-ink-soft")}>{c.label}</span></button></li>
                 ))}
               </ul>
               <button type="button" onClick={() => void submit()} disabled={!canCreate || saving} title={canCreate ? undefined : "Fill in the required fields listed above first"} className={cn("mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50", canCreate && BTN_FX)}>
                 {saving && <Spinner size={15} tone="current" />}{submitLabel}
               </button>
-              {error && <p role="alert" className="mt-2 text-xs font-medium text-danger">{error}</p>}
+              {error && <p role="alert" className="mt-2 text-xs font-medium text-danger-ink">{error}</p>}
               <button type="button" onClick={leave} className="mt-2 h-9 w-full cursor-pointer rounded-xl text-xs font-semibold text-ink-muted transition-colors hover:bg-canvas">Cancel</button>
               <p className="mt-2 text-center text-[11px] leading-relaxed text-ink-faint">{hintLine}</p>
             </div>
@@ -518,7 +518,7 @@ export function CreateConferencePage() {
         <div style={{ borderTop: "1px solid var(--border)", boxShadow: "0 -4px 16px rgba(15,23,42,0.06)" }} className="fixed inset-x-0 bottom-0 z-20 flex items-center gap-3 bg-white px-4 py-3 lg:hidden">
           <div className="min-w-0 flex-1"><div className="text-xs font-bold text-ink">{done}/{checks.length} required</div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"><div style={{ width: `${(done / checks.length) * 100}%` }} className={cn("h-full rounded-full transition-all duration-300", missing.length ? "bg-primary" : "bg-success")} /></div></div>
           <button type="button" onClick={() => void submit()} disabled={!canCreate || saving} className="h-10 shrink-0 cursor-pointer rounded-xl bg-primary px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{submitLabel}</button>
-          {error && <p role="alert" className="max-w-[10rem] text-[11px] font-medium text-danger">{error}</p>}
+          {error && <p role="alert" className="max-w-[10rem] text-[11px] font-medium text-danger-ink">{error}</p>}
         </div>
       </div>
 
@@ -537,7 +537,7 @@ export function CreateConferencePage() {
           title="Leave without creating?" subtitle="Your conference hasn't been created yet." icon={AlertTriangle} onClose={() => setConfirmLeave(false)} maxWidth="max-w-md"
           actions={(
             <>
-              <button type="button" onClick={() => { clearDraft(); router.push("/dashboard"); }} className="mr-auto h-10 cursor-pointer rounded-xl px-3 text-sm font-semibold text-danger transition-colors hover:bg-danger-soft">Discard draft</button>
+              <button type="button" onClick={() => { clearDraft(); router.push("/dashboard"); }} className="mr-auto h-10 cursor-pointer rounded-xl px-3 text-sm font-semibold text-danger-ink transition-colors hover:bg-danger-soft">Discard draft</button>
               <button type="button" onClick={() => setConfirmLeave(false)} className="h-10 cursor-pointer rounded-xl border-[1.5px] border-line px-4 text-sm font-semibold text-ink-soft transition-colors hover:bg-canvas">Keep editing</button>
               <button type="button" onClick={() => router.push("/dashboard")} className={cn("h-10 cursor-pointer rounded-xl bg-primary px-4 text-sm font-bold text-white", BTN_FX)}>Leave, keep draft</button>
             </>

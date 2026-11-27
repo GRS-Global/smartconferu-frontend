@@ -27,7 +27,7 @@ function Recipients({ list }: { list: Array<{ name: string; email: string }> }) 
   return <div><div className="font-semibold text-navy">{list[0].name || list[0].email}{list.length > 1 ? ` +${list.length - 1}` : ""}</div>{list[0].name && <div className="text-xs text-ink-faint">{list[0].email}</div>}</div>;
 }
 function StatusBadge({ status }: { status: "sent" | "failed" | "queued" }) {
-  const c = status === "failed" ? "text-danger bg-danger-soft" : status === "queued" ? "text-warning bg-warning-soft" : "text-success bg-success-soft";
+  const c = status === "failed" ? "text-danger-ink bg-danger-soft" : status === "queued" ? "text-warning-ink bg-warning-soft" : "text-success-ink bg-success-soft";
   return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${c}`}><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${status === "failed" ? "bg-danger" : status === "queued" ? "bg-warning" : "bg-success"}`} />{status === "failed" ? "Failed" : status === "queued" ? "Sending" : "Sent"}</span>;
 }
 function HeaderRow({ label, value }: { label: string; value: string | null }) {
@@ -59,7 +59,7 @@ function LogDialog({ log, acronym, onClose }: { log: ChairEmailLog | null; acron
           <span className="flex items-center gap-1.5"><span className="text-ink-faint">Status</span><StatusBadge status={log.status} /></span>
           <span className="text-ink-faint">Recipient: <span className="font-semibold text-ink">{log.recipientType || "—"}</span></span>
         </div>
-        {log.status === "failed" && log.error && <p role="alert" className="text-xs font-semibold text-danger">{log.error}</p>}
+        {log.status === "failed" && log.error && <p role="alert" className="text-xs font-semibold text-danger-ink">{log.error}</p>}
         <div>
           <div className="mb-1.5 text-xs font-semibold text-ink-faint">Message</div>
           {log.body
