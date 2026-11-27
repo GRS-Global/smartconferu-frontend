@@ -414,8 +414,10 @@ function NotificationsMenu() {
   const [rows, setRows] = useState<BellRow[]>([]);
   const [unread, setUnread] = useState(0);
   const load = useCallback(() => {
-    get<{ data: BellRow[]; unread: number }>("/me/notifications?limit=6")
-      .then((r) => { setRows(r.data); setUnread(r.unread); })
+    // `unreadNotifications`: the console lists notifications only, so emails sent to this account are not counted here (`unread`, which the
+    // web app's bell shows, includes them). An older API without it: fall back to `unread`.
+    get<{ data: BellRow[]; unread: number; unreadNotifications?: number }>("/me/notifications?limit=6")
+      .then((r) => { setRows(r.data); setUnread(r.unreadNotifications ?? r.unread); })
       .catch(() => undefined); // a failed count keeps the last one
   }, []);
   useEffect(() => {
