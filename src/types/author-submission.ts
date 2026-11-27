@@ -149,7 +149,8 @@ export interface SubmitFormInfo {
   /** The signed-in user, for the first author row. */
   me: { name: string; email: string; affiliation: string; country: string };
 }
-export interface NewPaperInput { responses?: Record<string, string | boolean>; title: string; abstract: string; keywords: string[]; authors: AuthorInput[]; track: string; presentationType: string; file: File;
+export interface NewPaperInput { /** A chair submitting for the authors (`onBehalf` on the API: allowed in archived conferences and with the CFP closed; the
+   *  corresponding authors get "Submitted on your behalf"). */ onBehalf?: boolean; responses?: Record<string, string | boolean>; title: string; abstract: string; keywords: string[]; authors: AuthorInput[]; track: string; presentationType: string; file: File;
   /** The automatic check of the PDF (lib/auto-check.ts), saved with the file for the chair's Initial Check. */
   autoCheck?: import("./chair").AutoCheck | null }
 

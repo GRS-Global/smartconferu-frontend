@@ -219,6 +219,7 @@ const implemented: AuthorSubmissionService = {
         title, abstract, keywords: paper.keywords.map((k) => k.trim()).filter(Boolean).slice(0, 20),
         authors: authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, country: a.country || null, corresponding: a.corresponding })),
         track: paper.track || "General Track", presentationType: paper.presentationType || "Paper Presentation", responses: paper.responses ?? {},
+        ...(paper.onBehalf ? { onBehalf: true } : {}),
       },
     });
     // The paper and its file are two calls: when the file fails, the paper is already saved and the author can add the file from its page.

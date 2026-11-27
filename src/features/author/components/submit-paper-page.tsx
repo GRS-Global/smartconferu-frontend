@@ -28,7 +28,8 @@ import { isValidEmail } from "@/lib/email";
 /* New Submission (the prototype's SubmitPaperPage with its default submission form): the paper file, title, abstract, keywords,
    submission type and track, the authors (the signed-in author is Author 1 and must stay on the paper), and the two declarations.
    Sending saves the paper, its authors and the file, then the email server mails the confirmation (`submission_received`). The chair's
-   "Submit on behalf" is the same form with the author the chair names as Author 1 (`submission_on_behalf`). Picking a PDF fills the
+   "Submit on behalf" is the same form for a chair (`onBehalf` on the API, `submission_on_behalf`): no author is asked for first, the author
+   list comes from the PDF and the corresponding author gets the confirmation. Picking a PDF fills the
    title, abstract, keywords and authors from it (lib/paper-extraction.ts: Smart Fill through the AI proxy, else a basic guess); the person
    submitting stays Author 1. Not ported yet: a chair-edited submission form (the database keeps none, so every conference uses this default). */
 
@@ -97,9 +98,6 @@ export function SubmitPaperPage({ slug, behalf = false }: { slug: string; behalf
 
 function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boolean; title: string }) {
   const router = useRouter();
-  // On behalf: the chair names the author first.
-  const [onBehalf, setOnBehalf] = useState<{ name: string; email: string } | null>(null);
-  const [ask, setAsk] = useState({ name: "", email: "" });
   const [paperTitle, setPaperTitle] = useState("");
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState("");
@@ -108,7 +106,9 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const [type, setType] = useState(info.presentationTypes[0] ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [fileProblem, setFileProblem] = useState("");
-  const [rows, setRows] = useState<Row[]>(() => [blankRow({ name: info.me.name, email: info.me.email, affiliation: info.me.affiliation, country: info.me.country, corresponding: true })]);
+  // The person submitting starts as Author 1. On behalf the chair is not an author: the list starts empty and is filled from the paper's PDF
+  // (or typed); the corresponding author gets the "Submitted on your behalf" email.
+  const [rows, setRows] = useState<Row[]>(() => [behalf ? blankRow({ name: "", email: "", affiliation: "", country: "", corresponding: true }) : blankRow({ name: info.me.name, email: info.me.email, affiliation: info.me.affiliation, country: info.me.country, corresponding: true })]);
   const [answers, setAnswers] = useState<Record<string, string | boolean>>({});
   const [originality, setOriginality] = useState(false);
   const [terms, setTerms] = useState(false);
@@ -146,33 +146,15 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   }, [tk, paperTitle, info.slug]);
   const duplicate = dup.key === tk && tk ? dup : { found: false, mine: false };
 
-  if (behalf && !onBehalf) {
-    const ok = ask.name.trim() && isValidEmail(ask.email.trim());
-    return (
-      <>
-        <PageHeader title={title} breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: info.acronym, href: `/chair/${encodeURIComponent(info.slug)}` }, { label: title }]} />
-        <div className="p-4 sm:p-8">
-          <div style={CARD} className="mx-auto max-w-lg rounded-2xl bg-white p-6">
-            <h2 className="text-base font-extrabold text-navy">Who are you submitting for?</h2>
-            <p className="mb-4 mt-1 text-sm text-ink-muted">The author becomes Author 1 (the corresponding author) and gets the confirmation email. The paper is linked to their account when they register with this email.</p>
-            <div className="space-y-3">
-              <div><label htmlFor="b-name" className={LABEL}>Author&apos;s full name <span className="text-danger-ink">*</span></label><input id="b-name" value={ask.name} maxLength={200} onChange={(e) => setAsk({ ...ask, name: e.target.value })} className={INPUT_CLASS} /></div>
-              <div><label htmlFor="b-email" className={LABEL}>Author&apos;s email <span className="text-danger-ink">*</span></label><input id="b-email" type="email" value={ask.email} maxLength={254} onChange={(e) => setAsk({ ...ask, email: e.target.value })} className={INPUT_CLASS} /></div>
-            </div>
-            <div className="mt-5 flex justify-end"><Button disabled={!ok} onClick={() => { setOnBehalf({ name: ask.name.trim(), email: ask.email.trim() }); setRows([blankRow({ name: ask.name.trim(), email: ask.email.trim(), corresponding: true })]); }}>Continue</Button></div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   const update = (key: number, patch: Partial<AuthorInput>) => setRows((l) => l.map((a) => (a.key === key ? { ...a, ...patch } : a)));
   const toggleCorresponding = (key: number) => setRows((l) => { const next = l.map((a) => (a.key === key ? { ...a, corresponding: !a.corresponding } : a)); return next.some((a) => a.corresponding) ? next : l; });
   const move = (i: number, dir: -1 | 1) => setRows((l) => { const next = [...l]; [next[i], next[i + dir]] = [next[i + dir], next[i]]; return next; });
   const remove = (key: number) => setRows((l) => { const next = l.filter((a) => a.key !== key); if (!next.some((a) => a.corresponding) && next[0]) next[0] = { ...next[0], corresponding: true }; return next; });
-  /* The signed-in person (or, on behalf, the author the chair named) stays Author 1, whatever the PDF lists: the prototype's withSubmitterFirst. */
+  /* The signed-in author stays Author 1, whatever the PDF lists: the prototype's withSubmitterFirst. On behalf nobody is pinned: the paper's own
+     author list is taken as it is (a row the chair already typed in is kept if the PDF lists that person too). */
   const mergeAuthors = (current: Row[], fromPaper: Row[]): Row[] => {
-    const myEmail = (behalf && onBehalf ? onBehalf.email : info.me.email).trim().toLowerCase();
+    if (behalf) return fromPaper.length ? fromPaper : current;
+    const myEmail = info.me.email.trim().toLowerCase();
     const isMine = (a: AuthorInput) => Boolean(myEmail) && a.email.trim().toLowerCase() === myEmail;
     const me = current.find(isMine);
     if (!me) return fromPaper.length ? fromPaper : current;
@@ -252,7 +234,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
     try {
       const svc = await getAuthorSubmissionService();
       const autoCheck = await autoCheckOf(file);
-      const made = await svc.submitPaper(info.slug, { autoCheck, title: paperTitle, abstract, keywords: keywords.split(/[,;]/).map((k) => k.trim()).filter(Boolean), authors: rows.map(({ key, ...a }) => { void key; return a; }), track, presentationType: type, file, responses: Object.fromEntries(info.extras.filter((f) => answers[f.id] !== undefined && answers[f.id] !== "").map((f) => [f.id, answers[f.id]])) });
+      const made = await svc.submitPaper(info.slug, { onBehalf: behalf, autoCheck, title: paperTitle, abstract, keywords: keywords.split(/[,;]/).map((k) => k.trim()).filter(Boolean), authors: rows.map(({ key, ...a }) => { void key; return a; }), track, presentationType: type, file, responses: Object.fromEntries(info.extras.filter((f) => answers[f.id] !== undefined && answers[f.id] !== "").map((f) => [f.id, answers[f.id]])) });
       void requestPaperIngest(made.dbId); // the AI features are prepared in the background
       const mail = await sendActionEmails(behalf ? "submission_on_behalf" : "submission_received", { submissionId: made.dbId });
       setToast({ title: "Submission received", text: mail ?? `${made.label} was sent to ${info.acronym}.` });
@@ -278,7 +260,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </div>
         </div>
         {info.closed && <div role="alert" className="flex items-start gap-2 rounded-xl border border-danger bg-danger-soft px-4 py-3 text-sm text-danger-ink"><TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" /> Submissions to {info.acronym} are closed (or it isn&apos;t open yet).</div>}
-        {behalf && onBehalf && <div className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-ink-soft">Submitting for <b className="text-navy">{onBehalf.name}</b> ({onBehalf.email}).</div>}
+        {behalf && <div className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-ink-soft">Submitting on behalf of the authors. Upload the paper and its authors are filled in from the PDF; check them and mark the <b className="text-navy">corresponding author</b>, who gets the confirmation email.</div>}
 
         <section style={{ border: "1.5px solid var(--primary)" }} className="rounded-2xl bg-white p-5 sm:p-6">
           <div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-soft text-primary"><Sparkles size={16} aria-hidden="true" /></span><div><h2 className="text-sm font-bold text-navy">Auto-fill from your paper</h2><p className="text-[11px] text-ink-faint">Upload your paper (PDF or Word, up to 25 MB) and we&apos;ll fill in the title, abstract, keywords and authors below for you.</p></div></div>
@@ -348,7 +330,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </div>
         </Section>
 
-        <Section n={2} title="Authors" busy={filling} hint={behalf ? "The author you named is Author 1." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it."}>
+        <Section n={2} title="Authors" busy={filling} hint={behalf ? "Read from the PDF: check them, and tick the corresponding author (they get the confirmation email)." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it."}>
           <div className="space-y-3">
             {rows.map((a, i) => (
               <div key={a.key} style={{ border: `1px solid ${a.corresponding ? "var(--primary-soft-border)" : "var(--border)"}`, background: a.corresponding ? "var(--primary-soft)" : "#FFFFFF" }} className="rounded-xl p-4">
