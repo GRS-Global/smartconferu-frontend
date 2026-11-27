@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getChairService } from "@/services/chair";
 import { SpotlightTour, type TourAction, type ViewStep } from "./spotlight-tour";
 import { SetupGuideModal } from "./setup-guide-modal";
-import { buildTourSteps, DETAIL_LABELS, gateOpen, missingDetails } from "./tour-steps";
+import { buildTourSteps, DETAIL_LABELS, gateOpen, missingDetails, tracksReady } from "./tour-steps";
 import type { ConferenceSetup, SetupTask } from "./use-setup";
 import { readTourState, writeTourState } from "./tour-state";
 import { rememberTourShown, tourNotShownYet } from "./tour-seen";
@@ -68,7 +68,7 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
       if (readTourState(slug).tourDone) writeTourState(slug, { tourDone: false, tourStep: 0 });
       wantGo(slug);
       // What the field steps ask about is what is saved right now.
-      void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, s]) => missingDetails(i, s.tracks.length > 0 && !(s.tracks.length === 1 && s.tracks[0].name === "General Track"))).catch(() => [] as string[]).then((open) => {
+      void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, s]) => missingDetails(i, tracksReady(s))).catch(() => [] as string[]).then((open) => {
         // A tour left (or skipped) past a required step that is still open starts again from that step: the required steps cannot be walked around by resuming.
         const firstRequired = buildTourSteps(open).findIndex((st) => st.gate);
         if (firstRequired >= 0 && readTourState(slug).tourStep > firstRequired) writeTourState(slug, { tourStep: firstRequired });
@@ -107,7 +107,7 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
     let off = false;
     void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, st]) => {
       if (off) return;
-      const now = missingDetails(i, st.tracks.length > 0 && !(st.tracks.length === 1 && st.tracks[0].name === "General Track"));
+      const now = missingDetails(i, tracksReady(st));
       const firstOpen = steps.findIndex((x) => x.gate && (x.gate === "saved" ? now.some((k) => k !== "tracks" && open.includes(k)) : now.includes(x.key)));
       if (firstOpen >= 0 && index > firstOpen) { wantGo(slug); setIndex(firstOpen); writeTourState(slug, { tourStep: firstOpen }); }
     }).catch(() => undefined);
@@ -159,7 +159,7 @@ function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open:
   const finish = () => {
     writeTourState(slug, { welcomed: true, tourDone: true, tourStep: 0 });
     void getChairService().then((c) => Promise.all([c.loadInfo(slug), c.loadSettings(slug)])).then(([i, s]) => {
-      const open = missingDetails(i, s.tracks.length > 0 && !(s.tracks.length === 1 && s.tracks[0].name === "General Track"));
+      const open = missingDetails(i, tracksReady(s));
       if (open.length) setRecap(open); else onExit();
     }).catch(onExit);
   };

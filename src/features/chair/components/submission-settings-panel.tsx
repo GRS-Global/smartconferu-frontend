@@ -144,7 +144,8 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
   const update = (patch: Partial<SubmissionPolicy>) => {
     const next = { ...policy, ...patch };
     setPolicy(next); setError("");
-    void getChairService().then((s) => s.saveSubmissionPolicy(slug, next)).catch(fail);
+    // Switching tracks on / off changes the setup checklist (Tracks is a setup item only while tracks are on): tell it once saved.
+    void getChairService().then((s) => s.saveSubmissionPolicy(slug, next)).then(() => { if ("tracksOn" in patch) setupChanged(); }).catch(fail);
   };
   const commitTracks = (names: string[]) => {
     const next: ConferenceTrack[] = names.map((name, i) => tracks.find((t) => t.name === name) ?? { id: `new-${Date.now()}-${i}`, name, description: "" });
@@ -276,7 +277,7 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
         {card("tracks", Layers, "Tracks", "tracks", policy.tracksOn ? "Authors select one track when submitting." : "Disabled — the track field is hidden from the submission form.", (
           <>
             {/* Read by the setup tour (gateOpen): a track other than the default placeholder has been added. */}
-            <span hidden data-track-ready={tracks.length > 0 && !(tracks.length === 1 && tracks[0].name === "General Track") ? "1" : "0"} />
+            <span hidden data-track-ready={!policy.tracksOn || (tracks.length > 0 && !(tracks.length === 1 && tracks[0].name === "General Track")) ? "1" : "0"} />
             {policy.tracksOn && tracks.length === 0 && <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning-ink"><AlertTriangle size={13} aria-hidden="true" /> Tracks are enabled but none are defined. Add at least one track.</p>}
             <OrderedNameTable items={trackNames} onChange={commitTracks} noun="Track" placeholder="e.g. Business Analytics" muted={!policy.tracksOn} />
           </>

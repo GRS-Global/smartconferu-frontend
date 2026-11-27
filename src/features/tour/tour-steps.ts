@@ -20,6 +20,13 @@ export const GATE_HINTS: Record<string, string> = {
   tracks: "Add at least one track to continue.",
 };
 
+/** Whether the conference's tracks need nothing more: tracks are switched off (Settings › Submissions, not shown to authors), or there is
+ *  at least one track of the chair's own (the default "General Track" alone does not count). */
+export function tracksReady(settings: { tracks: Array<{ name: string }>; submission?: { tracksOn?: boolean } }): boolean {
+  if (settings.submission?.tracksOn === false) return true;
+  return settings.tracks.length > 0 && !(settings.tracks.length === 1 && settings.tracks[0].name === "General Track");
+}
+
 /** The required details that are still missing in what is saved (the field steps and the recap are built from this). */
 export function missingDetails(info: ConferenceInfo | null, hasTracks: boolean): string[] {
   const empty = (v: string | undefined) => !v || !v.trim();

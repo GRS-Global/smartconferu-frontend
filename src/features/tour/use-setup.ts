@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getChairService } from "@/services/chair";
 import type { ConferenceInfo } from "@/types/chair";
-import { missingDetails } from "./tour-steps";
+import { missingDetails, tracksReady } from "./tour-steps";
 
 /* What a chair has to set up before the Call for Papers can be published (the prototype's getConferenceSetup + CONFERENCE_SETUP_TASKS). Whether a task is
    done always comes from what is saved, never from the guide. Once the Call for Papers is published or closed there is nothing left to set up. */
@@ -52,10 +52,11 @@ export function useConferenceSetup(slug: string, enabled: boolean): ConferenceSe
     let cancelled = false;
     void getChairService().then((c) => Promise.all([c.loadConference(slug), c.loadInfo(slug), c.loadSettings(slug)])).then(([data, info, settings]) => {
       if (cancelled) return;
-      const hasTracks = settings.tracks.length > 0 && !(settings.tracks.length === 1 && settings.tracks[0].name === "General Track");
-      const open = missingDetails(info, hasTracks);
+      const open = missingDetails(info, tracksReady(settings));
+      // Tracks switched off (Settings › Submissions): not a setup item at all.
+      const defs = settings.submission.tracksOn === false ? DEFS.filter((d) => d.key !== "tracks") : DEFS;
       const clash = Boolean(info?.abstractDeadline && info.submissionDeadline && info.abstractDeadline > info.submissionDeadline);
-      const tasks: SetupTask[] = DEFS.map((d) => {
+      const tasks: SetupTask[] = defs.map((d) => {
         const done = !(OPEN_KEYS[d.key] ?? [d.key]).some((k) => open.includes(k));
         const attention = done && clash && (d.key === "abstractDeadline" || d.key === "submissionDeadline");
         const partial = !done && d.key === "areas" && Boolean(info && (info.primaryArea || info.secondaryArea || info.topics.length));
