@@ -11,6 +11,7 @@ import { VerifyStatus } from "../showcase/parts";
 import { findListName, PROFILE_OTHER } from "../entries";
 import { useSectionSave } from "../use-section-save";
 import { validateProfileForm } from "../validation";
+import { phoneProblem } from "../phone-rules";
 import { ListMatch, OtherBox, PendingNote } from "./editor-parts";
 import type { EditorProps } from "./editor-types";
 import { PhoneField } from "./phone-field";
@@ -232,7 +233,8 @@ export function PhoneEditor({ profile, save, onDone, onCancel }: EditorProps) {
   const [touched, setTouched] = useState(false);
   const state = useSectionSave();
   const national = phone.replace(/^\+\d+\s*/, "").replace(/\D/g, "");
-  const problem = national && (national.length < 6 || national.length > 14) ? "Enter a valid mobile number." : "";
+  // Country-wise (phone-rules.ts): e.g. India 10 digits starting with 6–9.
+  const problem = phoneProblem(phone);
   const changed = phone.trim() !== profile.phone;
   const dirty = changed || (SMS_ALERTS_ENABLED && JSON.stringify([...channels].sort()) !== JSON.stringify([...profile.notifyChannels].sort()));
   const cleared = !national;
