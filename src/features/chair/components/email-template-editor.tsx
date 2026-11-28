@@ -9,6 +9,7 @@ import { INPUT_CLASS } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import type { PlatformTemplate } from "@/types/chair";
 import { emailPreviewDoc } from "../email-preview";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 
 /* Email Templates › editing one email, as a page of its own (the prototype's template editor): "Back to <where you came from>" and "All email templates",
    the email's name and category with its on / off switch, Edit / Preview of the subject and message (a small rich-text editor: bold, italic, underline,
@@ -147,7 +148,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
           </div>
         </section>
 
-        <aside className="space-y-4" aria-label="About this email">
+        <aside className={`space-y-4 ${STICKY_SIDE_XL}`} aria-label="About this email">
           <div style={CARD} className="rounded-2xl bg-white p-4">
             <div className="text-xs font-bold text-navy">Email information</div>
             <div className="mt-3 flex items-center justify-between text-[11.5px]"><span className="text-ink-faint">Category</span><span style={{ background: tone.bg, color: tone.color }} className="rounded-full px-2 py-0.5 text-[10.5px] font-bold">{tone.label}</span></div>

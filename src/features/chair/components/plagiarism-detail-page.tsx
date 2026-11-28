@@ -19,6 +19,7 @@ import { SendDialog } from "./plagiarism-check-page";
 import type { ScreeningSendInput } from "./screening-email-form";
 import { CheckRow, PaperNav, SectionCard, VersionActions } from "./screening-detail-ui";
 import { chairPaperHref } from "@/lib/routes";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 import {
   Btn, CARD, DecisionChip, DecisionSelect, DecisionWarning, EmailCell, LoadingOverlay, LockNote, ScreeningSettingsButton, ScreeningToast, SentNote, daysAgo, type ScreeningToastData,
 } from "./screening-ui";
@@ -261,7 +262,7 @@ export function PlagiarismDetailPage({ slug, paperLabel }: { slug: string; paper
           </SectionCard>
         </div>
 
-        <div className="min-w-0 space-y-5 xl:sticky xl:top-4">
+        <div className={`min-w-0 space-y-5 ${STICKY_SIDE_XL}`}>
           <SectionCard title="Decision" hint="Only Revision and Reject are emailed to the author.">
             {v.waiting ? <p className="text-sm text-ink-muted">{waitingWhy}</p> : (
               <>

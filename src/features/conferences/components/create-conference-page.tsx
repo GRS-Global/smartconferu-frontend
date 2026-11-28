@@ -534,7 +534,7 @@ export function CreateConferencePage() {
               </div>
             )}
           </div>
-          <aside className="sticky top-24 hidden space-y-4 lg:block">
+          <aside className="side-scroll sticky top-24 hidden max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto overscroll-contain lg:-m-1 lg:block lg:p-1">
             <div style={CARD} className="ui-accent-card rounded-2xl bg-white p-5">
               <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-ink-faint">Live preview</div>
               <div className="flex items-start gap-3">

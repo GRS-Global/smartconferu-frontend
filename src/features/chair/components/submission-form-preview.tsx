@@ -8,6 +8,7 @@ import { COUNTRIES } from "@/lib/country-codes";
 import { cn } from "@/lib/cn";
 import { getProfileService } from "@/services/profile";
 import type { SubmissionExtra } from "@/types/author-submission";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 
 /* The prototype's Manage › Submission Form (InlineFormEditor in "Author's view"): the form exactly as authors see it (guidelines, paper drop
    zone, Basic Information with the keyword tags and the author cards, Declarations, the chair's extra questions), to try out — nothing is
@@ -74,7 +75,7 @@ export function SubmissionFormPreview({ acronym, guidelines, types, tracks, extr
         <p className="mt-1.5 text-xs text-ink-soft">This is exactly how authors see the form.</p>
       </div>
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,48rem)_17rem]">
-        <aside className="space-y-3 xl:sticky xl:top-24 xl:order-2" aria-label="Form summary">
+        <aside className={`space-y-3 xl:order-2 ${STICKY_SIDE_XL}`} aria-label="Form summary">
           <div style={CARD} className="rounded-2xl bg-white p-3.5">
             <div className="flex items-center gap-2.5 px-1">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary"><Eye size={15} aria-hidden="true" /></span>

@@ -2,6 +2,7 @@
 
 import { RichTextContent, hasRichText } from "@/components/ui/rich-text";
 import { ArrowDown, ArrowUp, BookOpen, Check, ChevronUp, Clock, FileCheck, RefreshCw, Sparkles, TriangleAlert, Trash2, Upload, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -26,6 +27,7 @@ import { ApiError } from "@/lib/api-client";
 import type { AuthorInput, SubmissionExtra, SubmitFormInfo } from "@/types/author-submission";
 import { isValidEmail } from "@/lib/email";
 import { KeywordTags } from "@/components/ui/keyword-tags";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 
 /* New Submission (the prototype's SubmitPaperPage with its default submission form): the paper file, title, abstract, keywords,
    submission type and track, the authors (the signed-in author is Author 1 and must stay on the paper), and the two declarations.
@@ -55,6 +57,8 @@ const AUTHORS_WITH_PLACE = 2;
 const AUTHOR_EMAILS_REQUIRED = 2;
 const blankRow =(over: Partial<Row> = {}): Row => ({ key: nextRowKey(), name: "", email: "", affiliation: "", department: "", city: "", country: "", corresponding: false, later: false, ...over });
 const titleKey = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "");
+/** What a chair is told when they open their own conference's submission link (the API refuses it too: OWN_CONFERENCE). */
+const OWN_CONFERENCE_TOAST: FlowToastData = { tone: "warning", title: "You can't submit to your own conference", text: "You're a chair of this conference, so you can't submit your own paper to it. To add a paper for an author, use Submit on behalf." };
 
 type FormState =
   | { status: "loading" }
@@ -104,9 +108,35 @@ export function SubmitPaperPage({ slug, behalf = false }: { slug: string; behalf
   useEffect(() => { setVisit((v) => v + 1); }, []);
   const gate = workspaceGate(form, retry, { title, loadingLabel: "Loading the submission form", missingTitle: "We couldn't find that conference.", missingText: "It doesn't exist, or it isn't visible to you.", errorTitle: "Couldn't load the submission form." });
   if (gate || form.status !== "ready") return gate;
-  const page = <SubmitForm key={visit} info={form.info} behalf={behalf} title={title} />;
+  // A chair of this conference opening its CFP submission link: no form — they add papers for authors with Submit on behalf.
+  const ownConference = !behalf && Boolean(form.shell?.roles.includes("chair"));
+  const page = ownConference ? <OwnConferenceNotice key={visit} slug={form.info.slug} acronym={form.info.acronym} title={title} /> : <SubmitForm key={visit} info={form.info} behalf={behalf} title={title} />;
   if (!form.shell) return page;
-  return <ConferenceShell role={behalf ? "chair" : "author"} conference={form.shell.conference} roles={form.shell.roles} others={form.shell.others} active={null}>{page}</ConferenceShell>;
+  return <ConferenceShell role={behalf || ownConference ? "chair" : "author"} conference={form.shell.conference} roles={form.shell.roles} others={form.shell.others} active={null}>{page}</ConferenceShell>;
+}
+
+/** Shown instead of the form to a chair of the conference: why they can't submit here, and the way to add a paper for an author. The toast comes up at once. */
+function OwnConferenceNotice({ slug, acronym, title }: { slug: string; acronym: string; title: string }) {
+  const [toast, setToast] = useState<FlowToastData | null>(OWN_CONFERENCE_TOAST);
+  const closeToast = useCallback(() => setToast(null), []);
+  const chair = `/chair/${encodeURIComponent(slug)}`;
+  return (
+    <>
+      <PageHeader title={title} breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: acronym, href: chair }, { label: title }]} />
+      <div className="p-4 sm:p-8">
+        <div role="alert" style={CARD} className="mx-auto max-w-xl rounded-2xl bg-white p-8 text-center">
+          <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-warning-soft text-warning-ink"><TriangleAlert size={20} aria-hidden="true" /></span>
+          <h2 className="text-lg font-extrabold text-navy">You can&apos;t submit to your own conference</h2>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">You&apos;re a chair of {acronym}, so you can&apos;t submit your own paper to it. To add a paper for one of its authors, use <b className="text-navy">Submit on behalf</b>.</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+            <Link href={`${chair}/submit-behalf`} className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-hover">Submit on behalf of an author</Link>
+            <Link href={chair} className="inline-flex items-center rounded-xl border-[1.5px] border-line px-4 py-2.5 text-sm font-semibold text-ink-soft hover:bg-canvas">Back to {acronym}</Link>
+          </div>
+        </div>
+      </div>
+      <FlowToast toast={toast} onClose={closeToast} />
+    </>
+  );
 }
 
 function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boolean; title: string }) {
@@ -269,6 +299,8 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
     } catch (e) {
       // Another paper took this title in the meantime: say so under the title, where it can be fixed.
       if (e instanceof ApiError && e.code === "DUPLICATE_TITLE") { setDup({ key: tk, found: true, mine: false }); setSending(false); return; }
+      // A chair of this conference (the page didn't know, e.g. the role was given a moment ago): the API refused, say why in a toast.
+      if (e instanceof ApiError && e.code === "OWN_CONFERENCE") { setToast(OWN_CONFERENCE_TOAST); setSending(false); return; }
       setError(e instanceof AuthRequiredError ? "Your session ended — please sign in again." : e instanceof Error ? e.message : "Something went wrong.");
       setSending(false);
     }
@@ -452,7 +484,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           <Button disabled={sending || filling || info.closed} title={info.closed ? `Submissions to ${info.acronym} are closed` : undefined} onClick={() => void send()}>{sending ? <Spinner size={15} tone="current" /> : <Check size={15} aria-hidden="true" />} {sending ? "Submitting…" : "Submit paper"}</Button>
         </div>
       </div>
-      <aside className="space-y-4 xl:sticky xl:top-6" aria-label="Before you submit">
+      <aside className={`space-y-4 ${STICKY_SIDE_XL}`} aria-label="Before you submit">
         <div style={CARD} className="rounded-2xl bg-white p-5">
           <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-bold text-navy">Before you submit</h2><span className="text-xs font-semibold text-ink-faint">{done}/{required.length}</span></div>
           <ul className="space-y-2">{required.map(([l, ok]) => <li key={l} className="flex items-center gap-2.5 text-xs"><span className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded-full", ok ? "bg-success text-white" : "border-[1.5px] border-line-strong")}>{ok && <Check size={10} strokeWidth={3} aria-hidden="true" />}</span><span className={ok ? "font-medium text-ink" : "text-ink-faint"}>{l}</span></li>)}</ul>

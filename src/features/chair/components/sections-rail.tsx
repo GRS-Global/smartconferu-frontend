@@ -3,6 +3,7 @@
 import { ArrowRight, ChevronDown, ChevronRight, Check, Mail } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 
 /* The right-hand "Sections" rail the prototype's settings pages share (ConfSettingsRail): a card that says where you are on the page —
    each section with a one-line summary (and, for long ones, its items) that jumps to it — and, under it, links to the related pages. */
@@ -39,7 +40,7 @@ export function SectionsRail({ title = "Sections", sub = "Jump to a part of this
     return () => document.removeEventListener("scroll", onScroll, { capture: true });
   }, [ids]);
   return (
-    <aside className="space-y-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1" aria-label="Sections">
+    <aside className={`space-y-4 ${STICKY_SIDE_XL}`} aria-label="Sections">
       <nav style={CARD} className="overflow-hidden rounded-2xl bg-white">
         <div className="border-b border-muted px-4 py-3.5"><div className="text-xs font-bold text-navy">{title}</div><div className="mt-0.5 text-[11px] text-ink-muted">{sub}</div></div>
         <ul className="space-y-0.5 p-2">

@@ -12,6 +12,7 @@ import { sendEmailEvent } from "@/services/action-emails";
 import { useChairConference } from "../use-chair-conference";
 import { useEmailTemplates } from "../use-email-templates";
 import { EmailTemplatesPane } from "./email-templates-page";
+import { STICKY_SIDE_LG } from "@/components/layout/sticky-side";
 
 /* Email Communication › Send Email (the prototype's ComposeEmailPane): a one-off email to a chosen audience — all authors, the
    corresponding authors, the accepted ones, the ones still under review, the reviewers. The email server (`custom_email`) works out the
@@ -263,7 +264,7 @@ export function EmailCommunicationPage({ slug }: { slug: string }) {
                 </div>
               </section>
             </div>
-            <div className="space-y-4 lg:sticky lg:top-8">
+            <div className={`space-y-4 ${STICKY_SIDE_LG}`}>
               <section style={CARD} className="rounded-2xl bg-white p-4">
                 <CardHead icon={Users} title="Recipients" />
                 <div className="-mt-2 space-y-1.5">

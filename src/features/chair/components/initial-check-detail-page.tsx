@@ -20,6 +20,7 @@ import { ReopenModal, SendDialog } from "./initial-check-page";
 import type { ScreeningSendInput } from "./screening-email-form";
 import { CheckRow, PaperNav, SectionCard, VersionActions } from "./screening-detail-ui";
 import { chairPaperHref } from "@/lib/routes";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 import {
   AutoTag, Btn, CARD, CELL_INPUT, CELL_INPUT_ST, DecisionChip, DecisionSelect, DecisionWarning, EmailCell, LoadingOverlay, LockNote, MISSING_LABEL, PlainText, RED_ST, ScreeningSettingsButton, ScreeningToast, SentNote, YesNoSwitch, YesNoText, daysAgo,
   type ScreeningToastData,
@@ -244,7 +245,7 @@ export function InitialCheckDetailPage({ slug, paperLabel }: { slug: string; pap
           </SectionCard>
         </div>
 
-        <div className="min-w-0 space-y-5 xl:sticky xl:top-4">
+        <div className={`min-w-0 space-y-5 ${STICKY_SIDE_XL}`}>
           <SectionCard title="Decision" hint="Only Revision and Reject are emailed to the author.">
             {locked ? (
               <><DecisionChip value={check.decision} options={CHECK_DECISIONS} /><div className="mt-2"><LockNote /></div></>

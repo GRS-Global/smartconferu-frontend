@@ -473,7 +473,7 @@ export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: 
           </ProfileSectionCard>
         </div>
 
-        <aside aria-label="Contact" className="flex min-w-0 max-w-full basis-full flex-col gap-4 self-start min-[980px]:sticky min-[980px]:top-[88px] min-[980px]:shrink min-[980px]:grow-0 min-[980px]:basis-[340px]">
+        <aside aria-label="Contact" className="flex min-w-0 max-w-full basis-full flex-col gap-4 self-start side-scroll min-[980px]:sticky min-[980px]:top-[88px] min-[980px]:max-h-[calc(100vh-104px)] min-[980px]:overflow-y-auto min-[980px]:overscroll-contain min-[980px]:shrink min-[980px]:grow-0 min-[980px]:basis-[340px]">
           {!readOnly && <ContactCard profile={profile} onEditEmails={edit.emails} onEditPhone={edit.phone} onEditAddress={edit.address} onShare={edit.share} />}
         </aside>
       </div>

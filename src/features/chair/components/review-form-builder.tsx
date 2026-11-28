@@ -6,6 +6,7 @@ import { INPUT_CLASS } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/load-more";
 import { PROTECTED_FIELD_IDS, type FieldType, type ReviewField, type ReviewSection } from "@/features/reviewer/form-schema";
 import { InstructionsPreview } from "./review-form-preview";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 
 /* The review form edited where it sits (the prototype's InlineFormEditor): the form as the reviewer sees it, and on hover each field offers edit (label, hint,
    required, type, scale, options), duplicate, move and delete; a thin "insert field here" opens between fields; sections can be renamed, moved, added and
@@ -211,7 +212,7 @@ export function ReviewFormBuilder({ initial, acronym, instructions, hiddenFields
         <button type="button" onClick={done} className="h-9 cursor-pointer rounded-lg bg-primary px-5 text-xs font-bold text-white hover:bg-primary-hover">Done</button>
       </div>
       </div>
-      <aside className="space-y-4 xl:sticky xl:top-6" aria-label="Editing the form">
+      <aside className={`space-y-4 ${STICKY_SIDE_XL}`} aria-label="Editing the form">
         <div style={CARD} className="rounded-2xl bg-white px-[18px] py-5">
           <div className="flex items-center gap-2.5"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white"><Pencil size={14} aria-hidden="true" /></span><div><div className="text-sm font-bold text-navy">Editing form</div><div className="text-[11px] text-ink-faint">Changes save automatically</div></div></div>
           <div aria-live="polite" className="mt-3">{status}</div>

@@ -4,6 +4,7 @@ import { AlertTriangle, Camera, Check, Download, Eye, FileCheck, FileText, FileU
 import { useRef, useState } from "react";
 import { getChairService } from "@/services/chair";
 import { ConferenceMonogram } from "@/features/workspace/components/conference-shell";
+import { STICKY_SIDE_LG } from "@/components/layout/sticky-side";
 
 /* Conference Details › Branding (the prototype's Change Logo, embedded): the conference logo, shown beside its name on the Call for Papers, the submission pages and
    the emails. Drag a file onto the box or browse; nothing is saved until "Save logo" (Discard goes back to the saved one, Remove takes it off). The logo is stored in the
@@ -101,7 +102,7 @@ export function BrandingTab({ slug, acronym, name, logoUrl, onSaved, locked }: {
         </div>
       </div>
 
-      <aside className="space-y-3 lg:sticky lg:top-24">
+      <aside className={`space-y-3 ${STICKY_SIDE_LG}`}>
         <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-ink-faint"><Eye size={12} aria-hidden="true" /> Where your logo appears</div>
         <div style={CARD} className="overflow-hidden rounded-2xl bg-white">
           <div style={{ borderBottom: "1px solid var(--muted)" }} className="px-4 py-2 text-[11px] font-semibold text-ink-faint">Call for Papers page</div>

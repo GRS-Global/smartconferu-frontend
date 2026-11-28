@@ -207,7 +207,7 @@ export function ReviewBody(p: ReviewBodyProps) {
         </section>
       </div>
 
-      <section style={CARD} className="rounded-2xl bg-white p-5">
+      <section style={CARD} className="side-scroll rounded-2xl bg-white p-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:overscroll-contain">
         <Title>Record decision</Title>
         {detail.reviewers.length > 0 && <div className="mb-3 rounded-lg bg-canvas px-3 py-2 text-xs text-ink-soft">{done.length} of {detail.reviewers.length} reviewed{lean && <> · reviewers lean <b className="text-navy">{lean}</b></>}</div>}
         <div role="group" aria-label="Decision" className="space-y-2">

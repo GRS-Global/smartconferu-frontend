@@ -17,6 +17,7 @@ import type { AppNotification } from "@/types/notification";
 import { EmailViewer } from "./email-viewer";
 import { NotificationCard } from "./notification-card";
 import { SMS_ALERTS_ENABLED } from "@/lib/config";
+import { STICKY_SIDE_XL } from "@/components/layout/sticky-side";
 
 /** Notifications: one inbox for everything addressed to the signed-in user — the prototype's NotificationsPage
  *  (src/author-module/NotificationsPage.jsx) on the global page: the four tabs (All, Paper updates, Announcements, Emails), the
@@ -228,7 +229,7 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
             )}
           </section>
 
-          <aside className="flex flex-col gap-4">
+          <aside className={`flex flex-col gap-4 ${STICKY_SIDE_XL}`}>
             <section aria-labelledby="notification-prefs" className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5 shadow-card">
               <h2 id="notification-prefs" className="text-[15px] font-extrabold text-navy">How should we tell you?</h2>
               {([

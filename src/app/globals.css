@@ -254,3 +254,7 @@ summary {
 @keyframes pu-spin { to { transform: rotate(360deg); } }
 @keyframes pu-glow { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
 @media (prefers-reduced-motion: reduce) { .pu-anim { animation: none !important; } }
+
+/* Side panels that scroll on their own (components/layout/sticky-side.ts): a thin scrollbar that only shows its colour on hover. */
+.side-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.side-scroll:hover { scrollbar-color: var(--line-strong, #cbd5e1) transparent; }

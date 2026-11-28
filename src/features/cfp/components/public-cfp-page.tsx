@@ -96,7 +96,7 @@ export function PublicCfpPage({ page }: { page: string }) {
             </div>
             <CfpDoc html={html} accent={accent} />
           </div>
-          <div className="space-y-4 lg:sticky lg:top-24">
+          <div className="side-scroll space-y-4 lg:sticky lg:top-24 lg:-m-1 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:overscroll-contain lg:p-1">
             <div style={CARD} className="rounded-2xl bg-white p-4">
               <div className="mb-2 text-xs font-semibold text-ink-faint">Key dates</div>
               <div className="space-y-1.5 text-xs">

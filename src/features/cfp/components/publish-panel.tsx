@@ -7,6 +7,7 @@ import { openSetupGuide } from "@/features/tour/tour-events";
 import { CFP_NEEDS_APPROVAL, getCfpService } from "@/services/cfps";
 import { AuthRequiredError } from "@/services/errors";
 import { CfpPublicPreview, type CfpPreviewProps } from "./cfp-public-preview";
+import { STICKY_SIDE_LG } from "@/components/layout/sticky-side";
 
 /* Publish (the prototype's PublishCFPPage): choose the page the CFP lives at, check what is still missing, see what will go live, and publish. In the
    database, publishing opens submissions at once (`publish_cfp`); there is no review step and the submission link is the conference's own
@@ -131,7 +132,7 @@ export function PublishPanel({ slug, acronym, chosen, missing, preview, onCancel
         </>
       ))}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
-        <div className="space-y-6 lg:sticky lg:top-6 lg:col-span-2">
+        <div className={`space-y-6 lg:col-span-2 ${STICKY_SIDE_LG}`}>
           <div style={CARD} className="rounded-2xl bg-white p-6">
             <h2 className="mb-4 flex items-center gap-2 text-[15px] font-extrabold text-navy"><Globe2 size={16} aria-hidden="true" className="text-primary" /> Choose the CFP web page</h2>
             <p className="-mt-1 mb-4 text-xs text-ink-faint">This is the page authors will visit to view your published CFP — it&apos;ll live at <strong className="text-ink-soft">/cfp/&lt;the part you choose below&gt;</strong>.</p>

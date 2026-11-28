@@ -206,7 +206,7 @@ export function RequestDetailPage({ id }: { id: string }) {
               </div>
             </div>
 
-            <div style={CARD} className="rounded-2xl bg-white p-6 lg:sticky lg:top-6">
+            <div style={CARD} className="side-scroll rounded-2xl bg-white p-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:overscroll-contain">
               <CardHeader icon={Building2} title="Conference information" />
               <dl className="space-y-3.5 text-sm">
                 {details.map((d) => <div key={d.label}><dt className="mb-0.5 text-xs font-semibold text-ink-faint">{d.label}</dt><dd className="break-words font-medium text-ink">{d.value}</dd></div>)}

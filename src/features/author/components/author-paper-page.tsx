@@ -22,6 +22,7 @@ import { DecisionCard, FilesTable, ManageCard, PaperBody, PlagiarismReports, Pap
 import { StatusPill } from "./submission-parts";
 import { authorPaperHref } from "@/lib/routes";
 import { useCanonicalPath } from "@/lib/use-canonical-path";
+import { STICKY_SIDE_LG } from "@/components/layout/sticky-side";
 
 /* A paper's own page, as its author sees it (the prototype's SubmissionDetailPage, author layout): the header with its status
    and the author's timeline, the presentation panel once accepted, the correction / revision request, keywords, abstract and
@@ -164,7 +165,7 @@ export function AuthorPaperPage({ label }: { label: string }) {
             <FilesTable paper={paper} onView={(f) => { void open(f, false); }} onDownload={(f) => { void open(f, true); }} onAddSupporting={paper.withdrawn || paper.status === "rejected" ? null : () => setDialog("files-supporting")} />
             <DecisionCard paper={paper} onUpload={() => setDialog("files-paper")} />
           </div>
-          <div className="space-y-5 lg:sticky lg:top-8">
+          <div className={`space-y-5 ${STICKY_SIDE_LG}`}>
             <ManageCard paper={paper} onDetails={() => setDialog("details")} onAuthors={() => setDialog("authors")} onFiles={() => setDialog("files-paper")} onWithdraw={() => setDialog("withdraw")} />
           </div>
         </div>

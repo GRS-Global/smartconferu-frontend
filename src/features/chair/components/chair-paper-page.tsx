@@ -36,6 +36,7 @@ import { EmailAuthorsDialog } from "./email-authors-dialog";
 import { chairPaperHref } from "@/lib/routes";
 import { useCanonicalPath } from "@/lib/use-canonical-path";
 import { RegistrationCard, type RegistrationValues } from "./registration-card";
+import { STICKY_SIDE_LG } from "@/components/layout/sticky-side";
 
 /* A paper's page as its chair sees it (the prototype's SubmissionDetailPage, chair layout): the paper, "Reviewers & Scores" with each
    reviewer's progress and review (and the switch that shares their comments with the authors), and "Record decision" with the note to
@@ -299,7 +300,7 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
               <FilesCard detail={detail} onNotice={(title, text) => setToast({ title, text })} onAddSupporting={paper.withdrawn ? null : () => setManage("files-supporting")} />
               <NoteCard detail={detail} onUpload={() => setManage("files-paper")} />
             </div>
-            <div className="space-y-6">
+            <div className={`space-y-6 ${STICKY_SIDE_LG}`}>
             <RegistrationCard key={`${paper.dbId}-${paper.registration?.updatedAt ?? "new"}`} paper={paper} busy={busy} onSave={saveRegistration} />
             <ManageCard detail={detail} onDetails={() => setManage("details")} onAuthors={() => setManage("authors")} onFiles={() => setManage("files-paper")} onWithdraw={() => setManage("withdraw")} />
             <Card title="Paper actions" icon={Pencil}>
