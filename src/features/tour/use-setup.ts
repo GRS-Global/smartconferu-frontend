@@ -19,7 +19,6 @@ export interface SetupTask {
 export interface ConferenceSetup { ready: boolean; tasks: SetupTask[]; done: number; total: number; left: number; published: boolean; minutesLeft: number; info: ConferenceInfo | null }
 
 const DEFS: Array<Omit<SetupTask, "done" | "status" | "issue">> = [
-  { key: "abstractDeadline", label: "Set the abstract deadline", hint: "When authors must send their abstract.", why: "Shown on your Call for Papers so authors know when abstracts are due.", minutes: 0.5, input: "date", at: "settings", tour: "cd-abstract-deadline" },
   { key: "submissionDeadline", label: "Set the submission deadline", hint: "The last day authors can submit a paper.", why: "The last day authors can submit; the Call for Papers and the emails use this date too.", minutes: 0.5, input: "date", at: "settings", tour: "cd-submission-deadline" },
   { key: "language", label: "Choose the language", hint: "The language papers are written and reviewed in.", why: "Tells authors and reviewers which language papers are written and reviewed in.", minutes: 0.5, input: "language", at: "settings", tour: "cd-language" },
   { key: "about", label: "Describe the conference", hint: "Scope and audience, shown on the Call for Papers.", why: "The scope and audience text readers see on your Call for Papers.", minutes: 2, input: "text", at: "settings", tour: "cd-about" },

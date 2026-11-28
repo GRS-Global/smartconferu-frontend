@@ -1,4 +1,5 @@
 import { api } from "@/lib/api-client";
+import { hybridDetails } from "@/lib/hybrid-dates";
 import { requestStatusOf, type ConferenceRequest, type NewConferenceInput } from "@/types/conference-request";
 import type { ConferenceRequestService } from "../conference-requests";
 
@@ -34,7 +35,8 @@ export const apiConferenceRequestService: ConferenceRequestService = {
         venue: blank(form.venue), city: blank(form.city), state: blank(form.state), country: blank(form.country), webPage: blank(form.webPage), contactEmail: blank(form.contactEmail),
         primaryArea: blank(form.primaryArea), secondaryArea: blank(form.secondaryArea), startDate: blank(form.startDate), endDate: blank(form.endDate),
         // What the backend has no column for travels in `details`, as the Supabase version kept it.
-        details: { type: form.type, typeInfo: form.type === "other" ? form.typeInfo.trim() : undefined, timezone: blank(form.timezone) ?? undefined, address: blank(form.address) ?? undefined, postalCode: blank(form.postalCode) ?? undefined, eventType: form.eventType || undefined },
+        details: { type: form.type, typeInfo: form.type === "other" ? form.typeInfo.trim() : undefined, timezone: blank(form.timezone) ?? undefined, address: blank(form.address) ?? undefined, postalCode: blank(form.postalCode) ?? undefined, eventType: form.eventType || undefined,
+          ...(form.eventType === "hybrid" && form.hybridDates ? hybridDetails(true, form.hybridDates) : {}) },
       },
     });
     return { id: created.id, slug: created.slug };

@@ -267,7 +267,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
     { key: "review", label: "Reviews due", iso: reviewDeadline, end: undefined },
     { key: "event", label: "Conference dates", iso: conference.startDate, end: conference.endDate },
   ].filter((m) => m.iso).map((m) => ({ ...m, days: daysToISO(m.end || m.iso) })).sort((a, b) => toDate(a.iso).getTime() - toDate(b.iso).getTime());
-  const missingDates = [!abstractDeadline && "abstract", !submissionDeadline && "submission", !reviewDeadline && "review"].filter(Boolean) as string[];
+  const missingDates = [!submissionDeadline && "submission", !reviewDeadline && "review"].filter(Boolean) as string[];
   const next = milestones.find((m) => m.days != null && m.days >= 0) ?? milestones[milestones.length - 1];
 
   const critical: Array<{ text: string; cta: string; href: string }> = [];

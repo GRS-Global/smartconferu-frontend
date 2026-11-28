@@ -46,6 +46,7 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
     set("topics", [...form.topics, t]); setTopic("");
   };
   const problem = !form.name.trim() ? "Give the conference a title."
+    : !form.submissionDeadline ? "Pick the submission deadline."
     : form.startDate && form.endDate && form.endDate < form.startDate ? "The end date can't be before the start date."
       : form.abstractDeadline && form.submissionDeadline && form.abstractDeadline > form.submissionDeadline ? "The abstract deadline must be on or before the submission deadline." : "";
   const save = async () => {
@@ -91,8 +92,8 @@ export function DetailsPanel({ slug, info, submissionLink, onDone, onSaved, onSe
             <div className="grid grid-cols-2 gap-3">
               <div><label htmlFor="cd-start" className={LABEL}>Start date <span className="text-danger-ink">*</span></label><input id="cd-start" type="date" value={form.startDate} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: f.endDate && f.endDate < v ? v : f.endDate })); }} className={FIELD} /></div>
               <div><label htmlFor="cd-end" className={LABEL}>End date <span className="text-danger-ink">*</span></label><input id="cd-end" type="date" value={form.endDate} min={form.startDate || undefined} onChange={(e) => set("endDate", e.target.value)} className={FIELD} /></div>
-              <div><label htmlFor="cd-abstract" className={LABEL}>Abstract deadline</label><input id="cd-abstract" type="date" value={form.abstractDeadline} onChange={(e) => set("abstractDeadline", e.target.value)} className={FIELD} /></div>
-              <div><label htmlFor="cd-deadline" className={LABEL}>Submission deadline</label><input id="cd-deadline" type="date" value={form.submissionDeadline} onChange={(e) => set("submissionDeadline", e.target.value)} className={FIELD} /></div>
+              <div><label htmlFor="cd-abstract" className={LABEL}>Abstract deadline <span className="font-normal text-ink-faint">(optional)</span></label><input id="cd-abstract" type="date" value={form.abstractDeadline} onChange={(e) => set("abstractDeadline", e.target.value)} className={FIELD} /></div>
+              <div><label htmlFor="cd-deadline" className={LABEL}>Submission deadline <span className="text-danger-ink">*</span></label><input id="cd-deadline" type="date" value={form.submissionDeadline} onChange={(e) => set("submissionDeadline", e.target.value)} className={FIELD} /></div>
             </div>
           </Card>
         </div>

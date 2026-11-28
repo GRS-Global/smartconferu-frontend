@@ -8,8 +8,8 @@ import { getChairService } from "@/services/chair";
 import type { LicenseRequest } from "@/types/chair";
 import { HelpLabel } from "./setting-label";
 
-/* Conference Details › License expiry (the prototype's LicenseExpiryField): read-only, because Smartconferu sets it, not the chair. A new conference's license runs 30 days
-   from the day it was created; only the Super Admin moves it, after a "Request extension" from the chair. One request can be open at a time; the chair can withdraw it. The
+/* Conference Details › License expiry (the prototype's LicenseExpiryField): read-only, because Smartconferu sets it, not the chair. A new conference's license runs until one
+   month after the conference ends (30 days from creation while it has no end date); only the Super Admin moves it, after a "Request extension" from the chair. One request can be open at a time; the chair can withdraw it. The
    requests are `license_requests` (migration 0035): until it is run, sending says so. */
 
 const TRIAL_DAYS = 30;
@@ -20,12 +20,12 @@ const parse = (s: string) => { const [y, m, d] = s.split("-").map(Number); retur
 const addDays = (s: string | null, days: number) => { const b = s ? parse(s) : new Date(); return iso(new Date(b.getFullYear(), b.getMonth(), b.getDate() + days)); };
 const addMonths = (s: string, months: number) => { const [y, m, d] = s.split("-").map(Number); const last = new Date(y, m - 1 + months + 1, 0).getDate(); return iso(new Date(y, m - 1 + months, Math.min(d, last))); };
 const daysUntil = (s: string) => { const t = new Date(); return Math.round((parse(s).getTime() - new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime()) / 86400000); };
-/** The day a license ends when Smartconferu has set none: 30 days from the day the conference was created. */
-export const licenseEndOf = (createdAt: string) => addDays(createdAt, TRIAL_DAYS);
+/** The day a license ends when Smartconferu has set none: one month after the conference ends; with no end date, 30 days from creation (same rule as the backend). */
+export const licenseEndOf = (createdAt: string, endDate?: string) => (endDate ? addMonths(endDate, 1) : addDays(createdAt, TRIAL_DAYS));
 const show = (s: string) => parse(s).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 const ago = (t: string) => { const m = Math.round((Date.now() - new Date(t).getTime()) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
 
-export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { slug: string; name: string; createdAt: string; licenseExpiry: string }) {
+export function LicenseExpiryField({ slug, name, createdAt, endDate, licenseExpiry }: { slug: string; name: string; createdAt: string; endDate?: string; licenseExpiry: string }) {
   const [record, setRecord] = useState<LicenseRequest | null>(null);
   const [draft, setDraft] = useState<{ date: string; reason: string; touched: boolean } | null>(null);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
@@ -36,8 +36,8 @@ export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { s
 
   const pending = record?.status === "pending" ? record : null;
   const decided = record && (record.status === "approved" || record.status === "declined") ? record : null;
-  // What the Super Admin set wins, then an approved answer, then 30 days from creation.
-  const expiry = (decided?.status === "approved" && decided.newExpiry) || licenseExpiry || (createdAt ? addDays(createdAt, TRIAL_DAYS) : "");
+  // What the Super Admin set wins, then an approved answer, then a month after the conference ends (30 days from creation without an end date).
+  const expiry = (decided?.status === "approved" && decided.newExpiry) || licenseExpiry || (endDate || createdAt ? licenseEndOf(createdAt, endDate) : "");
   const days = expiry ? daysUntil(expiry) : null;
   const tone = days === null ? null
     : days < 0 ? { label: `Expired ${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} ago`, color: "var(--danger-ink)", bg: "var(--danger-soft)" }
@@ -90,7 +90,7 @@ export function LicenseExpiryField({ slug, name, createdAt, licenseExpiry }: { s
             </div>
           )}
           <div className="mt-1.5 flex flex-wrap items-start justify-between gap-2">
-            <p className="text-xs leading-relaxed text-ink-faint">{createdAt && !licenseExpiry ? `${TRIAL_DAYS} days from creation (${show(createdAt)}). ` : "Set by Smartconferu. "}Need more time?</p>
+            <p className="text-xs leading-relaxed text-ink-faint">{!licenseExpiry && endDate ? `One month after the conference ends (${show(endDate)}). ` : createdAt && !licenseExpiry ? `${TRIAL_DAYS} days from creation (${show(createdAt)}) — set the conference dates and it moves to one month after the end. ` : "Set by Smartconferu. "}Need more time?</p>
             <button type="button" onClick={() => { setError(""); setDraft({ date: addMonths(floor, 1), reason: "", touched: false }); }} className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-xs font-semibold text-primary hover:underline"><Send size={12} aria-hidden="true" /> Request extension</button>
           </div>
         </>

@@ -28,7 +28,7 @@ interface FullScreening {
 }
 interface PublicConference { id?: string; status?: string; acronym: string; title: string; submissionDeadline?: string | null; cfpStatus?: string }
 interface ConferenceDto { acronym: string; title: string; status: string; startDate: string | null; endDate: string | null; city: string | null; state: string | null; country: string | null; webPage: string | null; contactEmail: string | null }
-interface FormDto { tracks: string[]; presentationTypes: string[]; extras: unknown[]; guidelines: string }
+interface FormDto { tracks: string[]; tracksOn?: boolean; presentationTypes: string[]; extras: unknown[]; guidelines: string }
 interface MeDto { email: string | null; firstName: string; lastName: string; affiliation: string | null; country: string | null; details?: { city?: unknown; affiliationDepartment?: unknown } | null }
 
 const STAGES = ["upload_pending", "no_decision", "plagiarism_clear"];
@@ -125,7 +125,19 @@ function reportsOf(s: SubmissionDto): PlagiarismReport[] {
 
 const paperVersions = (s: SubmissionDto) => s.files.filter((f) => f.kind !== "supplementary").sort((a, b) => a.version - b.version);
 
-function toListItem(s: SubmissionDto): AuthorSubmission {
+// Which status of the author's views each decision outcome words (Settings › Decision › "Author sees").
+const LABEL_KEY: Record<string, string> = { upload_pending: "draft", no_decision: "waiting", plagiarism_clear: "waiting", revise: "revise", waitlist: "waitlisted", accept: "pending", registered: "registered", reject: "rejected" };
+/** The chair's own wording of the statuses for a conference: {} when none is set (or it can't be read: the standard wording stays). */
+async function statusLabelsOf(conferenceSlug: string): Promise<Record<string, string>> {
+  try {
+    const types = await api<Array<{ outcome: string; authorLabel: string | null }>>(`/conferences/${encodeURIComponent(conferenceSlug)}/decision-types`);
+    const out: Record<string, string> = {};
+    for (const t of types) { const label = (t.authorLabel ?? "").trim(); const key = LABEL_KEY[t.outcome]; if (label && key && !out[key]) out[key] = label; }
+    return out;
+  } catch { return {}; }
+}
+
+function toListItem(s: SubmissionDto, statusLabels?: Record<string, string>): AuthorSubmission {
   const t = told(s);
   return {
     id: s.paperId, dbId: s.id, conferenceId: s.conferenceSlug, title: s.title, keywords: s.keywords,
@@ -134,6 +146,7 @@ function toListItem(s: SubmissionDto): AuthorSubmission {
     submittedAt: s.status === "draft" ? null : label(s.submittedAt), lastUpdate: label(s.updatedAt),
     track: s.track || "General Track", presentationType: s.presentationType || "Paper Presentation",
     withdrawn: s.status === "withdrawn", mySubmission: s.mySubmission, myCorresponding: s.myCorresponding,
+    ...(statusLabels && Object.keys(statusLabels).length ? { statusLabels } : {}),
     result: resultOf(s), decision: t === "revise" || t === "waitlist" ? t : null, uploadPending: s.outcome === "upload_pending",
     screeningRequest: screeningRequestOf(s, paperVersions(s).length),
     registration: s.registration ? { payment: s.registration.payment, attendance: s.registration.attendance, presenterName: s.registration.presenterName } : null,
@@ -157,7 +170,7 @@ async function toPaper(s: SubmissionDto): Promise<AuthorPaper> {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const comments = (reviews.authorReviews ?? []).filter((r) => (r.commentsToAuthor ?? "").trim()).map((r, i) => ({ n: i + 1, text: r.commentsToAuthor as string, submittedAt: label(r.submittedAt) }));
   return {
-    ...toListItem(s),
+    ...toListItem(s, await statusLabelsOf(s.conferenceSlug)),
     authors: (s.authors ?? []).map((a) => ({
       name: a.name, email: a.email ?? "", affiliation: a.affiliation ?? "", department: a.department ?? "", city: a.city ?? "", country: a.country ?? "", corresponding: a.corresponding,
       isMe: myEmail !== "" && (a.email ?? "").toLowerCase() === myEmail,
@@ -193,8 +206,8 @@ const implemented: AuthorSubmissionService = {
       // Closed while the CFP is not live, and once the deadline is over (the backend refuses a paper then too: better say so before the form is filled in).
       // A chair on an author's behalf is never held by the CFP or its deadline (the backend lets them through too).
       closed: !behalf && (conf.cfpStatus !== "published" || (Boolean(conf.submissionDeadline) && new Date(conf.submissionDeadline as string).getTime() < Date.now())), deadline: (conf.submissionDeadline ?? "").slice(0, 10), guidelines: form.guidelines,
-      tracks: form.tracks.length ? form.tracks : ["General Track"],
-      presentationTypes: form.presentationTypes.length ? form.presentationTypes : ["Paper Presentation", "Poster Presentation", "Workshop"],
+      tracks: form.tracks.length ? form.tracks : ["General Track"], tracksOn: form.tracksOn !== false,
+      presentationTypes: form.presentationTypes.length ? form.presentationTypes : ["Paper Presentation"],
     };
   },
 
@@ -292,7 +305,9 @@ const implemented: AuthorSubmissionService = {
       const all = await api<SubmissionDto[]>(`/conferences/${encodeURIComponent(slug)}/submissions`);
       // The list also holds papers given to the person to review: only their own are listed here.
       // Only the person's papers as an author (myPaper): never one a chair submitted on an author's behalf.
-      return all.filter((s) => s.view === "author" || (s.myPaper ?? s.mySubmission)).sort((a, b) => a.paperNo - b.paperNo).map(toListItem);
+      const mine = all.filter((s) => s.view === "author" || (s.myPaper ?? s.mySubmission)).sort((a, b) => a.paperNo - b.paperNo);
+      const labels = mine.length ? await statusLabelsOf(slug) : {};
+      return mine.map((s) => toListItem(s, labels));
     } catch (e) { if (notFound(e)) return []; throw e; }
   },
 };

@@ -146,6 +146,8 @@ export interface SubmitFormInfo {
   deadline: string;
   guidelines: string;
   tracks: string[];
+  /** False when the chair switched Tracks off (Settings › Submissions): the form has no track field. */
+  tracksOn?: boolean;
   presentationTypes: string[];
   /** The chair's extra questions on the form. */
   extras: SubmissionExtra[];

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import { MasterDataLoader } from "@/components/master-data-loader";
 import { OpenDatePicker } from "@/components/open-date-picker";
-import { ScrollToFirstError } from "@/components/scroll-to-first-error";
+import { ScrollToError } from "@/components/scroll-to-error";
 import { SupportViewBanner } from "@/components/support-view";
 import "./globals.css";
 
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-screen font-sans text-ink">
         <SupportViewBanner />
         <OpenDatePicker />
-        <ScrollToFirstError />
+        <ScrollToError />
         <MasterDataLoader />
         {children}
       </body>

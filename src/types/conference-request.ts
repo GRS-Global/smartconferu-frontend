@@ -1,8 +1,12 @@
+import type { HybridDates } from "@/lib/hybrid-dates";
+
 /** What "Create New Conference" asks (the prototype's CREATE_CONFERENCE_INITIAL_FORM, minus the map position). */
 export interface NewConferenceInput {
   type: string; typeInfo: string; title: string; acronym: string; eventType: "in-person" | "virtual" | "hybrid" | ""; webPage: string;
   venue: string; address: string; city: string; state: string; postalCode: string; country: string;
   startDate: string; endDate: string; timezone: string; about: string; primaryArea: string; secondaryArea: string; contactEmail: string;
+  /** Hybrid only: the in-person and the virtual event's own dates; startDate / endDate then cover both. */
+  hybridDates?: HybridDates;
 }
 export const EMPTY_NEW_CONFERENCE: NewConferenceInput = {
   type: "conference", typeInfo: "", title: "", acronym: "", eventType: "hybrid", webPage: "", venue: "", address: "", city: "", state: "", postalCode: "", country: "",

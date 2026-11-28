@@ -61,6 +61,16 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
     });
     return () => { alive = false; };
   }, [slug, memo]);
+  // Coming back to a conference whose setup was left half done: the checklist opens by itself, once per browser tab, so the chair sees what is still pending
+  // and carries on from there. (A tour running in this tab, or a checklist already shown, is left alone; nothing opens when all required items are done.)
+  const resumeKey = `grs_setup_resume_${slug}`;
+  useEffect(() => {
+    if (!setup.ready || setup.left === 0 || mode !== "off") return;
+    try { if (window.sessionStorage.getItem(memo) || window.sessionStorage.getItem(resumeKey)) return; window.sessionStorage.setItem(resumeKey, "1"); } catch { return; }
+    let alive = true;
+    void tourNotShownYet(slug).then((first) => { if (alive && !first) setMode("checklist"); });
+    return () => { alive = false; };
+  }, [setup.ready, setup.left, mode, memo, resumeKey, slug, setMode]);
   useEffect(() => {
     const start = () => {
       // A tour finished earlier is over, so this one begins at step 1. If "done" stayed saved, every page the running tour opens would start again from

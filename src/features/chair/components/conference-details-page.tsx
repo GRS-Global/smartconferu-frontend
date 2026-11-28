@@ -18,7 +18,7 @@ import { COUNTRIES } from "@/lib/country-codes";
 import { RESEARCH_AREA_GROUPS, RESEARCH_SUBAREAS } from "@/lib/research-areas";
 import { getChairService } from "@/services/chair";
 import { AuthRequiredError } from "@/services/errors";
-import { suggestTopics } from "@/services/paper-ai";
+import { suggestSummary, suggestTopics } from "@/services/paper-ai";
 import type { CfpFacts, ConferenceInfo } from "@/types/chair";
 import { useConferenceInfo } from "../use-conference-info";
 import { SectionsRail } from "./sections-rail";
@@ -29,6 +29,8 @@ import { licenseEndOf, LicenseExpiryField } from "./license-expiry-field";
 import { HelpLabel } from "./setting-label";
 import { setupChanged } from "@/features/tour/use-setup";
 import { isValidEmail } from "@/lib/email";
+import { EMPTY_HYBRID_DATES, hybridProblem, overallRange, type HybridDates } from "@/lib/hybrid-dates";
+import { HybridDateFields } from "@/features/conferences/components/hybrid-date-fields";
 
 /* Conference Settings › Conference Details (the prototype's ChairSettingsPage): a "Profile completeness" bar, the tabs Basic Details / Format &
    Venue / Branding, and a Sections rail. Everything is a column of `conferences`, except the time zone, abstract deadline, summary, language,
@@ -60,17 +62,25 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
   // Saving is offered only when something changed (an unsaved default, like the language, counts as a change).
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
   const set = <K extends keyof ConferenceInfo>(k: K, v: ConferenceInfo[K]) => setF((s) => ({ ...s, [k]: v }));
+  // Hybrid: the in-person and the virtual event each have their own dates; the conference's start / end follow them.
+  const hybridDates = f.hybridDates ?? EMPTY_HYBRID_DATES;
+  const setHybridDates = (next: HybridDates) => setF((s) => { const r = overallRange(next); return { ...s, hybridDates: next, startDate: r.start, endDate: r.end }; });
+  // Switching to Hybrid with no event dates yet: both events start out on the conference dates.
+  const chooseMode = (m: ConferenceInfo["mode"]) => setF((s) => (m === "hybrid" && !overallRange(s.hybridDates ?? EMPTY_HYBRID_DATES).start
+    ? { ...s, mode: m, hybridDates: { physicalStart: s.startDate, physicalEnd: s.endDate, virtualStart: s.startDate, virtualEnd: s.endDate } }
+    : { ...s, mode: m }));
   const problems = {
     name: !f.name.trim() ? "Give the conference a name." : "",
     web: f.webPage.trim() && !/^https?:\/\/\S+$/i.test(f.webPage.trim()) ? "Start the address with http:// or https://." : "",
     email: f.contactEmail.trim() && !isValidEmail(f.contactEmail.trim()) ? "Enter a valid email address." : "",
-    dates: f.startDate && f.endDate && f.endDate < f.startDate ? "The conference can't end before it starts." : "",
+    dates: f.mode === "hybrid" ? hybridProblem(hybridDates, true) : f.startDate && f.endDate && f.endDate < f.startDate ? "The conference can't end before it starts." : "",
+    deadlines: f.abstractDeadline && f.submissionDeadline && f.abstractDeadline > f.submissionDeadline ? "The abstract deadline must be on or before the submission deadline." : "",
     review: f.submissionDeadline && f.reviewDeadline && f.reviewDeadline < f.submissionDeadline ? "Reviews can't be due before the submission deadline." : "",
     about: words(f.about) > 1200 ? "Shorten it to 1,200 words." : "",
   };
   const ok = !Object.values(problems).some(Boolean);
   // The same details the setup checklist and the tour ask for: the button stays shut (and says what is missing) until all of them are filled, so the checklist can never stay open after Update.
-  const needed: Array<[string, boolean]> = [["website", Boolean(f.webPage.trim())], ["title", Boolean(f.name.trim())], ["dates", Boolean(f.startDate && f.endDate)], ["abstract deadline", Boolean(f.abstractDeadline)], ["submission deadline", Boolean(f.submissionDeadline)], ["description", Boolean(f.about.trim())], ["primary area", Boolean(f.primaryArea)], ["secondary area", Boolean(f.secondaryArea)], ["language", Boolean(f.language)], ["contact email", Boolean(f.contactEmail.trim())], ["topics", f.topics.length >= MIN_TOPICS]];
+  const needed: Array<[string, boolean]> = [["website", Boolean(f.webPage.trim())], ["title", Boolean(f.name.trim())], ["dates", Boolean(f.startDate && f.endDate)], ["submission deadline", Boolean(f.submissionDeadline)], ["description", Boolean(f.about.trim())], ["primary area", Boolean(f.primaryArea)], ["secondary area", Boolean(f.secondaryArea)], ["language", Boolean(f.language)], ["contact email", Boolean(f.contactEmail.trim())], ["topics", f.topics.length >= MIN_TOPICS]];
   const stillNeeded = needed.filter(([, d]) => !d).map(([l]) => l);
   const profile = [Boolean(f.webPage.trim()), f.topics.length > 0, typesSet, typesSet, cfp.managers > 0, cfp.publishing, cfp.description, Boolean(initial.logoUrl)];
   const pct = Math.round((profile.filter(Boolean).length / profile.length) * 100);
@@ -88,8 +98,14 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
       set("topics", next); setAi({ status: "done", added: next.length - f.topics.length });
     } catch (err) { setAi({ status: "error", message: err instanceof Error ? err.message : "Couldn't suggest topics." }); }
   };
+  const [sumAi, setSumAi] = useState<{ status: "idle" | "loading" | "error"; message?: string }>({ status: "idle" });
+  const writeSummary = async () => {
+    setSumAi({ status: "loading" });
+    try { set("summary", (await suggestSummary({ title: f.name, about: f.about, primaryArea: f.primaryArea, secondaryArea: f.secondaryArea, topics: f.topics })).slice(0, 200)); setSumAi({ status: "idle" }); }
+    catch (err) { setSumAi({ status: "error", message: err instanceof Error ? err.message : "Couldn't write the summary." }); }
+  };
   const e = encodeURIComponent(slug);
-  const licenseEnd = (() => { const d = f.licenseExpiry || (f.createdAt ? licenseEndOf(f.createdAt) : ""); return d ? new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : ""; })();
+  const licenseEnd = (() => { const d = f.licenseExpiry || (f.endDate || f.createdAt ? licenseEndOf(f.createdAt, f.endDate) : ""); return d ? new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : ""; })();
   const tabBtn = (k: Tab, l: string) => <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={cn("border-b-2 px-4 py-[11px] text-sm transition-colors", tab === k ? "border-primary font-bold text-primary" : "border-transparent font-semibold text-ink-muted hover:text-navy")}>{l}</button>;
 
   return (
@@ -115,15 +131,19 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
                 </div>
               </div>
               <div id="cd-dates" className="scroll-mt-24 space-y-4">
-                <div><div className={LABEL}><HelpLabel help="dates">Conference dates</HelpLabel> *</div><div className="grid gap-3 sm:grid-cols-2"><input aria-label="Start date" disabled={lockCfp} type="date" value={f.startDate} onChange={(ev) => set("startDate", ev.target.value)} className={INPUT_CLASS} /><input aria-label="End date" disabled={lockCfp} type="date" value={f.endDate} onChange={(ev) => set("endDate", ev.target.value)} aria-invalid={Boolean(problems.dates)} className={cn(INPUT_CLASS, bad(problems.dates))} /></div>{err(problems.dates)}</div>
+                {f.mode === "hybrid" ? (
+                  <div><div className={LABEL}><HelpLabel help="dates">Conference dates</HelpLabel> *</div>
+                    <p className="mb-2 text-xs text-ink-muted">Hybrid: the in-person and the virtual event have their own dates (change the format under Format &amp; Venue).</p>
+                    <HybridDateFields idPrefix="cd" value={hybridDates} onChange={setHybridDates} inputClass={cn(INPUT_CLASS, bad(problems.dates))} disabled={lockCfp} invalid={Boolean(problems.dates)} />{err(problems.dates)}</div>
+                ) : <div><div className={LABEL}><HelpLabel help="dates">Conference dates</HelpLabel> *</div><div className="grid gap-3 sm:grid-cols-2"><input aria-label="Start date" disabled={lockCfp} type="date" value={f.startDate} onChange={(ev) => set("startDate", ev.target.value)} className={INPUT_CLASS} /><input aria-label="End date" disabled={lockCfp} type="date" value={f.endDate} onChange={(ev) => set("endDate", ev.target.value)} aria-invalid={Boolean(problems.dates)} className={cn(INPUT_CLASS, bad(problems.dates))} /></div>{err(problems.dates)}</div>}
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div data-tour="cd-abstract-deadline"><label htmlFor="cd-abs" className={LABEL}><HelpLabel help="abstractDeadline">Abstract deadline</HelpLabel></label><input id="cd-abs" disabled={lockCfp} type="date" value={f.abstractDeadline} onChange={(ev) => set("abstractDeadline", ev.target.value)} className={INPUT_CLASS} /></div>
-                  <div data-tour="cd-submission-deadline"><label htmlFor="cd-sub" className={LABEL}><HelpLabel help="submissionDeadline">Submission deadline</HelpLabel></label><input id="cd-sub" disabled={lockCfp} type="date" value={f.submissionDeadline} onChange={(ev) => set("submissionDeadline", ev.target.value)} className={INPUT_CLASS} /></div>
+                  <div data-tour="cd-abstract-deadline"><label htmlFor="cd-abs" className={LABEL}><HelpLabel help="abstractDeadline">Abstract deadline</HelpLabel> <span className="font-normal text-ink-faint">(optional)</span></label><input id="cd-abs" disabled={lockCfp} type="date" value={f.abstractDeadline} onChange={(ev) => set("abstractDeadline", ev.target.value)} className={INPUT_CLASS} /></div>
+                  <div data-tour="cd-submission-deadline"><label htmlFor="cd-sub" className={LABEL}><HelpLabel help="submissionDeadline">Submission deadline</HelpLabel> *</label><input id="cd-sub" disabled={lockCfp} type="date" value={f.submissionDeadline} onChange={(ev) => set("submissionDeadline", ev.target.value)} aria-invalid={Boolean(problems.deadlines)} className={cn(INPUT_CLASS, bad(problems.deadlines))} />{err(problems.deadlines)}</div>
                 </div>
                 <p className="-mt-2 text-xs text-ink-faint">This is the only place the submission deadline is set — Submission Settings, the Call for Papers and the emails all use it.</p>
               </div>
               <div id="cd-about" data-tour="cd-about" className="scroll-mt-24 space-y-4">
-                <div><label htmlFor="cd-sum" className={LABEL}><HelpLabel help="summary">Summary</HelpLabel></label><input id="cd-sum" value={f.summary} maxLength={200} placeholder="One-line summary" onChange={(ev) => set("summary", ev.target.value)} className={INPUT_CLASS} /></div>
+                <div><div className="mb-1.5 flex items-center justify-between gap-2"><label htmlFor="cd-sum" className={LABEL.replace("mb-1.5 ","")}><HelpLabel help="summary">Summary</HelpLabel></label><button type="button" onClick={() => void writeSummary()} disabled={sumAi.status === "loading" || (!f.name.trim() && !f.about.trim())} className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"><Sparkles size={12} aria-hidden="true" /> {sumAi.status === "loading" ? "Writing…" : f.summary.trim() ? "Rewrite with AI" : "Write with AI"}</button></div><input id="cd-sum" value={f.summary} maxLength={200} placeholder="One-line summary" onChange={(ev) => set("summary", ev.target.value)} className={INPUT_CLASS} />{sumAi.status === "error" && <p role="alert" className="mt-1 text-xs font-medium text-danger-ink">{sumAi.message}</p>}</div>
                 <div><label htmlFor="cd-ab" className={LABEL}><HelpLabel help="about">About the conference</HelpLabel></label><textarea id="cd-ab" disabled={lockCfp} rows={7} maxLength={20000} value={f.about} onChange={(ev) => set("about", ev.target.value)} className={INPUT_CLASS} /><div className="mt-1 text-right text-xs text-ink-faint">{words(f.about)} / 1,200 words</div>{err(problems.about)}</div>
               </div>
               <div id="cd-area" className="scroll-mt-24 space-y-4">
@@ -137,7 +157,7 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
                 </div>
               </div>
               <div id="cd-contact" className="scroll-mt-24 grid gap-3 border-t border-muted pt-4 sm:grid-cols-2">
-                <LicenseExpiryField slug={slug} name={f.acronym || f.name} createdAt={f.createdAt} licenseExpiry={f.licenseExpiry} />
+                <LicenseExpiryField slug={slug} name={f.acronym || f.name} createdAt={f.createdAt} endDate={initial.endDate} licenseExpiry={f.licenseExpiry} />
                 <div><label htmlFor="cd-mail" className={LABEL}><HelpLabel help="contactEmail">Contact email address</HelpLabel> *</label><input id="cd-mail" type="email" value={f.contactEmail} onChange={(ev) => set("contactEmail", ev.target.value)} aria-invalid={Boolean(problems.email)} className={cn(INPUT_CLASS, bad(problems.email))} />{err(problems.email)}</div>
                 <div><label htmlFor="cd-reply" className={LABEL}><HelpLabel help="replyForwardingEmail">Reply &amp; forwarding email</HelpLabel></label><input id="cd-reply" type="email" value={f.replyEmail} placeholder="Where author replies get forwarded to" onChange={(ev) => set("replyEmail", ev.target.value)} className={INPUT_CLASS} /></div>
                 <div><label htmlFor="cd-sc" className={LABEL}><HelpLabel help="smartConfEmail">SmartConf email</HelpLabel></label><input id="cd-sc" type="email" value={f.smartConfEmail} placeholder="notifications@smartconf.example" onChange={(ev) => set("smartConfEmail", ev.target.value)} className={INPUT_CLASS} /></div>
@@ -158,7 +178,7 @@ function Form({ initial, slug, types, typesSet, cfp, onLogoSaved, onSave, busy, 
                 <div className={LABEL}><HelpLabel help="eventType">Event format</HelpLabel> *</div>
                 <div role="radiogroup" aria-label="Event format" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {([["in_person", "In-Person", "Attendees gather at a physical venue", MapPin], ["virtual", "Virtual", "Fully online, no physical venue", Globe], ["hybrid", "Hybrid", "Both in-person and online attendance", Layers]] as const).map(([k, l, d, Icon]) => (
-                    <button key={k} type="button" role="radio" disabled={lockCfp} aria-checked={f.mode === k} onClick={() => set("mode", k)} className={cn("flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] p-3 text-left transition-colors", f.mode === k ? "border-primary bg-primary-soft" : "border-line bg-white")}>
+                    <button key={k} type="button" role="radio" disabled={lockCfp} aria-checked={f.mode === k} onClick={() => chooseMode(k)} className={cn("flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] p-3 text-left transition-colors", f.mode === k ? "border-primary bg-primary-soft" : "border-line bg-white")}>
                       <Icon size={16} aria-hidden="true" className={cn("mt-0.5 shrink-0", f.mode === k ? "text-primary" : "text-ink-faint")} />
                       <span><span className={cn("block text-sm font-semibold", f.mode === k ? "text-primary" : "text-ink")}>{l}</span><span className="mt-0.5 block text-xs text-ink-faint">{d}</span></span>
                     </button>
