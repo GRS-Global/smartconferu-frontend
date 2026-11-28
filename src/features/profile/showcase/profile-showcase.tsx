@@ -210,7 +210,7 @@ export function ProfileShowcase({ profile, edit, readOnly = false }: { profile: 
               )}
             </div>
             {profile.designation && <p className="mt-1.5 text-[17px] font-medium leading-normal text-[#334155]">{profile.designation}</p>}
-            {!readOnly && <VerifyProfile profile={profile} />}
+            {!readOnly && <VerifyProfile profile={profile} edit={edit} />}
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2.5">
