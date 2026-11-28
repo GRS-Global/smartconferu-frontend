@@ -108,9 +108,19 @@ export function ConferenceTour({ slug, acronym, setup }: { slug: string; acronym
 }
 
 function Runner({ slug, open, here, go, onExit, onPause }: { slug: string; open: string[]; here: string; go: (to?: string) => void; onExit: () => void; onPause: () => void }) {
-  const steps = useMemo(() => buildTourSteps(open), [open]);
+  // The list of open items is read when the tour starts. If the chair switches Tracks off after that (Settings › Submissions), the Tracks step has nothing to
+  // point at any more, so it is dropped the moment it comes up (and the tour carries on with the step after it).
+  const [tracksOff, setTracksOff] = useState(false);
+  const steps = useMemo(() => buildTourSteps(tracksOff ? open.filter((k) => k !== "tracks") : open), [open, tracksOff]);
   const [index, setIndex] = useState(() => { const s = readTourState(slug); return s.tourDone ? 0 : Math.min(s.tourStep, steps.length - 1); });
-  const step = steps[index];
+  const step = steps[Math.min(index, steps.length - 1)];
+  const onTracksStep = step?.key === "tracks";
+  useEffect(() => {
+    if (!onTracksStep) return undefined;
+    let off = false;
+    void getChairService().then((c) => c.loadSettings(slug)).then((st) => { if (!off && tracksReady(st)) setTracksOff(true); }).catch(() => undefined);
+    return () => { off = true; };
+  }, [onTracksStep, slug]);
   // A tour carried past a required step that is still open (progress saved by an older version, or a step walked around) goes back to that step. Only on arrival at a page:
   // inside a page the field steps wait for their fields themselves.
   useEffect(() => {
