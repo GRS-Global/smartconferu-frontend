@@ -16,7 +16,9 @@ import { ListMatch, OtherBox, PendingNote } from "./editor-parts";
 import type { EditorProps } from "./editor-types";
 import { PhoneField } from "./phone-field";
 import { SectionCard } from "./section-card";
+import { PlaceInput } from "@/components/ui/place-input";
 import { SMS_ALERTS_ENABLED } from "@/lib/config";
+import { useCityOptions, useStateOptions } from "@/lib/places";
 
 const ALL_AREAS = RESEARCH_AREA_GROUPS.flatMap((g) => g.areas);
 
@@ -25,6 +27,8 @@ export function IntroEditor({ profile, save, onDone, onCancel, onManageAffiliati
   const [d, setD] = useState({ firstName: profile.firstName, lastName: profile.lastName, designation: profile.designation, gender: profile.gender, country: profile.country, webPage: profile.webPage, city: profile.city, state: profile.state });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const state = useSectionSave();
+  const stateOptions = useStateOptions(d.country);
+  const cityOptions = useCityOptions(d.country, d.state);
   const set = (k: keyof typeof d) => (v: string) => setD((x) => ({ ...x, [k]: v }));
   const touch = (k: string) => () => setTouched((t) => (t[k] ? t : { ...t, [k]: true }));
   const problems = validateProfileForm({ ...d, mainEmail: profile.mainEmail, affiliation: profile.affiliation || "x", phone: "" });
@@ -57,14 +61,14 @@ export function IntroEditor({ profile, save, onDone, onCancel, onManageAffiliati
           </select>
         </Field>
         <Field label="Country" htmlFor="profile-country" required error={errorOf("country")}>
-          <select id="profile-country" autoComplete="country-name" value={d.country} onChange={(e) => set("country")(e.target.value)} onBlur={touch("country")} className={INPUT_CLASS}>
+          <select id="profile-country" autoComplete="country-name" value={d.country} onChange={(e) => { if (e.target.value !== d.country) setD((x) => ({ ...x, state: "", city: "", country: e.target.value })); else set("country")(e.target.value); }} onBlur={touch("country")} className={INPUT_CLASS}>
             <option value="" disabled>Select a country</option>
             {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
+        <Field label="State / Region" htmlFor="profile-state" required error={errorOf("state")}><PlaceInput id="profile-state" autoComplete="address-level1" value={d.state} onChange={set("state")} options={stateOptions} onBlur={touch("state")} invalid={Boolean(errorOf("state"))} /></Field>
+        <Field label="City" htmlFor="profile-city" required error={errorOf("city")}><PlaceInput id="profile-city" autoComplete="address-level2" value={d.city} onChange={set("city")} options={cityOptions} onBlur={touch("city")} invalid={Boolean(errorOf("city"))} /></Field>
         <Field className="sm:col-span-2" label="Website" htmlFor="profile-web" error={errorOf("webPage")}><input id="profile-web" type="text" inputMode="url" autoComplete="url" value={d.webPage} placeholder="https://" onChange={(e) => set("webPage")(e.target.value)} onBlur={touch("webPage")} aria-invalid={Boolean(errorOf("webPage")) || undefined} aria-describedby={errorOf("webPage") ? "profile-web-error" : undefined} className={INPUT_CLASS} /></Field>
-        <Field label="City" htmlFor="profile-city" required error={errorOf("city")}><input id="profile-city" autoComplete="address-level2" value={d.city} onChange={(e) => set("city")(e.target.value)} onBlur={touch("city")} aria-invalid={Boolean(errorOf("city")) || undefined} className={INPUT_CLASS} /></Field>
-        <Field label="State / Region" htmlFor="profile-state" required error={errorOf("state")}><input id="profile-state" autoComplete="address-level1" value={d.state} onChange={(e) => set("state")(e.target.value)} onBlur={touch("state")} aria-invalid={Boolean(errorOf("state")) || undefined} className={INPUT_CLASS} /></Field>
       </div>
       {missing && <p role="alert" className="text-[13px] font-medium text-danger-ink">Name, designation, gender, country, state and city can&apos;t be empty.</p>}
     </SectionCard>

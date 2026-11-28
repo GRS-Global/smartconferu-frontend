@@ -455,13 +455,13 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
 
         <Section n={info.extras.length ? 4 : 3} title="Declarations" busy={filling}>
           <div className="space-y-3">
-            <div className={tried && !originality ? "rounded-xl border border-danger bg-danger-soft px-3.5 py-3" : undefined}>
-              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !originality ? "font-semibold text-danger-ink" : "text-ink-soft")}><input type="checkbox" checked={originality} onChange={(e) => setOriginality(e.target.checked)} aria-invalid={tried && !originality} className={cn("mt-0.5", tried && !originality && "outline outline-2 outline-offset-1 outline-danger")} /> I confirm this submission is original work and has not been previously published or plagiarized. <span className="text-danger-ink" aria-hidden="true">*</span></label>
-              {tried && !originality && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger-ink">Please tick this box to submit your paper.</p>}
+            <div className={cn("rounded-xl border bg-white px-4 py-3 transition-colors", tried && !originality ? "border-danger" : "border-line")}>
+              <label className="flex cursor-pointer items-start gap-3 text-[13px] leading-relaxed text-ink-soft"><input type="checkbox" checked={originality} onChange={(e) => setOriginality(e.target.checked)} aria-invalid={tried && !originality} className="mt-[3px] h-4 w-4 shrink-0 cursor-pointer accent-primary" /><span>I confirm this submission is original work and has not been previously published or plagiarized. <span className="text-danger-ink" aria-hidden="true">*</span></span></label>
+              {tried && !originality && <p role="alert" className="mt-2 flex items-center gap-1.5 pl-7 text-xs font-medium text-danger-ink"><TriangleAlert size={13} aria-hidden="true" className="shrink-0" />Please confirm this to submit your paper.</p>}
             </div>
-            <div className={tried && !terms ? "rounded-xl border border-danger bg-danger-soft px-3.5 py-3" : undefined}>
-              <label className={cn("flex cursor-pointer items-start gap-2.5 text-[13px]", tried && !terms ? "font-semibold text-danger-ink" : "text-ink-soft")}><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} aria-invalid={tried && !terms} className={cn("mt-0.5", tried && !terms && "outline outline-2 outline-offset-1 outline-danger")} /> I agree to the conference&apos;s submission terms and conditions. <span className="text-danger-ink" aria-hidden="true">*</span></label>
-              {tried && !terms && <p role="alert" className="ml-[26px] mt-1.5 text-xs font-semibold text-danger-ink">Please tick this box to submit your paper.</p>}
+            <div className={cn("rounded-xl border bg-white px-4 py-3 transition-colors", tried && !terms ? "border-danger" : "border-line")}>
+              <label className="flex cursor-pointer items-start gap-3 text-[13px] leading-relaxed text-ink-soft"><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} aria-invalid={tried && !terms} className="mt-[3px] h-4 w-4 shrink-0 cursor-pointer accent-primary" /><span>I agree to the conference&apos;s submission terms and conditions. <span className="text-danger-ink" aria-hidden="true">*</span></span></label>
+              {tried && !terms && <p role="alert" className="mt-2 flex items-center gap-1.5 pl-7 text-xs font-medium text-danger-ink"><TriangleAlert size={13} aria-hidden="true" className="shrink-0" />Please accept the terms and conditions to submit your paper.</p>}
             </div>
           </div>
         </Section>

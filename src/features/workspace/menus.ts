@@ -72,7 +72,7 @@ export const CHAIR_MENU: MenuItem[] = live([
       { key: "manage", label: "Manage", app: (s) => `/chair/${e(s)}/peer-review/manage` },
     ],
   },
-  { key: "registration", label: "Registration", icon: Users, ...soon("registration") },
+  { key: "registration", label: "Registration", icon: Users, soon: true },
   {
     key: "programme", label: "Program", icon: Calendar,
     children: [
