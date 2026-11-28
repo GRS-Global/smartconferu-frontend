@@ -40,6 +40,10 @@ export const FLYER_ENABLED = false;
  *  "Soon" in the top menu and a "Coming soon" page while false. */
 export const ACCOUNT_EXTRAS_ENABLED = false;
 
+/** TESTING ONLY (temporary): Create Conference accepts dates that are already over, so a conference that took place can be entered with its
+ *  real data. The backend needs ALLOW_PAST_CONFERENCE_DATES=true in its .env too. Set back to false before going live. */
+export const ALLOW_PAST_CONFERENCE_DATES = true;
+
 /** Sign-in goes through the own backend (NEXT_PUBLIC_DATA_SOURCE=api) instead of Supabase Auth. */
 export const AUTH_API = DATA_SOURCE === "api";
 /** Whether sign-in can work at all: the backend is the auth server in `api` mode, otherwise Supabase must be configured. */

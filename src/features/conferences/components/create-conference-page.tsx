@@ -23,6 +23,7 @@ import { VenueSearchInput } from "@/components/ui/venue-search-input";
 import { EMPTY_NEW_CONFERENCE, type NewConferenceInput } from "@/types/conference-request";
 import { BLANK_DRAFT_FORM, clearDraft, draftAge, readDraft, writeDraft, type DraftForm, type SavedDraft } from "../create-conference-draft";
 import { isValidEmail } from "@/lib/email";
+import { ALLOW_PAST_CONFERENCE_DATES } from "@/lib/config";
 /* Create New Conference (the prototype's CreateConferencePage): the request goes to the Super Admin, who approves or declines it; the chair is
    told by email. The "Required to create" checklist, the live preview and the policy tick are the prototype's. Smart Fill (reading the website with AI
    to fill the form) works with the own backend (services/smart-fill.ts); without it the button is not shown. Not ported: the saved-draft offer and "Clear form". The venue box suggests places (Google Places) and the venue
@@ -203,7 +204,8 @@ export function CreateConferencePage() {
 
   // A conference can't be requested for days that are over: today (this computer's date) is the earliest start. Shown as soon as such a date is picked.
   const todayIso = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
-  const datesInPast = Boolean((form.startDate && form.startDate < todayIso) || (form.endDate && form.endDate < todayIso));
+  // Testing switch (lib/config.ts ALLOW_PAST_CONFERENCE_DATES): past dates allowed.
+  const datesInPast = !ALLOW_PAST_CONFERENCE_DATES && Boolean((form.startDate && form.startDate < todayIso) || (form.endDate && form.endDate < todayIso));
   const checks: Array<{ key: string; label: string; ok: boolean; msg: string }> = [
     { key: "webPage", label: "Website", ok: URL_RE.test(form.webPage.trim()), msg: form.webPage.trim() ? "That doesn't look like a web address, e.g. https://yourconference.org" : "Add your conference website." },
     { key: "title", label: "Conference title", ok: Boolean(form.title.trim()), msg: "Add a title for your conference." },
@@ -378,7 +380,7 @@ export function CreateConferencePage() {
                     <div>
                       <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Starts</span>
                       {/* Picking a start date fills an empty (or earlier) end date, so one-day events take one click. */}
-                      <input id="cc-startDate" type="date" aria-label="Start date" value={form.startDate} min={todayIso} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: v && (!f.endDate || f.endDate < v) ? v : f.endDate })); }} className={cls("startDate")} />
+                      <input id="cc-startDate" type="date" aria-label="Start date" value={form.startDate} min={ALLOW_PAST_CONFERENCE_DATES ? undefined : todayIso} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: v && (!f.endDate || f.endDate < v) ? v : f.endDate })); }} className={cls("startDate")} />
                     </div>
                     <div>
                       <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Ends</span>
