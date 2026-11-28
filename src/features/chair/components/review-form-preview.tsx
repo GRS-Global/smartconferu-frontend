@@ -190,7 +190,7 @@ export function ReviewFormPreview({ acronym, instructions, form, hiddenFields, e
           </section>
           <ReviewFormBody form={form} hiddenFields={hiddenFields} values={a} onChange={(id, v) => setA((x) => ({ ...x, [id]: v }))} />
         </div>
-        <aside className="space-y-4 xl:sticky xl:top-6" aria-label="Form summary">
+        <aside className="space-y-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1" aria-label="Form summary">
           <div style={CARD} className="rounded-2xl bg-white px-[18px] py-5">
             <div className="flex items-center gap-2.5"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-soft text-primary"><Eye size={15} aria-hidden="true" /></span><div><div className="text-sm font-bold text-navy">Reviewer&apos;s view</div><div className="text-[11px] text-ink-faint">What reviewers see</div></div></div>
             <div className="mt-4 flex items-center justify-between text-xs"><span className="text-ink-muted">Required answered</span><b className="text-navy">{done} of {req.length}</b></div>

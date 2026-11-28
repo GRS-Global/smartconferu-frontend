@@ -228,7 +228,7 @@ export function NotificationsPage({ scope }: { scope?: { slug: string; role: "au
             )}
           </section>
 
-          <aside className="flex flex-col gap-4">
+          <aside className="flex flex-col gap-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1">
             <section aria-labelledby="notification-prefs" className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5 shadow-card">
               <h2 id="notification-prefs" className="text-[15px] font-extrabold text-navy">How should we tell you?</h2>
               {([

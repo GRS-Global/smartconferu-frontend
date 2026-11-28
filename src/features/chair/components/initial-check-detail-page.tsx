@@ -244,7 +244,7 @@ export function InitialCheckDetailPage({ slug, paperLabel }: { slug: string; pap
           </SectionCard>
         </div>
 
-        <div className="min-w-0 space-y-5 xl:sticky xl:top-4">
+        <div className="min-w-0 space-y-5 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1">
           <SectionCard title="Decision" hint="Only Revision and Reject are emailed to the author.">
             {locked ? (
               <><DecisionChip value={check.decision} options={CHECK_DECISIONS} /><div className="mt-2"><LockNote /></div></>

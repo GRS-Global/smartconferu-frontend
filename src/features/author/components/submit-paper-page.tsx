@@ -452,7 +452,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           <Button disabled={sending || filling || info.closed} title={info.closed ? `Submissions to ${info.acronym} are closed` : undefined} onClick={() => void send()}>{sending ? <Spinner size={15} tone="current" /> : <Check size={15} aria-hidden="true" />} {sending ? "Submitting…" : "Submit paper"}</Button>
         </div>
       </div>
-      <aside className="space-y-4 xl:sticky xl:top-6" aria-label="Before you submit">
+      <aside className="space-y-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1" aria-label="Before you submit">
         <div style={CARD} className="rounded-2xl bg-white p-5">
           <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-bold text-navy">Before you submit</h2><span className="text-xs font-semibold text-ink-faint">{done}/{required.length}</span></div>
           <ul className="space-y-2">{required.map(([l, ok]) => <li key={l} className="flex items-center gap-2.5 text-xs"><span className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded-full", ok ? "bg-success text-white" : "border-[1.5px] border-line-strong")}>{ok && <Check size={10} strokeWidth={3} aria-hidden="true" />}</span><span className={ok ? "font-medium text-ink" : "text-ink-faint"}>{l}</span></li>)}</ul>

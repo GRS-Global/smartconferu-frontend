@@ -147,7 +147,7 @@ export function EmailTemplateEditor({ edit, setEdit, moduleLabel, sendLabel, con
           </div>
         </section>
 
-        <aside className="space-y-4" aria-label="About this email">
+        <aside className="space-y-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1" aria-label="About this email">
           <div style={CARD} className="rounded-2xl bg-white p-4">
             <div className="text-xs font-bold text-navy">Email information</div>
             <div className="mt-3 flex items-center justify-between text-[11.5px]"><span className="text-ink-faint">Category</span><span style={{ background: tone.bg, color: tone.color }} className="rounded-full px-2 py-0.5 text-[10.5px] font-bold">{tone.label}</span></div>

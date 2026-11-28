@@ -1,7 +1,9 @@
 "use client";
 
 import { Field, INPUT_CLASS, describedBy } from "@/components/ui/field";
+import { PlaceInput } from "@/components/ui/place-input";
 import { COUNTRIES } from "@/lib/country-codes";
+import { useCityOptions, useStateOptions } from "@/lib/places";
 import { GENDER_OPTIONS } from "../fields";
 import type { IdentityForm } from "../use-identity-form";
 import { DepartmentPicker, InstitutionPicker } from "./institution-fields";
@@ -11,6 +13,8 @@ import { PhotoField } from "./photo-field";
 /** The identity details shared by Complete Profile and My Profile › General. Fields marked * are required. */
 export function IdentityFields({ form, email, emailNote, idPrefix }: { form: IdentityForm; email: string; emailNote: string; idPrefix: string }) {
   const { values, set, errorOf, touch } = form;
+  const stateOptions = useStateOptions(values.country);
+  const cityOptions = useCityOptions(values.country, values.state);
   const id = (name: string) => `${idPrefix}-${name}`;
   return (
     <div className="space-y-3">
@@ -39,7 +43,7 @@ export function IdentityFields({ form, email, emailNote, idPrefix }: { form: Ide
       </Field>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Country / region" htmlFor={id("country")} required error={errorOf("country")}>
-          <select id={id("country")} autoComplete="country-name" value={values.country} onChange={(e) => set("country", e.target.value)} onBlur={touch("country")} aria-invalid={Boolean(errorOf("country")) || undefined} aria-describedby={describedBy(id("country"), errorOf("country"))} className={`${INPUT_CLASS} cursor-pointer`}>
+          <select id={id("country")} autoComplete="country-name" value={values.country} onChange={(e) => { if (e.target.value !== values.country) { set("state", ""); set("city", ""); } set("country", e.target.value); }} onBlur={touch("country")} aria-invalid={Boolean(errorOf("country")) || undefined} aria-describedby={describedBy(id("country"), errorOf("country"))} className={`${INPUT_CLASS} cursor-pointer`}>
             <option value="" disabled>Select a country</option>
             {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -53,10 +57,10 @@ export function IdentityFields({ form, email, emailNote, idPrefix }: { form: Ide
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <Field label="State / region" htmlFor={id("state")} required error={errorOf("state")}>
-        <input id={id("state")} autoComplete="address-level1" value={values.state} placeholder="e.g. Gujarat" onChange={(e) => set("state", e.target.value)} onBlur={touch("state")} aria-invalid={Boolean(errorOf("state")) || undefined} aria-describedby={describedBy(id("state"), errorOf("state"))} className={INPUT_CLASS} />
+        <PlaceInput id={id("state")} autoComplete="address-level1" value={values.state} placeholder="e.g. Gujarat" onChange={(v) => set("state", v)} options={stateOptions} onBlur={touch("state")} invalid={Boolean(errorOf("state"))} describedBy={describedBy(id("state"), errorOf("state"))} />
       </Field>
       <Field label="City" htmlFor={id("city")} required error={errorOf("city")}>
-        <input id={id("city")} autoComplete="address-level2" value={values.city} placeholder="e.g. Mumbai" onChange={(e) => set("city", e.target.value)} onBlur={touch("city")} aria-invalid={Boolean(errorOf("city")) || undefined} aria-describedby={describedBy(id("city"), errorOf("city"))} className={INPUT_CLASS} />
+        <PlaceInput id={id("city")} autoComplete="address-level2" value={values.city} placeholder="e.g. Ahmedabad" onChange={(v) => set("city", v)} options={cityOptions} onBlur={touch("city")} invalid={Boolean(errorOf("city"))} describedBy={describedBy(id("city"), errorOf("city"))} />
       </Field>
       </div>
       <Field label="Website" htmlFor={id("web")} error={errorOf("webPage")}>

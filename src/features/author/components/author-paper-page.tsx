@@ -164,7 +164,7 @@ export function AuthorPaperPage({ label }: { label: string }) {
             <FilesTable paper={paper} onView={(f) => { void open(f, false); }} onDownload={(f) => { void open(f, true); }} onAddSupporting={paper.withdrawn || paper.status === "rejected" ? null : () => setDialog("files-supporting")} />
             <DecisionCard paper={paper} onUpload={() => setDialog("files-paper")} />
           </div>
-          <div className="space-y-5 lg:sticky lg:top-8">
+          <div className="space-y-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pb-1">
             <ManageCard paper={paper} onDetails={() => setDialog("details")} onAuthors={() => setDialog("authors")} onFiles={() => setDialog("files-paper")} onWithdraw={() => setDialog("withdraw")} />
           </div>
         </div>

@@ -132,7 +132,7 @@ export function PresentationPanel({ paper }: { paper: AuthorPaper }) {
           <DestLink dest={conferenceDest.programme(slug)} className={PRIMARY_LINK}>Book your slot</DestLink>
         </div>
       </section>
-      <aside className="flex flex-col gap-4">
+      <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pb-1">
         <DestLink dest={conferenceDest.flyer(slug)} style={CARD} className="flex items-center gap-3.5 rounded-2xl bg-white p-4 text-left hover:border-primary">
           <div style={{ background: "linear-gradient(160deg,#2E1065,#7C3AED 70%,#06B6D4)" }} className="flex h-20 w-16 shrink-0 items-center justify-center rounded-lg"><ImageIcon size={20} aria-hidden="true" className="text-white/80" /></div>
           <div className="min-w-0">
@@ -186,7 +186,7 @@ function RegistrationPanel({ paper, registration: r }: { paper: AuthorPaper; reg
         <p style={done ? undefined : { color: "#92400E" }} className={`mt-3 text-[12.5px] leading-relaxed ${done ? "text-ink-muted" : ""}`}>{pay.text} To change how you attend or who presents, write to the organisers of {paper.conference.acronym}.</p>
       </section>
       {done && (
-        <aside className="flex flex-col gap-4">
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pb-1">
           <DestLink dest={conferenceDest.flyer(paper.conference.id)} style={CARD} className="flex items-center gap-3.5 rounded-2xl bg-white p-4 text-left hover:border-primary">
             <div style={{ background: "linear-gradient(160deg,#2E1065,#7C3AED 70%,#06B6D4)" }} className="flex h-20 w-16 shrink-0 items-center justify-center rounded-lg"><ImageIcon size={20} aria-hidden="true" className="text-white/80" /></div>
             <div className="min-w-0">

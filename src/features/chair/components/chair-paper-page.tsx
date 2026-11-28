@@ -299,7 +299,7 @@ export function ChairPaperPage({ label, view = "review" }: { label: string; view
               <FilesCard detail={detail} onNotice={(title, text) => setToast({ title, text })} onAddSupporting={paper.withdrawn ? null : () => setManage("files-supporting")} />
               <NoteCard detail={detail} onUpload={() => setManage("files-paper")} />
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pb-1">
             <RegistrationCard key={`${paper.dbId}-${paper.registration?.updatedAt ?? "new"}`} paper={paper} busy={busy} onSave={saveRegistration} />
             <ManageCard detail={detail} onDetails={() => setManage("details")} onAuthors={() => setManage("authors")} onFiles={() => setManage("files-paper")} onWithdraw={() => setManage("withdraw")} />
             <Card title="Paper actions" icon={Pencil}>

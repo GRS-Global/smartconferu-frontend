@@ -211,7 +211,7 @@ export function ReviewFormBuilder({ initial, acronym, instructions, hiddenFields
         <button type="button" onClick={done} className="h-9 cursor-pointer rounded-lg bg-primary px-5 text-xs font-bold text-white hover:bg-primary-hover">Done</button>
       </div>
       </div>
-      <aside className="space-y-4 xl:sticky xl:top-6" aria-label="Editing the form">
+      <aside className="space-y-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1" aria-label="Editing the form">
         <div style={CARD} className="rounded-2xl bg-white px-[18px] py-5">
           <div className="flex items-center gap-2.5"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white"><Pencil size={14} aria-hidden="true" /></span><div><div className="text-sm font-bold text-navy">Editing form</div><div className="text-[11px] text-ink-faint">Changes save automatically</div></div></div>
           <div aria-live="polite" className="mt-3">{status}</div>

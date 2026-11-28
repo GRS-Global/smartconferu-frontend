@@ -261,7 +261,7 @@ export function PlagiarismDetailPage({ slug, paperLabel }: { slug: string; paper
           </SectionCard>
         </div>
 
-        <div className="min-w-0 space-y-5 xl:sticky xl:top-4">
+        <div className="min-w-0 space-y-5 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pb-1">
           <SectionCard title="Decision" hint="Only Revision and Reject are emailed to the author.">
             {v.waiting ? <p className="text-sm text-ink-muted">{waitingWhy}</p> : (
               <>

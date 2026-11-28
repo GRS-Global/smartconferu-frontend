@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AuthMessage } from "@/components/ui/auth-message";
 import { CountrySelect } from "@/components/ui/country-select";
+import { PlaceInput } from "@/components/ui/place-input";
 import { PasswordField } from "@/components/ui/password-field";
 import { TriggeredEmailNote } from "@/components/ui/triggered-email-note";
 import { GENDER_OPTIONS } from "@/features/profile/fields";
@@ -16,6 +17,7 @@ import { PhotoField, type PhotoValue } from "@/features/profile/components/photo
 import { initialsOf } from "@/features/profile/components/profile-avatar";
 import { DEFAULT_AFTER_LOGIN, LOGIN_PATH } from "@/lib/auth-redirect";
 import { cn } from "@/lib/cn";
+import { useCityOptions, useStateOptions } from "@/lib/places";
 import { AUTH_CONFIGURED, DATA_SOURCE } from "@/lib/config";
 import { getProfileService } from "@/services/profile";
 import { authService } from "../auth-service";
@@ -204,6 +206,8 @@ export function RegisterForm() {
 
 function Fields({ form }: { form: Form }) {
   const { values, set, errorOf, touch } = form;
+  const stateOptions = useStateOptions(values.country);
+  const cityOptions = useCityOptions(values.country, values.state);
   const invalid = (key: Parameters<typeof errorOf>[0]) => Boolean(errorOf(key)) || undefined;
   const err = (key: Parameters<typeof errorOf>[0]) => (errorOf(key) ? <p role="alert" className="mt-1 text-[11.5px] text-danger-ink">{errorOf(key)}</p> : null);
   return (
@@ -237,7 +241,7 @@ function Fields({ form }: { form: Form }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div onBlur={touch("country")}>
-          <CountrySelect value={values.country} onChange={(c) => set("country", c)} placeholder="Country / region *" invalid={Boolean(errorOf("country"))} className={REG_INPUT} />
+          <CountrySelect value={values.country} onChange={(c) => { if (c !== values.country) { set("state", ""); set("city", ""); } set("country", c); }} placeholder="Country / region *" invalid={Boolean(errorOf("country"))} className={REG_INPUT} />
           {err("country")}
         </div>
         <div>
@@ -250,11 +254,11 @@ function Fields({ form }: { form: Form }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
       <div>
-        <input autoComplete="address-level1" aria-label="State / region" aria-required="true" placeholder="State / region *" value={values.state} onChange={(e) => set("state", e.target.value)} onBlur={touch("state")} aria-invalid={invalid("state")} className={REG_INPUT} />
+        <PlaceInput autoComplete="address-level1" ariaLabel="State / region" required placeholder="State / region *" value={values.state} onChange={(v) => set("state", v)} options={stateOptions} onBlur={touch("state")} invalid={invalid("state") === true} className={REG_INPUT} />
         {err("state")}
       </div>
       <div>
-        <input autoComplete="address-level2" aria-label="City" aria-required="true" placeholder="City *" value={values.city} onChange={(e) => set("city", e.target.value)} onBlur={touch("city")} aria-invalid={invalid("city")} className={REG_INPUT} />
+        <PlaceInput autoComplete="address-level2" ariaLabel="City" required placeholder="City *" value={values.city} onChange={(v) => set("city", v)} options={cityOptions} onBlur={touch("city")} invalid={invalid("city") === true} className={REG_INPUT} />
         {err("city")}
       </div>
       </div>
