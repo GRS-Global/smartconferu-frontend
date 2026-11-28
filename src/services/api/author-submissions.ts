@@ -289,7 +289,9 @@ const implemented: AuthorSubmissionService = {
       blob = await apiBlob(`/submissions/${paperId}/files/${fileId}`);
     }
     // A download is typed as plain bytes so that the browser saves it instead of showing it.
-    const url = URL.createObjectURL(downloadAs ? new Blob([blob], { type: "application/octet-stream" }) : blob);
+    // Opening (not downloading): a PDF must carry the PDF type, or the new tab saves it instead of showing it. The bytes decide, whatever the response said.
+    const isPdf = !downloadAs && (await blob.slice(0, 5).text()).startsWith("%PDF");
+    const url = URL.createObjectURL(downloadAs ? new Blob([blob], { type: "application/octet-stream" }) : isPdf && blob.type !== "application/pdf" ? new Blob([blob], { type: "application/pdf" }) : blob);
     setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
     return url;
   },

@@ -485,7 +485,9 @@ const implemented: Partial<ChairService> = {
   async fileUrl(storagePath, download) {
     const m = /^([0-9a-f-]{36})\/([0-9a-f-]{36})$/i.exec(storagePath);
     const blob = m ? await apiBlob(`/submissions/${m[1]}/files/${m[2]}`) : await apiBlob("/files", { query: { path: storagePath } });
-    const url = URL.createObjectURL(download ? new Blob([blob], { type: "application/octet-stream" }) : blob);
+    // Opening (not downloading): a PDF must carry the PDF type, or the new tab saves it instead of showing it. The bytes decide, whatever the response said.
+    const isPdf = !download && (await blob.slice(0, 5).text()).startsWith("%PDF");
+    const url = URL.createObjectURL(download ? new Blob([blob], { type: "application/octet-stream" }) : isPdf && blob.type !== "application/pdf" ? new Blob([blob], { type: "application/pdf" }) : blob);
     setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
     return url;
   },
