@@ -37,6 +37,9 @@ export function IdentityFields({ form, email, emailNote, idPrefix }: { form: Ide
       <Field label="Designation" htmlFor={id("designation")} required error={errorOf("designation")}>
         <input id={id("designation")} value={values.designation} placeholder="e.g. Professor" onChange={(e) => set("designation", e.target.value)} onBlur={touch("designation")} aria-invalid={Boolean(errorOf("designation")) || undefined} aria-describedby={describedBy(id("designation"), errorOf("designation"))} className={INPUT_CLASS} />
       </Field>
+      <Field label="City" htmlFor={id("city")} required error={errorOf("city")}>
+        <input id={id("city")} autoComplete="address-level2" value={values.city} placeholder="e.g. Mumbai" onChange={(e) => set("city", e.target.value)} onBlur={touch("city")} aria-invalid={Boolean(errorOf("city")) || undefined} aria-describedby={describedBy(id("city"), errorOf("city"))} className={INPUT_CLASS} />
+      </Field>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Country / region" htmlFor={id("country")} required error={errorOf("country")}>
           <select id={id("country")} autoComplete="country-name" value={values.country} onChange={(e) => set("country", e.target.value)} onBlur={touch("country")} aria-invalid={Boolean(errorOf("country")) || undefined} aria-describedby={describedBy(id("country"), errorOf("country"))} className={`${INPUT_CLASS} cursor-pointer`}>

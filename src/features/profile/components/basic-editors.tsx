@@ -28,7 +28,7 @@ export function IntroEditor({ profile, save, onDone, onCancel, onManageAffiliati
   const set = (k: keyof typeof d) => (v: string) => setD((x) => ({ ...x, [k]: v }));
   const touch = (k: string) => () => setTouched((t) => (t[k] ? t : { ...t, [k]: true }));
   const problems = validateProfileForm({ ...d, mainEmail: profile.mainEmail, affiliation: profile.affiliation || "x", phone: "" });
-  const missing = (["firstName", "lastName", "designation", "gender", "country"] as const).some((k) => !d[k].trim());
+  const missing = (["firstName", "lastName", "designation", "gender", "country", "city"] as const).some((k) => !d[k].trim());
   const errorOf = (k: keyof typeof problems) => (touched[k] ? problems[k] : undefined);
   const dirty = (Object.keys(d) as Array<keyof typeof d>).some((k) => d[k] !== profile[k]);
   const canSave = !missing && !problems.webPage && dirty;
@@ -63,7 +63,7 @@ export function IntroEditor({ profile, save, onDone, onCancel, onManageAffiliati
           </select>
         </Field>
         <Field className="sm:col-span-2" label="Website" htmlFor="profile-web" error={errorOf("webPage")}><input id="profile-web" type="text" inputMode="url" autoComplete="url" value={d.webPage} placeholder="https://" onChange={(e) => set("webPage")(e.target.value)} onBlur={touch("webPage")} aria-invalid={Boolean(errorOf("webPage")) || undefined} aria-describedby={errorOf("webPage") ? "profile-web-error" : undefined} className={INPUT_CLASS} /></Field>
-        <Field label="City" htmlFor="profile-city"><input id="profile-city" autoComplete="address-level2" value={d.city} onChange={(e) => set("city")(e.target.value)} className={INPUT_CLASS} /></Field>
+        <Field label="City" htmlFor="profile-city" required error={errorOf("city")}><input id="profile-city" autoComplete="address-level2" value={d.city} onChange={(e) => set("city")(e.target.value)} onBlur={touch("city")} aria-invalid={Boolean(errorOf("city")) || undefined} className={INPUT_CLASS} /></Field>
         <Field label="State / Region" htmlFor="profile-state"><input id="profile-state" autoComplete="address-level1" value={d.state} onChange={(e) => set("state")(e.target.value)} className={INPUT_CLASS} /></Field>
       </div>
       {missing && <p role="alert" className="text-[13px] font-medium text-danger-ink">Name, designation, gender and country can&apos;t be empty.</p>}

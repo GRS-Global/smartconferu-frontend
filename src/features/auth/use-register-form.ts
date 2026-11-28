@@ -16,11 +16,11 @@ export type RegisterProblems = Partial<Record<RegisterKey, string>>;
 /** What is still needed, named the way the prototype's hint line names it. */
 export const REQUIRED_LABELS: Record<RegisterKey, string> = {
   firstName: "first name", lastName: "last name", mainEmail: "email", affiliation: "affiliation", designation: "designation",
-  country: "country", gender: "gender", webPage: "a valid website (or leave it empty)", phone: "a valid mobile number (or leave it empty)",
+  country: "country", city: "city", gender: "gender", webPage: "a valid website (or leave it empty)", phone: "a valid mobile number (or leave it empty)",
   password: "password", password2: "retyped password",
 };
 
-const ORDER: RegisterKey[] = ["firstName", "lastName", "mainEmail", "affiliation", "designation", "country", "gender", "webPage", "phone", "password", "password2"];
+const ORDER: RegisterKey[] = ["firstName", "lastName", "mainEmail", "affiliation", "designation", "country", "city", "gender", "webPage", "phone", "password", "password2"];
 
 /** A profile with nothing in it, as the base the primary affiliation is written onto. */
 const NO_AFFILIATIONS = {
@@ -29,7 +29,7 @@ const NO_AFFILIATIONS = {
 };
 
 export function useRegisterForm() {
-  const [values, setValues] = useState({ firstName: "", lastName: "", mainEmail: "", designation: "", country: "", gender: "", webPage: "", phone: "", notifyChannels: [] as string[] });
+  const [values, setValues] = useState({ firstName: "", lastName: "", mainEmail: "", designation: "", country: "", city: "", gender: "", webPage: "", phone: "", notifyChannels: [] as string[] });
   const [inst, setInst] = useState<InstitutionValue>({ name: "", institutionId: null, pending: false });
   const [department, setDepartment] = useState("");
   const [password, setPassword] = useState("");
@@ -65,6 +65,7 @@ export function useRegisterForm() {
       affiliation: affiliation.affiliation,
       designation: values.designation.trim(),
       country: values.country,
+      city: values.city.trim(),
       gender: values.gender,
       phone: values.phone.trim(),
       webPage: values.webPage.trim(),

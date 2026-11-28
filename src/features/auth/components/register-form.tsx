@@ -235,6 +235,10 @@ function Fields({ form }: { form: Form }) {
         <input autoComplete="organization-title" aria-label="Designation" aria-required="true" placeholder="Designation * (e.g. Professor)" value={values.designation} onChange={(e) => set("designation", e.target.value)} onBlur={touch("designation")} aria-invalid={invalid("designation")} className={REG_INPUT} />
         {err("designation")}
       </div>
+      <div>
+        <input autoComplete="address-level2" aria-label="City" aria-required="true" placeholder="City *" value={values.city} onChange={(e) => set("city", e.target.value)} onBlur={touch("city")} aria-invalid={invalid("city")} className={REG_INPUT} />
+        {err("city")}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div onBlur={touch("country")}>
           <CountrySelect value={values.country} onChange={(c) => set("country", c)} placeholder="Country / region *" invalid={Boolean(errorOf("country"))} className={REG_INPUT} />

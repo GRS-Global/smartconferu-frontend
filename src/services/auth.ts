@@ -8,6 +8,8 @@ export interface SignUpInput {
   affiliation: string;
   designation: string;
   country: string;
+  /** Kept with the profile details (`details.city`). */
+  city: string;
   gender: string;
   phone: string;
   webPage: string;

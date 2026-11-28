@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { INPUT_CLASS } from "@/components/ui/field";
 import { getProfileService } from "@/services/profile";
-import type { Profile, ProfileVerification } from "@/types/profile";
+import { PROFESSIONAL_LINK_KEYS, SCHOLAR_LINK_KEYS, type Profile, type ProfileVerification } from "@/types/profile";
 import { useProfile } from "../profile-context";
 import { PENDING_AMBER } from "../showcase/parts";
 
@@ -13,8 +13,21 @@ const PRIMARY_BTN = "h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-
 const GHOST_BTN = "h-10 rounded-lg border border-line-strong bg-white px-4 text-sm font-semibold text-ink-soft hover:bg-canvas";
 
 /** What is missing before a profile can be sent for verification (the server checks the same). */
-export function missingForVerification(p: Pick<Profile, "firstName" | "lastName" | "designation" | "affiliation">): string[] {
-  return [!p.firstName.trim() || !p.lastName.trim() ? "name" : "", !p.designation.trim() ? "designation" : "", !p.affiliation.trim() ? "affiliation" : ""].filter(Boolean);
+/** Profile links counted for verification ("Find me on"): ORCID plus the scholar and professional profiles (the server counts the same). */
+const VERIFY_LINKS = ["orcidId", ...SCHOLAR_LINK_KEYS, ...PROFESSIONAL_LINK_KEYS] as const;
+export const linksForVerification = (p: Pick<Profile, (typeof VERIFY_LINKS)[number]>) => VERIFY_LINKS.filter((k) => String(p[k] ?? "").trim()).length;
+/** Memberships counted: any on the profile except a society a Super Admin refused. */
+export const membershipsForVerification = (p: Pick<Profile, "timeline">) => p.timeline.filter((e) => e.type === "membership" && e.verification !== "rejected").length;
+
+export function missingForVerification(p: Pick<Profile, "firstName" | "lastName" | "designation" | "affiliation" | "timeline" | (typeof VERIFY_LINKS)[number]>): string[] {
+  const links = linksForVerification(p);
+  return [
+    !p.firstName.trim() || !p.lastName.trim() ? "name" : "",
+    !p.designation.trim() ? "designation" : "",
+    !p.affiliation.trim() ? "affiliation" : "",
+    links < 2 ? `${2 - links === 2 ? "2 profile links" : "1 more profile link"} (ORCID, Google Scholar, ResearchGate, LinkedIn…)` : "",
+    membershipsForVerification(p) < 1 ? "a membership" : "",
+  ].filter(Boolean);
 }
 
 /** "Verify my profile" on My Profile: ask the Super Admin to check the profile; its green tick appears once approved. Own backend only

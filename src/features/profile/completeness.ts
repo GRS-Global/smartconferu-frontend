@@ -26,6 +26,7 @@ export const REQUIRED_ITEMS: Item[] = [
   { key: "affiliation", label: "affiliation", tab: "general" },
   { key: "designation", label: "designation", tab: "general" },
   { key: "country", label: "country", tab: "general" },
+  { key: "city", label: "city", tab: "general" },
   { key: "gender", label: "gender", tab: "general" },
 ];
 
@@ -34,7 +35,6 @@ export const OPTIONAL_ITEMS: Item[] = [
   { key: "webPage", label: "web page", tab: "general" },
   { key: "phone", label: "phone number", tab: "general" },
   { key: "addressLine1", label: "address", tab: "contact" },
-  { key: "city", label: "city", tab: "contact" },
   { key: "postCode", label: "post code", tab: "contact" },
   // One answer each for the two link tabs: any single link, or ticking the opt-out, counts, so ten URL fields don't swamp the score.
   { key: "scholarProfiles", label: "scholar profile", tab: "scholar", anyOf: ["orcidId", ...SCHOLAR_LINK_KEYS], optOut: "scholarNone" },
