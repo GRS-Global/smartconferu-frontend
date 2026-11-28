@@ -97,11 +97,14 @@ export const CHAIR_MENU: MenuItem[] = live([
 ]);
 
 /** The "Coming soon" block under the menu: the chair's items that are announced but not built in the prototype either. */
-export const SOON: Record<"author" | "reviewer" | "chair", Array<{ label: string; icon: LucideIcon }>> = {
+export const SOON: Record<"author" | "reviewer" | "chair", Array<{ key: string; label: string; icon: LucideIcon }>> = {
   author: [],
   reviewer: [],
-  chair: [{ label: "Payment", icon: CreditCard }, { label: "Communications", icon: Mail }],
+  chair: [{ key: "payment", label: "Payment", icon: CreditCard }, { key: "communications", label: "Communications", icon: Mail }],
 };
+
+/** The order of the "Coming soon" list at the bottom of the menu (by item key); anything not named here follows, in menu order. */
+export const SOON_ORDER = ["registration", "flyer", "programme", "certificates", "payment", "communications"];
 
 export const MENUS: Record<"author" | "reviewer" | "chair", MenuItem[]> = { author: AUTHOR_MENU, reviewer: REVIEWER_MENU, chair: CHAIR_MENU };
 

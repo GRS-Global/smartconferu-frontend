@@ -13,7 +13,7 @@ const ConferenceTour = dynamic(() => import("@/features/tour/conference-tour").t
 import { readTourState } from "@/features/tour/tour-state";
 import { setupLocked, useConferenceSetup } from "@/features/tour/use-setup";
 import type { Conference, ConferenceRole } from "@/types/conference";
-import { SOON, MENUS, hrefOf, roleLanding, type MenuItem } from "../menus";
+import { SOON, SOON_ORDER, MENUS, hrefOf, roleLanding, type MenuItem } from "../menus";
 
 /* The frame of a conference workspace (the prototype's Sidebar + ConferenceShell): the conference's menu on the left, the page on
    the right. One component for the Author, Reviewer and Chair workspaces; each has its own menu (features/workspace/menus.ts).
@@ -216,7 +216,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
     .filter((i) => !i.children || i.children.length > 0);
   // Everything not available yet (switched off in lib/config.ts, or announced only) is listed together at the bottom, under "Coming soon".
   const menuItems = items.filter((i) => !i.soon);
-  const soonEntries: Array<{ key?: string; label: string; icon: LucideIcon }> = [...items.filter((i) => i.soon).map((i) => ({ key: i.key, label: i.label, icon: i.icon as LucideIcon })), ...SOON[role]];
+  const soonEntries: Array<{ key?: string; label: string; icon: LucideIcon }> = [...items.filter((i) => i.soon).map((i) => ({ key: i.key, label: i.label, icon: i.icon as LucideIcon })), ...SOON[role]].sort((a, b) => { const rank = (k?: string) => { const i = SOON_ORDER.indexOf(k ?? ""); return i < 0 ? SOON_ORDER.length : i; }; return rank(a.key) - rank(b.key); });
   // Groups start open when one of their pages is the current one; the person can fold or open any group afterwards.
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const groupOpen = (item: MenuItem) => toggled[item.key] ?? groupOn(active, item);
