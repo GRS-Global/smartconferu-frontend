@@ -363,7 +363,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
   return (
     <div className="flex items-start">
       {rail ? (
-        <div id="conference-sidebar" style={PANEL} onMouseEnter={enter} onMouseLeave={leave} onFocus={enter} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave(); }} className="sticky top-16 hidden h-[calc(100vh-64px)] w-[76px] shrink-0 flex-col items-center lg:flex">
+        <div id="conference-sidebar" style={PANEL} onMouseEnter={enter} onMouseLeave={leave} onFocus={enter} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave(); }} className={`sticky top-16 hidden h-[calc(100vh-64px)] w-[76px] shrink-0 flex-col items-center lg:flex ${hover ? "z-[95]" : ""}`}>
           <button type="button" onClick={() => setCollapsed(false)} aria-label="Keep menu open" aria-expanded="false" aria-controls="conference-sidebar" title="Keep menu open" className="absolute -right-3 top-5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-[#E7E2F5] bg-white text-primary shadow-sm transition-colors hover:bg-primary-soft">
             <ChevronRight size={14} strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -393,7 +393,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
             {role === "chair" && <button type="button" onClick={() => startConferenceTour()} aria-label="Take a tour" title="Take a tour" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-primary transition-colors hover:bg-white"><HelpCircle size={18} aria-hidden="true" /></button>}
             <Link href="/dashboard" aria-label="My Conferences" title="My Conferences" className="flex h-10 w-10 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-white hover:text-navy"><ChevronLeft size={18} aria-hidden="true" /></Link>
           </div>
-          {hover && <div onMouseEnter={enter} onMouseLeave={leave} className="absolute left-0 top-0 z-40">{fullMenu(true)}</div>}
+          {hover && <div onMouseEnter={enter} onMouseLeave={leave} className="menu-flyout absolute left-0 top-0 z-40">{fullMenu(true)}</div>}
         </div>
       ) : (
         fullMenu(false)

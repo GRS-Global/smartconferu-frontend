@@ -258,3 +258,8 @@ summary {
 /* Side panels that scroll on their own (components/layout/sticky-side.ts): a thin scrollbar that only shows its colour on hover. */
 .side-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
 .side-scroll:hover { scrollbar-color: var(--line-strong, #cbd5e1) transparent; }
+
+/* The left menu opening over the page when the pointer is on its rail: it slides out of the rail and fades in, slowly enough to follow. */
+@keyframes menu-flyout { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+.menu-flyout { animation: menu-flyout 380ms cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) { .menu-flyout { animation: none; } }

@@ -261,7 +261,7 @@ const implemented: AuthorSubmissionService = {
     const title = patch.title.trim(); const abstract = patch.abstract.trim();
     const keywords = patch.keywords.map((k) => k.trim()).filter(Boolean);
     if (!title || !abstract || title.length > 500 || keywords.length > 20 || keywords.some((k) => k.length > 100)) throw bad();
-    await api(`/submissions/${paperDbId}`, { method: "PATCH", body: { title, abstract, keywords } });
+    await api(`/submissions/${paperDbId}`, { method: "PATCH", body: { title, abstract, keywords, ...(patch.track?.trim() ? { track: patch.track.trim() } : {}) } });
   },
 
   async saveAuthors(paperDbId, authors) {

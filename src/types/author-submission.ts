@@ -76,7 +76,7 @@ export interface AuthorSubmission {
 }
 
 /** What an author may change about a paper's text. */
-export interface PaperDetailsPatch { title: string; abstract: string; keywords: string[] }
+export interface PaperDetailsPatch { title: string; abstract: string; keywords: string[]; /** Moves the paper to this track; left out, the track stays. */ track?: string }
 
 /** One author as saved: the first is the main author; at least one is corresponding. */
 /** An author as typed on the submission form. `affiliation` is the institution only; department and city have their own fields. */

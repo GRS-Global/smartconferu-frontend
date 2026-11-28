@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, ArrowDown, ArrowUp, Download, Eye, FileCheck, FileUp, Paperclip, Pencil, Trash2, User, UserPlus, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { AuthorPlaces } from "./author-places";
 import { useEmailLaterAsk } from "./email-later-ask";
@@ -71,19 +71,31 @@ function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonPro
   const [title, setTitle] = useState(paper.title);
   const [abstract, setAbstract] = useState(paper.abstract);
   const [keywords, setKeywords] = useState(paper.keywords);
+  // The conference's tracks (when it uses them): the paper can be moved to another one here.
+  const [track, setTrack] = useState(paper.track);
+  const [tracks, setTracks] = useState<string[]>([]);
+  useEffect(() => {
+    let off = false;
+    void getAuthorSubmissionService().then((s) => s.loadSubmitForm(paper.conference.id, false)).then((info) => {
+      if (off || !info || info.tracksOn === false) return;
+      setTracks(info.tracks.includes(paper.track) || !paper.track ? info.tracks : [paper.track, ...info.tracks]);
+    }).catch(() => undefined);
+    return () => { off = true; };
+  }, [paper.conference.id, paper.track]);
   const { saving, error, run } = useSave(onClose, onSaved, onSessionEnded);
   // Save always answers: what is missing (or a title another paper already has) shows under its field, and the page scrolls to it.
   const [tried, setTried] = useState(false);
   const [takenTitle, setTakenTitle] = useState("");
-  const valid = title.trim() !== "" && abstract.trim() !== "";
+  const valid = title.trim() !== "" && abstract.trim() !== "" && keywords.length > 0;
   const titleError = tried && !title.trim() ? "The title can't be empty." : takenTitle && takenTitle === title.trim() ? "A paper with this title is already submitted to this conference. Please use a different title." : "";
   const abstractError = tried && !abstract.trim() ? "The abstract can't be empty." : "";
+  const keywordsError = tried && keywords.length === 0 ? "Add at least one keyword (press Enter after each)." : "";
   const words = abstract.trim().split(/\s+/).filter(Boolean).length;
   const save = () => {
     setTried(true);
     if (!valid) return;
     void run(
-      async () => { await (await getAuthorSubmissionService()).updateDetails(paper.dbId, { title, abstract, keywords }); return { notice: null }; },
+      async () => { await (await getAuthorSubmissionService()).updateDetails(paper.dbId, { title, abstract, keywords, track: track !== paper.track ? track : undefined }); return { notice: null }; },
       (e) => { if (e instanceof ApiError && e.code === "DUPLICATE_TITLE") { setTakenTitle(title.trim()); return true; } return false; },
     );
   };
@@ -96,9 +108,20 @@ function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonPro
           {titleError && <p id="paper-title-error" role="alert" className="mt-1 text-[11.5px] font-semibold text-danger-ink">{titleError}</p>}
         </div>
         <div>
-          <label htmlFor="paper-keywords" className={LABEL}>Keywords</label>
-          <KeywordTags id="paper-keywords" value={keywords} onChange={setKeywords} placeholder="e.g. Machine Learning — press Enter to add" />
+          <label htmlFor="paper-keywords" className={LABEL}>Keywords<span className="text-danger-ink" aria-hidden="true"> *</span></label>
+          <KeywordTags id="paper-keywords" value={keywords} onChange={setKeywords} invalid={Boolean(keywordsError)} describedBy={keywordsError ? "paper-keywords-error" : undefined} placeholder="e.g. Machine Learning — press Enter to add" />
+          {keywordsError && <p id="paper-keywords-error" role="alert" className="mt-1 text-[11.5px] font-semibold text-danger-ink">{keywordsError}</p>}
         </div>
+        {tracks.length > 0 && (
+          <div>
+            <div id="paper-track-label" className={LABEL}>Track</div>
+            <div role="group" aria-labelledby="paper-track-label" className="grid gap-2 sm:grid-cols-3">
+              {tracks.map((t) => (
+                <button key={t} type="button" aria-pressed={track === t} onClick={() => setTrack(t)} className={`rounded-lg border px-3 py-2.5 text-sm ${track === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong"}`}>{t}</button>
+              ))}
+            </div>
+          </div>
+        )}
         <div>
           <label htmlFor="paper-abstract" className={LABEL}>Abstract<span className="text-danger-ink" aria-hidden="true"> *</span></label>
           <textarea id="paper-abstract" value={abstract} maxLength={20000} rows={7} onChange={(e) => setAbstract(e.target.value)} aria-invalid={Boolean(abstractError) || undefined} aria-describedby={abstractError ? "paper-abstract-error" : undefined} className={`${INPUT_CLASS} resize-y bg-canvas leading-relaxed focus:bg-white`} />
