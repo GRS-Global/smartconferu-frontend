@@ -11,7 +11,7 @@ import { isValidEmail } from "@/lib/email";
    is "<paperId>/<fileId>", which `fileUrl` turns into the download route. */
 
 interface PaperFileDto { id: string; kind: string; version: number; fileName: string; sizeBytes: number | null; uploadedAt: string }
-interface AuthorDto { name: string; email: string; affiliation: string | null; country: string | null; corresponding: boolean; hasAccount: boolean }
+interface AuthorDto { name: string; email: string; affiliation: string | null; department?: string | null; city?: string | null; country: string | null; corresponding: boolean; hasAccount: boolean }
 interface SubmissionDto {
   id: string; paperId: string; paperNo: number; conferenceId: string; conferenceSlug: string; conferenceAcronym: string; view: "chair" | "author" | "reviewer";
   title: string; abstract: string; keywords: string[]; track: string | null; presentationType: string | null; authors: AuthorDto[] | null;
@@ -29,7 +29,7 @@ interface FullScreening {
 interface PublicConference { id?: string; status?: string; acronym: string; title: string; submissionDeadline?: string | null; cfpStatus?: string }
 interface ConferenceDto { acronym: string; title: string; status: string; startDate: string | null; endDate: string | null; city: string | null; state: string | null; country: string | null; webPage: string | null; contactEmail: string | null }
 interface FormDto { tracks: string[]; presentationTypes: string[]; extras: unknown[]; guidelines: string }
-interface MeDto { email: string | null; firstName: string; lastName: string; affiliation: string | null; country: string | null }
+interface MeDto { email: string | null; firstName: string; lastName: string; affiliation: string | null; country: string | null; details?: { city?: unknown; affiliationDepartment?: unknown } | null }
 
 const STAGES = ["upload_pending", "no_decision", "plagiarism_clear"];
 const label = (ts: string | null) => (ts ? new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "");
@@ -158,7 +158,7 @@ async function toPaper(s: SubmissionDto): Promise<AuthorPaper> {
   return {
     ...toListItem(s),
     authors: (s.authors ?? []).map((a) => ({
-      name: a.name, email: a.email, affiliation: a.affiliation ?? "", country: a.country ?? "", corresponding: a.corresponding,
+      name: a.name, email: a.email, affiliation: a.affiliation ?? "", department: a.department ?? "", city: a.city ?? "", country: a.country ?? "", corresponding: a.corresponding,
       isMe: myEmail !== "" && a.email.toLowerCase() === myEmail,
     })),
     myEmails: myEmail ? [myEmail] : [],
@@ -182,7 +182,7 @@ const implemented: AuthorSubmissionService = {
     let conf: PublicConference;
     try { conf = await api<PublicConference>(`/public/conferences/${encodeURIComponent(slug)}`, { auth: false }); } catch (e) { if (notFound(e)) return null; throw e; }
     const me = await api<MeDto>("/me");
-    const base = { slug, acronym: conf.acronym, name: conf.title, me: { name: [me.firstName, me.lastName].filter(Boolean).join(" "), email: me.email ?? "", affiliation: me.affiliation ?? "", country: me.country ?? "" } };
+    const base = { slug, acronym: conf.acronym, name: conf.title, me: { name: [me.firstName, me.lastName].filter(Boolean).join(" "), email: me.email ?? "", affiliation: me.affiliation ?? "", country: me.country ?? "", department: typeof me.details?.affiliationDepartment === "string" ? me.details.affiliationDepartment : "", city: typeof me.details?.city === "string" ? me.details.city : "" } };
     // An archived conference answers with a short notice only: the author's page says it is closed (a chair on an author's behalf still gets the form).
     if (conf.status === "archived" && !behalf) return { ...base, closed: true, deadline: "", guidelines: "", tracks: ["General Track"], presentationTypes: ["Paper Presentation"], extras: [] };
     const form = await api<FormDto>(`/public/conferences/${encodeURIComponent(slug)}/submission-form`, { auth: false });
@@ -217,7 +217,7 @@ const implemented: AuthorSubmissionService = {
       method: "POST",
       body: {
         title, abstract, keywords: paper.keywords.map((k) => k.trim()).filter(Boolean).slice(0, 20),
-        authors: authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, country: a.country || null, corresponding: a.corresponding })),
+        authors: authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, department: a.department?.trim() || null, city: a.city?.trim() || null, country: a.country || null, corresponding: a.corresponding })),
         track: paper.track || "General Track", presentationType: paper.presentationType || "Paper Presentation", responses: paper.responses ?? {},
         ...(paper.onBehalf ? { onBehalf: true } : {}),
       },
@@ -246,7 +246,7 @@ const implemented: AuthorSubmissionService = {
   },
 
   async saveAuthors(paperDbId, authors) {
-    const list = authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, country: a.country.trim() || null, corresponding: Boolean(a.corresponding) }));
+    const list = authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, department: a.department?.trim() || null, city: a.city?.trim() || null, country: a.country.trim() || null, corresponding: Boolean(a.corresponding) }));
     if (!list.length || list.length > 50 || !list.some((a) => a.corresponding) || list.some((a) => !a.name || !isValidEmail(a.email))) throw bad();
     await api(`/submissions/${paperDbId}/authors`, { method: "PUT", body: { authors: list } });
   },

@@ -10,7 +10,7 @@ import { extractPaperFields } from "@/services/paper-ai";
    - Basic guess (rules over the same text, no network): used when the AI is not available, so the form is still filled as far as it can be.
    The person always checks the result: nothing is saved until they press Submit. */
 
-export interface FilledAuthor { name: string; email: string; affiliation: string; country: string; corresponding: boolean; countrySource: string }
+export interface FilledAuthor { name: string; email: string; affiliation: string; department: string; city: string; country: string; corresponding: boolean; countrySource: string }
 export interface FilledPaper { title: string; abstract: string; keywords: string[]; authors: FilledAuthor[]; how: "ai" | "basic" }
 
 const WORLD: Array<[string, string]> = Object.entries(COUNTRY_CODES);
@@ -37,7 +37,7 @@ export async function extractPdfText(file: File): Promise<string> {
 }
 
 const AFFILIATION_HINTS = /(university|institute|department|dept\.|college|school|lab(oratory)?|centre|center|ltd\.?|inc\.?|corp\.?|faculty)/i;
-interface Raw { name: string; email: string; affiliation: string; country: string; corresponding: boolean }
+interface Raw { name: string; email: string; affiliation: string; department: string; city: string; country: string; corresponding: boolean }
 
 function splitAuthorBlock(block: string): Raw[] {
   const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -46,7 +46,7 @@ function splitAuthorBlock(block: string): Raw[] {
   const affiliation = lines.slice(1).join(", ");
   return lines[0].split(/,| and | & /i).map((s) => s.trim()).filter(Boolean)
     .filter((s) => !AFFILIATION_HINTS.test(s) && !/\d/.test(s) && s.split(/\s+/).length <= 4)
-    .map((name, i) => ({ name, email: "", affiliation, country: "", corresponding: i === 0 }));
+    .map((name, i) => ({ name, email: "", affiliation, department: "", city: "", country: "", corresponding: i === 0 }));
 }
 
 /** The basic guess: regular expressions over the paper's first pages. */

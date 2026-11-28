@@ -3,6 +3,8 @@ export interface PaperAuthor {
   name: string;
   email: string;
   affiliation: string;
+  department?: string;
+  city?: string;
   country: string;
   corresponding: boolean;
 }
@@ -72,7 +74,8 @@ export interface AuthorSubmission {
 export interface PaperDetailsPatch { title: string; abstract: string; keywords: string[] }
 
 /** One author as saved: the first is the main author; at least one is corresponding. */
-export interface AuthorInput { name: string; email: string; affiliation: string; country: string; corresponding: boolean }
+/** An author as typed on the submission form. `affiliation` is the institution only; department and city have their own fields. */
+export interface AuthorInput { name: string; email: string; affiliation: string; department: string; city: string; country: string; corresponding: boolean }
 
 /** One author on a paper's own page; `isMe` marks the signed-in user's row ("You"). */
 export interface PaperPageAuthor extends PaperAuthor { isMe: boolean }
@@ -147,7 +150,7 @@ export interface SubmitFormInfo {
   /** The chair's extra questions on the form. */
   extras: SubmissionExtra[];
   /** The signed-in user, for the first author row. */
-  me: { name: string; email: string; affiliation: string; country: string };
+  me: { name: string; email: string; affiliation: string; country: string; /** From the profile, for Author 1. */ department?: string; city?: string };
 }
 export interface NewPaperInput { /** A chair submitting for the authors (`onBehalf` on the API: allowed in archived conferences and with the CFP closed; the
    *  corresponding authors get "Submitted on your behalf"). */ onBehalf?: boolean; responses?: Record<string, string | boolean>; title: string; abstract: string; keywords: string[]; authors: AuthorInput[]; track: string; presentationType: string; file: File;

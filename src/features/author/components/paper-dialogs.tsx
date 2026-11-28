@@ -11,6 +11,11 @@ import { autoCheckOf } from "@/lib/auto-check";
 import { requestPaperIngest } from "@/services/paper-ai";
 import type { AuthorInput, AuthorPaper, PaperFile } from "@/types/author-submission";
 import { isValidEmail } from "@/lib/email";
+import { COUNTRIES } from "@/lib/country-codes";
+
+/** How many authors (from the top) must give affiliation, city and country (same as the submission form). */
+const AUTHORS_WITH_PLACE = 2;
+const STAR = <span className="text-danger-ink" aria-hidden="true"> *</span>;
 import { KeywordTags } from "@/components/ui/keyword-tags";
 
 /* The ways an author changes their paper (the prototype's EditPaperDetailsModal, EditAuthorsModal and the withdraw
@@ -107,7 +112,7 @@ interface Row extends AuthorInput { key: number }
 let rowKey = 0;
 
 function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded }: Omit<CommonProps, "open">) {
-  const [rows, setRows] = useState<Row[]>(() => paper.authors.map((a) => ({ name: a.name, email: a.email, affiliation: a.affiliation, country: a.country, corresponding: a.corresponding, key: ++rowKey })));
+  const [rows, setRows] = useState<Row[]>(() => paper.authors.map((a) => ({ name: a.name, email: a.email, affiliation: a.affiliation, department: a.department ?? "", city: a.city ?? "", country: a.country, corresponding: a.corresponding, key: ++rowKey })));
   const { saving, error, run } = useSave(onClose, onSaved, onSessionEnded);
   const mine = new Set(paper.myEmails);
   const update = (key: number, patch: Partial<AuthorInput>) => setRows((l) => l.map((a) => (a.key === key ? { ...a, ...patch } : a)));
@@ -125,11 +130,13 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
   const correspondingCount = rows.filter((a) => a.corresponding).length;
   // The author editing their paper must stay on it.
   const meListed = asChair || rows.some((a) => mine.has(a.email.trim().toLowerCase()));
-  const valid = rows.length > 0 && meListed && rows.every((a) => a.name.trim() && isValidEmail(a.email.trim()));
+  // The first two authors need affiliation, city and country; the rest may leave them empty.
+  const placeOk = (a: (typeof rows)[number], i: number) => i >= AUTHORS_WITH_PLACE || Boolean(a.affiliation.trim() && a.city.trim() && a.country);
+  const valid = rows.length > 0 && meListed && rows.every((a, i) => a.name.trim() && isValidEmail(a.email.trim()) && placeOk(a, i));
   const iconBtn = "flex h-7 w-7 items-center justify-center rounded-lg text-ink-muted hover:bg-white disabled:opacity-30";
 
   const save = () => run(async () => {
-    const authors: AuthorInput[] = rows.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim(), country: a.country, corresponding: a.corresponding }));
+    const authors: AuthorInput[] = rows.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim(), department: a.department.trim(), city: a.city.trim(), country: a.country, corresponding: a.corresponding }));
     await (await getAuthorSubmissionService()).saveAuthors(paper.dbId, authors);
     // The people added are told they were added as a co-author (only the addresses that are new on the paper).
     const known = new Set(paper.authors.map((a) => a.email.trim().toLowerCase()));
@@ -164,8 +171,20 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
                 <input id={`author-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor={`author-aff-${a.key}`} className={LABEL}>Affiliation</label>
-                <input id={`author-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="University / organisation" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+                <label htmlFor={`author-aff-${a.key}`} className={LABEL}>Affiliation{i < AUTHORS_WITH_PLACE && STAR}</label>
+                <input id={`author-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="Institution only, e.g. IIT Bombay" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+              </div>
+              <div>
+                <label htmlFor={`author-dept-${a.key}`} className={LABEL}>Department</label>
+                <input id={`author-dept-${a.key}`} value={a.department} maxLength={300} placeholder="e.g. Department of Computer Science" onChange={(e) => update(a.key, { department: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+              </div>
+              <div>
+                <label htmlFor={`author-city-${a.key}`} className={LABEL}>City{i < AUTHORS_WITH_PLACE && STAR}</label>
+                <input id={`author-city-${a.key}`} value={a.city} maxLength={120} placeholder="e.g. Mumbai" onChange={(e) => update(a.key, { city: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+              </div>
+              <div>
+                <label htmlFor={`author-country-${a.key}`} className={LABEL}>Country{i < AUTHORS_WITH_PLACE && STAR}</label>
+                <select id={`author-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}{a.country && !COUNTRIES.includes(a.country) && <option value={a.country}>{a.country}</option>}</select>
               </div>
             </div>
             <label className="mt-3 inline-flex cursor-pointer items-center gap-2">
@@ -175,7 +194,7 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
           </div>
         ))}
       </div>
-      <button type="button" onClick={() => setRows((l) => (l.length < 50 ? [...l, { key: ++rowKey, name: "", email: "", affiliation: "", country: "", corresponding: false }] : l))} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong py-2.5 text-sm font-bold text-primary hover:bg-primary-soft">
+      <button type="button" onClick={() => setRows((l) => (l.length < 50 ? [...l, { key: ++rowKey, name: "", email: "", affiliation: "", department: "", city: "", country: "", corresponding: false }] : l))} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong py-2.5 text-sm font-bold text-primary hover:bg-primary-soft">
         <UserPlus size={15} aria-hidden="true" /> Add co-author
       </button>
       {!meListed && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">You have to stay on the paper as an author or co-author. Put your own name and email back to save.</p>}

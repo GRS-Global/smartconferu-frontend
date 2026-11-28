@@ -47,7 +47,9 @@ const fieldLabel = (missing = false) => `${FIELD_LABEL} ${missing ? "text-danger
 /** Keys for the author rows. The counter lives on `globalThis`, not in this module, so a hot reload (which re-runs the module but keeps the rows on screen) can never hand out a key a row already has. */
 const nextRowKey = (): number => { const g = globalThis as { __authorRowKey?: number }; g.__authorRowKey = (g.__authorRowKey ?? 0) + 1; return g.__authorRowKey; };
 interface Row extends AuthorInput { key: number }
-const blankRow = (over: Partial<Row> = {}): Row => ({ key: nextRowKey(), name: "", email: "", affiliation: "", country: "", corresponding: false, ...over });
+/** How many authors (from the top) must give affiliation, city and country. Same number in the backend (submissions.service.ts). */
+const AUTHORS_WITH_PLACE = 2;
+const blankRow =(over: Partial<Row> = {}): Row => ({ key: nextRowKey(), name: "", email: "", affiliation: "", department: "", city: "", country: "", corresponding: false, ...over });
 const titleKey = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 type FormState =
@@ -109,7 +111,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const [fileProblem, setFileProblem] = useState("");
   // The person submitting starts as Author 1. On behalf the chair is not an author: the list starts empty and is filled from the paper's PDF
   // (or typed); the corresponding author gets the "Submitted on your behalf" email.
-  const [rows, setRows] = useState<Row[]>(() => [behalf ? blankRow({ name: "", email: "", affiliation: "", country: "", corresponding: true }) : blankRow({ name: info.me.name, email: info.me.email, affiliation: info.me.affiliation, country: info.me.country, corresponding: true })]);
+  const [rows, setRows] = useState<Row[]>(() => [behalf ? blankRow({ name: "", email: "", affiliation: "", country: "", corresponding: true }) : blankRow({ name: info.me.name, email: info.me.email, affiliation: info.me.affiliation, department: info.me.department ?? "", city: info.me.city ?? "", country: info.me.country, corresponding: true })]);
   const [answers, setAnswers] = useState<Record<string, string | boolean>>({});
   const [originality, setOriginality] = useState(false);
   const [terms, setTerms] = useState(false);
@@ -163,7 +165,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
     const at = fromPaper.findIndex(sameAsMe);
     if (at < 0) return [{ ...me, corresponding: false }, ...fromPaper];
     const mine = fromPaper[at];
-    const mineNow: Row = { ...me, affiliation: me.affiliation || mine.affiliation, country: me.country || mine.country, corresponding: mine.corresponding };
+    const mineNow: Row = { ...me, affiliation: me.affiliation || mine.affiliation, department: me.department || mine.department, city: me.city || mine.city, country: me.country || mine.country, corresponding: mine.corresponding };
     return fromPaper.map((a, i) => (i === at ? mineNow : a)).filter((a, i) => i === at || !sameAsMe(a));
   };
 
@@ -175,7 +177,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
     const anyCorresponding = r.authors.some((a) => a.corresponding);
     const source = new Map<string, FilledAuthor>();
     const paperRows = r.authors.map((a, i) => {
-      const row = blankRow({ name: a.name, email: a.email, affiliation: a.affiliation, country: a.country, corresponding: anyCorresponding ? a.corresponding : i === 0 });
+      const row = blankRow({ name: a.name, email: a.email, affiliation: a.affiliation, department: a.department, city: a.city, country: a.country, corresponding: anyCorresponding ? a.corresponding : i === 0 });
       source.set(String(row.key), a);
       return row;
     });
@@ -218,7 +220,9 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
 
   const emails = rows.map((a) => a.email.trim().toLowerCase()).filter(Boolean);
   const dupEmail = new Set(emails).size !== emails.length;
-  const authorsOk = rows.length > 0 && rows.every((a) => a.name.trim() && isValidEmail(a.email.trim()));
+  // The first two authors need affiliation, city and country; the rest may leave them empty.
+  const placeOk = (a: Row, i: number) => i >= AUTHORS_WITH_PLACE || Boolean(a.affiliation.trim() && a.city.trim() && a.country);
+  const authorsOk = rows.length > 0 && rows.every((a, i) => a.name.trim() && isValidEmail(a.email.trim()) && placeOk(a, i));
   // The person submitting must be on the paper (a chair submitting for an author is exempt).
   const listed = behalf || emails.includes(info.me.email.trim().toLowerCase());
   const answered = (f: SubmissionExtra) => (f.type === "consent" ? answers[f.id] === true : String(answers[f.id] ?? "").trim() !== "");
@@ -331,7 +335,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </div>
         </Section>
 
-        <Section n={2} title="Authors" busy={filling} hint={behalf ? "Read from the PDF: check them, and tick the corresponding author (they get the confirmation email)." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it."}>
+        <Section n={2} title="Authors" busy={filling} hint={(behalf ? "Read from the PDF: check them, and tick the corresponding author (they get the confirmation email)." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it.") + " The first two authors need affiliation, city and country."}>
           <div className="space-y-3">
             {rows.map((a, i) => (
               <div key={a.key} style={{ border: `1px solid ${a.corresponding ? "var(--primary-soft-border)" : "var(--border)"}`, background: a.corresponding ? "var(--primary-soft)" : "#FFFFFF" }} className="rounded-xl p-4">
@@ -346,8 +350,10 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div><label htmlFor={`a-name-${a.key}`} className={LABEL}>Full name <span className="text-danger-ink">*</span></label><input id={`a-name-${a.key}`} value={a.name} maxLength={200} onChange={(e) => update(a.key, { name: e.target.value })} className={`${INPUT_CLASS} ${tried && !a.name.trim() ? "border-danger" : ""}`} /></div>
                   <div><label htmlFor={`a-email-${a.key}`} className={LABEL}>Email <span className="text-danger-ink">*</span></label><input id={`a-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} ${tried && !isValidEmail(a.email.trim()) ? "border-danger" : ""}`} /></div>
-                  <div><label htmlFor={`a-aff-${a.key}`} className={LABEL}>Affiliation</label><input id={`a-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="University / organisation" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={INPUT_CLASS} /></div>
-                  <div><label htmlFor={`a-country-${a.key}`} className={LABEL}>Country</label><select id={`a-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={INPUT_CLASS}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>{hints[a.key] && a.country && <p className="mt-1 text-[11px] font-medium text-warning-ink">{hints[a.key]} — please check</p>}</div>
+                  <div><label htmlFor={`a-aff-${a.key}`} className={LABEL}>Affiliation{i < AUTHORS_WITH_PLACE && <> <span className="text-danger-ink">*</span></>}</label><input id={`a-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="Institution only, e.g. IIT Bombay" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={`${INPUT_CLASS} ${tried && i < AUTHORS_WITH_PLACE && !a.affiliation.trim() ? "border-danger" : ""}`} /></div>
+                  <div><label htmlFor={`a-dept-${a.key}`} className={LABEL}>Department</label><input id={`a-dept-${a.key}`} value={a.department} maxLength={300} placeholder="e.g. Department of Computer Science" onChange={(e) => update(a.key, { department: e.target.value })} className={INPUT_CLASS} /></div>
+                  <div><label htmlFor={`a-city-${a.key}`} className={LABEL}>City{i < AUTHORS_WITH_PLACE && <> <span className="text-danger-ink">*</span></>}</label><input id={`a-city-${a.key}`} value={a.city} maxLength={120} placeholder="e.g. Mumbai" onChange={(e) => update(a.key, { city: e.target.value })} className={`${INPUT_CLASS} ${tried && i < AUTHORS_WITH_PLACE && !a.city.trim() ? "border-danger" : ""}`} /></div>
+                  <div><label htmlFor={`a-country-${a.key}`} className={LABEL}>Country{i < AUTHORS_WITH_PLACE && <> <span className="text-danger-ink">*</span></>}</label><select id={`a-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={`${INPUT_CLASS} ${tried && i < AUTHORS_WITH_PLACE && !a.country ? "border-danger" : ""}`}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>{hints[a.key] && a.country && <p className="mt-1 text-[11px] font-medium text-warning-ink">{hints[a.key]} — please check</p>}</div>
                 </div>
                 <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-ink-soft"><input type="checkbox" checked={a.corresponding} onChange={() => toggleCorresponding(a.key)} disabled={a.corresponding && rows.filter((x) => x.corresponding).length === 1} /> Corresponding author</label>
               </div>

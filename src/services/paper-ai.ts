@@ -88,7 +88,8 @@ export async function screenPaperDigest(input: { pages: number; layout: string; 
   return { column: body.column === "double" ? "double" : "single", columnConfidence: body.columnConfidence ?? "low", english: Boolean(body.english), missing: Array.isArray(body.missing) ? body.missing.filter((k): k is string => typeof k === "string") : [], summary: body.summary ?? "" };
 }
 
-export interface ExtractedAuthor { name: string; affiliation: string; country: string; email: string; corresponding: boolean }
+/** `affiliation` is the institution only; the department and the city come in their own fields. */
+export interface ExtractedAuthor { name: string; affiliation: string; department: string; city: string; country: string; email: string; corresponding: boolean }
 export interface ExtractedPaper { title: string; abstract: string; keywords: string[]; authors: ExtractedAuthor[] }
 /** "Smart Fill" on New Submission: the first pages' text in, the paper's title, abstract, keywords and authors out (Claude reads it on the
  *  server). Resolves to null when the AI is not available (mock mode, signed out, no key on the server, service down) so the caller can fall
@@ -106,7 +107,7 @@ export async function extractPaperFields(text: string): Promise<ExtractedPaper |
     }
     if (!r) return null;
     const str = (v: unknown) => (typeof v === "string" ? v : "");
-    const authors = (Array.isArray(r.authors) ? r.authors : []).map((a): ExtractedAuthor => { const o = (a ?? {}) as Record<string, unknown>; return { name: str(o.name).trim(), affiliation: str(o.affiliation), country: str(o.country), email: str(o.email), corresponding: o.corresponding === true }; }).filter((a) => a.name);
+    const authors = (Array.isArray(r.authors) ? r.authors : []).map((a): ExtractedAuthor => { const o = (a ?? {}) as Record<string, unknown>; return { name: str(o.name).trim(), affiliation: str(o.affiliation).trim(), department: str(o.department).trim(), city: str(o.city).trim(), country: str(o.country), email: str(o.email), corresponding: o.corresponding === true }; }).filter((a) => a.name);
     return { title: str(r.title), abstract: str(r.abstract), keywords: (Array.isArray(r.keywords) ? r.keywords : []).filter((k): k is string => typeof k === "string"), authors };
   } catch {
     return null;
