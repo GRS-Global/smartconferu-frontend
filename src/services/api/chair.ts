@@ -4,11 +4,12 @@ import { PEER_REVIEW_FORM, PROTECTED_FIELD_IDS, sectionsFromStored } from "@/fea
 import { extrasFromStored } from "@/types/author-submission";
 import {
   DEFAULT_CRITERIA, DEFAULT_PRESENTATION_TYPES, DEFAULT_REVIEW_LIMITS, DEFAULT_REVIEW_POLICY, DEFAULT_REVIEW_TIMELINE, DEFAULT_SUBMISSION_POLICY,
-  type CfpFacts, type ChairAuthor, type ChairConference, type ChairPaper, type ChairPaperDetail, type PaperRegistration, type ChairReviewer, type DeclinedReviewer, type ReviewBoard, type ScreeningFile, type ConferenceInfo, type ConferenceSettings, type DecisionType, type DeletionRequest,
+  type CfpFacts, type SubmissionPolicy, type ChairAuthor, type ChairConference, type ChairPaper, type ChairPaperDetail, type PaperRegistration, type ChairReviewer, type DeclinedReviewer, type ReviewBoard, type ScreeningFile, type ConferenceInfo, type ConferenceSettings, type DecisionType, type DeletionRequest,
   type ChairEmailLog, type LicenseRequest, type ConferenceTemplate, type EmailTemplates, type InviteResult, type Outcome, type PoolReviewer, type ReviewerPool, type ScreeningCriteria, type ScreeningRecord,
 } from "@/types/chair";
 import type { ChairService } from "../chair";
 import { ServiceError } from "../errors";
+import { EMPTY_HYBRID_DATES, hybridDetails, readHybridDates, type HybridDates } from "@/lib/hybrid-dates";
 import { isValidEmail } from "@/lib/email";
 
 /* The Chair workspace through the own backend: the conference (details, settings, reviewer pool, logo, archive and deletion, the overview the workspace frame reads)
@@ -60,7 +61,7 @@ interface BoardPending { id: string; memberId: string; name: string; email: stri
 interface Board { conferenceId: string; papers: Array<{ submissionId: string; assignments: BoardAssignment[]; pending: BoardPending[] }> }
 interface Overview {
   conferenceId: string; cfpStatus: string; papers: OverviewPaper[];
-  decisionTypes: Array<{ id: string; label: string; color: string; outcome: Outcome; description: string | null }>;
+  decisionTypes: Array<{ id: string; label: string; color: string; outcome: Outcome; description: string | null; authorLabel?: string | null }>;
   screening: { settings: { initialCheck?: boolean; plagiarism?: boolean }; criteria: Partial<ScreeningCriteria> };
 }
 
@@ -97,11 +98,17 @@ function toChairPaper(p: OverviewPaper, slug: string): ChairPaper {
   };
 }
 
+/** A hybrid conference saved before the events had their own dates: both start out on the conference dates. */
+function hybridDatesOf(mode: string | null, h: HybridDates, start: string, end: string): HybridDates {
+  if (mode !== "hybrid" || h.physicalStart || h.physicalEnd || h.virtualStart || h.virtualEnd) return h;
+  return { physicalStart: start, physicalEnd: end, virtualStart: start, virtualEnd: end };
+}
+
 function toInfo(c: ConferenceResponse): ConferenceInfo {
   const d = rec(c.details);
   return {
     name: c.title, acronym: c.acronym, about: c.about ?? "", webPage: c.webPage ?? "", contactEmail: c.contactEmail ?? "", primaryArea: c.primaryArea ?? "", secondaryArea: c.secondaryArea ?? "",
-    startDate: c.startDate ?? "", endDate: c.endDate ?? "", mode: c.mode === "in_person" || c.mode === "virtual" || c.mode === "hybrid" ? c.mode : "", venue: c.venue ?? "", city: c.city ?? "", state: c.state ?? "", country: c.country ?? "",
+    startDate: c.startDate ?? "", endDate: c.endDate ?? "", hybridDates: hybridDatesOf(c.mode, readHybridDates(d), c.startDate ?? "", c.endDate ?? ""), mode: c.mode === "in_person" || c.mode === "virtual" || c.mode === "hybrid" ? c.mode : "", venue: c.venue ?? "", city: c.city ?? "", state: c.state ?? "", country: c.country ?? "",
     submissionDeadline: isoDay(c.submissionDeadline), reviewDeadline: isoDay(c.reviewDeadline), status: c.status,
     timezone: str(d.timezone), abstractDeadline: str(d.abstractDeadline), summary: str(d.summary), language: str(d.language), replyEmail: str(d.replyForwardingEmail), smartConfEmail: str(d.smartConfEmail),
     address: str(d.address), postalCode: str(d.postalCode), lat: typeof d.lat === "number" ? d.lat : null, lng: typeof d.lng === "number" ? d.lng : null,
@@ -121,7 +128,8 @@ function toSettings(c: ConferenceResponse): ConferenceSettings {
     limits: { reviewersPerPaper: typeof limits.reviewersPerPaper === "number" ? limits.reviewersPerPaper : DEFAULT_REVIEW_LIMITS.reviewersPerPaper, maxPapersPerReviewer: typeof limits.maxPapersPerReviewer === "number" ? limits.maxPapersPerReviewer : null, reviewMode: mode },
     presentationTypes: types.length ? types : DEFAULT_PRESENTATION_TYPES,
     tracks, stored: true,
-    submission: { ...DEFAULT_SUBMISSION_POLICY, ...rec(s.submissionPolicy) },
+    // Guidelines never saved (or saved empty, as older saves of this card did): the general default.
+    submission: (() => { const p = { ...DEFAULT_SUBMISSION_POLICY, ...rec(s.submissionPolicy) } as SubmissionPolicy; return typeof p.guidelines === "string" && p.guidelines.trim() ? p : { ...p, guidelines: DEFAULT_SUBMISSION_POLICY.guidelines }; })(),
     review: { ...DEFAULT_REVIEW_POLICY, ...rec(s.reviewPolicy) },
   };
 }
@@ -178,7 +186,7 @@ const needUuid = (...ids: string[]) => { if (ids.some((id) => !UUID.test(id))) t
 const implemented: Partial<ChairService> = {
   async loadConference(slug) {
     const o = await getOverview(slug);
-    const decisionTypes: DecisionType[] = o.decisionTypes.map((t) => ({ id: t.id, label: t.label, color: t.color, outcome: t.outcome, description: t.description ?? "" }));
+    const decisionTypes: DecisionType[] = o.decisionTypes.map((t) => ({ id: t.id, label: t.label, color: t.color, outcome: t.outcome, description: t.description ?? "", authorLabel: t.authorLabel ?? "" }));
     const criteria: ScreeningCriteria = { ...DEFAULT_CRITERIA, ...o.screening.criteria };
     return {
       dbId: o.conferenceId,
@@ -203,6 +211,7 @@ const implemented: Partial<ChairService> = {
     const details = {
       timezone: i.timezone, abstractDeadline: i.abstractDeadline, summary: i.summary, language: i.language, replyForwardingEmail: i.replyEmail, smartConfEmail: i.smartConfEmail,
       topics: i.topics, address: i.address, postalCode: i.postalCode, lat: i.lat, lng: i.lng,
+      ...hybridDetails(i.mode === "hybrid", i.hybridDates ?? EMPTY_HYBRID_DATES),
     };
     await patchConference(slug, {
       title: i.name.trim(), about: nul(i.about), webPage: nul(i.webPage), contactEmail: nul(i.contactEmail), primaryArea: nul(i.primaryArea), secondaryArea: nul(i.secondaryArea),
@@ -483,7 +492,7 @@ const implemented: Partial<ChairService> = {
   async saveDecisionTypes(slug, types) {
     const bad = types.some((t) => !t.label.trim() || t.label.length > 100);
     if (!types.length || types.length > 50 || bad) throw new ServiceError("Couldn't save that. Every decision needs a name (up to 100 characters).");
-    await api(`/conferences/${slug}/decision-types`, { method: "PUT", body: { types: types.map((t) => ({ ...(UUID.test(t.id) ? { id: t.id } : {}), label: t.label.trim(), color: t.color, outcome: t.outcome, description: t.description.trim() || null })) } });
+    await api(`/conferences/${slug}/decision-types`, { method: "PUT", body: { types: types.map((t) => ({ ...(UUID.test(t.id) ? { id: t.id } : {}), label: t.label.trim(), color: t.color, outcome: t.outcome, description: t.description.trim() || null, authorLabel: (t.authorLabel ?? "").trim() || null })) } });
   },
 
   /* ---- emails: the conference's templates, its Email Logs (Backend/src/modules/communications) */

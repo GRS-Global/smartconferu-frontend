@@ -1,3 +1,6 @@
+import { DEFAULT_SUBMISSION_GUIDELINES } from "@/lib/default-guidelines";
+import type { HybridDates } from "@/lib/hybrid-dates";
+
 /** One author of a paper, as the chair sees them (the chair is never blind to authors). */
 export interface ChairAuthor { name: string; email: string; affiliation: string; country: string; corresponding: boolean; hasAccount: boolean }
 
@@ -228,7 +231,9 @@ export type ReviewMode = "double_blind" | "single_blind" | "open";
 /** A reviewer's load limits (`conference_settings`, migration 0028) and the review mode (`conferences.review_mode`, which the database already enforces: in double-blind reviewers never see the authors). */
 export interface ReviewLimits { reviewersPerPaper: number; maxPapersPerReviewer: number | null; reviewMode: ReviewMode }
 export const DEFAULT_REVIEW_LIMITS: ReviewLimits = { reviewersPerPaper: 2, maxPapersPerReviewer: null, reviewMode: "double_blind" };
-export const DEFAULT_PRESENTATION_TYPES = ["Paper Presentation", "Poster Presentation", "Workshop"];
+/** Paper Presentation is always on; Workshop and Poster Presentation are off until the chair switches them on. */
+export const PRESENTATION_OPTIONS = ["Paper Presentation", "Workshop", "Poster Presentation"] as const;
+export const DEFAULT_PRESENTATION_TYPES: string[] = ["Paper Presentation"];
 export interface ConferenceTrack { id: string; name: string; description: string }
 /** Everything the Conference Settings pages edit that lives outside the papers. `stored` is false until migration 0028_conference_settings.sql is run (limits and presentation types then show their defaults and cannot be saved). */
 /** The Submissions settings the prototype has beyond tracks and types (`conferences.settings.submissionPolicy`). The server enforces the deadline and the published CFP; these are recorded for the conference and read by the screens that use them. */
@@ -237,7 +242,7 @@ export interface SubmissionPolicy {
   idFormat: "numeric" | "prefixed"; startNumber: number | null; maxSubmissions: number | null; maxPerAuthor: number | null;
   guidelines: string; tracksOn: boolean; typesOn: boolean;
 }
-export const DEFAULT_SUBMISSION_POLICY: SubmissionPolicy = { accepting: true, opensAt: "", allowUpdates: true, allowMultiple: true, editAfterAccept: false, idFormat: "numeric", startNumber: null, maxSubmissions: null, maxPerAuthor: null, guidelines: "", tracksOn: true, typesOn: true };
+export const DEFAULT_SUBMISSION_POLICY: SubmissionPolicy = { accepting: true, opensAt: "", allowUpdates: true, allowMultiple: true, editAfterAccept: false, idFormat: "numeric", startNumber: null, maxSubmissions: null, maxPerAuthor: null, guidelines: DEFAULT_SUBMISSION_GUIDELINES, tracksOn: true, typesOn: true };
 /** The Review settings toggles beyond the limits and the review mode (`conferences.settings.reviewPolicy`). `hiddenFields` are review-form field ids reviewers do not see. */
 export interface ReviewPolicy { unassignedAccess: boolean; abstractFirst: boolean; presenterRequired: boolean; shareResults: boolean; hiddenFields: string[] }
 export const DEFAULT_REVIEW_POLICY: ReviewPolicy = { unassignedAccess: false, abstractFirst: true, presenterRequired: true, shareResults: false, hiddenFields: [] };
@@ -254,6 +259,8 @@ export interface CfpFacts { managers: number; publishing: boolean; description: 
 export interface ConferenceInfo {
   name: string; acronym: string; about: string; webPage: string; contactEmail: string; primaryArea: string; secondaryArea: string;
   startDate: string; endDate: string; mode: "in_person" | "virtual" | "hybrid" | ""; venue: string; city: string; state: string; country: string;
+  /** Hybrid only (`conferences.details`): the in-person and the virtual event's own dates; startDate / endDate then cover both. */
+  hybridDates?: HybridDates;
   submissionDeadline: string; reviewDeadline: string;
   /** Kept in `conferences.details` (the prototype's DETAIL_KEYS). `status` is read-only here. */
   timezone: string; abstractDeadline: string; summary: string; language: string; replyEmail: string; smartConfEmail: string; topics: string[]; status: string;

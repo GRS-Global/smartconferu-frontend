@@ -7,7 +7,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { setupChanged } from "@/features/tour/use-setup";
 import { getChairService } from "@/services/chair";
-import { DEFAULT_SUBMISSION_POLICY, type ConferenceSettings, type ConferenceTrack, type SubmissionPolicy } from "@/types/chair";
+import { DEFAULT_SUBMISSION_POLICY, PRESENTATION_OPTIONS, type ConferenceSettings, type ConferenceTrack, type SubmissionPolicy } from "@/types/chair";
 import { SectionsRail, type RailLink, type RailSection } from "./sections-rail";
 import { HelpLabel } from "./setting-label";
 
@@ -155,12 +155,32 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
     void getChairService().then((s) => s.saveTracks(slug, next)).then(() => setupChanged()).catch(fail);
     if (Object.keys(patch).length) update(patch);
   };
-  const commitTypes = (names: string[]) => {
-    const patch: Partial<SubmissionPolicy> = names.length > types.length ? { typesOn: true } : names.length === 0 ? { typesOn: false } : {};
+// Paper Presentation is always on; Workshop / Poster Presentation are switched on or off (at least one stays on: Paper Presentation).
+  const customTypes = types.filter((t) => !(PRESENTATION_OPTIONS as readonly string[]).includes(t));
+  const saveTypes = (names: string[]) => {
     setTypes(names); setError("");
     void getChairService().then((s) => s.savePresentationTypes(slug, names)).catch(fail);
-    if (Object.keys(patch).length) update(patch);
+    if (!policy.typesOn) update({ typesOn: true });
   };
+  const setOption = (name: string, on: boolean) => saveTypes([...PRESENTATION_OPTIONS.filter((o) => o === "Paper Presentation" || (o === name ? on : types.includes(o))), ...customTypes]);
+  const [newType, setNewType] = useState("");
+  const addType = () => {
+    const n = newType.trim();
+    if (!n) return;
+    if (n.length > 80) { setError("A presentation type name can be up to 80 characters."); return; }
+    if (types.some((t) => t.toLowerCase() === n.toLowerCase()) || PRESENTATION_OPTIONS.some((o) => o.toLowerCase() === n.toLowerCase())) { setError("That presentation type is already in the list."); return; }
+    saveTypes([...types, n]); setNewType("");
+  };
+  // Allow Abstract Pre-Submission (kept in the review policy settings, as before; moved here from Review Settings).
+  const [abstractFirst, setAbstractFirst] = useState(settings.review.abstractFirst);
+  const [presenterRequired, setPresenterRequired] = useState(settings.review.presenterRequired);
+  const reviewPolicyRef = useRef(settings.review);
+  const saveReview = (patch: Partial<typeof settings.review>) => {
+    reviewPolicyRef.current = { ...reviewPolicyRef.current, ...patch }; setError("");
+    void getChairService().then((s) => s.saveReviewPolicy(slug, reviewPolicyRef.current)).catch(fail);
+  };
+  const saveAbstractFirst = (v: boolean) => { setAbstractFirst(v); saveReview({ abstractFirst: v }); };
+  const savePresenterRequired = (v: boolean) => { setPresenterRequired(v); saveReview({ presenterRequired: v }); };
   const saveGuidelines = () => { update({ guidelines: guideDraft }); setGuideSaved(true); setTimeout(() => setGuideSaved(false), 2000); };
 
   const status = windowStatus(policy, now, deadline);
@@ -264,6 +284,19 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
           </div>
         ))}
 
+        {card("abstracts", Pencil, "Abstract & Presenter", "preSubmissionAbstracts", "Abstract pre-submission works with the Abstract deadline in Conference Details.", (
+          <div className="space-y-2">
+          <div style={{ border: "1px solid var(--border)" }} className="flex items-center justify-between gap-4 rounded-xl px-4 py-3">
+            <div className="min-w-0"><div className="text-sm font-semibold text-ink">Allow Abstract Pre-Submission</div><div className="mt-0.5 text-xs text-ink-faint">Authors may submit an abstract ahead of the full paper.</div></div>
+            <Switch label="Allow Abstract Pre-Submission" checked={abstractFirst} onChange={saveAbstractFirst} />
+          </div>
+          <div style={{ border: "1px solid var(--border)" }} className="flex items-center justify-between gap-4 rounded-xl px-4 py-3">
+            <div className="min-w-0"><div className="text-sm font-semibold text-ink"><HelpLabel help="authorsSelectPresenter">Require Presenter Selection</HelpLabel></div><div className="mt-0.5 text-xs text-ink-faint">Authors must nominate the presenting author for each submission.</div></div>
+            <Switch label="Require Presenter Selection" checked={presenterRequired} onChange={savePresenterRequired} />
+          </div>
+          </div>
+        ))}
+
         {card("guidelines", BookOpen, "Submission Guidelines", "guidelines", "Displayed at the top of the submission form for all authors.", (
           <>
             <RichTextEditor value={settings.submission.guidelines} onChange={setGuideDraft} placeholder="e.g. formatting requirements, page limits, anonymisation policy and templates…" label="Submission guidelines" maxHeight={360} />
@@ -283,13 +316,30 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
           </>
         ), enabledSwitch("tracksOn", "Tracks"))}
 
-        {card("types", Ticket, "Presentation Types", "types", policy.typesOn ? "Authors select a presentation type when submitting." : "Disabled — the presentation type field is hidden from the submission form.", (
+        {card("types", Ticket, "Presentation Types", "types", "Authors select a presentation type when submitting. Paper Presentation is always on.", (
           <>
-            {policy.typesOn && types.length === 0 && <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning-ink"><AlertTriangle size={13} aria-hidden="true" /> Presentation types are enabled but none are defined. Add at least one type.</p>}
-            <OrderedNameTable items={types} onChange={commitTypes} noun="Presentation type" placeholder="e.g. Paper Presentation" muted={!policy.typesOn} />
+            <div className="space-y-2">
+              {PRESENTATION_OPTIONS.map((o) => { const fixed = o === "Paper Presentation"; const on = fixed || types.includes(o); return (
+                <div key={o} style={{ border: "1px solid var(--border)" }} className="flex items-center justify-between gap-4 rounded-xl px-4 py-3">
+                  <div className="min-w-0"><div className="text-sm font-semibold text-ink">{o}</div><div className="mt-0.5 text-xs text-ink-faint">{fixed ? "Always enabled — it can't be switched off." : on ? "Enabled" : "Disabled"}</div></div>
+                  <span className="flex shrink-0 items-center gap-2.5"><span style={{ color: on ? "var(--success-ink)" : "var(--ink-faint)" }} className="text-xs font-bold">{on ? "Enabled" : "Disabled"}</span><Switch label={o} checked={on} disabled={fixed} onChange={(v) => setOption(o, v)} /></span>
+                </div>
+              ); })}
+              {customTypes.map((t) => (
+                <div key={t} style={{ border: "1px solid var(--border)" }} className="flex items-center justify-between gap-4 rounded-xl px-4 py-3">
+                  <div className="min-w-0"><div className="truncate text-sm font-semibold text-ink">{t}</div><div className="mt-0.5 text-xs text-ink-faint">Added by you — enabled</div></div>
+                  <button type="button" onClick={() => saveTypes(types.filter((x) => x !== t))} aria-label={`Remove ${t}`} className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-ink-faint hover:bg-danger-soft hover:text-danger-ink"><Trash2 size={14} aria-hidden="true" /></button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <input aria-label="New presentation type" value={newType} maxLength={80} placeholder="e.g. Keynote Talk" onChange={(e) => setNewType(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addType(); } }} className="h-10 min-w-0 flex-1 rounded-xl border-[1.5px] border-line bg-white px-3 text-sm outline-none focus:border-primary" />
+              <button type="button" onClick={addType} disabled={!newType.trim()} className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl border-[1.5px] border-primary px-4 text-sm font-semibold text-primary hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-45"><Plus size={14} aria-hidden="true" /> Add presentation type</button>
+            </div>
+            {error && <p role="alert" className="mt-2 text-xs font-medium text-danger-ink">{error}</p>}
             {!settings.stored && <p className="mt-3 text-xs font-semibold text-warning-ink">Run migration 0028_conference_settings.sql to save the presentation types.</p>}
           </>
-        ), enabledSwitch("typesOn", "Presentation types"))}
+        ))}
         {after}
       </div>
 
@@ -299,9 +349,10 @@ export function SubmissionSettingsPanel({ slug, acronym, received, lastNumber, s
           { id: "ss-status", label: "Submission status", meta: `${policy.maxSubmissions ? `${received} / ${policy.maxSubmissions}` : received} received · next ${nextLabel}`, tone: { label: status.label, bg: status.bg, color: status.color } },
           { id: "ss-window", label: "Submission Period", meta: policy.allowUpdates ? "Updates allowed until the deadline" : "Updates not allowed" },
           { id: "ss-numbering", label: "Numbering & Limits", meta: `${policy.idFormat === "prefixed" ? "Prefixed IDs" : "Numeric IDs"} · ${policy.maxSubmissions ? `max ${policy.maxSubmissions}` : "no limit"}` },
+          { id: "ss-abstracts", label: "Abstract & Presenter", meta: [abstractFirst ? "Abstract pre-submission on" : "Full paper only", presenterRequired ? "presenter required" : "presenter optional"].join(" · "), tone: onOff(abstractFirst) },
           { id: "ss-guidelines", label: "Submission Guidelines", meta: hasGuidelines ? "Published" : "Not added yet" },
           { id: "ss-tracks", label: "Tracks", meta: policy.tracksOn ? `${tracks.length} track${tracks.length === 1 ? "" : "s"}` : "Hidden from the form", tone: onOff(policy.tracksOn) },
-          { id: "ss-types", label: "Presentation Types", meta: policy.typesOn ? `${types.length} type${types.length === 1 ? "" : "s"}` : "Hidden from the form", tone: onOff(policy.typesOn) },
+          { id: "ss-types", label: "Presentation Types", meta: `${types.length} enabled`, tone: onOff(true) },
           ...extraSections,
         ]}
         links={onOpenForm ? [{ label: "Submission Form", desc: "Configure the fields authors complete", onClick: onOpenForm }, ...links] : links}

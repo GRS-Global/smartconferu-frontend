@@ -69,6 +69,7 @@ function WizardForm({ slug, conference, info, retry, reload }: { slug: string; c
   const addTopic = () => { const t = topic.trim(); if (!t || form.topics.includes(t) || form.topics.length >= 40) return; set("topics", [...form.topics, t]); setTopic(""); };
   const subareas = RESEARCH_SUBAREAS[form.primaryArea] ?? [];
   const problem = step === 0 && !form.name.trim() ? "Give the conference a title."
+    : step === 2 && !form.submissionDeadline ? "Pick the submission deadline."
     : step === 2 && form.startDate && form.endDate && form.endDate < form.startDate ? "The end date can't be before the start date."
       : step === 2 && form.abstractDeadline && form.submissionDeadline && form.abstractDeadline > form.submissionDeadline ? "The abstract deadline must be on or before the submission deadline." : "";
   const next = () => { if (problem) { setError(problem); return; } setError(""); setStep((s) => s + 1); };
@@ -159,8 +160,8 @@ function WizardForm({ slug, conference, info, retry, reload }: { slug: string; c
                 <div className="grid grid-cols-2 gap-3">
                   <div><label htmlFor="nw-start" className={LABEL}>Start date</label><input id="nw-start" type="date" value={form.startDate} onChange={(e) => { const v = e.target.value; setForm((f) => ({ ...f, startDate: v, endDate: f.endDate && f.endDate < v ? v : f.endDate })); }} className={FIELD} /></div>
                   <div><label htmlFor="nw-end" className={LABEL}>End date</label><input id="nw-end" type="date" value={form.endDate} min={form.startDate || undefined} onChange={(e) => set("endDate", e.target.value)} className={FIELD} /></div>
-                  <div><label htmlFor="nw-abs" className={LABEL}>Abstract deadline</label><input id="nw-abs" type="date" value={form.abstractDeadline} onChange={(e) => set("abstractDeadline", e.target.value)} className={FIELD} /></div>
-                  <div><label htmlFor="nw-sub" className={LABEL}>Submission deadline</label><input id="nw-sub" type="date" value={form.submissionDeadline} onChange={(e) => set("submissionDeadline", e.target.value)} className={FIELD} /></div>
+                  <div><label htmlFor="nw-abs" className={LABEL}>Abstract deadline <span className="font-normal text-ink-faint">(optional)</span></label><input id="nw-abs" type="date" value={form.abstractDeadline} onChange={(e) => set("abstractDeadline", e.target.value)} className={FIELD} /></div>
+                  <div><label htmlFor="nw-sub" className={LABEL}>Submission deadline <span className="text-danger-ink">*</span></label><input id="nw-sub" type="date" value={form.submissionDeadline} onChange={(e) => set("submissionDeadline", e.target.value)} className={FIELD} /></div>
                 </div>
               </>
             )}

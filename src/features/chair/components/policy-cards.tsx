@@ -146,8 +146,6 @@ export function VisibilityCard({ initial, mode, fields, onChange }: { initial: R
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <Tile helpKey="doubleBlind" title="Double-blind review" help="Reviewers never see author names, emails or affiliations — in their queue, on the paper, or in search." checked={m === "double_blind"} onChange={(v) => put(p, v ? "double_blind" : "single_blind")} />
         <Tile helpKey="nonChairsSeeUnassigned" title="Reviewer Access to Unassigned Submissions" help="Reviewers can view submissions that are not assigned to them." checked={p.unassignedAccess} onChange={(v) => put({ ...p, unassignedAccess: v })} />
-        <Tile helpKey="preSubmissionAbstracts" title="Allow Abstract Pre-Submission" help="Authors may submit an abstract ahead of the full paper." checked={p.abstractFirst} onChange={(v) => put({ ...p, abstractFirst: v })} />
-        <Tile helpKey="authorsSelectPresenter" title="Require Presenter Selection" help="Authors must nominate the presenting author for each submission." checked={p.presenterRequired} onChange={(v) => put({ ...p, presenterRequired: v })} />
         <Tile helpKey="shareResultsToAuthors" title="Share Results to Authors" help="Authors see the reviewer feedback you share once a decision is recorded." checked={p.shareResults} onChange={(v) => put({ ...p, shareResults: v })} />
       </div>
       <div className="mt-4 border-t border-muted pt-4">
