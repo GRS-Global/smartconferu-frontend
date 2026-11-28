@@ -22,7 +22,6 @@ export interface MenuLeaf {
 export interface MenuItem extends Omit<MenuLeaf, "app"> { app?: MenuLeaf["app"]; children?: MenuLeaf[]; soon?: boolean }
 
 const e = encodeURIComponent;
-const soon = (key: "registration" | "programme") => ({ app: () => comingSoonHref(key) });
 
 /** The entries switched off in lib/config.ts keep their place in the menu but become "Soon" (no link, no sub-items). */
 const OFF = new Set([...(CERTIFICATES_ENABLED ? [] : ["certificates"]), ...(FLYER_ENABLED ? [] : ["flyer"])]);
@@ -73,14 +72,7 @@ export const CHAIR_MENU: MenuItem[] = live([
     ],
   },
   { key: "registration", label: "Registration", icon: Users, soon: true },
-  {
-    key: "programme", label: "Program", icon: Calendar,
-    children: [
-      { key: "overview", label: "Overview", ...soon("programme") },
-      { key: "full", label: "Full Program", ...soon("programme") },
-      { key: "manage", label: "Manage", ...soon("programme") },
-    ],
-  },
+  { key: "programme", label: "Program", icon: Calendar, soon: true },
   {
     key: "certificates", label: "Certificates", icon: Award,
     children: [

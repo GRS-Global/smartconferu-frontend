@@ -214,6 +214,9 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
   const items: MenuItem[] = MENUS[role]
     .map((i) => (i.children ? { ...i, children: i.children.filter((c) => !c.screening || screening[c.screening]) } : i))
     .filter((i) => !i.children || i.children.length > 0);
+  // Everything not available yet (switched off in lib/config.ts, or announced only) is listed together at the bottom, under "Coming soon".
+  const menuItems = items.filter((i) => !i.soon);
+  const soonEntries: Array<{ key?: string; label: string; icon: LucideIcon }> = [...items.filter((i) => i.soon).map((i) => ({ key: i.key, label: i.label, icon: i.icon as LucideIcon })), ...SOON[role]];
   // Groups start open when one of their pages is the current one; the person can fold or open any group afterwards.
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const groupOpen = (item: MenuItem) => toggled[item.key] ?? groupOn(active, item);
@@ -282,7 +285,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
       )}
       <div className="px-6 pb-1.5 pt-3 text-[10.5px] font-bold uppercase tracking-wider text-[#9389B2]">Menu</div>
       <nav aria-label="Conference menu" className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
-        {items.map((item) => {
+        {menuItems.map((item) => {
           const Icon = item.icon as LucideIcon;
           if (item.soon) {
             return (
@@ -337,12 +340,12 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
             </ItemLink>
           );
         })}
-        {SOON[role].length > 0 && (
+        {soonEntries.length > 0 && (
           <>
             <div className="mx-2 my-3 border-t border-[#E7E2F5]" />
             <div className="mb-1 px-2.5 text-[10.5px] font-bold uppercase tracking-wider text-[#9389B2]">Coming soon</div>
-            {SOON[role].map((s) => (
-              <div key={s.label} title={`${s.label} — coming soon`} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
+            {soonEntries.map((s) => (
+              <div key={s.label} data-tour={s.key ? `nav-${s.key}` : undefined} title={`${s.label} — coming soon`} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><s.icon size={16} aria-hidden="true" /></span>
                 <span className="flex-1">{s.label}</span>
                 <SoonBadge />
@@ -369,7 +372,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
           </button>
           <div className="pb-2 pt-4" title={`${conference.acronym} — ${conference.name}`}><ConferenceMonogram acronym={conference.acronym} size={40} logoUrl={conference.logoUrl} /></div>
           <nav aria-label="Conference menu" className="flex w-full flex-1 flex-col items-center space-y-1.5 overflow-y-auto px-3 pb-3 pt-2">
-            {items.map((item) => {
+            {menuItems.map((item) => {
               const Icon = item.icon as LucideIcon;
               const on = item.children ? groupOn(active, item) : isOn(active, item.key);
               const cls = `flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${on ? "" : "hover:bg-primary-soft"}`;
@@ -382,10 +385,10 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
               }
               return <ItemLink key={item.key} item={item} slug={slug} on={on} label={item.label} className={cls} style={style}><Icon size={18} aria-hidden="true" /></ItemLink>;
             })}
-            {SOON[role].length > 0 && (
+            {soonEntries.length > 0 && (
               <>
                 <div className="my-1.5 w-8 border-t border-[#E7E2F5]" />
-                {SOON[role].map((s) => <span key={s.label} role="img" aria-label={`${s.label} — coming soon`} title={`${s.label} — coming soon`} className="relative flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-white/60 text-[#A39AC0]"><s.icon size={18} aria-hidden="true" /><SoonDot /></span>)}
+                {soonEntries.map((s) => <span key={s.label} data-tour={s.key ? `nav-${s.key}` : undefined} role="img" aria-label={`${s.label} — coming soon`} title={`${s.label} — coming soon`} className="relative flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-white/60 text-[#A39AC0]"><s.icon size={18} aria-hidden="true" /><SoonDot /></span>)}
               </>
             )}
           </nav>
