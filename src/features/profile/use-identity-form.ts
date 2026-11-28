@@ -17,7 +17,7 @@ export function photoValueOf(profile: Profile): PhotoValue {
 export function useIdentityForm(profile: Profile) {
   const [values, setValues] = useState({
     firstName: profile.firstName, lastName: profile.lastName, designation: profile.designation,
-    country: profile.country, city: profile.city, gender: profile.gender, webPage: profile.webPage, phone: profile.phone,
+    country: profile.country, state: profile.state, city: profile.city, gender: profile.gender, webPage: profile.webPage, phone: profile.phone,
     notifyChannels: profile.notifyChannels,
   });
   const [inst, setInst] = useState<InstitutionValue>({ name: profile.affiliation, institutionId: profile.affiliationInstitutionId, pending: profile.affiliationPending });
@@ -29,9 +29,9 @@ export function useIdentityForm(profile: Profile) {
   const touch = (key: keyof FormValues) => () => setTouched((t) => (t[key] ? t : { ...t, [key]: true }));
 
   const formValues: FormValues = { ...values, mainEmail: profile.mainEmail, affiliation: inst.name };
-  const problems: FieldProblems = useMemo(() => validateProfileForm(formValues), [formValues.firstName, formValues.lastName, formValues.mainEmail, formValues.affiliation, formValues.designation, formValues.country, formValues.city, formValues.gender, formValues.webPage, formValues.phone]); // eslint-disable-line react-hooks/exhaustive-deps
+  const problems: FieldProblems = useMemo(() => validateProfileForm(formValues), [formValues.firstName, formValues.lastName, formValues.mainEmail, formValues.affiliation, formValues.designation, formValues.country, formValues.state, formValues.city, formValues.gender, formValues.webPage, formValues.phone]); // eslint-disable-line react-hooks/exhaustive-deps
   const errorOf = (key: keyof FormValues) => (touched[key] ? problems[key] : undefined);
-  const touchAll = () => setTouched({ firstName: true, lastName: true, mainEmail: true, affiliation: true, designation: true, country: true, city: true, gender: true, webPage: true, phone: true });
+  const touchAll = () => setTouched({ firstName: true, lastName: true, mainEmail: true, affiliation: true, designation: true, country: true, state: true, city: true, gender: true, webPage: true, phone: true });
 
   const completeness = getProfileCompleteness({ ...profile, ...values, affiliation: inst.name, photo: photo.kind === "none" ? "" : photo.name });
   const initials = initialsOf(values.firstName, values.lastName, profile.mainEmail);
@@ -43,6 +43,7 @@ export function useIdentityForm(profile: Profile) {
       lastName: values.lastName.trim(),
       designation: values.designation.trim(),
       country: values.country,
+      state: values.state.trim(),
       city: values.city.trim(),
       gender: values.gender,
       webPage: values.webPage.trim(),

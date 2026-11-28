@@ -18,6 +18,8 @@ export interface FormValues {
   country: string;
   /** Required: where the person is based (with affiliation and country). */
   city: string;
+  /** Required: the state / province / region, right after the country. */
+  state: string;
   gender: string;
   webPage: string;
   phone: string;
@@ -35,6 +37,7 @@ export function validateProfileForm(v: FormValues): FieldProblems {
     designation: !v.designation.trim() ? "Enter your designation, e.g. Professor." : undefined,
     country: !v.country ? "Choose your country / region." : undefined,
     city: !String(v.city ?? "").trim() ? "Enter your city." : undefined,
+    state: !String(v.state ?? "").trim() ? "Enter your state / region." : undefined,
     gender: !v.gender ? "Choose a gender option." : undefined,
     webPage: v.webPage.trim() && !WEB_RX.test(v.webPage.trim()) ? "Enter a valid web address, e.g. https://example.org." : undefined,
     // Country-wise (phone-rules.ts): e.g. India 10 digits starting with 6–9. Optional, so an empty number passes.

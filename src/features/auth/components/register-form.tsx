@@ -235,10 +235,6 @@ function Fields({ form }: { form: Form }) {
         <input autoComplete="organization-title" aria-label="Designation" aria-required="true" placeholder="Designation * (e.g. Professor)" value={values.designation} onChange={(e) => set("designation", e.target.value)} onBlur={touch("designation")} aria-invalid={invalid("designation")} className={REG_INPUT} />
         {err("designation")}
       </div>
-      <div>
-        <input autoComplete="address-level2" aria-label="City" aria-required="true" placeholder="City *" value={values.city} onChange={(e) => set("city", e.target.value)} onBlur={touch("city")} aria-invalid={invalid("city")} className={REG_INPUT} />
-        {err("city")}
-      </div>
       <div className="grid grid-cols-2 gap-3">
         <div onBlur={touch("country")}>
           <CountrySelect value={values.country} onChange={(c) => set("country", c)} placeholder="Country / region *" invalid={Boolean(errorOf("country"))} className={REG_INPUT} />
@@ -251,6 +247,16 @@ function Fields({ form }: { form: Form }) {
           </select>
           {err("gender")}
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+      <div>
+        <input autoComplete="address-level1" aria-label="State / region" aria-required="true" placeholder="State / region *" value={values.state} onChange={(e) => set("state", e.target.value)} onBlur={touch("state")} aria-invalid={invalid("state")} className={REG_INPUT} />
+        {err("state")}
+      </div>
+      <div>
+        <input autoComplete="address-level2" aria-label="City" aria-required="true" placeholder="City *" value={values.city} onChange={(e) => set("city", e.target.value)} onBlur={touch("city")} aria-invalid={invalid("city")} className={REG_INPUT} />
+        {err("city")}
+      </div>
       </div>
       <div>
         <input type="url" autoComplete="url" aria-label="Website" placeholder="Website (optional)" value={values.webPage} onChange={(e) => set("webPage", e.target.value)} onBlur={touch("webPage")} aria-invalid={invalid("webPage")} className={REG_INPUT} />

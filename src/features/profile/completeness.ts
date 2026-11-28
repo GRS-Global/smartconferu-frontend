@@ -26,6 +26,7 @@ export const REQUIRED_ITEMS: Item[] = [
   { key: "affiliation", label: "affiliation", tab: "general" },
   { key: "designation", label: "designation", tab: "general" },
   { key: "country", label: "country", tab: "general" },
+  { key: "state", label: "state / region", tab: "general" },
   { key: "city", label: "city", tab: "general" },
   { key: "gender", label: "gender", tab: "general" },
 ];
