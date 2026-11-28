@@ -87,7 +87,7 @@ export function PaperCard({ detail }: { detail: ChairPaperDetail }) {
             <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[11px] font-bold text-primary">{initials(a.name)}</span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-bold text-navy">{a.name}{a.corresponding && <span className="rounded-full bg-primary-soft px-1.5 py-0.5 text-[10px] font-bold text-primary">Corresponding</span>}</div>
-              <div className="truncate text-[11.5px] text-ink-faint">{[a.affiliation, a.country].filter(Boolean).join(", ")}{a.corresponding && a.email ? ` · ${a.email}` : ""}</div>
+              <div className="truncate text-[11.5px] text-ink-faint">{[[a.affiliation, ...(a.otherAffiliations ?? [])].filter(Boolean).join("; "), a.country].filter(Boolean).join(", ")}{a.corresponding && a.email ? ` · ${a.email}` : ""}</div>
             </div>
             <span className="shrink-0 rounded-full border border-line bg-white px-2 py-0.5 text-[10.5px] font-semibold text-ink-muted">{a.corresponding ? "Main author" : "Co-author"}</span>
           </li>

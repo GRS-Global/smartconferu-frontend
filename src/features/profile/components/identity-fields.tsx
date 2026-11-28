@@ -56,7 +56,7 @@ export function IdentityFields({ form, email, emailNote, idPrefix }: { form: Ide
         </Field>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <Field label="State / region" htmlFor={id("state")} required error={errorOf("state")}>
+      <Field label="State / region" htmlFor={id("state")} error={errorOf("state")}>
         <PlaceInput id={id("state")} autoComplete="address-level1" value={values.state} placeholder="e.g. Gujarat" onChange={(v) => set("state", v)} options={stateOptions} onBlur={touch("state")} invalid={Boolean(errorOf("state"))} describedBy={describedBy(id("state"), errorOf("state"))} />
       </Field>
       <Field label="City" htmlFor={id("city")} required error={errorOf("city")}>

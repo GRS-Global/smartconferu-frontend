@@ -10,7 +10,9 @@ import { extractPaperFields } from "@/services/paper-ai";
    - Basic guess (rules over the same text, no network): used when the AI is not available, so the form is still filled as far as it can be.
    The person always checks the result: nothing is saved until they press Submit. */
 
-export interface FilledAuthor { name: string; email: string; affiliation: string; department: string; city: string; country: string; corresponding: boolean; countrySource: string }
+export interface FilledPlace { affiliation: string; department: string; city: string; country: string }
+/** `otherAffiliations`: the author's further affiliations (one author, several affiliations); the fields before it are the primary one. */
+export interface FilledAuthor { name: string; email: string; affiliation: string; department: string; city: string; country: string; otherAffiliations: FilledPlace[]; corresponding: boolean; countrySource: string }
 export interface FilledPaper { title: string; abstract: string; keywords: string[]; authors: FilledAuthor[]; how: "ai" | "basic" }
 
 const WORLD: Array<[string, string]> = Object.entries(COUNTRY_CODES);
@@ -37,7 +39,7 @@ export async function extractPdfText(file: File): Promise<string> {
 }
 
 const AFFILIATION_HINTS = /(university|institute|department|dept\.|college|school|lab(oratory)?|centre|center|ltd\.?|inc\.?|corp\.?|faculty)/i;
-interface Raw { name: string; email: string; affiliation: string; department: string; city: string; country: string; corresponding: boolean }
+interface Raw { name: string; email: string; affiliation: string; department: string; city: string; country: string; otherAffiliations?: FilledPlace[]; corresponding: boolean }
 
 function splitAuthorBlock(block: string): Raw[] {
   const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -66,6 +68,31 @@ export function parsePaperRuleBased(text: string): { title: string; abstract: st
   return { title, abstract, keywords, authors: splitAuthorBlock(block).map((a, i) => ({ ...a, email: emails[i] || "" })) };
 }
 
+const nameKey = (n: string) => n.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const sameInstitution = (a: FilledPlace, b: FilledPlace) => a.affiliation.trim().toLowerCase() === b.affiliation.trim().toLowerCase();
+
+/** One person is one author, however many affiliations they have: a name listed again (once per affiliation) is joined to its first entry, whose own
+ *  affiliation stays the primary one. */
+export function joinRepeatedAuthors<T extends Raw>(authors: T[]): T[] {
+  const out: T[] = [];
+  const first = new Map<string, T>();
+  for (const a of authors) {
+    const own: FilledPlace[] = [];
+    for (const p of a.otherAffiliations ?? []) if (p.affiliation.trim() && !sameInstitution(p, a) && !own.some((q) => sameInstitution(p, q))) own.push(p);
+    const id = nameKey(a.name);
+    const into = id ? first.get(id) : undefined;
+    if (!into) { const entry = { ...a, otherAffiliations: own }; if (id) first.set(id, entry); out.push(entry); continue; }
+    const list = into.otherAffiliations ?? [];
+    for (const p of [{ affiliation: a.affiliation, department: a.department, city: a.city, country: a.country }, ...own]) {
+      if (p.affiliation.trim() && !sameInstitution(p, into) && !list.some((q) => sameInstitution(p, q))) list.push(p);
+    }
+    into.otherAffiliations = list;
+    if (!into.email && a.email) into.email = a.email;
+    if (a.corresponding) into.corresponding = true;
+  }
+  return out;
+}
+
 /** Reads the PDF and returns what could be filled in. Throws only when the PDF itself can't be read. */
 export async function fillFromPdf(file: File, onStage?: (stage: "reading" | "ai" | "filling") => void): Promise<FilledPaper> {
   onStage?.("reading");
@@ -76,6 +103,6 @@ export async function fillFromPdf(file: File, onStage?: (stage: "reading" | "ai"
   const picked = ai ? { ...ai, how: "ai" as const } : { ...parsePaperRuleBased(text), how: "basic" as const };
   onStage?.("filling");
   // Papers often leave the country out: work it out from the institution, city or e-mail.
-  const authors = picked.authors.map((a) => { const c = inferAuthorCountry(a, WORLD); return { ...a, country: c.country, countrySource: c.source }; });
+  const authors = joinRepeatedAuthors(picked.authors as Raw[]).map((a) => { const c = inferAuthorCountry(a, WORLD); return { ...a, otherAffiliations: a.otherAffiliations ?? [], country: c.country, countrySource: c.source }; });
   return { title: picked.title, abstract: picked.abstract, keywords: picked.keywords, authors, how: picked.how };
 }

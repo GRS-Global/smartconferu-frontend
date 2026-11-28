@@ -339,7 +339,7 @@ function AuthorRow({ a, first }: { a: PaperPageAuthor; first: boolean }) {
           {a.isMe && <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-navy px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"><User size={10} strokeWidth={2.6} aria-hidden="true" /> You</span>}
           {a.corresponding && <span className="inline-flex items-center gap-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white"><Mail size={10} aria-hidden="true" /> Corresponding</span>}
         </div>
-        <div className="truncate text-xs text-ink-faint">{[a.affiliation, a.corresponding ? a.email : null, a.email ? null : "Email to be added"].filter(Boolean).join(" · ") || "—"}</div>
+        <div className="truncate text-xs text-ink-faint">{[[a.affiliation, ...(a.otherAffiliations ?? []).map((p) => p.affiliation)].filter(Boolean).join("; "), a.corresponding ? a.email : null, a.email ? null : "Email to be added"].filter(Boolean).join(" · ") || "—"}</div>
       </div>
       <span className={`shrink-0 rounded-full border border-line px-2 py-0.5 text-[10.5px] font-bold ${first ? "bg-white text-navy" : "bg-canvas text-ink-muted"}`}>{first ? "Main author" : "Co-author"}</span>
     </div>

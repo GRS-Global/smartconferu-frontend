@@ -2,7 +2,7 @@ import { DEFAULT_SUBMISSION_GUIDELINES } from "@/lib/default-guidelines";
 import type { HybridDates } from "@/lib/hybrid-dates";
 
 /** One author of a paper, as the chair sees them (the chair is never blind to authors). */
-export interface ChairAuthor { name: string; email: string; affiliation: string; country: string; corresponding: boolean; hasAccount: boolean }
+export interface ChairAuthor { name: string; email: string; affiliation: string; country: string; /** The author's further affiliations (institution names), after the primary one. */ otherAffiliations?: string[]; corresponding: boolean; hasAccount: boolean }
 
 /** The chair's screening record of one uploaded version (Initial Check / Plagiarism Check), as stored in `submissions.screening`.
  *  Only the parts the stage logic reads are typed; the rest is kept as it is. */

@@ -1,3 +1,6 @@
+/** One affiliation of an author: the institution, then its department, city and country. */
+export interface AuthorPlace { affiliation: string; department: string; city: string; country: string }
+
 /** One author of a paper, as listed on it. */
 export interface PaperAuthor {
   name: string;
@@ -6,6 +9,8 @@ export interface PaperAuthor {
   department?: string;
   city?: string;
   country: string;
+  /** Further affiliations of an author who belongs to several institutions (the fields above are the primary one). */
+  otherAffiliations?: AuthorPlace[];
   corresponding: boolean;
 }
 
@@ -75,7 +80,7 @@ export interface PaperDetailsPatch { title: string; abstract: string; keywords: 
 
 /** One author as saved: the first is the main author; at least one is corresponding. */
 /** An author as typed on the submission form. `affiliation` is the institution only; department and city have their own fields. */
-export interface AuthorInput { name: string; email: string; affiliation: string; department: string; city: string; country: string; corresponding: boolean }
+export interface AuthorInput { name: string; email: string; affiliation: string; department: string; city: string; country: string; otherAffiliations?: AuthorPlace[]; corresponding: boolean }
 
 /** One author on a paper's own page; `isMe` marks the signed-in user's row ("You"). */
 export interface PaperPageAuthor extends PaperAuthor { isMe: boolean }

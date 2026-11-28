@@ -32,7 +32,7 @@ export function IntroEditor({ profile, save, onDone, onCancel, onManageAffiliati
   const set = (k: keyof typeof d) => (v: string) => setD((x) => ({ ...x, [k]: v }));
   const touch = (k: string) => () => setTouched((t) => (t[k] ? t : { ...t, [k]: true }));
   const problems = validateProfileForm({ ...d, mainEmail: profile.mainEmail, affiliation: profile.affiliation || "x", phone: "" });
-  const missing = (["firstName", "lastName", "designation", "gender", "country", "state", "city"] as const).some((k) => !d[k].trim());
+  const missing = (["firstName", "lastName", "designation", "gender", "country", "city"] as const).some((k) => !d[k].trim());
   const errorOf = (k: keyof typeof problems) => (touched[k] ? problems[k] : undefined);
   const dirty = (Object.keys(d) as Array<keyof typeof d>).some((k) => d[k] !== profile[k]);
   const canSave = !missing && !problems.webPage && dirty;
@@ -66,11 +66,11 @@ export function IntroEditor({ profile, save, onDone, onCancel, onManageAffiliati
             {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
-        <Field label="State / Region" htmlFor="profile-state" required error={errorOf("state")}><PlaceInput id="profile-state" autoComplete="address-level1" value={d.state} onChange={set("state")} options={stateOptions} onBlur={touch("state")} invalid={Boolean(errorOf("state"))} /></Field>
+        <Field label="State / Region" htmlFor="profile-state"><PlaceInput id="profile-state" autoComplete="address-level1" value={d.state} onChange={set("state")} options={stateOptions} /></Field>
         <Field label="City" htmlFor="profile-city" required error={errorOf("city")}><PlaceInput id="profile-city" autoComplete="address-level2" value={d.city} onChange={set("city")} options={cityOptions} onBlur={touch("city")} invalid={Boolean(errorOf("city"))} /></Field>
         <Field className="sm:col-span-2" label="Website" htmlFor="profile-web" error={errorOf("webPage")}><input id="profile-web" type="text" inputMode="url" autoComplete="url" value={d.webPage} placeholder="https://" onChange={(e) => set("webPage")(e.target.value)} onBlur={touch("webPage")} aria-invalid={Boolean(errorOf("webPage")) || undefined} aria-describedby={errorOf("webPage") ? "profile-web-error" : undefined} className={INPUT_CLASS} /></Field>
       </div>
-      {missing && <p role="alert" className="text-[13px] font-medium text-danger-ink">Name, designation, gender, country, state and city can&apos;t be empty.</p>}
+      {missing && <p role="alert" className="text-[13px] font-medium text-danger-ink">Name, designation, gender, country and city can&apos;t be empty.</p>}
     </SectionCard>
   );
 }

@@ -30,9 +30,9 @@ const ROLE_COLOR: Record<ConferenceRole, { color: string; bg: string }> = {
   reviewer: { color: "var(--success-ink)", bg: "var(--success-soft)" },
   committee: { color: "var(--cat-virtual)", bg: "var(--cat-virtual-soft)" },
 };
-const COLLAPSE_KEY = "smartconferu.sidebarCollapsed";
+const PIN_KEY = "smartconferu.sidebarPinned";
 
-/* The "menu hidden" choice, kept in this browser (localStorage can be unavailable: then it just isn't remembered). */
+/* The menu is a slim icon rail by default (the page gets the whole width) and opens over the page while the pointer is on it; "Keep menu open" pins it, a choice kept in this browser (localStorage can be unavailable: then it just isn't remembered). */
 const COLLAPSE_EVENT = "smartconferu:sidebar-collapsed";
 const subscribeCollapsed = (notify: () => void) => {
   window.addEventListener(COLLAPSE_EVENT, notify);
@@ -41,10 +41,10 @@ const subscribeCollapsed = (notify: () => void) => {
 };
 /* A page can fold the menu away while it is open (the review form needs the width); this is not remembered, and the saved choice is back on leaving. */
 let foldedByPage = false;
-const readCollapsed = () => { if (foldedByPage) return true; try { return window.localStorage.getItem(COLLAPSE_KEY) === "1"; } catch { return false; } };
+const readCollapsed = () => { if (foldedByPage) return true; try { return window.localStorage.getItem(PIN_KEY) !== "1"; } catch { return true; } };
 const setCollapsed = (v: boolean) => {
   foldedByPage = false;
-  try { window.localStorage.setItem(COLLAPSE_KEY, v ? "1" : "0"); } catch { /* storage off */ }
+  try { window.localStorage.setItem(PIN_KEY, v ? "0" : "1"); } catch { /* storage off */ }
   window.dispatchEvent(new Event(COLLAPSE_EVENT));
 };
 
@@ -186,7 +186,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
     window.addEventListener(SETUP_OPEN_EVENT, on);
     return () => { clearTimeout(t); window.removeEventListener(START_EVENT, on); window.removeEventListener(SETUP_OPEN_EVENT, on); };
   }, [role, tourOn]);
-  const collapsed =useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
+  const collapsed =useSyncExternalStore(subscribeCollapsed, readCollapsed, () => true);
   useEffect(() => {
     if (!foldMenu) return undefined;
     foldedByPage = true;
@@ -246,12 +246,125 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
   })();
   const roleName = ROLE_LABEL[role];
   const rail = collapsed && !sideOpen;
+  // Hovering the rail (or tabbing into it) opens the full menu over the page; leaving it closes the menu again.
+  const [hover, setHover] = useState(false);
+  useEffect(() => { setHover(false); }, [active]); // eslint-disable-line react-hooks/set-state-in-effect -- the menu closes when a page is chosen
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const enter = () => { clearTimeout(leaveTimer.current); setHover(true); };
+  const leave = () => { clearTimeout(leaveTimer.current); leaveTimer.current = setTimeout(() => setHover(false), 180); };
+  const fullMenu = (flyout: boolean) => (
+    <div id={flyout ? undefined : "conference-sidebar"} style={PANEL} className={flyout ? "h-[calc(100vh-64px)] w-72 flex-col shadow-2xl flex" : `h-[calc(100vh-64px)] w-72 max-w-[86vw] shrink-0 flex-col lg:sticky lg:top-16 lg:z-auto lg:flex lg:shadow-none ${sideOpen ? "fixed left-0 top-16 z-40 flex shadow-2xl" : "hidden"}`}>
+      {!flyout && <button type="button" onClick={() => setCollapsed(true)} aria-label="Hide menu" aria-expanded="true" aria-controls="conference-sidebar" title="Hide menu" className="absolute -right-3 top-5 z-20 hidden h-6 w-6 items-center justify-center rounded-full border border-[#E7E2F5] bg-white text-primary shadow-sm transition-colors hover:bg-primary-soft lg:flex">
+        <ChevronLeft size={14} strokeWidth={2.5} aria-hidden="true" />
+      </button>}
+      <div className="relative z-20 px-4 pb-2 pt-4">
+        <div className="rounded-2xl border border-[#E7E2F5] bg-white px-4 pb-3.5 pt-4 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+          <div className="mb-3 flex items-center gap-3">
+            <ConferenceMonogram acronym={conference.acronym} size={40} logoUrl={conference.logoUrl} />
+            <div className="min-w-0">
+              <div className="truncate text-[15px] font-extrabold leading-tight tracking-tight text-navy">{conference.acronym}</div>
+              <div className="line-clamp-2 text-xs leading-snug text-ink-muted" title={conference.name}>{conference.name}</div>
+            </div>
+          </div>
+          <RoleSwitcher roles={roles} active={role} slug={slug} />
+          <ConferenceSwitcher others={others} role={role} />
+        </div>
+      </div>
+      {locked && (
+        <div className="px-4 pt-1">
+          <button type="button" onClick={() => { setSideOpen(false); openSetupGuide(); }} style={{ border: "1px solid var(--primary-soft-border)", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }} className="w-full cursor-pointer rounded-2xl bg-white px-4 py-3 text-left transition-colors hover:bg-primary-soft">
+            <span className="flex items-center gap-1.5 text-[13px] font-bold text-primary"><Sparkles size={14} aria-hidden="true" /> {readTourState(slug).welcomed ? "Resume setup" : "Finish setup"} <ChevronRight size={14} aria-hidden="true" className="ml-auto" /></span>
+            <span className="mt-0.5 block text-xs text-ink-muted">Required {setup.done} of {setup.total}</span>
+            <span className="mt-0.5 block text-[11px] text-ink-faint">The menu unlocks when the required items are done</span>
+            <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-muted"><span style={{ width: `${Math.round((setup.done / setup.total) * 100)}%` }} className="block h-full rounded-full bg-primary transition-all" /></span>
+          </button>
+        </div>
+      )}
+      <div className="px-6 pb-1.5 pt-3 text-[10.5px] font-bold uppercase tracking-wider text-[#9389B2]">Menu</div>
+      <nav aria-label="Conference menu" className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
+        {items.map((item) => {
+          const Icon = item.icon as LucideIcon;
+          if (item.soon) {
+            return (
+              <div key={item.key} data-tour={`nav-${item.key}`} title={`${item.label} — coming soon`} aria-disabled="true" className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><Icon size={16} aria-hidden="true" /></span>
+                <span className="flex-1">{item.label}</span>
+                <SoonBadge />
+              </div>
+            );
+          }
+          if (item.children) {
+            const lockedGroup = off(item.key);
+            const open = groupOpen(item) && !lockedGroup;
+            const gOn = groupOn(active, item) && !lockedGroup;
+            return (
+              <div key={item.key}>
+                <button type="button" onClick={() => toggle(item)} disabled={lockedGroup} title={lockedGroup ? LOCK_TITLE : undefined} aria-expanded={open} data-tour={`nav-${item.key}`} style={gOn ? { color: "var(--primary)", background: "#FFFFFF", boxShadow: "0 1px 3px rgba(15,23,42,0.06)" } : lockedGroup ? { opacity: 0.5 } : undefined} className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-semibold transition-colors ${lockedGroup ? "cursor-not-allowed" : "hover:bg-white"} ${gOn ? "" : "text-[#334155]"}`}>
+                  <span style={TILE_OFF} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"><Icon size={16} aria-hidden="true" /></span>
+                  <span className="flex-1">{item.label}</span>
+                  {lockedGroup ? <Lock size={13} aria-hidden="true" className="shrink-0" /> : open ? <ChevronDown size={15} aria-hidden="true" className="shrink-0 opacity-70" /> : <ChevronRight size={15} aria-hidden="true" className="shrink-0 opacity-70" />}
+                </button>
+                {open && (
+                  <div className="mb-1.5 ml-[26px] mt-1 space-y-0.5 border-l-2 border-[#E2DBF5] pl-3">
+                    {item.children.map((child) => {
+                      const cOn = isOn(active, item.key, child.key);
+                      return (
+                        <ItemLink key={child.key} item={child} slug={slug} on={cOn} tour={`nav-${item.key}-${child.key}`} onNavigate={() => setSideOpen(false)} style={cOn ? { color: "var(--primary)", background: "#FFFFFF", boxShadow: "0 1px 3px rgba(15,23,42,0.08)" } : undefined} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] font-semibold transition-colors hover:bg-white ${cOn ? "" : "text-[#475569]"}`}>
+                          <span aria-hidden="true" style={{ background: cOn ? "var(--primary)" : "#CFC5E8" }} className="h-1.5 w-1.5 shrink-0 rounded-full" />
+                          {child.label}
+                        </ItemLink>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+          const on = isOn(active, item.key) && !off(item.key);
+          if (off(item.key)) {
+            return (
+              <button key={item.key} type="button" disabled data-tour={`nav-${item.key}`} title={LOCK_TITLE} style={{ color: "#334155", opacity: 0.5 }} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-semibold">
+                <span style={TILE_OFF} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"><Icon size={16} aria-hidden="true" /></span>
+                <span className="flex-1">{item.label}</span>
+                <Lock size={13} aria-hidden="true" className="shrink-0" />
+              </button>
+            );
+          }
+          return (
+            <ItemLink key={item.key} item={item} slug={slug} on={on} tour={`nav-${item.key}`} onNavigate={() => setSideOpen(false)} style={on ? ACTIVE : undefined} className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-semibold transition-colors ${on ? "" : "text-[#334155] hover:bg-white"}`}>
+              <span style={on ? TILE_ON : TILE_OFF} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"><Icon size={16} aria-hidden="true" /></span>
+              <span className="flex-1">{item.label}</span>
+            </ItemLink>
+          );
+        })}
+        {SOON[role].length > 0 && (
+          <>
+            <div className="mx-2 my-3 border-t border-[#E7E2F5]" />
+            <div className="mb-1 px-2.5 text-[10.5px] font-bold uppercase tracking-wider text-[#9389B2]">Coming soon</div>
+            {SOON[role].map((s) => (
+              <div key={s.label} title={`${s.label} — coming soon`} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><s.icon size={16} aria-hidden="true" /></span>
+                <span className="flex-1">{s.label}</span>
+                <SoonBadge />
+              </div>
+            ))}
+          </>
+        )}
+      </nav>
+      <div className="border-t border-[#E7E2F5] px-4 py-3">
+        {role === "chair" && <button type="button" onClick={() => { setSideOpen(false); startConferenceTour(); }} data-tour="take-tour" className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-bold text-primary transition-colors hover:bg-white"><HelpCircle size={15} className="shrink-0" aria-hidden="true" /> Take a tour</button>}
+        <Link href="/dashboard" className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-ink-soft transition-colors hover:bg-white hover:text-navy">
+          <ChevronLeft size={15} className="shrink-0" aria-hidden="true" /> My Conferences
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex items-start">
       {rail ? (
-        <div id="conference-sidebar" style={PANEL} className="sticky top-16 hidden h-[calc(100vh-64px)] w-[76px] shrink-0 flex-col items-center lg:flex">
-          <button type="button" onClick={() => setCollapsed(false)} aria-label="Show menu" aria-expanded="false" aria-controls="conference-sidebar" title="Show menu" className="absolute -right-3 top-5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-[#E7E2F5] bg-white text-primary shadow-sm transition-colors hover:bg-primary-soft">
+        <div id="conference-sidebar" style={PANEL} onMouseEnter={enter} onMouseLeave={leave} onFocus={enter} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave(); }} className="sticky top-16 hidden h-[calc(100vh-64px)] w-[76px] shrink-0 flex-col items-center lg:flex">
+          <button type="button" onClick={() => setCollapsed(false)} aria-label="Keep menu open" aria-expanded="false" aria-controls="conference-sidebar" title="Keep menu open" className="absolute -right-3 top-5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-[#E7E2F5] bg-white text-primary shadow-sm transition-colors hover:bg-primary-soft">
             <ChevronRight size={14} strokeWidth={2.5} aria-hidden="true" />
           </button>
           <div className="pb-2 pt-4" title={`${conference.acronym} — ${conference.name}`}><ConferenceMonogram acronym={conference.acronym} size={40} logoUrl={conference.logoUrl} /></div>
@@ -265,7 +378,7 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
               if (off(item.key)) return <button key={item.key} type="button" disabled aria-label={item.label} title={LOCK_TITLE} style={{ ...TILE_OFF, opacity: 0.5 }} className="flex h-10 w-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl"><Icon size={18} aria-hidden="true" /></button>;
               // A group's icon opens the full menu with that group expanded.
               if (item.children) {
-                return <button key={item.key} type="button" aria-label={item.label} title={item.label} data-tour={`nav-${item.key}`} style={style} className={cls} onClick={() => { setToggled((t) => ({ ...t, [item.key]: true })); setCollapsed(false); }}><Icon size={18} aria-hidden="true" /></button>;
+                return <button key={item.key} type="button" aria-label={item.label} title={item.label} data-tour={`nav-${item.key}`} style={style} className={cls} onClick={() => { setToggled((t) => ({ ...t, [item.key]: true })); enter(); }}><Icon size={18} aria-hidden="true" /></button>;
               }
               return <ItemLink key={item.key} item={item} slug={slug} on={on} label={item.label} className={cls} style={style}><Icon size={18} aria-hidden="true" /></ItemLink>;
             })}
@@ -280,113 +393,10 @@ export function ConferenceShell({ role, conference, roles, others, active, scree
             {role === "chair" && <button type="button" onClick={() => startConferenceTour()} aria-label="Take a tour" title="Take a tour" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-primary transition-colors hover:bg-white"><HelpCircle size={18} aria-hidden="true" /></button>}
             <Link href="/dashboard" aria-label="My Conferences" title="My Conferences" className="flex h-10 w-10 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-white hover:text-navy"><ChevronLeft size={18} aria-hidden="true" /></Link>
           </div>
+          {hover && <div onMouseEnter={enter} onMouseLeave={leave} className="absolute left-0 top-0 z-40">{fullMenu(true)}</div>}
         </div>
       ) : (
-        <div id="conference-sidebar" style={PANEL} className={`h-[calc(100vh-64px)] w-72 max-w-[86vw] shrink-0 flex-col lg:sticky lg:top-16 lg:z-auto lg:flex lg:shadow-none ${sideOpen ? "fixed left-0 top-16 z-40 flex shadow-2xl" : "hidden"}`}>
-          <button type="button" onClick={() => setCollapsed(true)} aria-label="Hide menu" aria-expanded="true" aria-controls="conference-sidebar" title="Hide menu" className="absolute -right-3 top-5 z-20 hidden h-6 w-6 items-center justify-center rounded-full border border-[#E7E2F5] bg-white text-primary shadow-sm transition-colors hover:bg-primary-soft lg:flex">
-            <ChevronLeft size={14} strokeWidth={2.5} aria-hidden="true" />
-          </button>
-          <div className="relative z-20 px-4 pb-2 pt-4">
-            <div className="rounded-2xl border border-[#E7E2F5] bg-white px-4 pb-3.5 pt-4 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 flex items-center gap-3">
-                <ConferenceMonogram acronym={conference.acronym} size={40} logoUrl={conference.logoUrl} />
-                <div className="min-w-0">
-                  <div className="truncate text-[15px] font-extrabold leading-tight tracking-tight text-navy">{conference.acronym}</div>
-                  <div className="line-clamp-2 text-xs leading-snug text-ink-muted" title={conference.name}>{conference.name}</div>
-                </div>
-              </div>
-              <RoleSwitcher roles={roles} active={role} slug={slug} />
-              <ConferenceSwitcher others={others} role={role} />
-            </div>
-          </div>
-          {locked && (
-            <div className="px-4 pt-1">
-              <button type="button" onClick={() => { setSideOpen(false); openSetupGuide(); }} style={{ border: "1px solid var(--primary-soft-border)", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }} className="w-full cursor-pointer rounded-2xl bg-white px-4 py-3 text-left transition-colors hover:bg-primary-soft">
-                <span className="flex items-center gap-1.5 text-[13px] font-bold text-primary"><Sparkles size={14} aria-hidden="true" /> {readTourState(slug).welcomed ? "Resume setup" : "Finish setup"} <ChevronRight size={14} aria-hidden="true" className="ml-auto" /></span>
-                <span className="mt-0.5 block text-xs text-ink-muted">Required {setup.done} of {setup.total}</span>
-                <span className="mt-0.5 block text-[11px] text-ink-faint">The menu unlocks when the required items are done</span>
-                <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-muted"><span style={{ width: `${Math.round((setup.done / setup.total) * 100)}%` }} className="block h-full rounded-full bg-primary transition-all" /></span>
-              </button>
-            </div>
-          )}
-          <div className="px-6 pb-1.5 pt-3 text-[10.5px] font-bold uppercase tracking-wider text-[#9389B2]">Menu</div>
-          <nav aria-label="Conference menu" className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
-            {items.map((item) => {
-              const Icon = item.icon as LucideIcon;
-              if (item.soon) {
-                return (
-                  <div key={item.key} data-tour={`nav-${item.key}`} title={`${item.label} — coming soon`} aria-disabled="true" className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><Icon size={16} aria-hidden="true" /></span>
-                    <span className="flex-1">{item.label}</span>
-                    <SoonBadge />
-                  </div>
-                );
-              }
-              if (item.children) {
-                const lockedGroup = off(item.key);
-                const open = groupOpen(item) && !lockedGroup;
-                const gOn = groupOn(active, item) && !lockedGroup;
-                return (
-                  <div key={item.key}>
-                    <button type="button" onClick={() => toggle(item)} disabled={lockedGroup} title={lockedGroup ? LOCK_TITLE : undefined} aria-expanded={open} data-tour={`nav-${item.key}`} style={gOn ? { color: "var(--primary)", background: "#FFFFFF", boxShadow: "0 1px 3px rgba(15,23,42,0.06)" } : lockedGroup ? { opacity: 0.5 } : undefined} className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-semibold transition-colors ${lockedGroup ? "cursor-not-allowed" : "hover:bg-white"} ${gOn ? "" : "text-[#334155]"}`}>
-                      <span style={TILE_OFF} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"><Icon size={16} aria-hidden="true" /></span>
-                      <span className="flex-1">{item.label}</span>
-                      {lockedGroup ? <Lock size={13} aria-hidden="true" className="shrink-0" /> : open ? <ChevronDown size={15} aria-hidden="true" className="shrink-0 opacity-70" /> : <ChevronRight size={15} aria-hidden="true" className="shrink-0 opacity-70" />}
-                    </button>
-                    {open && (
-                      <div className="mb-1.5 ml-[26px] mt-1 space-y-0.5 border-l-2 border-[#E2DBF5] pl-3">
-                        {item.children.map((child) => {
-                          const cOn = isOn(active, item.key, child.key);
-                          return (
-                            <ItemLink key={child.key} item={child} slug={slug} on={cOn} tour={`nav-${item.key}-${child.key}`} onNavigate={() => setSideOpen(false)} style={cOn ? { color: "var(--primary)", background: "#FFFFFF", boxShadow: "0 1px 3px rgba(15,23,42,0.08)" } : undefined} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] font-semibold transition-colors hover:bg-white ${cOn ? "" : "text-[#475569]"}`}>
-                              <span aria-hidden="true" style={{ background: cOn ? "var(--primary)" : "#CFC5E8" }} className="h-1.5 w-1.5 shrink-0 rounded-full" />
-                              {child.label}
-                            </ItemLink>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              const on = isOn(active, item.key) && !off(item.key);
-              if (off(item.key)) {
-                return (
-                  <button key={item.key} type="button" disabled data-tour={`nav-${item.key}`} title={LOCK_TITLE} style={{ color: "#334155", opacity: 0.5 }} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-semibold">
-                    <span style={TILE_OFF} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"><Icon size={16} aria-hidden="true" /></span>
-                    <span className="flex-1">{item.label}</span>
-                    <Lock size={13} aria-hidden="true" className="shrink-0" />
-                  </button>
-                );
-              }
-              return (
-                <ItemLink key={item.key} item={item} slug={slug} on={on} tour={`nav-${item.key}`} onNavigate={() => setSideOpen(false)} style={on ? ACTIVE : undefined} className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-semibold transition-colors ${on ? "" : "text-[#334155] hover:bg-white"}`}>
-                  <span style={on ? TILE_ON : TILE_OFF} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"><Icon size={16} aria-hidden="true" /></span>
-                  <span className="flex-1">{item.label}</span>
-                </ItemLink>
-              );
-            })}
-            {SOON[role].length > 0 && (
-              <>
-                <div className="mx-2 my-3 border-t border-[#E7E2F5]" />
-                <div className="mb-1 px-2.5 text-[10.5px] font-bold uppercase tracking-wider text-[#9389B2]">Coming soon</div>
-                {SOON[role].map((s) => (
-                  <div key={s.label} title={`${s.label} — coming soon`} className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] font-semibold text-[#A39AC0]">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60"><s.icon size={16} aria-hidden="true" /></span>
-                    <span className="flex-1">{s.label}</span>
-                    <SoonBadge />
-                  </div>
-                ))}
-              </>
-            )}
-          </nav>
-          <div className="border-t border-[#E7E2F5] px-4 py-3">
-            {role === "chair" && <button type="button" onClick={() => { setSideOpen(false); startConferenceTour(); }} data-tour="take-tour" className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-bold text-primary transition-colors hover:bg-white"><HelpCircle size={15} className="shrink-0" aria-hidden="true" /> Take a tour</button>}
-            <Link href="/dashboard" className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-ink-soft transition-colors hover:bg-white hover:text-navy">
-              <ChevronLeft size={15} className="shrink-0" aria-hidden="true" /> My Conferences
-            </Link>
-          </div>
-        </div>
+        fullMenu(false)
       )}
       {role === "chair" && tourOn && <ConferenceTour slug={slug} acronym={conference.acronym} setup={setup} />}
       {sideOpen && <div aria-hidden="true" onClick={() => setSideOpen(false)} style={{ background: "rgba(15,23,42,0.35)" }} className="fixed inset-x-0 bottom-0 top-16 z-30 lg:hidden" />}

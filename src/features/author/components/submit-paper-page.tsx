@@ -1,5 +1,7 @@
 "use client";
 
+import { AuthorPlaces } from "./author-places";
+import { useEmailLaterAsk } from "./email-later-ask";
 import { RichTextContent, hasRichText } from "@/components/ui/rich-text";
 import { ArrowDown, ArrowUp, BookOpen, Check, ChevronUp, Clock, FileCheck, RefreshCw, Sparkles, TriangleAlert, Trash2, Upload, UserPlus } from "lucide-react";
 import Link from "next/link";
@@ -51,11 +53,9 @@ const fieldLabel = (missing = false) => `${FIELD_LABEL} ${missing ? "text-danger
 const nextRowKey = (): number => { const g = globalThis as { __authorRowKey?: number }; g.__authorRowKey = (g.__authorRowKey ?? 0) + 1; return g.__authorRowKey; };
 /** `later`: "Will add later" — the email is left out for now (sent as none; the author can add it from the paper's page). */
 interface Row extends AuthorInput { key: number; later: boolean }
-/** How many authors (from the top) must give affiliation, city and country. Same number in the backend (submissions.service.ts). */
-const AUTHORS_WITH_PLACE = 2;
 /** How many emails an author submitting must give (their own and a co-author's; fewer on a one-author paper). Same number in the backend. On behalf only the corresponding authors' are needed. */
 const AUTHOR_EMAILS_REQUIRED = 2;
-const blankRow =(over: Partial<Row> = {}): Row => ({ key: nextRowKey(), name: "", email: "", affiliation: "", department: "", city: "", country: "", corresponding: false, later: false, ...over });
+const blankRow =(over: Partial<Row> = {}): Row => ({ key: nextRowKey(), name: "", email: "", affiliation: "", department: "", city: "", country: "", otherAffiliations: [], corresponding: false, later: false, ...over });
 const titleKey = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "");
 /** What a chair is told when they open their own conference's submission link (the API refuses it too: OWN_CONFERENCE). */
 const OWN_CONFERENCE_TOAST: FlowToastData = { tone: "warning", title: "You can't submit to your own conference", text: "You're a chair of this conference, so you can't submit your own paper to it. To add a paper for an author, use Submit on behalf." };
@@ -144,9 +144,10 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const [paperTitle, setPaperTitle] = useState("");
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
-  // The first track and the first submission type are already picked; the author changes them with one click.
+  // The first submission type is already picked. A track is not: when tracks are on, the author chooses one themselves (with tracks off there is no
+  // field, and the conference's single default track goes along).
   const tracksOn = info.tracksOn !== false; // the chair can switch tracks off: then there is no track field
-  const [track, setTrack] = useState(info.tracks[0] ?? "");
+  const [track, setTrack] = useState(tracksOn ? "" : info.tracks[0] ?? "");
   const [type, setType] = useState(info.presentationTypes[0] ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [fileProblem, setFileProblem] = useState("");
@@ -193,7 +194,10 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const update = (key: number, patch: Partial<AuthorInput>) => setRows((l) => l.map((a) => (a.key === key ? { ...a, ...patch } : a)));
   // A corresponding author gets every update by email, so their email can't be left for later.
   const toggleCorresponding = (key: number) => setRows((l) => l.map((a) => (a.key === key ? { ...a, corresponding: !a.corresponding, later: a.corresponding ? a.later : false } : a)));
-  const toggleLater = (key: number) => setRows((l) => l.map((a) => (a.key === key ? { ...a, later: !a.later, email: a.later ? a.email : "" } : a)));
+  const setLater = (key: number, on: boolean) => setRows((l) => l.map((a) => (a.key === key ? { ...a, later: on, email: on ? "" : a.email } : a)));
+  // The first "Will add later" asks (once) why the email matters; the answer holds for the other authors.
+  const laterAsk = useEmailLaterAsk(setLater, (key) => document.getElementById(`a-email-${key}`)?.focus());
+  const toggleLater = (key: number) => laterAsk.toggle(key, Boolean(rows.find((a) => a.key === key)?.later));
   const move = (i: number, dir: -1 | 1) => setRows((l) => { const next = [...l]; [next[i], next[i + dir]] = [next[i + dir], next[i]]; return next; });
   const remove = (key: number) => setRows((l) => l.filter((a) => a.key !== key));
   /* The signed-in author stays Author 1, whatever the PDF lists: the prototype's withSubmitterFirst. On behalf nobody is pinned: the paper's own
@@ -208,7 +212,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
     const at = fromPaper.findIndex(sameAsMe);
     if (at < 0) return [{ ...me, corresponding: false }, ...fromPaper];
     const mine = fromPaper[at];
-    const mineNow: Row = { ...me, affiliation: me.affiliation || mine.affiliation, department: me.department || mine.department, city: me.city || mine.city, country: me.country || mine.country, corresponding: mine.corresponding };
+    const mineNow: Row = { ...me, affiliation: me.affiliation || mine.affiliation, department: me.department || mine.department, city: me.city || mine.city, country: me.country || mine.country, otherAffiliations: me.otherAffiliations?.length ? me.otherAffiliations : mine.otherAffiliations, corresponding: mine.corresponding };
     return fromPaper.map((a, i) => (i === at ? mineNow : a)).filter((a, i) => i === at || !sameAsMe(a));
   };
 
@@ -220,7 +224,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
     // Only an author the paper itself marks as corresponding is ticked; when it marks nobody, the person submitting chooses.
     const source = new Map<string, FilledAuthor>();
     const paperRows = r.authors.map((a) => {
-      const row = blankRow({ name: a.name, email: a.email, affiliation: a.affiliation, department: a.department, city: a.city, country: a.country, corresponding: a.corresponding });
+      const row = blankRow({ name: a.name, email: a.email, affiliation: a.affiliation, department: a.department, city: a.city, country: a.country, otherAffiliations: a.otherAffiliations, corresponding: a.corresponding });
       source.set(String(row.key), a);
       return row;
     });
@@ -268,13 +272,13 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   // An email may be left for later, except a corresponding author's and the submitter's own.
   const canLater = (a: Row) => !a.corresponding && !isMine(a);
   const emailOk = (a: Row) => (a.later && canLater(a)) || isValidEmail(a.email.trim());
-  // The first two authors need affiliation, city and country; the rest may leave them empty.
-  const placeOk = (a: Row, i: number) => i >= AUTHORS_WITH_PLACE || Boolean(a.affiliation.trim() && a.city.trim() && a.country);
+  // Every author needs an affiliation and a country (the city is optional). Same rule in the backend (submissions.service.ts).
+  const placeOk = (a: Row) => Boolean(a.affiliation.trim() && a.country);
   const corresponding = rows.some((a) => a.corresponding);
   // An author submitting gives their own email and at least one co-author's (just their own on a one-author paper).
   const emailsGiven = rows.filter((a) => !a.later && isValidEmail(a.email.trim())).length;
   const enoughEmails = behalf || emailsGiven >= Math.min(AUTHOR_EMAILS_REQUIRED, rows.length);
-  const authorsOk = rows.length > 0 && rows.every((a, i) => a.name.trim() && emailOk(a) && placeOk(a, i)) && enoughEmails;
+  const authorsOk = rows.length > 0 && rows.every((a) => a.name.trim() && emailOk(a) && placeOk(a)) && enoughEmails;
   // The person submitting must be on the paper (a chair submitting for an author is exempt).
   const listed = behalf || emails.includes(myEmail);
   const answered = (f: SubmissionExtra) => (f.type === "consent" ? answers[f.id] === true : String(answers[f.id] ?? "").trim() !== "");
@@ -309,6 +313,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
 
   return (
     <>
+      {laterAsk.dialog}
       <PageHeader title={title} breadcrumbs={[{ label: "My Conferences", href: "/dashboard" }, { label: info.acronym, href: behalf ? `/chair/${encodeURIComponent(info.slug)}` : undefined }, { label: title }]} />
       <div className="grid grid-cols-1 items-start gap-6 p-4 sm:p-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
       <div className="min-w-0 space-y-5">
@@ -391,7 +396,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
           </div>
         </Section>
 
-        <Section n={2} title="Authors" busy={filling} hint={(behalf ? "Read from the PDF: check them, and tick the corresponding author (they get the confirmation email). Only the corresponding author's email is needed; the others can be added later." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it, and tick the corresponding author. Give your email and at least one co-author's; the others can be added later.") + " The first two authors need affiliation, city and country."}>
+        <Section n={2} title="Authors" busy={filling} hint={(behalf ? "Read from the PDF: check them, and tick the corresponding author (they get the confirmation email). Only the corresponding author's email is needed; the others can be added later." : "You are Author 1 — you must stay on the paper. Add the co-authors in the order they appear on it, and tick the corresponding author. Give your email and at least one co-author's; the others can be added later.") + " Every author needs an affiliation and a country."}>
           <div className="space-y-3">
             {rows.map((a, i) => (
               <div key={a.key} style={{ border: `1px solid ${a.corresponding ? "var(--primary-soft-border)" : "var(--border)"}`, background: a.corresponding ? "var(--primary-soft)" : "#FFFFFF" }} className="rounded-xl p-4">
@@ -408,14 +413,15 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
                   <div>
                     <label htmlFor={`a-email-${a.key}`} className={LABEL}>Email{!(a.later && canLater(a)) && <> <span className="text-danger-ink">*</span></>}</label>
                     <input id={`a-email-${a.key}`} type="email" value={a.later && canLater(a) ? "" : a.email} maxLength={254} disabled={a.later && canLater(a)} placeholder={a.later && canLater(a) ? "Will be added later" : undefined} onChange={(e) => update(a.key, { email: e.target.value })} aria-invalid={(tried && !emailOk(a)) || undefined} aria-describedby={tried && !emailOk(a) ? `a-email-${a.key}-error` : undefined} className={`${INPUT_CLASS} ${tried && !emailOk(a) ? "border-danger" : ""}`} />
-                    {canLater(a) && <label className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 text-[11.5px] font-semibold text-ink-soft"><input type="checkbox" checked={a.later} onChange={() => toggleLater(a.key)} /> Will add later</label>}
+                    {canLater(a) && (a.later || !a.email.trim()) && <label className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 text-[11.5px] font-semibold text-ink-soft"><input type="checkbox" checked={a.later} onChange={() => toggleLater(a.key)} /> Will add later</label>}
                     {tried && !emailOk(a) && <p id={`a-email-${a.key}-error`} role="alert" className="mt-1 text-[11.5px] font-semibold text-danger-ink">{a.email.trim() ? "That isn't a valid email address." : a.corresponding ? "The corresponding author needs an email." : canLater(a) ? "Enter the email, or tick “Will add later”." : "Enter the email."}</p>}
                   </div>
-                  <div><label htmlFor={`a-aff-${a.key}`} className={LABEL}>Affiliation{i < AUTHORS_WITH_PLACE && <> <span className="text-danger-ink">*</span></>}</label><input id={`a-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="Institution only, e.g. IIT Bombay" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={`${INPUT_CLASS} ${tried && i < AUTHORS_WITH_PLACE && !a.affiliation.trim() ? "border-danger" : ""}`} /></div>
                   <div><label htmlFor={`a-dept-${a.key}`} className={LABEL}>Department</label><input id={`a-dept-${a.key}`} value={a.department} maxLength={300} placeholder="e.g. Department of Computer Science" onChange={(e) => update(a.key, { department: e.target.value })} className={INPUT_CLASS} /></div>
-                  <div><label htmlFor={`a-city-${a.key}`} className={LABEL}>City{i < AUTHORS_WITH_PLACE && <> <span className="text-danger-ink">*</span></>}</label><input id={`a-city-${a.key}`} value={a.city} maxLength={120} placeholder="e.g. Mumbai" onChange={(e) => update(a.key, { city: e.target.value })} className={`${INPUT_CLASS} ${tried && i < AUTHORS_WITH_PLACE && !a.city.trim() ? "border-danger" : ""}`} /></div>
-                  <div><label htmlFor={`a-country-${a.key}`} className={LABEL}>Country{i < AUTHORS_WITH_PLACE && <> <span className="text-danger-ink">*</span></>}</label><select id={`a-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={`${INPUT_CLASS} ${tried && i < AUTHORS_WITH_PLACE && !a.country ? "border-danger" : ""}`}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>{hints[a.key] && a.country && <p className="mt-1 text-[11px] font-medium text-warning-ink">{hints[a.key]} — please check</p>}</div>
+                  <div><label htmlFor={`a-aff-${a.key}`} className={LABEL}>Affiliation<> <span className="text-danger-ink">*</span></></label><input id={`a-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="Institution only, e.g. IIT Bombay" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={`${INPUT_CLASS} ${tried && !a.affiliation.trim() ? "border-danger" : ""}`} /></div>
+                  <div><label htmlFor={`a-city-${a.key}`} className={LABEL}>City</label><input id={`a-city-${a.key}`} value={a.city} maxLength={120} placeholder="e.g. Mumbai" onChange={(e) => update(a.key, { city: e.target.value })} className={INPUT_CLASS} /></div>
+                  <div><label htmlFor={`a-country-${a.key}`} className={LABEL}>Country<> <span className="text-danger-ink">*</span></></label><select id={`a-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={`${INPUT_CLASS} ${tried && !a.country ? "border-danger" : ""}`}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>{hints[a.key] && a.country && <p className="mt-1 text-[11px] font-medium text-warning-ink">{hints[a.key]} — please check</p>}</div>
                 </div>
+                <AuthorPlaces idPrefix={`a-${a.key}`} primary={{ affiliation: a.affiliation, department: a.department, city: a.city, country: a.country }} others={a.otherAffiliations ?? []} onChange={(n) => update(a.key, { ...n.primary, otherAffiliations: n.others })} />
                 <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-ink-soft"><input type="checkbox" checked={a.corresponding} onChange={() => toggleCorresponding(a.key)} aria-invalid={(tried && !corresponding) || undefined} /> Corresponding author</label>
               </div>
             ))}

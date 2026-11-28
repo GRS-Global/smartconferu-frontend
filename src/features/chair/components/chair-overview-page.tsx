@@ -301,6 +301,9 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
   // The first things a new conference needs, read from what is saved (the prototype's setup guide, without the guided tour).
   const filled = (v: string | undefined) => Boolean(v && v.trim());
   const hasTracks = pool.tracks.length > 0 && !(pool.tracks.length === 1 && pool.tracks[0] === "General Track");
+  // Tracks switched off (Settings › Submissions): nothing to set up about them.
+  const tracksOn = settings?.submission.tracksOn !== false;
+  const tracksDone = !tracksOn || hasTracks;
   const detailsDone = Boolean(info && filled(info.startDate) && filled(info.endDate) && filled(info.city) && filled(info.country) && filled(info.webPage) && filled(info.contactEmail));
   const reviewDue = Boolean(info && filled(info.reviewDeadline)) || Boolean(settings && filled(settings.timeline.closesAt));
   const origin = typeof window === "undefined" ? "" : window.location.origin;
@@ -314,7 +317,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
       key: "setup", name: "Set up", sub: "get the basics in place", tasks: [
         { label: "Fill in the conference details", desc: "Dates, venue, website and a contact email.", done: detailsDone, href: `/chair/${e}/settings` },
         { label: "Set the submission deadline", desc: "The last day authors can send a paper.", done: Boolean(info && filled(info.submissionDeadline)), href: `/chair/${e}/settings` },
-        { label: "Add your tracks", desc: "Authors pick one of these when they submit.", done: hasTracks, href: `/chair/${e}/settings/submissions` },
+        ...(tracksOn ? [{ label: "Add your tracks", desc: "Authors pick one of these when they submit.", done: hasTracks, href: `/chair/${e}/settings/submissions` }] : []),
         { label: "Review the decision types", desc: "The outcomes you can give a paper.", done: data.decisionTypes.length > 0, href: `/chair/${e}/settings/decision` },
       ]
     },
@@ -322,7 +325,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
       key: "open", name: "Open submissions", sub: "your conference is ready for papers", tasks: [
         { label: "Share the submission link", desc: "Send it to authors — they sign in (or register) and submit their paper here.", done: data.papers.length > 0, copy: submitUrl },
         { label: "Invite at least 3 reviewers", desc: `${pool.reviewers.length} invited so far.`, done: pool.reviewers.length >= 3, href: reviewers },
-        { label: "Check presentation types and guidelines", desc: "What authors can submit, and the rules they read first.", done: hasTracks && data.decisionTypes.length > 0, href: `/chair/${e}/settings/submissions` },
+        { label: "Check presentation types and guidelines", desc: "What authors can submit, and the rules they read first.", done: tracksDone && data.decisionTypes.length > 0, href: `/chair/${e}/settings/submissions` },
         { label: "Set the review deadline", desc: "The day reviewers' reviews are due.", done: reviewDue, href: `/chair/${e}/settings/review` },
       ]
     },
@@ -345,7 +348,7 @@ export function ChairOverviewPage({ slug }: { slug: string }) {
   const cfpOn = data.cfpStatus === "published" || data.cfpStatus === "closed";
   const checklist = [
     { done: cfpOn, label: "Call for Papers published", href: cfpManagerHref(slug, "publish"), external: false },
-    { done: pool.tracks.length > 1 || (pool.tracks.length === 1 && pool.tracks[0] !== "General Track"), label: "Tracks defined", href: `/chair/${e}/settings` },
+    ...(tracksOn ? [{ done: pool.tracks.length > 1 || (pool.tracks.length === 1 && pool.tracks[0] !== "General Track"), label: "Tracks defined", href: `/chair/${e}/settings/submissions`, external: false }] : []),
     { done: pool.reviewers.length >= 3, label: "At least 3 reviewers invited", href: reviewers },
     { done: maxAssigned, label: "Every submission has reviewers", href: review("needs") },
     { done: expected > 0 && received >= expected, label: "All assigned reviews submitted", href: review("waiting") },

@@ -44,6 +44,7 @@ export function useRegisterForm() {
   const identity: FormValues = { ...values, affiliation: inst.name };
   const problems: RegisterProblems = {
     ...validateProfileForm(identity),
+    ...(!values.state.trim() ? { state: "Enter your state / region." } : {}),
     ...(!password ? { password: "Choose a password." } : password.length < PASSWORD_MIN ? { password: `Use at least ${PASSWORD_MIN} characters.` } : {}),
     ...(!password2 ? { password2: "Retype your password." } : password2 !== password ? { password2: "The two passwords don't match." } : {}),
   };
