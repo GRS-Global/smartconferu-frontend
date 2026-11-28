@@ -71,7 +71,7 @@ export function RegistrationCard({ paper, busy, onSave }: { paper: ChairPaper; b
           <label htmlFor={ids.presenter} className={LABEL}>Presenting author</label>
           <select id={ids.presenter} value={form.presenterEmail?.toLowerCase() ?? ""} disabled={busy} onChange={(e) => set("presenterEmail", e.target.value || null)} className="h-9 w-full cursor-pointer rounded-lg border-[1.5px] border-line bg-white px-2 text-sm text-ink outline-none focus:border-primary disabled:opacity-60">
             <option value="">Not chosen yet</option>
-            {paper.authors.map((a) => <option key={a.email} value={a.email.toLowerCase()}>{a.name}{a.corresponding ? " (corresponding)" : ""}</option>)}
+            {paper.authors.filter((a) => a.email).map((a) => <option key={a.email} value={a.email.toLowerCase()}>{a.name}{a.corresponding ? " (corresponding)" : ""}</option>)}
             {presenterGone && <option value={form.presenterEmail!.toLowerCase()}>{form.presenterEmail} (no longer an author)</option>}
           </select>
           {presenterGone && <p className="mt-1 text-[11px] font-semibold text-warning-ink">This person is no longer on the author list. Pick another presenter.</p>}

@@ -43,7 +43,7 @@ interface MemberResponse { id: string; role: string; status: string; userId: str
 interface OverviewPaper {
   id: string; paperId: string; title: string; track: string | null; presentationType: string | null; keywords: string[]; status: string; outcome: string; decisionTypeId: string | null;
   notifiedOutcome: string | null; screening: Record<string, unknown> | null; files: Array<{ id: string; kind: string; version: number; fileName: string; uploadedAt: string; autoCheck: Record<string, unknown> | null }>; withdrawnAt: string | null; withdrawnBy: string | null; submittedAt: string; updatedAt: string;
-  authors: Array<{ name: string; email: string; affiliation: string | null; country: string | null; corresponding: boolean; hasAccount: boolean }> | null;
+  authors: Array<{ name: string; email: string | null; affiliation: string | null; country: string | null; corresponding: boolean; hasAccount: boolean }> | null;
   registration: PaperRegistration | null;
   reviewersAssigned: number; reviewsReceived: number; averageScore: number | null;
 }
@@ -86,7 +86,7 @@ const notAvailable = (what: string) => new ServiceError(`${what} isn't available
 /* ---------------------------------------------------------------- mappers */
 
 function toChairPaper(p: OverviewPaper, slug: string): ChairPaper {
-  const authors: ChairAuthor[] = (p.authors ?? []).map((a) => ({ name: a.name, email: a.email, affiliation: a.affiliation ?? "", country: a.country ?? "", corresponding: a.corresponding, hasAccount: a.hasAccount }));
+  const authors: ChairAuthor[] = (p.authors ?? []).map((a) => ({ name: a.name, email: a.email ?? "", affiliation: a.affiliation ?? "", country: a.country ?? "", corresponding: a.corresponding, hasAccount: a.hasAccount }));
   return {
     id: p.paperId, dbId: p.id, conferenceId: slug, title: p.title, track: p.track ?? "", presentationType: p.presentationType ?? "", authors, keywords: p.keywords,
     submittedAt: label(p.submittedAt), lastUpdate: label(p.updatedAt), withdrawn: p.status === "withdrawn", withdrawnAt: label(p.withdrawnAt || p.updatedAt), withdrawnBy: p.withdrawnBy === "chair" ? "chair" : "author",

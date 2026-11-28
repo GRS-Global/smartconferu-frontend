@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { INPUT_CLASS } from "@/components/ui/field";
 import { AuthRequiredError } from "@/services/errors";
+import { ApiError } from "@/lib/api-client";
 import { sendActionEmails } from "@/services/action-emails";
 import { getAuthorSubmissionService } from "@/services/author-submissions";
 import { autoCheckOf } from "@/lib/auto-check";
@@ -42,7 +43,8 @@ function Actions({ onCancel, onSave, disabled, saving, saveLabel = "Save changes
 function useSave(onClose: () => void, onSaved: (s: Saved) => void, onSessionEnded: () => void) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const run = async (action: () => Promise<Saved>) => {
+  /** `handled`: the form shows this failure itself, next to the field it is about (answer true), instead of the sentence at the bottom. */
+  const run = async (action: () => Promise<Saved>, handled?: (e: unknown) => boolean) => {
     if (saving) return;
     setSaving(true);
     setError("");
@@ -51,7 +53,7 @@ function useSave(onClose: () => void, onSaved: (s: Saved) => void, onSessionEnde
       onClose();
       onSaved(saved);
     } catch (e) {
-      if (e instanceof AuthRequiredError) { onClose(); onSessionEnded(); } else setError(failure(e));
+      if (e instanceof AuthRequiredError) { onClose(); onSessionEnded(); } else if (!handled?.(e)) setError(failure(e));
     } finally {
       setSaving(false);
     }
@@ -70,14 +72,28 @@ function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonPro
   const [abstract, setAbstract] = useState(paper.abstract);
   const [keywords, setKeywords] = useState(paper.keywords);
   const { saving, error, run } = useSave(onClose, onSaved, onSessionEnded);
+  // Save always answers: what is missing (or a title another paper already has) shows under its field, and the page scrolls to it.
+  const [tried, setTried] = useState(false);
+  const [takenTitle, setTakenTitle] = useState("");
   const valid = title.trim() !== "" && abstract.trim() !== "";
+  const titleError = tried && !title.trim() ? "The title can't be empty." : takenTitle && takenTitle === title.trim() ? "A paper with this title is already submitted to this conference. Please use a different title." : "";
+  const abstractError = tried && !abstract.trim() ? "The abstract can't be empty." : "";
   const words = abstract.trim().split(/\s+/).filter(Boolean).length;
+  const save = () => {
+    setTried(true);
+    if (!valid) return;
+    void run(
+      async () => { await (await getAuthorSubmissionService()).updateDetails(paper.dbId, { title, abstract, keywords }); return { notice: null }; },
+      (e) => { if (e instanceof ApiError && e.code === "DUPLICATE_TITLE") { setTakenTitle(title.trim()); return true; } return false; },
+    );
+  };
   return (
     <>
       <div className="space-y-4">
         <div>
           <label htmlFor="paper-title" className={LABEL}>Title<span className="text-danger-ink" aria-hidden="true"> *</span></label>
-          <input id="paper-title" value={title} maxLength={500} onChange={(e) => setTitle(e.target.value)} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+          <input id="paper-title" value={title} maxLength={500} onChange={(e) => setTitle(e.target.value)} aria-invalid={Boolean(titleError) || undefined} aria-describedby={titleError ? "paper-title-error" : undefined} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+          {titleError && <p id="paper-title-error" role="alert" className="mt-1 text-[11.5px] font-semibold text-danger-ink">{titleError}</p>}
         </div>
         <div>
           <label htmlFor="paper-keywords" className={LABEL}>Keywords</label>
@@ -85,15 +101,13 @@ function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonPro
         </div>
         <div>
           <label htmlFor="paper-abstract" className={LABEL}>Abstract<span className="text-danger-ink" aria-hidden="true"> *</span></label>
-          <textarea id="paper-abstract" value={abstract} maxLength={20000} rows={7} onChange={(e) => setAbstract(e.target.value)} className={`${INPUT_CLASS} resize-y bg-canvas leading-relaxed focus:bg-white`} />
+          <textarea id="paper-abstract" value={abstract} maxLength={20000} rows={7} onChange={(e) => setAbstract(e.target.value)} aria-invalid={Boolean(abstractError) || undefined} aria-describedby={abstractError ? "paper-abstract-error" : undefined} className={`${INPUT_CLASS} resize-y bg-canvas leading-relaxed focus:bg-white`} />
+          {abstractError && <p id="paper-abstract-error" role="alert" className="mt-1 text-[11.5px] font-semibold text-danger-ink">{abstractError}</p>}
           <span className="mt-1 block text-right text-[11px] text-ink-faint">{words} words</span>
         </div>
       </div>
       <Error_ message={error} />
-      <Actions
-        onCancel={onClose} saving={saving} disabled={!valid}
-        onSave={() => run(async () => { await (await getAuthorSubmissionService()).updateDetails(paper.dbId, { title, abstract, keywords }); return { notice: null }; })}
-      />
+      <Actions onCancel={onClose} saving={saving} onSave={save} />
     </>
   );
 }
@@ -108,41 +122,49 @@ export function EditDetailsDialog(props: CommonProps) {
 
 /* ---------------- authors ---------------- */
 
-interface Row extends AuthorInput { key: number }
+/** `later`: "Will add later" — this author's email is left out for now (an empty email on the paper is one still to come). */
+interface Row extends AuthorInput { key: number; later: boolean }
 let rowKey = 0;
+/** An author editing their paper gives their own email and a co-author's (just their own on a one-author paper); a chair editing for the authors needs only the corresponding authors'. Same rule in the backend. */
+const AUTHOR_EMAILS_REQUIRED = 2;
 
 function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded }: Omit<CommonProps, "open">) {
-  const [rows, setRows] = useState<Row[]>(() => paper.authors.map((a) => ({ name: a.name, email: a.email, affiliation: a.affiliation, department: a.department ?? "", city: a.city ?? "", country: a.country, corresponding: a.corresponding, key: ++rowKey })));
+  const [rows, setRows] = useState<Row[]>(() => paper.authors.map((a) => ({ name: a.name, email: a.email, affiliation: a.affiliation, department: a.department ?? "", city: a.city ?? "", country: a.country, corresponding: a.corresponding, later: a.email.trim() === "", key: ++rowKey })));
   const { saving, error, run } = useSave(onClose, onSaved, onSessionEnded);
   const mine = new Set(paper.myEmails);
   const update = (key: number, patch: Partial<AuthorInput>) => setRows((l) => l.map((a) => (a.key === key ? { ...a, ...patch } : a)));
-  // Any number of corresponding authors, but never none: the last ticked box can't be cleared.
-  const toggleCorresponding = (key: number) => setRows((l) => {
-    const next = l.map((a) => (a.key === key ? { ...a, corresponding: !a.corresponding } : a));
-    return next.some((a) => a.corresponding) ? next : l;
-  });
+  // Any number of corresponding authors, at least one when saving. A corresponding author's email can't be left for later.
+  const toggleCorresponding = (key: number) => setRows((l) => l.map((a) => (a.key === key ? { ...a, corresponding: !a.corresponding, later: a.corresponding ? a.later : false } : a)));
+  const toggleLater = (key: number) => setRows((l) => l.map((a) => (a.key === key ? { ...a, later: !a.later, email: a.later ? a.email : "" } : a)));
+  const [tried, setTried] = useState(false);
   const move = (i: number, dir: -1 | 1) => setRows((l) => { const next = [...l]; [next[i], next[i + dir]] = [next[i + dir], next[i]]; return next; });
-  const remove = (key: number) => setRows((l) => {
-    const next = l.filter((a) => a.key !== key);
-    if (!next.some((a) => a.corresponding) && next[0]) next[0] = { ...next[0], corresponding: true };
-    return next;
-  });
-  const correspondingCount = rows.filter((a) => a.corresponding).length;
+  const remove = (key: number) => setRows((l) => l.filter((a) => a.key !== key));
   // The author editing their paper must stay on it.
-  const meListed = asChair || rows.some((a) => mine.has(a.email.trim().toLowerCase()));
+  const isMine = (a: Row) => !asChair && mine.has(a.email.trim().toLowerCase());
+  const meListed = asChair || rows.some(isMine);
+  const canLater = (a: Row) => !a.corresponding && !isMine(a);
+  const emailOk = (a: Row) => (a.later && canLater(a)) || isValidEmail(a.email.trim());
   // The first two authors need affiliation, city and country; the rest may leave them empty.
   const placeOk = (a: (typeof rows)[number], i: number) => i >= AUTHORS_WITH_PLACE || Boolean(a.affiliation.trim() && a.city.trim() && a.country);
-  const valid = rows.length > 0 && meListed && rows.every((a, i) => a.name.trim() && isValidEmail(a.email.trim()) && placeOk(a, i));
+  const corresponding = rows.some((a) => a.corresponding);
+  const emailsGiven = rows.filter((a) => !a.later && isValidEmail(a.email.trim())).length;
+  const enoughEmails = asChair || emailsGiven >= Math.min(AUTHOR_EMAILS_REQUIRED, rows.length);
+  const valid = rows.length > 0 && meListed && corresponding && enoughEmails && rows.every((a, i) => a.name.trim() && emailOk(a) && placeOk(a, i));
+  const missing = (bad: boolean) => (tried && bad) || undefined;
   const iconBtn = "flex h-7 w-7 items-center justify-center rounded-lg text-ink-muted hover:bg-white disabled:opacity-30";
 
-  const save = () => run(async () => {
-    const authors: AuthorInput[] = rows.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim(), department: a.department.trim(), city: a.city.trim(), country: a.country, corresponding: a.corresponding }));
+  const save = () => {
+    setTried(true);
+    if (!valid) return;
+    void run(async () => {
+    const authors: AuthorInput[] = rows.map((a) => ({ name: a.name.trim(), email: a.later && canLater(a) ? "" : a.email.trim(), affiliation: a.affiliation.trim(), department: a.department.trim(), city: a.city.trim(), country: a.country, corresponding: a.corresponding }));
     await (await getAuthorSubmissionService()).saveAuthors(paper.dbId, authors);
     // The people added are told they were added as a co-author (only the addresses that are new on the paper).
     const known = new Set(paper.authors.map((a) => a.email.trim().toLowerCase()));
-    const added = authors.filter((a) => !known.has(a.email.toLowerCase())).map((a) => a.email);
+    const added = authors.filter((a) => a.email !== "" && !known.has(a.email.toLowerCase())).map((a) => a.email);
     return { notice: added.length ? await sendActionEmails("paper_authors_updated", { submissionId: paper.dbId, added }) : null };
-  });
+    });
+  };
 
   return (
     <>
@@ -164,15 +186,18 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor={`author-name-${a.key}`} className={LABEL}>Full name<span className="text-danger-ink" aria-hidden="true"> *</span></label>
-                <input id={`author-name-${a.key}`} value={a.name} maxLength={200} onChange={(e) => update(a.key, { name: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+                <input id={`author-name-${a.key}`} value={a.name} maxLength={200} onChange={(e) => update(a.key, { name: e.target.value })} aria-invalid={missing(!a.name.trim())} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+                {tried && !a.name.trim() && <p id={`author-name-${a.key}-error`} role="alert" className="mt-1 text-[11.5px] font-semibold text-danger-ink">Every author needs a name.</p>}
               </div>
               <div>
-                <label htmlFor={`author-email-${a.key}`} className={LABEL}>Email<span className="text-danger-ink" aria-hidden="true"> *</span></label>
-                <input id={`author-email-${a.key}`} type="email" value={a.email} maxLength={254} onChange={(e) => update(a.key, { email: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+                <label htmlFor={`author-email-${a.key}`} className={LABEL}>Email{!(a.later && canLater(a)) && <span className="text-danger-ink" aria-hidden="true"> *</span>}</label>
+                <input id={`author-email-${a.key}`} type="email" value={a.later && canLater(a) ? "" : a.email} maxLength={254} disabled={a.later && canLater(a)} placeholder={a.later && canLater(a) ? "Will be added later" : undefined} onChange={(e) => update(a.key, { email: e.target.value })} aria-invalid={missing(!emailOk(a))} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+                {canLater(a) && <label className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 text-[11.5px] font-semibold text-ink-soft"><input type="checkbox" checked={a.later} onChange={() => toggleLater(a.key)} /> Will add later</label>}
+                {tried && !emailOk(a) && <p role="alert" className="mt-1 text-[11.5px] font-semibold text-danger-ink">{a.email.trim() ? "That isn't a valid email address." : a.corresponding ? "The corresponding author needs an email." : canLater(a) ? "Enter the email, or tick “Will add later”." : "Enter the email."}</p>}
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor={`author-aff-${a.key}`} className={LABEL}>Affiliation{i < AUTHORS_WITH_PLACE && STAR}</label>
-                <input id={`author-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="Institution only, e.g. IIT Bombay" onChange={(e) => update(a.key, { affiliation: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+                <input id={`author-aff-${a.key}`} value={a.affiliation} maxLength={300} placeholder="Institution only, e.g. IIT Bombay" onChange={(e) => update(a.key, { affiliation: e.target.value })} aria-invalid={missing(i < AUTHORS_WITH_PLACE && !a.affiliation.trim())} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
               </div>
               <div>
                 <label htmlFor={`author-dept-${a.key}`} className={LABEL}>Department</label>
@@ -180,33 +205,36 @@ function AuthorsForm({ paper, asChair = false, onClose, onSaved, onSessionEnded 
               </div>
               <div>
                 <label htmlFor={`author-city-${a.key}`} className={LABEL}>City{i < AUTHORS_WITH_PLACE && STAR}</label>
-                <input id={`author-city-${a.key}`} value={a.city} maxLength={120} placeholder="e.g. Mumbai" onChange={(e) => update(a.key, { city: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
+                <input id={`author-city-${a.key}`} value={a.city} maxLength={120} placeholder="e.g. Mumbai" onChange={(e) => update(a.key, { city: e.target.value })} aria-invalid={missing(i < AUTHORS_WITH_PLACE && !a.city.trim())} className={`${INPUT_CLASS} bg-canvas focus:bg-white`} />
               </div>
               <div>
                 <label htmlFor={`author-country-${a.key}`} className={LABEL}>Country{i < AUTHORS_WITH_PLACE && STAR}</label>
-                <select id={`author-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} className={`${INPUT_CLASS} bg-canvas focus:bg-white`}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}{a.country && !COUNTRIES.includes(a.country) && <option value={a.country}>{a.country}</option>}</select>
+                <select id={`author-country-${a.key}`} value={a.country} onChange={(e) => update(a.key, { country: e.target.value })} aria-invalid={missing(i < AUTHORS_WITH_PLACE && !a.country)} className={`${INPUT_CLASS} bg-canvas focus:bg-white`}><option value="">Select…</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}{a.country && !COUNTRIES.includes(a.country) && <option value={a.country}>{a.country}</option>}</select>
               </div>
             </div>
             <label className="mt-3 inline-flex cursor-pointer items-center gap-2">
-              <input type="checkbox" checked={a.corresponding} onChange={() => toggleCorresponding(a.key)} disabled={a.corresponding && correspondingCount === 1} title={a.corresponding && correspondingCount === 1 ? "At least one author must be a corresponding author" : undefined} className="h-4 w-4 accent-primary" />
+              <input type="checkbox" checked={a.corresponding} onChange={() => toggleCorresponding(a.key)} aria-invalid={missing(!corresponding)} className="h-4 w-4 accent-primary" />
               <span className={`text-xs font-semibold ${a.corresponding ? "text-primary" : "text-ink-soft"}`}>Corresponding author</span>
             </label>
           </div>
         ))}
       </div>
-      <button type="button" onClick={() => setRows((l) => (l.length < 50 ? [...l, { key: ++rowKey, name: "", email: "", affiliation: "", department: "", city: "", country: "", corresponding: false }] : l))} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong py-2.5 text-sm font-bold text-primary hover:bg-primary-soft">
+      <button type="button" onClick={() => setRows((l) => (l.length < 50 ? [...l, { key: ++rowKey, name: "", email: "", affiliation: "", department: "", city: "", country: "", corresponding: false, later: false }] : l))} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-[1.5px] border-dashed border-line-strong py-2.5 text-sm font-bold text-primary hover:bg-primary-soft">
         <UserPlus size={15} aria-hidden="true" /> Add co-author
       </button>
+      {tried && rows.some((a, i) => !placeOk(a, i)) && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">The first {AUTHORS_WITH_PLACE} authors need affiliation, city and country.</p>}
+      {tried && !corresponding && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">Choose the corresponding author: tick “Corresponding author” on their card.</p>}
+      {tried && !enoughEmails && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">Give the email of at least one co-author as well as your own. The others can be added later.</p>}
       {!meListed && <p role="alert" className="mt-2 text-xs font-semibold text-danger-ink">You have to stay on the paper as an author or co-author. Put your own name and email back to save.</p>}
       <Error_ message={error} />
-      <Actions onCancel={onClose} saving={saving} disabled={!valid} onSave={save} />
+      <Actions onCancel={onClose} saving={saving} onSave={save} />
     </>
   );
 }
 
 export function EditAuthorsDialog(props: CommonProps) {
   return (
-    <Dialog open={props.open} onClose={props.onClose} title="Update / add authors" description="The first author is the main author. Tick every corresponding author (at least one)." icon={Users} size="lg">
+    <Dialog open={props.open} onClose={props.onClose} title="Update / add authors" description="The first author is the main author. Tick every corresponding author (at least one). Emails you don't have yet can be added later." icon={Users} size="lg">
       <AuthorsForm paper={props.paper} asChair={props.asChair} onClose={props.onClose} onSaved={props.onSaved} onSessionEnded={props.onSessionEnded} />
     </Dialog>
   );

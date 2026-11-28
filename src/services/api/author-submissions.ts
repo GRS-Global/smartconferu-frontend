@@ -11,12 +11,12 @@ import { isValidEmail } from "@/lib/email";
    is "<paperId>/<fileId>", which `fileUrl` turns into the download route. */
 
 interface PaperFileDto { id: string; kind: string; version: number; fileName: string; sizeBytes: number | null; uploadedAt: string }
-interface AuthorDto { name: string; email: string; affiliation: string | null; department?: string | null; city?: string | null; country: string | null; corresponding: boolean; hasAccount: boolean }
+interface AuthorDto { name: string; email: string | null; affiliation: string | null; department?: string | null; city?: string | null; country: string | null; corresponding: boolean; hasAccount: boolean }
 interface SubmissionDto {
   id: string; paperId: string; paperNo: number; conferenceId: string; conferenceSlug: string; conferenceAcronym: string; view: "chair" | "author" | "reviewer";
   title: string; abstract: string; keywords: string[]; track: string | null; presentationType: string | null; authors: AuthorDto[] | null;
   status: "draft" | "submitted" | "withdrawn"; outcome: string; decisionNote: string | null; screening: Record<string, FullScreening> | null; files: PaperFileDto[];
-  withdrawnAt: string | null; withdrawnBy: string | null; submittedAt: string; updatedAt: string; mySubmission: boolean; myCorresponding: boolean;
+  withdrawnAt: string | null; withdrawnBy: string | null; submittedAt: string; updatedAt: string; mySubmission: boolean; myPaper?: boolean; myCorresponding: boolean;
   registration?: { payment: "not_paid" | "paid" | "waived"; attendance: "physical" | "virtual" | null; presenterName: string | null } | null;
 }
 interface FullScreening {
@@ -129,7 +129,8 @@ function toListItem(s: SubmissionDto): AuthorSubmission {
   const t = told(s);
   return {
     id: s.paperId, dbId: s.id, conferenceId: s.conferenceSlug, title: s.title, keywords: s.keywords,
-    authors: (s.authors ?? []).map((a) => ({ name: a.name, email: a.email, affiliation: a.affiliation ?? "", country: a.country ?? "", corresponding: a.corresponding })),
+    // An email still to come ("Will add later") is null in the API and "" here.
+    authors: (s.authors ?? []).map((a) => ({ name: a.name, email: a.email ?? "", affiliation: a.affiliation ?? "", country: a.country ?? "", corresponding: a.corresponding })),
     submittedAt: s.status === "draft" ? null : label(s.submittedAt), lastUpdate: label(s.updatedAt),
     track: s.track || "General Track", presentationType: s.presentationType || "Paper Presentation",
     withdrawn: s.status === "withdrawn", mySubmission: s.mySubmission, myCorresponding: s.myCorresponding,
@@ -158,8 +159,8 @@ async function toPaper(s: SubmissionDto): Promise<AuthorPaper> {
   return {
     ...toListItem(s),
     authors: (s.authors ?? []).map((a) => ({
-      name: a.name, email: a.email, affiliation: a.affiliation ?? "", department: a.department ?? "", city: a.city ?? "", country: a.country ?? "", corresponding: a.corresponding,
-      isMe: myEmail !== "" && a.email.toLowerCase() === myEmail,
+      name: a.name, email: a.email ?? "", affiliation: a.affiliation ?? "", department: a.department ?? "", city: a.city ?? "", country: a.country ?? "", corresponding: a.corresponding,
+      isMe: myEmail !== "" && (a.email ?? "").toLowerCase() === myEmail,
     })),
     myEmails: myEmail ? [myEmail] : [],
     status: statusOf(s),
@@ -210,14 +211,15 @@ const implemented: AuthorSubmissionService = {
 
   async submitPaper(slug, paper) {
     const title = paper.title.trim(); const abstract = paper.abstract.trim();
-    const authors = paper.authors.filter((a) => a.email.trim());
-    if (!title || !abstract || title.length > 500 || !authors.length || authors.some((a) => !a.name.trim() || !isValidEmail(a.email.trim()))) throw bad();
+    // Every author is sent; an email left for later goes as null (the API checks which ones are required).
+    const authors = paper.authors;
+    if (!title || !abstract || title.length > 500 || !authors.length || authors.some((a) => !a.name.trim() || (a.email.trim() !== "" && !isValidEmail(a.email.trim())))) throw bad();
     checkFile(paper.file);
     const created = await api<SubmissionDto>(`/conferences/${encodeURIComponent(slug)}/submissions`, {
       method: "POST",
       body: {
         title, abstract, keywords: paper.keywords.map((k) => k.trim()).filter(Boolean).slice(0, 20),
-        authors: authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, department: a.department?.trim() || null, city: a.city?.trim() || null, country: a.country || null, corresponding: a.corresponding })),
+        authors: authors.map((a) => ({ name: a.name.trim(), email: a.email.trim() || null, affiliation: a.affiliation.trim() || null, department: a.department?.trim() || null, city: a.city?.trim() || null, country: a.country || null, corresponding: a.corresponding })),
         track: paper.track || "General Track", presentationType: paper.presentationType || "Paper Presentation", responses: paper.responses ?? {},
         ...(paper.onBehalf ? { onBehalf: true } : {}),
       },
@@ -246,8 +248,8 @@ const implemented: AuthorSubmissionService = {
   },
 
   async saveAuthors(paperDbId, authors) {
-    const list = authors.map((a) => ({ name: a.name.trim(), email: a.email.trim(), affiliation: a.affiliation.trim() || null, department: a.department?.trim() || null, city: a.city?.trim() || null, country: a.country.trim() || null, corresponding: Boolean(a.corresponding) }));
-    if (!list.length || list.length > 50 || !list.some((a) => a.corresponding) || list.some((a) => !a.name || !isValidEmail(a.email))) throw bad();
+    const list = authors.map((a) => ({ name: a.name.trim(), email: a.email.trim() || null, affiliation: a.affiliation.trim() || null, department: a.department?.trim() || null, city: a.city?.trim() || null, country: a.country.trim() || null, corresponding: Boolean(a.corresponding) }));
+    if (!list.length || list.length > 50 || !list.some((a) => a.corresponding) || list.some((a) => !a.name || (a.email !== null && !isValidEmail(a.email)))) throw bad();
     await api(`/submissions/${paperDbId}/authors`, { method: "PUT", body: { authors: list } });
   },
 
@@ -289,7 +291,8 @@ const implemented: AuthorSubmissionService = {
     try {
       const all = await api<SubmissionDto[]>(`/conferences/${encodeURIComponent(slug)}/submissions`);
       // The list also holds papers given to the person to review: only their own are listed here.
-      return all.filter((s) => s.view === "author" || s.mySubmission).sort((a, b) => a.paperNo - b.paperNo).map(toListItem);
+      // Only the person's papers as an author (myPaper): never one a chair submitted on an author's behalf.
+      return all.filter((s) => s.view === "author" || (s.myPaper ?? s.mySubmission)).sort((a, b) => a.paperNo - b.paperNo).map(toListItem);
     } catch (e) { if (notFound(e)) return []; throw e; }
   },
 };

@@ -46,7 +46,7 @@ function splitAuthorBlock(block: string): Raw[] {
   const affiliation = lines.slice(1).join(", ");
   return lines[0].split(/,| and | & /i).map((s) => s.trim()).filter(Boolean)
     .filter((s) => !AFFILIATION_HINTS.test(s) && !/\d/.test(s) && s.split(/\s+/).length <= 4)
-    .map((name, i) => ({ name, email: "", affiliation, department: "", city: "", country: "", corresponding: i === 0 }));
+    .map((name) => ({ name, email: "", affiliation, department: "", city: "", country: "", corresponding: false })); // a guess never picks the corresponding author
 }
 
 /** The basic guess: regular expressions over the paper's first pages. */
