@@ -21,6 +21,8 @@ import { fillConferenceFromWebsite, SMART_FILL_AVAILABLE } from "@/services/smar
 import { VenueMapPicker } from "@/components/ui/venue-map-picker";
 import { VenueSearchInput } from "@/components/ui/venue-search-input";
 import { EMPTY_NEW_CONFERENCE, type NewConferenceInput } from "@/types/conference-request";
+import { EMPTY_HYBRID_DATES, hybridProblem, overallRange, type HybridDates } from "@/lib/hybrid-dates";
+import { HybridDateFields } from "./hybrid-date-fields";
 import { BLANK_DRAFT_FORM, clearDraft, draftAge, readDraft, writeDraft, type DraftForm, type SavedDraft } from "../create-conference-draft";
 import { isValidEmail } from "@/lib/email";
 import { ALLOW_PAST_CONFERENCE_DATES } from "@/lib/config";
@@ -95,6 +97,13 @@ export function CreateConferencePage() {
   const formRef = useRef(form);
   useEffect(() => { formRef.current = form; }, [form]);
   const set = <K extends keyof NewConferenceInput>(k: K, v: NewConferenceInput[K]) => setForm((f) => ({ ...f, [k]: v }));
+  // Hybrid dates: the conference's own start / end follow them.
+  const setHybridDates = (next: HybridDates) => setForm((f) => { const r = overallRange(next); return { ...f, hybridDates: next, startDate: r.start, endDate: r.end }; });
+  // Switching to Hybrid with dates already picked: both events start out on those dates.
+  const chooseFormat = (id: NewConferenceInput["eventType"]) => setForm((f) => {
+    if (id !== "hybrid" || (f.hybridDates && overallRange(f.hybridDates).start)) return { ...f, eventType: id };
+    return { ...f, eventType: id, hybridDates: { physicalStart: f.startDate, physicalEnd: f.endDate, virtualStart: f.startDate, virtualEnd: f.endDate } };
+  });
 
   /* Saved draft (same behaviour as the prototype). The draft is the whole form plus the policy tick, kept in this browser only.
      - A dirty form writes it on every change; returning to a blank form (after an edit in this visit) removes it, so an untouched page never
@@ -180,7 +189,15 @@ export function CreateConferencePage() {
         filled += 1;
       }
       if (applied.timezone) setTzAuto(false);
-      setForm((f) => ({ ...f, ...applied }));
+      setForm((f) => {
+        const next = { ...f, ...applied };
+        // Hybrid with no event dates yet: the dates read from the website start both events.
+        const noHybridDates = !f.hybridDates || !overallRange(f.hybridDates).start;
+        if (next.eventType === "hybrid" && noHybridDates && (applied.startDate || applied.endDate)) {
+          next.hybridDates = { physicalStart: next.startDate, physicalEnd: next.endDate, virtualStart: next.startDate, virtualEnd: next.endDate };
+        }
+        return next;
+      });
       setFill(filled
         ? { status: "done", message: `Filled ${filled} field${filled === 1 ? "" : "s"} from ${source.replace(/^https?:\/\//, "")}. Please check them and add anything that is missing.` }
         : { status: "done", message: "Nothing new to fill — the fields it found are already filled in, or the website didn't say." });
@@ -206,13 +223,19 @@ export function CreateConferencePage() {
   const todayIso = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
   // Testing switch (lib/config.ts ALLOW_PAST_CONFERENCE_DATES): past dates allowed.
   const datesInPast = !ALLOW_PAST_CONFERENCE_DATES && Boolean((form.startDate && form.startDate < todayIso) || (form.endDate && form.endDate < todayIso));
+  // Hybrid: the in-person and the virtual event each have their own dates; the conference runs from the first start to the last end.
+  const hybrid = form.eventType === "hybrid";
+  const hybridDates = form.hybridDates ?? EMPTY_HYBRID_DATES;
+  const hybridIssue = hybrid ? hybridProblem(hybridDates, true) : "";
   const checks: Array<{ key: string; label: string; ok: boolean; msg: string }> = [
     { key: "webPage", label: "Website", ok: URL_RE.test(form.webPage.trim()), msg: form.webPage.trim() ? "That doesn't look like a web address, e.g. https://yourconference.org" : "Add your conference website." },
     { key: "title", label: "Conference title", ok: Boolean(form.title.trim()), msg: "Add a title for your conference." },
     { key: "acronym", label: "Acronym", ok: Boolean(form.acronym.trim()), msg: "Add a short acronym, e.g. ISBM 2026." },
     ...(form.type === "other" ? [{ key: "typeInfo", label: "Type information", ok: Boolean(form.typeInfo.trim()), msg: "Briefly describe what this is." }] : []),
     // As in the prototype only the end date is required (picking a start date fills an empty end date, so one-day events take one click).
-    { key: "endDate", label: "Conference dates", ok: Boolean(form.endDate) && !datesInPast, msg: datesInPast ? "These dates are in the past. Pick today or a later date." : "Pick the conference dates." },
+    hybrid
+      ? { key: "endDate", label: "Conference dates", ok: !hybridIssue && !datesInPast, msg: datesInPast ? "These dates are in the past. Pick today or a later date." : hybridIssue }
+      : { key: "endDate", label: "Conference dates", ok: Boolean(form.endDate) && !datesInPast, msg: datesInPast ? "These dates are in the past. Pick today or a later date." : "Pick the conference dates." },
     { key: "primaryArea", label: "Primary area", ok: Boolean(form.primaryArea), msg: "Pick the main research area." },
     { key: "secondaryArea", label: "Secondary area", ok: Boolean(form.secondaryArea), msg: form.primaryArea ? "Pick a secondary area." : "Pick a primary area first." },
     { key: "eventType", label: "Event format", ok: Boolean(form.eventType), msg: "Choose how attendees will join." },
@@ -376,6 +399,12 @@ export function CreateConferencePage() {
                 </div>
                 <div>
                   <div className="flex items-end justify-between gap-2">{label("Conference dates", "endDate", true)}{days > 0 && <span className="mb-1.5 text-xs font-semibold text-primary">{days} day{days > 1 ? "s" : ""}</span>}</div>
+                  {hybrid ? (
+                    <>
+                      <p className="mb-2 text-xs text-ink-muted">Hybrid: give the in-person and the virtual event their own dates. Change the format in step 2.</p>
+                      <HybridDateFields idPrefix="cc" value={hybridDates} onChange={setHybridDates} inputClass={cls("endDate")} min={ALLOW_PAST_CONFERENCE_DATES ? undefined : todayIso} invalid={invalid("endDate")} />
+                    </>
+                  ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Starts</span>
@@ -387,6 +416,7 @@ export function CreateConferencePage() {
                       <input id="cc-endDate" type="date" aria-label="End date" value={form.endDate} min={form.startDate || undefined} onChange={(e) => set("endDate", e.target.value)} className={cls("endDate")} />
                     </div>
                   </div>
+                  )}
                   {msg("endDate")}
                 </div>
                 <div>
@@ -431,7 +461,7 @@ export function CreateConferencePage() {
                   {label("Event format", "eventType", true)}
                   <div id="cc-eventType" tabIndex={-1} className="grid grid-cols-1 gap-2 outline-none sm:grid-cols-3">
                     {FORMATS.map((f) => { const on = form.eventType === f.id; return (
-                      <button key={f.id} type="button" aria-pressed={on} onClick={() => set("eventType", f.id)} style={choice(on, "eventType")} className="flex cursor-pointer items-start gap-2.5 rounded-xl p-3 text-left transition-colors">
+                      <button key={f.id} type="button" aria-pressed={on} onClick={() => chooseFormat(f.id)} style={choice(on, "eventType")} className="flex cursor-pointer items-start gap-2.5 rounded-xl p-3 text-left transition-colors">
                         <f.Icon size={16} aria-hidden="true" className={cn("mt-0.5 shrink-0", on ? "text-primary" : "text-ink-faint")} />
                         <span><span className={cn("block text-sm font-semibold", on ? "text-primary" : "text-ink")}>{f.label}</span><span className="mt-0.5 block text-xs text-ink-faint">{f.desc}</span></span>
                       </button>
