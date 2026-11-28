@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowDown, ArrowUp, Download, Eye, FileCheck, FileUp, Paperclip, Pencil, Trash2, User, UserPlus, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, Download, Eye, FileCheck, FileUp, Paperclip, Pencil, Trash2, User, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { INPUT_CLASS } from "@/components/ui/field";
@@ -11,6 +11,7 @@ import { autoCheckOf } from "@/lib/auto-check";
 import { requestPaperIngest } from "@/services/paper-ai";
 import type { AuthorInput, AuthorPaper, PaperFile } from "@/types/author-submission";
 import { isValidEmail } from "@/lib/email";
+import { KeywordTags } from "@/components/ui/keyword-tags";
 
 /* The ways an author changes their paper (the prototype's EditPaperDetailsModal, EditAuthorsModal and the withdraw
    confirmation, src/author-journey.jsx). Each saves through the service (the database checks who may change the paper and
@@ -59,39 +60,6 @@ interface CommonProps { /** The chair of the conference editing the paper for it
 
 /* ---------------- title, abstract, keywords ---------------- */
 
-function KeywordsEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const [draft, setDraft] = useState("");
-  const add = () => {
-    const v = draft.trim();
-    if (v && !value.includes(v) && value.length < 30) onChange([...value, v]);
-    setDraft("");
-  };
-  return (
-    <div>
-      <div className="mb-3 flex items-stretch gap-2">
-        <input
-          id="paper-keywords" value={draft} maxLength={100}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
-          placeholder="e.g. Machine Learning — press Enter to add"
-          className="min-w-0 flex-1 rounded-xl border-[1.5px] border-line bg-white px-3 py-2.5 text-sm text-ink outline-none transition-all placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary-soft"
-        />
-        <button type="button" onClick={add} disabled={!draft.trim()} className="shrink-0 rounded-xl border-[1.5px] border-primary px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">Add</button>
-      </div>
-      {value.length > 0 && (
-        <ul className="flex flex-wrap gap-1.5">
-          {value.map((v) => (
-            <li key={v} className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft py-1 pl-2.5 pr-1.5 text-xs font-semibold text-primary">
-              {v}
-              <button type="button" onClick={() => onChange(value.filter((i) => i !== v))} aria-label={`Remove ${v}`} className="hover:opacity-60"><X size={12} aria-hidden="true" /></button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonProps, "open">) {
   const [title, setTitle] = useState(paper.title);
   const [abstract, setAbstract] = useState(paper.abstract);
@@ -108,7 +76,7 @@ function DetailsForm({ paper, onClose, onSaved, onSessionEnded }: Omit<CommonPro
         </div>
         <div>
           <label htmlFor="paper-keywords" className={LABEL}>Keywords</label>
-          <KeywordsEditor value={keywords} onChange={setKeywords} />
+          <KeywordTags id="paper-keywords" value={keywords} onChange={setKeywords} placeholder="e.g. Machine Learning — press Enter to add" />
         </div>
         <div>
           <label htmlFor="paper-abstract" className={LABEL}>Abstract<span className="text-danger-ink" aria-hidden="true"> *</span></label>
