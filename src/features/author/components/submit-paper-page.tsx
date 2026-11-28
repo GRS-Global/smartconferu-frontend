@@ -105,6 +105,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   // The first track and the first submission type are already picked; the author changes them with one click.
+  const tracksOn = info.tracksOn !== false; // the chair can switch tracks off: then there is no track field
   const [track, setTrack] = useState(info.tracks[0] ?? "");
   const [type, setType] = useState(info.presentationTypes[0] ?? "");
   const [file, setFile] = useState<File | null>(null);
@@ -227,7 +228,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
   const listed = behalf || emails.includes(info.me.email.trim().toLowerCase());
   const answered = (f: SubmissionExtra) => (f.type === "consent" ? answers[f.id] === true : String(answers[f.id] ?? "").trim() !== "");
   const extraRequired: Array<[string, boolean]> = info.extras.filter((f) => f.required).map((f) => [f.label, answered(f)]);
-  const required: Array<[string, boolean]> = [["Paper file", Boolean(file)], ["Title", Boolean(paperTitle.trim())], ["Abstract", Boolean(abstract.trim())], ["Submission type", Boolean(type)], ["Track", Boolean(track)], ["Authors", authorsOk], ["Originality declaration", originality], ["Submission terms", terms], ...extraRequired];
+  const required: Array<[string, boolean]> = [["Paper file", Boolean(file)], ["Title", Boolean(paperTitle.trim())], ["Abstract", Boolean(abstract.trim())], ["Submission type", Boolean(type)], ...(tracksOn ? [["Track", Boolean(track)] as [string, boolean]] : []), ["Authors", authorsOk], ["Originality declaration", originality], ["Submission terms", terms], ...extraRequired];
   const done = required.filter(([, ok]) => ok).length;
   const canSubmit = done === required.length && !dupEmail && !duplicate.found && listed && !info.closed;
   const bad = (ok: boolean) => (tried && !ok ? "border-danger" : "");
@@ -330,7 +331,7 @@ function SubmitForm({ info, behalf, title }: { info: SubmitFormInfo; behalf: boo
             <div><label htmlFor="p-keywords" className={fieldLabel()}>Keywords</label><KeywordTags id="p-keywords" value={keywords} onChange={setKeywords} disabled={filling} placeholder="e.g. Machine Learning — press Enter to add" /></div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2"><div id="p-type" className={fieldLabel(tried && !type)}>Please choose your submission type <span className="text-danger-ink">*</span></div><div role="group" aria-labelledby="p-type" className="grid gap-2 sm:grid-cols-3">{info.presentationTypes.map((t) => <button key={t} type="button" aria-pressed={type === t} onClick={() => setType(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", type === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(type)) && type !== t && "border-danger")}>{t}</button>)}</div></div>
-              <div className="sm:col-span-2"><div id="p-track" className={fieldLabel(tried && !track)}>Please choose your track <span className="text-danger-ink">*</span></div><div role="group" aria-labelledby="p-track" className="grid gap-2 sm:grid-cols-3">{info.tracks.map((t) => <button key={t} type="button" aria-pressed={track === t} onClick={() => setTrack(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", track === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(track)) && track !== t && "border-danger")}>{t}</button>)}</div></div>
+              {tracksOn && <div className="sm:col-span-2"><div id="p-track" className={fieldLabel(tried && !track)}>Please choose your track <span className="text-danger-ink">*</span></div><div role="group" aria-labelledby="p-track" className="grid gap-2 sm:grid-cols-3">{info.tracks.map((t) => <button key={t} type="button" aria-pressed={track === t} onClick={() => setTrack(t)} className={cn("rounded-lg border px-3 py-2.5 text-sm", track === t ? "border-primary bg-primary-soft font-semibold text-primary" : "border-line bg-white text-ink hover:border-line-strong", bad(Boolean(track)) && track !== t && "border-danger")}>{t}</button>)}</div></div>}
             </div>
           </div>
         </Section>

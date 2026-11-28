@@ -58,6 +58,15 @@ export async function suggestTopics(input: { title: string; about: string; prima
   return Array.isArray(body.topics) ? body.topics.filter((t): t is string => typeof t === "string") : [];
 }
 
+/** "Write with AI" for a conference's one-line summary (Conference Details): the text only, nothing is saved; throws an Error ready to show. */
+export async function suggestSummary(input: { title: string; about: string; primaryArea: string; secondaryArea: string; topics: string[] }): Promise<string> {
+  if (DATA_SOURCE !== "api") throw new Error("The AI summary isn't available in this mode.");
+  const r = await api<{ summary?: unknown }>("/ai/summary", { method: "POST", body: input });
+  const text = typeof r.summary === "string" ? r.summary.trim() : "";
+  if (!text) throw new Error("Smart Assist couldn't write a summary. Please try again.");
+  return text;
+}
+
 export interface ReviewEnhancement { versions: Array<{ style: string; text: string }>; improvements: string[]; suggestions: string[] }
 /** "Polish with Smart Assist": better-worded versions of the reviewer's own draft. Resolves to the versions; throws an Error ready to show. */
 export async function enhanceReview(input: { review: string; title: string; abstract: string; ratings: Array<{ label: string; value: number }>; submissionId?: string }, signal?: AbortSignal): Promise<ReviewEnhancement> {

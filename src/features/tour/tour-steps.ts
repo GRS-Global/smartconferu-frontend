@@ -32,7 +32,6 @@ export function missingDetails(info: ConferenceInfo | null, hasTracks: boolean):
   const empty = (v: string | undefined) => !v || !v.trim();
   const out: string[] = [];
   if (!info || empty(info.webPage)) out.push("webPage");
-  if (!info || empty(info.abstractDeadline)) out.push("abstractDeadline");
   if (!info || empty(info.submissionDeadline)) out.push("submissionDeadline");
   if (!info || empty(info.about)) out.push("about");
   if (!info || empty(info.primaryArea) || empty(info.secondaryArea)) out.push("areas");
